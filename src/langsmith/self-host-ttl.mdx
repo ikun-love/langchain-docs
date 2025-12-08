@@ -1,16 +1,16 @@
 ---
-title: Enable TTL and data retention
-sidebarTitle: Enable TTL & data retention
+title: 启用 TTL 和数据保留期
+sidebarTitle: 启用 TTL 和数据保留期
 ---
 
-LangSmith Self-Hosted allows enablement of automatic TTL and Data Retention of traces. This can be useful if you're complying with data privacy regulations, or if you want to have more efficient space usage and auto cleanup of your traces. Traces will also have their data retention period automatically extended based on certain actions or run rule applications.
+LangSmith Self-Hosted 允许启用跟踪（traces）的自动 TTL（Time-To-Live，生存时间）和数据保留策略。如果您需要遵守数据隐私法规，或者希望提高空间利用率并自动清理跟踪数据，这将非常有用。此外，跟踪数据的保留期限会根据某些操作或运行规则的应用自动延长。
 
-## Requirements
+## 前提条件
 
-You can configure retention through helm or environment variable settings. There are a few options that are configurable:
+您可以通过 Helm 或环境变量设置来配置保留策略。以下是几个可配置的选项：
 
-- *Enabled:* Whether data retention is enabled or disabled. If enabled, via the UI you can your default organization and project TTL tiers to apply to traces (see [data retention guide](/langsmith/administration-overview#data-retention) for details).
-- *Retention Periods:* You can configure system-wide retention periods for shortlived and longlived traces. Once configured, you can manage the retention level at each project as well as set an organization-wide default for new projects.
+- *Enabled（启用）:* 数据保留是启用还是禁用。如果启用，您可以通过 UI 设置默认的组织和项目 TTL 层级来应用于跟踪（详情请参阅 [数据保留指南](/langsmith/administration-overview#data-retention)）。
+- *Retention Periods（保留期）:* 您可以为短期（shortlived）和长期（longlived）跟踪配置系统范围的保留周期。配置后，您可以在每个项目级别管理保留级别，并为新项目设置组织范围的默认值。
 
 <CodeGroup>
 
@@ -19,35 +19,37 @@ config:
   ttl:
     enabled: true
     ttl_period_seconds:
-      # -- 400 day longlived and 14 day shortlived
+      # -- 400 天长期和 14 天短期
       longlived: "34560000"
       shortlived: "1209600"
 ```
 
 ```bash Docker
-# In your .env fileFF_TRACE_TIERS_ENABLED=trueTRACE_TIER_TTL_DURATION_SEC_MAP='{"longlived": 34560000, "shortlived": 1209600}'
+# 在您的 .env 文件中
+FF_TRACE_TIERS_ENABLED=true
+TRACE_TIER_TTL_DURATION_SEC_MAP='{"longlived": 34560000, "shortlived": 1209600}'
 ```
 
 </CodeGroup>
 
-## ClickHouse TTL Cleanup Job
+## ClickHouse TTL 清理作业
 
-As of version **0.11**, a cron job runs on weekends to assist in deleting expired data that may not have been cleaned up by ClickHouse's built-in TTL mechanism.
+从 **0.11** 版本开始，会有一个在周末运行的 cron 作业，用于协助删除 ClickHouse 内置 TTL 机制可能未能清理到位的过期数据。
 
 <Warning>
-This job uses potentially long running **mutations** (`ALTER TABLE DELETE`), which are expensive operations that can impact ClickHouse's performance. We recommend running these operations only during off-peak hours (nights and weekends). During testing with **1 concurrent active** mutation (default), we did not observe significant CPU, memory, or latency increases.
+此作业会使用潜在的长时间运行的**变更操作 (mutations)**（即 `ALTER TABLE DELETE`），这些操作成本较高，可能会影响 ClickHouse 的性能。我们建议仅在非高峰时段（夜间和周末）运行这些操作。在测试中，使用 **1 个并发活动**变更（默认值），我们未观察到显著的 CPU、内存或延迟增加。
 </Warning>
 
-### Default Schedule
+### 默认调度
 
-By default, the cleanup job runs:
+默认情况下，清理作业的运行时间如下：
 
-- **Saturday**: 8pm and 10pm UTC
-- **Sunday**: 12am, 2am, and 4am UTC
+- **周六**: 协调世界时 (UTC) 20:00 和 22:00
+- **周日**: 协调世界时 (UTC) 00:00、02:00 和 04:00
 
-### Disabling the Job
+### 禁用作业
 
-To disable the cleanup job entirely:
+要完全禁用清理作业：
 
 ```yaml
 queue:
@@ -56,44 +58,43 @@ queue:
       - name: "ENABLE_CLICKHOUSE_TTL_CLEANUP_CRON"
         value: "false"
 ```
-### Configuring the Schedule
-You can customize when the cleanup job runs by modifying the cron expressions:
+### 配置调度
+您可以通过修改 cron 表达式来自定义清理作业的运行时间：
 ```yaml
 queue:
   deployment:
     extraEnv:
-      # UTC: Sunday 12am/2am/4am
+      # UTC: 周日 00:00/02:00/04:00
       - name: "CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_MORNING"
         value: "0 0,2,4 * * 0"
-      # UTC: Saturday 8pm/10pm
+      # UTC: 周六 20:00/22:00
       - name: "CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_EVENING"
         value: "0 20,22 * * 6"
 ```
 <Tip>
-To run the job on a single cron schedule, set both `CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_EVENING` and `CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_MORNING` to the same value. Job locking prevents overlapping executions.
+要使作业在单一的 cron 计划下运行，请将 `CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_EVENING` 和 `CLICKHOUSE_TTL_CLEANUP_CRON_WEEKEND_MORNING` 设置为相同的值。作业锁定机制会防止执行重叠。
 </Tip>
 
-### Configuring Minimum Expired Rows Per Part
+### 配置每个数据块中的最小过期行数
 
-The job goes table by table, scanning parts and deleting data from parts containing a minimum number of expired rows. This threshold balances efficiency and thoroughness:
+该作业会逐个表地扫描数据块（parts），并从包含最少过期行数的数据块中删除数据。此阈值用于平衡效率和彻底性：
 
-- **Too low**: Job scans entire parts to clear minimal data (inefficient)
-- **Too high**: Job misses parts with significant expired data
+- **过低**: 作业会扫描整个数据块来清除少量数据（效率低下）
+- **过高**: 作业会错过那些包含大量过期数据的数据块
 
 ```yaml
 queue:
   deployment:
     extraEnv:
       - name: "CLICKHOUSE_TTL_CRON_MIN_EXPIRED_ROWS_PER_PART"
-        value: "100000" # 100k expired rows
+        value: "100000" # 10万行过期数据
 ```
 
-#### Checking Expired Rows
-
-Use this query to analyze expired rows in your tables, and tweak your minimum value accordingly:
+#### 检查过期行数
+使用以下查询来分析表中过期的数据行数，并相应地调整您的最小值：
 
 ```sql
--- Query for Runs table. For other tables, replace 'ttl_seconds' with 'trace_ttl_seconds'
+-- runs 表的查询。对于其他表，请将 'ttl_seconds' 替换为 'trace_ttl_seconds'
 SELECT
     _part,
     count() AS expired_rows
@@ -105,9 +106,8 @@ GROUP BY _part
 ORDER BY expired_rows DESC
 ```
 
-### Configuring Maximum Active Mutations
-
-Delete operations can be time-consuming (~50 minutes for a 100GB part). You can increase concurrent mutations to speed up the process:
+### 配置最大活动变更数 (Maximum Active Mutations)
+删除操作可能非常耗时（处理 100GB 数据块可能需要约 50 分钟）。您可以增加并发的变更数来加快过程：
 
 ```yaml
 queue:
@@ -118,33 +118,33 @@ queue:
 ```
 
 <Warning>
-Increasing concurrent DELETE operations can severely impact system performance. Monitor your system carefully and only increase this value if you can tolerate potentially slower insert and read latencies.
+增加并发的 DELETE 操作可能会严重影响系统性能。请仔细监控您的系统，只有在您能容忍可能较慢的插入和读取延迟时，才增加此值。
 </Warning>
 
-### Emergency: Stopping Running Mutations
+### 紧急情况：停止正在运行的变更 (Mutations)
 
-If you experience latency spikes and need to terminate a running mutation:
+如果您遇到延迟尖峰并需要终止正在运行的变更操作：
 
-1. **Find active mutations**:
+1. **查找活动中的变更**:
 
    ```sql
    SELECT * FROM system.mutations WHERE is_done = 0;
    ```
 
-   Look for the `mutation_id` where the `command` column contains a `DELETE` statement.
+   查找 `command` 列包含 `DELETE` 语句的 `mutation_id`。
 
-2. **Kill the mutation**:
+2. **终止变更**:
    ```sql
    KILL MUTATION WHERE mutation_id = '<mutation_id>';
    ```
 
-### Backups and Data Retention
+### 备份与数据保留
 
-If disk space does not decrease after running this job, or if it continues to increase, backups may be causing the issue by creating file system hard links. These links prevent ClickHouse from cleaning up the data.
+如果在运行此作业后磁盘空间没有减少，或者仍在增加，问题可能是备份正在创建文件系统硬链接。这些链接会阻止 ClickHouse 清理数据。
 
-To verify, check the following directories inside your ClickHouse pod:
+要验证这一点，请检查您的 ClickHouse Pod 内部的以下目录：
 
  - `/var/lib/clickhouse/backup`
  - `/var/lib/clickhouse/shadow`
 
-If backups are present, copy them to an external filesystem or blob storage (e.g., S3), then clear the directories. Within a few minutes, you will notice disk space releasing.
+如果存在备份文件，请将它们复制到外部文件系统或对象存储（例如 S3），然后清空这些目录。几分钟内，您将看到磁盘空间被释放。

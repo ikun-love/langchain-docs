@@ -2,11 +2,11 @@
 title: Metal
 ---
 
->[Metal](https://github.com/getmetal/metal-python) is a managed service for ML Embeddings.
+>[Metal](https://github.com/getmetal/metal-python) 是一个用于管理 ML 嵌入（ML Embeddings）的服务。
 
-This notebook shows how to use [Metal's](https://docs.getmetal.io/introduction) retriever.
+本 Notebook 演示了如何使用 [Metal](https://docs.getmetal.io/introduction) 的检索器（retriever）。
 
-First, you will need to sign up for Metal and get an API key. You can do so [here](https://docs.getmetal.io/misc-create-app)
+首先，您需要注册 Metal 账户并获取一个 API 密钥。您可以在 [此处](https://docs.getmetal.io/misc-create-app) 完成注册。
 
 ```python
 pip install -qU  metal_sdk
@@ -22,9 +22,9 @@ INDEX_ID = ""
 metal = Metal(API_KEY, CLIENT_ID, INDEX_ID)
 ```
 
-## Ingest Documents
+## 嵌入文档 (Ingest Documents)
 
-You only need to do this if you haven't already set up an index
+仅当您尚未设置索引时，才需要执行此操作。
 
 ```python
 metal.index({"text": "foo1"})
@@ -37,9 +37,9 @@ metal.index({"text": "foo"})
   'createdAt': '2023-03-31T19:51:06.748Z'}}
 ```
 
-## Query
+## 查询 (Query)
 
-Now that our index is set up, we can set up a retriever and start querying it.
+现在我们的索引已经设置好了，我们可以配置检索器并开始对其进行查询。
 
 ```python
 from langchain_community.retrievers import MetalRetriever
@@ -58,6 +58,6 @@ retriever.invoke("foo1")
  Document(page_content='foo1', metadata={'dist': '4.05311584473e-06', 'id': '642738f67559b026b4430e3c', 'createdAt': '2023-03-31T19:48:06.769Z'})]
 ```
 
-```python
+```
 
 ```

@@ -1,117 +1,117 @@
 ---
-title: Analyze an experiment
-sidebarTitle: Analyze an experiment
+title: 分析实验
+sidebarTitle: 分析实验
 ---
 
-This page describes some of the essential tasks for working with [_experiments_](/langsmith/evaluation-concepts#experiment) in LangSmith:
+本页面将介绍使用 LangSmith 处理 [_实验_](/langsmith/evaluation-concepts#experiment) 时所需的一些基本任务：
 
-- **[Analyze a single experiment](#analyze-a-single-experiment)**: View and interpret experiment results, customize columns, filter data, and compare runs.
-- **[Download experiment results as a CSV](#how-to-download-experiment-results-as-a-csv)**: Export your experiment data for external analysis and sharing.
-- **[Rename an experiment](#how-to-rename-an-experiment)**: Update experiment names in both the Playground and Experiments view.
+- **[分析单个实验](#analyze-a-single-experiment)**：查看和解释实验结果，自定义列，过滤数据以及比较运行（runs）。
+- **[将实验结果下载为 CSV](#how-to-download-experiment-results-as-a-csv)**：将实验数据导出，用于外部分析和共享。
+- **[重命名实验](#how-to-rename-an-experiment)**：在 Playground 和实验视图中更新实验名称。
 
-## Analyze a single experiment
+## 分析单个实验
 
-After running an experiment, you can use LangSmith's experiment view to analyze the results and draw insights about your experiment's performance.
+运行实验后，您可以使用 LangSmith 的实验视图来分析结果，并从中得出关于实验性能的见解。
 
-### Open the experiment view
+### 打开实验视图
 
-To open the experiment view, select the relevant [_dataset_](/langsmith/evaluation-concepts#datasets) from the **Dataset & Experiments** page and then select the experiment you want to view.
+要打开实验视图，请从 **Dataset & Experiments**（数据集与实验）页面选择相关的 [_数据集_](/langsmith/evaluation-concepts#datasets)，然后选择您想要查看的实验。
 
 ![Open experiment view](/langsmith/images/select-experiment.png)
 
-### View experiment results
+### 查看实验结果
 
-#### Customize columns
+#### 自定义列
 
-By default, the experiment view shows the input, output, and reference output for each [example](/langsmith/evaluation-concepts#examples) in the dataset, feedback scores from evaluations and experiment metrics like cost, token counts, latency and status.
+默认情况下，实验视图会为数据集中每个 [示例](/langsmith/evaluation-concepts#examples) 显示输入、输出和参考输出，以及评估反馈分数、成本、Token 计数、延迟和状态等实验指标。
 
-You can customize the columns using the **Display** button to make it easier to interpret experiment results:
+您可以使用 **Display**（显示）按钮自定义列，以便更轻松地解释实验结果：
 
-- **Break out fields from inputs, outputs, and reference outputs** into their own columns. This is especially helpful if you have long inputs/outputs/reference outputs and want to surface important fields.
-- **Hide and reorder columns** to create focused views for analysis.
-- **Control decimal precision on feedback scores**. By default, LangSmith surfaces numerical feedback scores with a decimal precision of 2, but you can customize this setting to be up to 6 decimals.
-- **Set the Heat Map threshold** to high, middle, and low for numeric feedback scores in your experiment, which affects the threshold at which score chips render as red or green:
+- **将输入、输出和参考输出中的字段拆分**到它们各自的列中。如果您有很长的输入/输出/参考输出，并希望突出显示重要字段时，这一点尤其有用。
+- **隐藏和重新排序列**，以创建专注于分析的视图。
+- **控制反馈分数的十进制精度**。默认情况下，LangSmith 会显示十进制精度为 2 的数值反馈分数，但您可以将此设置自定义为最多 6 位小数。
+- **为数值反馈分数设置热力图阈值**（高、中、低）。这会影响分数标签渲染为红色或绿色时的阈值：
 
 ![Column heatmap configuration](/langsmith/images/column-heat-map.png)
 
 <Tip>
-You can set default configurations for an entire dataset or temporarily save settings just for yourself.
+您可以为整个数据集设置默认配置，或者暂时只为您自己保存设置。
 </Tip>
 
-#### Sort and filter
+#### 排序和过滤
 
-To sort or filter feedback scores, you can use the actions in the column headers.
+要对反馈分数进行排序或过滤，您可以使用列标题中的操作。
 
 ![Sort and filter](/langsmith/images/sort-filter.png)
 
-#### Table views
+#### 表格视图
 
-Depending on the view most useful for your analysis, you can change the formatting of the table by toggling between a compact view, a full, view, and a diff view.
+根据分析所需的视图，您可以通过切换紧凑视图（compact view）、完整视图（full view）和差异视图（diff view）来更改表的格式。
 
-- The **Compact** view shows each run as a one-line row, for ease of comparing scores at a glance.
-- The **Full** view shows the full output for each run for digging into the details of individual runs.
-- The **Diff** view shows the text difference between the reference output and the output for each run.
+- **Compact**（紧凑）视图将每次运行显示为单行，便于快速比较分数。
+- **Full**（完整）视图显示每次运行的完整输出，以便深入了解单个运行的详细信息。
+- **Diff**（差异）视图显示参考输出与每次运行的输出之间的文本差异。
 
 ![Diff view](/langsmith/images/diff-mode.png)
 
-#### View the traces
+#### 查看追踪（Traces）
 
-Hover over any of the output cells, and click on the trace icon to view the trace for that run. This will open up a trace in the side panel.
+将鼠标悬停在任何输出单元格上，然后单击追踪图标即可查看该运行的追踪。这将会在侧边栏中打开一个追踪。
 
-To view the entire tracing project, click on the **View Project** button in the top right of the header.
+要查看完整的追踪项目，请单击标题右上角的 **View Project**（查看项目）按钮。
 
 ![View trace](/langsmith/images/view-trace.png)
 
-#### View evaluator runs
+#### 查看评估器运行（Evaluator Runs）
 
-For evaluator scores, you can view the source run by hovering over the evaluator score cell and clicking on the arrow icon. This will open up a trace in the side panel. If you're running a [LLM-as-a-judge evaluator](/langsmith/llm-as-judge), you can view the prompt used for the evaluator in this run. If your experiment has [repetitions](/langsmith/evaluation-concepts#repetitions), you can click on the aggregate average score to find links to all of the individual runs.
+对于评估器分数，您可以将鼠标悬停在评估器分数单元格上并单击箭头图标来查看源运行（source run）。这将在侧边栏中打开一个追踪。如果您正在运行 [LLM-as-a-judge 评估器](/langsmith/llm-as-judge)，您可以在此运行中查看评估器所使用的提示（prompt）。如果您的实验包含 [重复项](/langsmith/evaluation-concepts#repetitions)，您可以单击聚合平均分数以查找所有单个运行的链接。
 
 ![View evaluator runs](/langsmith/images/evaluator-run.png)
 
-### Group results by metadata
+### 按元数据分组结果
 
-You can add metadata to examples to categorize and organize them. For example, if you're evaluating factual accuracy on a question answering dataset, the metadata might include which subject area each question belongs to. Metadata can be added either [via the UI](/langsmith/manage-datasets-in-application#edit-example-metadata) or [via the SDK](/langsmith/manage-datasets-programmatically#update-single-example).
+您可以向示例添加元数据以对其进行分类和组织。例如，如果您正在对问答数据集评估事实准确性，元数据可能包括每个问题所属的主题领域。元数据可以通过 [UI](/langsmith/manage-datasets-in-application#edit-example-metadata) 或 [SDK](/langsmith/manage-datasets-programmatically#update-single-example) 添加。
 
-To analyze results by metadata, use the **Group by** dropdown in the top right corner of the experiment view and select your desired metadata key. This displays average feedback scores, latency, total tokens, and cost for each metadata group.
+要按元数据分析结果，请使用实验视图右上角的 **Group by**（分组依据）下拉菜单，并选择您想要的元数据键。这将显示每个元数据组的平均反馈分数、延迟、总 Tokens 数和成本。
 
 <Info>
-You will only be able to group by example metadata on experiments created after February 20th, 2025. Any experiments before that date can still be grouped by metadata, but only if the metadata is on the experiment traces themselves.
+您只能按 2025 年 2 月 20 日之后创建的实验的示例元数据进行分组。对于早于该日期的任何实验，虽然仍可以按元数据分组，但前提是该元数据已应用于实验追踪本身。
 </Info>
 
-### Repetitions
+### 重复项（Repetitions）
 
-If you've run your experiment with [_repetitions_](/langsmith/evaluation-concepts#repetitions), there will be arrows in the output results column so you can view outputs in the table. To view each run from the repetition, hover over the output cell and click the expanded view.
+如果您使用 [_重复项_](/langsmith/evaluation-concepts#repetitions) 运行实验，输出结果列中将会有箭头，以便您可以在表中查看这些输出。要查看重复项中的每次运行，请将鼠标悬停在输出单元格上并单击展开视图。
 
-When you run an experiment with repetitions, LangSmith displays the average for each feedback score in the table. Click on the feedback score to view the feedback scores from individual runs, or to view the standard deviation across repetitions.
+当您运行带重复项的实验时，LangSmith 会在表中显示每个反馈分数的平均值。单击反馈分数可以查看单个运行的反馈分数，或查看重复项之间的标准差。
 
 ![Repetitions](/langsmith/images/repetitions.png)
 
-### Compare to another experiment
+### 与另一个实验进行比较
 
-In the top right of the experiment view, you can select another experiment to compare to. This will open up a comparison view, where you can see how the two experiments compare. To learn more about the comparison view, see [how to compare experiment results](/langsmith/compare-experiment-results).
+在实验视图的右上角，您可以选择另一个实验进行比较。这将打开一个比较视图，您可以在其中查看两个实验的对比情况。要了解有关比较视图的更多信息，请参阅 [如何比较实验结果](/langsmith/compare-experiment-results)。
 
-## Download experiment results as a CSV
+## 将实验结果下载为 CSV
 
-LangSmith lets you download experiment results as a CSV file, which allows you to analyze and share your results.
+LangSmith 允许您将实验结果下载为 CSV 文件，以便您分析和共享结果。
 
-To download as a CSV, click the download icon at the top of the experiment view. The icon is directly to the left of the [Compact toggle](/langsmith/compare-experiment-results#adjust-the-table-display).
+要下载为 CSV，请单击实验视图顶部的下载图标。该图标位于 [Compact toggle](/langsmith/compare-experiment-results#adjust-the-table-display)（紧凑切换按钮）的左侧。
 
 ![Download CSV](/langsmith/images/download-experiment-results-as-csv.png)
 
-## Rename an experiment
+## 重命名实验
 
 <Note>
-Experiment names must be unique per workspace.
+实验名称在每个工作区内必须是唯一的。
 </Note>
 
-You can rename an experiment in the LangSmith UI in:
+您可以在 LangSmith UI 的以下位置重命名实验：
 
-- The [Playground](#renaming-an-experiment-in-the-playground). When running experiments in the Playground, a default name with the format `pg::prompt-name::model::uuid` (eg. `pg::gpt-4o-mini::897ee630`) is automatically assigned.
+- [Playground（在 Playground 中重命名实验）](#renaming-an-experiment-in-the-playground)。在 Playground 中运行实验时，会自动分配一个默认名称，格式为 `pg::prompt-name::model::uuid`（例如 `pg::gpt-4o-mini::897ee630`）。
 
-  You can rename an experiment immediately after running it by editing its name in the Playground table header.
+  您可以在运行实验后立即通过编辑 Playground 表格标题中的名称来重命名该实验。
 
   ![Edit name in playground](/langsmith/images/rename-in-playground.png)
 
-- The [Experiments view](#renaming-an-experiment-in-the-experiments-view). When viewing results in the experiments view, you can rename an experiment by using the pencil icon beside the experiment name.
+- [Experiments view（在实验视图中重命名实验）](#renaming-an-experiment-in-the-experiments-view)。在实验视图中查看结果时，您可以通过使用实验名称旁边的铅笔图标来重命名实验。
 
   ![Edit name in experiments view](/langsmith/images/rename-in-experiments-view.png)

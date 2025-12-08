@@ -1,27 +1,26 @@
 ---
-title: Use cron jobs
-sidebarTitle: Use cron jobs
+title: 使用 Cron 作业
+sidebarTitle: 使用 Cron 作业
 ---
 
-There are many situations in which it is useful to run an assistant on a schedule.
+在许多情况下，按计划运行助手都是非常实用的。
 
-For example, say that you're building an assistant that runs daily and sends an email summary
-of the day's news. You could use a cron job to run the assistant every day at 8:00 PM.
+例如，假设您正在构建一个助手，该助手每天运行并发送当天的每日新闻摘要邮件。您可以使用 cron 作业 (cron job) 约定每天下午 8:00 运行该助手。
 
-LangSmith Deployment supports cron jobs, which run on a user-defined schedule. The user specifies a schedule, an assistant, and some input. After that, on the specified schedule, the server will:
+LangSmith 部署支持 cron 作业，这些作业可以按照用户定义的计划运行。用户指定一个计划 (schedule)、一个助手 (assistant) 以及一些输入 (input)。之后，在指定的计划时间，服务器将执行以下操作：
 
-* Create a new thread with the specified assistant
-* Send the specified input to that thread
+* 使用指定的助手创建一个新的线程 (thread)
+* 将指定的输入发送到该线程
 
-Note that this sends the same input to the thread every time.
+请注意，这每次都会向线程发送**相同的**输入。
 
-The LangSmith Deployment API provides several endpoints for creating and managing cron jobs. See the [API reference](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref/) for more details.
+LangSmith 部署 API 提供了几个用于创建和管理 cron 作业的端点。有关更多详细信息，请参阅 [API 参考文档](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref/)。
 
-Sometimes you don't want to run your graph based on user interaction, but rather you would like to schedule your graph to run on a schedule - for example if you wish for your graph to compose and send out a weekly email of to-dos for your team. LangSmith Deployment allows you to do this without having to write your own script by using the `Crons` client. To schedule a graph job, you need to pass a [cron expression](https://crontab.cronhub.io/) to inform the client when you want to run the graph. `Cron` jobs are run in the background and do not interfere with normal invocations of the graph.
+有时您不希望基于用户交互来运行图 (graph)，而是希望安排图在特定时间运行——例如，如果您希望图组合并发送团队的每周待办事项邮件。LangSmith 部署允许您通过使用 `Crons` 客户端来实现这一点，而无需编写自己的脚本。要安排一个图作业，您需要提供一个 [cron 表达式](https://crontab.cronhub.io/)，以告知客户端何时运行该图。`Cron` 作业在后台运行，不会干扰图的正常调用。
 
-## Setup
+## 设置
 
-First, let's set up our SDK client, assistant, and thread:
+首先，让我们设置 SDK 客户端、助手和线程：
 
 <Tabs>
     <Tab title="Python">
@@ -29,9 +28,9 @@ First, let's set up our SDK client, assistant, and thread:
     from langgraph_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
-    # Using the graph deployed with the name "agent"
+    # 使用部署名称为 "agent" 的图
     assistant_id = "agent"
-    # create thread
+    # 创建线程
     thread = await client.threads.create()
     print(thread)
     ```
@@ -41,9 +40,9 @@ First, let's set up our SDK client, assistant, and thread:
     import { Client } from "@langchain/langgraph-sdk";
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
-    // Using the graph deployed with the name "agent"
+    // 使用部署名称为 "agent" 的图
     const assistantId = "agent";
-    // create thread
+    // 创建线程
     const thread = await client.threads.create();
     console.log(thread);
     ```
@@ -65,7 +64,7 @@ First, let's set up our SDK client, assistant, and thread:
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 {
@@ -79,14 +78,14 @@ Output:
 }
 ```
 
-## Cron job on a thread
+## 线程上的 Cron 作业
 
-To create a cron job associated with a specific thread, you can write:
+要创建与特定线程关联的 cron 作业，您可以按如下方式编写：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # This schedules a job to run at 15:27 (3:27PM) every day
+    # 这将安排一个作业每天在 15:27 (下午 3:27) 运行
     cron_job = await client.crons.create_for_thread(
         thread["thread_id"],
         assistant_id,
@@ -97,7 +96,7 @@ To create a cron job associated with a specific thread, you can write:
     </Tab>
     <Tab title="Javascript">
     ```js
-    // This schedules a job to run at 15:27 (3:27PM) every day
+    // 这将安排一个作业每天在 15:27 (下午 3:27) 运行
     const cronJob = await client.crons.create_for_thread(
       thread["thread_id"],
       assistantId,
@@ -120,7 +119,7 @@ To create a cron job associated with a specific thread, you can write:
     </Tab>
 </Tabs>
 
-Note that it is **very** important to delete `Cron` jobs that are no longer useful. Otherwise you could rack up unwanted API charges to the LLM! You can delete a `Cron` job using the following code:
+请注意，**非常**重要的是删除不再需要的 `Cron` 作业。否则，您可能会产生不必要的 LLM API 费用！您可以使用以下代码删除一个 `Cron` 作业：
 
 <Tabs>
     <Tab title="Python">
@@ -141,14 +140,14 @@ Note that it is **very** important to delete `Cron` jobs that are no longer usef
     </Tab>
 </Tabs>
 
-## Cron job stateless
+## 无状态 Cron 作业
 
-You can also create stateless cron jobs by using the following code:
+您也可以通过使用以下代码创建无状态 cron 作业：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # This schedules a job to run at 15:27 (3:27PM) every day
+    # 这将安排一个作业每天在 15:27 (下午 3:27) 运行
     cron_job_stateless = await client.crons.create(
         assistant_id,
         schedule="27 15 * * *",
@@ -158,7 +157,7 @@ You can also create stateless cron jobs by using the following code:
     </Tab>
     <Tab title="Javascript">
     ```js
-    // This schedules a job to run at 15:27 (3:27PM) every day
+    // 这将安排一个作业每天在 15:27 (下午 3:27) 运行
     const cronJobStateless = await client.crons.create(
       assistantId,
       {
@@ -180,7 +179,7 @@ You can also create stateless cron jobs by using the following code:
     </Tab>
 </Tabs>
 
-Again, remember to delete your job once you are done with it!
+再次提醒，请记得在完成工作后删除您的作业！
 
 <Tabs>
     <Tab title="Python">

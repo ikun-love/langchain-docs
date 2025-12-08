@@ -1,11 +1,12 @@
+```mdx
 ---
-title: Trace generator functions
+title: 追踪生成器函数
 sidebarTitle: Trace generator functions
 ---
 
-In most LLM applications, you will want to stream outputs to minimize the time to the first token seen by the user.
+在大多数大型语言模型（LLM）应用中，您通常希望**流式传输**输出，以最小化用户看到第一个 token 所需的时间。
 
-LangSmith's tracing functionality natively supports streamed outputs via `generator` functions. Below is an example.
+LangSmith 的追踪功能原生支持通过 `generator` 函数进行流式输出。示例如下。
 
 <CodeGroup>
 
@@ -15,16 +16,16 @@ from langsmith import traceable
 def my_generator():
   for chunk in ["Hello", "World", "!"]:
       yield chunk
-# Stream to the user
+# 流式传输给用户
 for output in my_generator():
   print(output)
-# It also works with async functions
+# 也适用于异步函数
 import asyncio
 @traceable
 async def my_async_generator():
   for chunk in ["Hello", "World", "!"]:
       yield chunk
-# Stream to the user
+# 流式传输给用户
 async def main():
   async for output in my_async_generator():
       print(output)
@@ -45,12 +46,12 @@ for (const output of myGenerator()) {
 
 </CodeGroup>
 
-## Aggregate Results[](#aggregate-results "Direct link to Aggregate Results")
+## 聚合结果[ ](#aggregate-results "Direct link to Aggregate Results")
 
-By default, the `outputs` of the traced function are aggregated into a single array in LangSmith. If you want to customize how it is stored (for instance, concatenating the outputs into a single string), you can use the `aggregate` option (`reduce_fn` in python). This is especially useful for aggregating streamed LLM outputs.
+默认情况下，被追踪函数的 `outputs` 会在 LangSmith 中被聚合为一个单独的数组。如果您想自定义输出的存储方式（例如，将输出连接成一个单独的字符串），您可以使用 `aggregate` 选项（在 Python 中是 `reduce_fn`）。这在聚合流式 LLM 输出时尤其有用。
 
 <Note>
-Aggregating outputs **only** impacts the traced representation of the outputs. It doesn not alter the values returned by your function.
+聚合输出**仅**影响输出的追踪表示形式。它不会改变您的函数返回的实际值。
 </Note>
 
 <CodeGroup>
@@ -63,16 +64,16 @@ def concatenate_strings(outputs: list):
 def my_generator():
   for chunk in ["Hello", "World", "!"]:
       yield chunk
-# Stream to the user
+# 流式传输给用户
 for output in my_generator():
   print(output)
-# It also works with async functions
+# 也适用于异步函数
 import asyncio
 @traceable(reduce_fn=concatenate_strings)
 async def my_async_generator():
   for chunk in ["Hello", "World", "!"]:
       yield chunk
-# Stream to the user
+# 流式传输给用户
 async def main():
   async for output in my_async_generator():
       print(output)
@@ -93,3 +94,4 @@ for (const output of await myGenerator()) {
 ```
 
 </CodeGroup>
+```

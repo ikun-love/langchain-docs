@@ -1,25 +1,25 @@
 ---
 title: Jenkins
+description: 用于与 [Jenkins](https://www.jenkins.io/) 交互的工具。
 ---
 
-Tools for interacting with [Jenkins](https://www.jenkins.io/).
+用于与 [Jenkins](https://www.jenkins.io/) 交互的工具。
 
-## Overview
+## 概述
 
-The `langchain-jenkins` package allows you to execute and control CI/CD pipelines with
-Jenkins.
+`langchain-jenkins` 包允许您使用 Jenkins 执行和控制 CI/CD 流水线。
 
-### Setup
+### 安装
 
-Install `langchain-jenkins`:
+安装 `langchain-jenkins`:
 
 ```python
 pip install -qU langchain-jenkins
 ```
 
-### Credentials
+### 凭证
 
-You'll need to setup or obtain authorization to access Jenkins server.
+您需要设置或获取授权才能访问 Jenkins 服务器。
 
 ```python
 import getpass
@@ -34,9 +34,9 @@ def _set_env(var: str):
 _set_env("PASSWORD")
 ```
 
-## Instantiation
+## 实例化
 
-To disable the SSL Verify, set `os.environ["PYTHONHTTPSVERIFY"] = "0"`
+要禁用 SSL 验证，请设置 `os.environ["PYTHONHTTPSVERIFY"] = "0"`
 
 ```python
 from langchain_jenkins import JenkinsAPIWrapper, JenkinsJobRun
@@ -52,11 +52,11 @@ tools = [
 ]
 ```
 
-## Invocation
+## 调用
 
-You can now call invoke and pass arguments.
+您现在可以调用 `invoke` 方法并传入参数。
 
-1. Create the Jenkins job
+1. 创建 Jenkins 作业
 
 ```python
 jenkins_job_content = ""
@@ -66,13 +66,13 @@ with open(src_file) as fread:
 tools[0].invoke({"job": "job01", "config_xml": jenkins_job_content, "action": "create"})
 ```
 
-2. Run the Jenkins Job
+2. 运行 Jenkins 作业
 
 ```python
 tools[0].invoke({"job": "job01", "parameters": {}, "action": "run"})
 ```
 
-3. Get job info
+3. 获取作业信息
 
 ```python
 resp = tools[0].invoke({"job": "job01", "number": 1, "action": "status"})
@@ -80,7 +80,7 @@ if not resp["inProgress"]:
     print(resp["result"])
 ```
 
-4. Delete the jenkins job
+4. 删除 Jenkins 作业
 
 ```python
 tools[0].invoke({"job": "job01", "action": "delete"})
@@ -88,6 +88,6 @@ tools[0].invoke({"job": "job01", "action": "delete"})
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation [API reference](https://python.langchain.com/docs/integrations/tools/jenkins/)
+有关详细文档，请参阅 [API 参考](https://python.langchain.com/docs/integrations/tools/jenkins/)

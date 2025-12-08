@@ -1,50 +1,50 @@
+```markdown
 ---
 title: VertexAIEmbeddings
 ---
 
-[Google Vertex](https://cloud.google.com/vertex-ai) is a service that exposes all foundation models available in Google Cloud.
+[Google Vertex](https://cloud.google.com/vertex-ai) 是一项服务，用于暴露 Google Cloud 中所有可用的基础模型（foundation models）。
 
-This will help you get started with Google Vertex AI [embedding models](/oss/integrations/text_embedding) using LangChain. For detailed documentation on `VertexAIEmbeddings` features and configuration options, please refer to the [API reference](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html).
+这将帮助您使用 LangChain 开始使用 Google Vertex AI 的 [嵌入模型](/oss/integrations/text_embedding)。有关 `VertexAIEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Py support | Downloads | Version |
+| 类名 (Class) | 包 (Package) | 本地 (Local) | Py 支持 | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [`VertexAIEmbeddings`](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html) | [`@langchain/google-vertexai`](https://npmjs.com/@langchain/google-vertexai) | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/google-vertexai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/google-vertexai?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-LangChain.js supports two different authentication methods based on whether
-you're running in a Node.js environment or a web environment.
+LangChain.js 支持两种不同的身份验证方法，具体取决于您是在 Node.js 环境中运行还是在 Web 环境中运行。
 
-To access `ChatVertexAI` models you'll need to setup Google VertexAI in your Google Cloud Platform (GCP) account, save the credentials file, and install the `@langchain/google-vertexai` integration package.
+要访问 `ChatVertexAI` 模型，您需要在 Google Cloud Platform (GCP) 账户中设置 Google VertexAI，保存凭证文件，并安装 `@langchain/google-vertexai` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to your [GCP account](https://console.cloud.google.com/) and generate a credentials file. Once you've done this set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable:
+前往您的 [GCP 账户](https://console.cloud.google.com/) 并生成一个凭证文件。完成此操作后，设置 `GOOGLE_APPLICATION_CREDENTIALS` 环境变量：
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
 ```
 
-If running in a web environment, you should set the `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable as a JSON stringified object, and install the `@langchain/google-vertexai-web` package:
+如果在 Web 环境中运行，您应该将 `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` 环境变量设置为一个 JSON 字符串化的对象，并安装 `@langchain/google-vertexai-web` 包：
 
 ```bash
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您希望对模型调用进行自动化的调用追踪，您还可以取消注释下方内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### Installation
+### 安装 (Installation)
 
-The LangChain `VertexAIEmbeddings` integration lives in the `@langchain/google-vertexai` package:
+LangChain 的 `VertexAIEmbeddings` 集成位于 `@langchain/google-vertexai` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -58,13 +58,13 @@ pnpm add @langchain/google-vertexai @langchain/core
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and embed text:
+现在我们可以实例化我们的模型对象并嵌入文本：
 
 ```typescript
 import { VertexAIEmbeddings } from "@langchain/google-vertexai";
-// Uncomment the following line if you're running in a web environment:
+// 如果您在 Web 环境中运行，请取消注释以下行：
 // import { VertexAIEmbeddings } from "@langchain/google-vertexai-web"
 
 const embeddings = new VertexAIEmbeddings({
@@ -73,14 +73,14 @@ const embeddings = new VertexAIEmbeddings({
 });
 ```
 
-## Indexing and Retrieval
+## 索引和检索
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our RAG tutorials under the [**Learn** tab](/oss/learn/).
+嵌入模型通常用于检索增强生成 (RAG) 工作流中，既可以作为数据索引的一部分，也可以在后续检索时使用。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡](/oss/learn/) 下的 RAG 教程。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document using the demo [`MemoryVectorStore`](/oss/integrations/vectorstores/memory).
+下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用演示 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
-// Create a vector store with a sample text
+// 使用示例文本创建一个向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const text = "LangChain is the framework for building context-aware reasoning applications";
@@ -90,10 +90,10 @@ const vectorstore = await MemoryVectorStore.fromDocuments(
   embeddings,
 );
 
-// Use the vector store as a retriever that returns a single document
+// 将向量存储用作检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
-// Retrieve the most similar text
+// 检索最相似的文本
 const retrievedDocuments = await retriever.invoke("What is LangChain?");
 
 retrievedDocuments[0].pageContent;
@@ -103,15 +103,15 @@ retrievedDocuments[0].pageContent;
 LangChain is the framework for building context-aware reasoning applications
 ```
 
-## Direct Usage
+## 直接使用
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embedDocument(...)` and `embeddings.embedQuery(...)` to create embeddings for the text(s) used in `fromDocuments` and the retriever's `invoke` operations, respectively.
+在底层，向量存储和检索器的实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 使用的文本和检索器的 `invoke` 操作创建嵌入向量。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
-### Embed single texts
+### 嵌入单个文本
 
-You can embed queries for search with `embedQuery`. This generates a vector representation specific to the query:
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -158,9 +158,9 @@ console.log(singleVector.slice(0, 100));
 ]
 ```
 
-### Embed multiple texts
+### 嵌入多个文本
 
-You can embed multiple texts for indexing with `embedDocuments`. The internals used for this method may (but do not have to) differ from embedding queries:
+您可以使用 `embedDocuments` 嵌入要索引的多个文本。此方法中使用的内部机制可能（但不一定）与嵌入查询的方式不同：
 
 ```typescript
 const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
@@ -208,6 +208,9 @@ console.log(vectors[1].slice(0, 100));
    -0.022546149790287018,  0.0053468807600438595,   0.03879072889685631,
      0.03238753229379654
 ]
+```
+
+```output
 [
   -0.00007261172140715644,    0.03209814056754112,  -0.10099327564239502,
    -0.0017932605696842074, -0.0016863049240782857,  0.009428824298083782,
@@ -234,20 +237,4 @@ console.log(vectors[1].slice(0, 100));
      -0.05852395296096802,   0.020076945424079895, -0.033808667212724686,
     -0.008225022815167904,  -0.014589417725801468,  -0.01408824510872364,
      -0.06293410807847977,   0.026668129488825798,  -0.01397104375064373,
-    -0.017627086490392685,   -0.03409220278263092, -0.018559949472546577,
-      0.07163946330547333,   0.015611495822668076, -0.034166790544986725,
-    -0.005098687019199133,    0.04163505882024765, -0.010681619867682457,
-     0.027817489579319954,  -0.031076539307832718, -0.006825212389230728,
-     -0.06810358166694641,   -0.03793689236044884,  -0.03981738165020943,
-      0.09524374455213547,   -0.03607913851737976,  0.003638653317466378,
-      0.02828306518495083,   0.018808560445904732, -0.047244682908058167,
-     -0.06114668399095535,   -0.02395530976355076,  0.036157332360744476,
-       0.0422002375125885
-]
-```
-
----
-
-## API reference
-
-For detailed documentation of all `VertexAIEmbeddings` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html).
+    -0.017627086490392685,   -0.0340922027826309

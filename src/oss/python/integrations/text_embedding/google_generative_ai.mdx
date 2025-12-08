@@ -1,50 +1,50 @@
 ---
-title: Google Generative AI Embeddings (AI Studio & Gemini API)
+title: Google 生成式 AI 嵌入模型 (AI Studio 和 Gemini API)
 sidebarTitle: GoogleGenerativeAIEmbeddings
 ---
 
-Connect to Google's generative AI embeddings service using the `GoogleGenerativeAIEmbeddings` class, found in the [langchain-google-genai](https://pypi.org/project/langchain-google-genai/) package.
+使用 `langchain-google-genai` 包中提供的 `GoogleGenerativeAIEmbeddings` 类，可以连接到 Google 的生成式 AI 嵌入服务。
 
-This will help you get started with Google's Generative AI embedding models (like Gemini) using LangChain. For detailed documentation on `GoogleGenerativeAIEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/v0.2/api_reference/google_genai/embeddings/langchain_google_genai.embeddings.GoogleGenerativeAIEmbeddings.html).
+这将帮助您使用 LangChain 开始使用 Google 的生成式 AI 嵌入模型（如 Gemini）。有关 `GoogleGenerativeAIEmbeddings` 功能和配置选项的详细文档，请参阅[API 参考](https://python.langchain.com/v0.2/api_reference/google_genai/embeddings/langchain_google_genai.embeddings.GoogleGenerativeAIEmbeddings.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
 <ItemTable category="text_embedding" item="Google Gemini" />
 
-## Setup
+## 设置
 
-To access Google Generative AI embedding models you'll need to create a Google Cloud project, enable the Generative Language API, get an API key, and install the `langchain-google-genai` integration package.
+要访问 Google 生成式 AI 嵌入模型，您需要创建一个 Google Cloud 项目，启用 Generative Language API，获取一个 API 密钥，并安装 `langchain-google-genai` 集成包。
 
-### Credentials
+### 凭证
 
-To use Google Generative AI models, you must have an API key. You can create one in Google AI Studio. See the [Google documentation](https://ai.google.dev/gemini-api/docs/api-key) for instructions.
+要使用 Google 生成式 AI 模型，您必须拥有一个 API 密钥。您可以在 Google AI Studio 中创建一个。有关说明，请参阅[Google 文档](https://ai.google.dev/gemini-api/docs/api-key)。
 
-Once you have a key, set it as an environment variable `GOOGLE_API_KEY`:
+获取密钥后，将其设置为环境变量 `GOOGLE_API_KEY`：
 
 ```python
 import getpass
 import os
 
 if not os.getenv("GOOGLE_API_KEY"):
-    os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google API key: ")
+    os.environ["GOOGLE_API_KEY"] = getpass.getpass("输入您的 Google API 密钥: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用对您的模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
 ```
 
-## Installation
+## 安装
 
 ```python
 pip install -qU  langchain-google-genai
 ```
 
-## Usage
+## 用法
 
 ```python
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -62,9 +62,9 @@ vector[:5]
  0.0020742062479257584]
 ```
 
-## Batch
+## 批量处理
 
-You can also embed multiple strings at once for a processing speedup:
+您还可以一次嵌入多个字符串，以加快处理速度：
 
 ```python
 vectors = embeddings.embed_documents(
@@ -81,14 +81,14 @@ len(vectors), len(vectors[0])
 (3, 3072)
 ```
 
-## Indexing and Retrieval
+## 索引和检索
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our [RAG tutorials](/oss/langchain/rag).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document in the `InMemoryVectorStore`.
+下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在这个例子中，我们将使用 `InMemoryVectorStore` 索引和检索示例文档。
 
 ```python
-# Create a vector store with a sample text
+# 使用示例文本创建向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
 text = "LangChain is the framework for building context-aware reasoning applications"
@@ -98,13 +98,13 @@ vectorstore = InMemoryVectorStore.from_texts(
     embedding=embeddings,
 )
 
-# Use the vectorstore as a retriever
+# 使用向量存储作为检索器
 retriever = vectorstore.as_retriever()
 
-# Retrieve the most similar text
+# 检索最相似的文本
 retrieved_documents = retriever.invoke("What is LangChain?")
 
-# show the retrieved document's content
+# 显示检索到的文档内容
 retrieved_documents[0].page_content
 ```
 
@@ -112,17 +112,17 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## Task type
+## 任务类型 (Task type)
 
-`GoogleGenerativeAIEmbeddings` optionally support a `task_type`, which currently must be one of:
+`GoogleGenerativeAIEmbeddings` 可选地支持 `task_type` 参数，该参数目前必须是以下值之一：
 
-- `SEMANTIC_SIMILARITY`: Used to generate embeddings that are optimized to assess text similarity.
-- `CLASSIFICATION`: Used to generate embeddings that are optimized to classify texts according to preset labels.
-- `CLUSTERING`: Used to generate embeddings that are optimized to cluster texts based on their similarities.
-- `RETRIEVAL_DOCUMENT`, `RETRIEVAL_QUERY`, `QUESTION_ANSWERING`, and `FACT_VERIFICATION`: Used to generate embeddings that are optimized for document search or information retrieval.
-- `CODE_RETRIEVAL_QUERY`: Used to retrieve a code block based on a natural language query, such as sort an array or reverse a linked list. Embeddings of the code blocks are computed using `RETRIEVAL_DOCUMENT`.
+- `SEMANTIC_SIMILARITY`: 用于生成优化用于评估文本相似性的嵌入。
+- `CLASSIFICATION`: 用于生成优化用于根据预设标签对文本进行分类的嵌入。
+- `CLUSTERING`: 用于生成优化用于根据相似性对文本进行聚类的嵌入。
+- `RETRIEVAL_DOCUMENT`, `RETRIEVAL_QUERY`, `QUESTION_ANSWERING`, 和 `FACT_VERIFICATION`: 用于生成优化用于文档搜索或信息检索的嵌入。
+- `CODE_RETRIEVAL_QUERY`: 用于根据自然语言查询（例如排序数组或反转链表）检索代码块。代码块的嵌入是使用 `RETRIEVAL_DOCUMENT` 计算的。
 
-By default, we use `RETRIEVAL_DOCUMENT` in the `embed_documents` method and `RETRIEVAL_QUERY` in the `embed_query` method. If you provide a task type, we will use that for all methods.
+默认情况下，我们在 `embed_documents` 方法中使用 `RETRIEVAL_DOCUMENT`，在 `embed_query` 方法中使用 `RETRIEVAL_QUERY`。如果您提供了 `task_type`，我们将对所有方法使用该类型。
 
 ```python
 pip install -qU  matplotlib scikit-learn
@@ -161,13 +161,13 @@ Cosine similarity with query: 0.5438283285204146
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation on `GoogleGenerativeAIEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/google_genai/embeddings/langchain_google_genai.embeddings.GoogleGenerativeAIEmbeddings.html).
+有关 `GoogleGenerativeAIEmbeddings` 功能和配置选项的详细文档，请参阅[API 参考](https://python.langchain.com/api_reference/google_genai/embeddings/langchain_google_genai.embeddings.GoogleGenerativeAIEmbeddings.html)。
 
-## Additional Configuration
+## 附加配置
 
-You can pass the following parameters to ChatGoogleGenerativeAI in order to customize the SDK's behavior:
+您可以将以下参数传递给 `ChatGoogleGenerativeAI` 以自定义 SDK 的行为：
 
-- `client_options`: [Client Options](https://googleapis.dev/python/google-api-core/latest/client_options.html#module-google.api_core.client_options) to pass to the Google API Client, such as a custom `client_options["api_endpoint"]`
-- `transport`: The transport method to use, such as `rest`, `grpc`, or `grpc_asyncio`.
+- `client_options`: 要传递给 Google API 客户端的[客户端选项](https://googleapis.dev/python/google-api-core/latest/client_options.html#module-google.api_core.client_options)，例如自定义的 `client_options["api_endpoint"]`
+- `transport`: 要使用的传输方法，例如 `rest`、`grpc` 或 `grpc_asyncio`。

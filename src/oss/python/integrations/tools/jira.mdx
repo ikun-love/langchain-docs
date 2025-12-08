@@ -1,21 +1,21 @@
 ---
-title: Jira Toolkit
+title: Jira 工具包
 ---
 
-This notebook goes over how to use the `Jira` toolkit.
+本教程将介绍如何使用 `Jira` 工具包。
 
-The `Jira` toolkit allows agents to interact with a given Jira instance, performing actions such as searching for issues and creating issues, the tool wraps the atlassian-python-api library, for more see: [atlassian-python-api.readthedocs.io/jira.html](https://atlassian-python-api.readthedocs.io/jira.html)
+`Jira` 工具包允许智能体（Agent）与给定的 Jira 实例进行交互，执行诸如搜索问题单（issues）和创建问题单等操作。该工具封装了 `atlassian-python-api` 库，更多信息请参阅：[atlassian-python-api.readthedocs.io/jira.html](https://atlassian-python-api.readthedocs.io/jira.html)
 
-## Installation and setup
+## 安装与设置
 
-To use this tool, you must first set as environment variables:
-    JIRA_INSTANCE_URL,
-    JIRA_CLOUD
+要使用此工具，您必须首先将以下内容设置为环境变量：
+    `JIRA_INSTANCE_URL`,
+    `JIRA_CLOUD`
 
-You have the choice between two authentication methods:
+您可以在以下两种认证方法中进行选择：
 
-- API token authentication: set the JIRA_API_TOKEN (and JIRA_USERNAME if needed) environment variables
-- OAuth2.0 authentication: set the JIRA_OAUTH2 environment variable as a dict having as fields "client_id" and "token" which is a dict containing at least "access_token" and "token_type"
+- API 令牌认证：设置 `JIRA_API_TOKEN`（如果需要，也设置 `JIRA_USERNAME`）环境变量。
+- OAuth2.0 认证：设置 `JIRA_OAUTH2` 环境变量，它应该是一个包含 `client_id` 字段和一个 `token` 字典的字典，其中 `token` 字典至少包含 `access_token` 和 `token_type` 字段。
 
 ```python
 pip install -qU  atlassian-python-api
@@ -34,7 +34,7 @@ from langchain_community.utilities.jira import JiraAPIWrapper
 from langchain_openai import OpenAI
 ```
 
-For authentication with API token
+使用 API 令牌进行认证
 
 ```python
 os.environ["JIRA_API_TOKEN"] = "abc"
@@ -44,7 +44,7 @@ os.environ["OPENAI_API_KEY"] = "xyz"
 os.environ["JIRA_CLOUD"] = "True"
 ```
 
-For authentication with a Oauth2.0
+使用 OAuth2.0 进行认证
 
 ```python
 os.environ["JIRA_OAUTH2"] = (
@@ -61,9 +61,9 @@ jira = JiraAPIWrapper()
 toolkit = JiraToolkit.from_jira_api_wrapper(jira)
 ```
 
-## Tool usage
+## 工具使用
 
-Let's see what individual tools are in the Jira toolkit:
+让我们看看 Jira 工具包中包含哪些单独的工具：
 
 ```python
 [(tool.name, tool.description) for tool in toolkit.get_tools()]
@@ -71,15 +71,15 @@ Let's see what individual tools are in the Jira toolkit:
 
 ```output
 [('JQL Query',
-  '\n    This tool is a wrapper around atlassian-python-api\'s Jira jql API, useful when you need to search for Jira issues.\n    The input to this tool is a JQL query string, and will be passed into atlassian-python-api\'s Jira `jql` function,\n    For example, to find all the issues in project "Test" assigned to the me, you would pass in the following string:\n    project = Test AND assignee = currentUser()\n    or to find issues with summaries that contain the word "test", you would pass in the following string:\n    summary ~ \'test\'\n    '),
+  '\n    该工具是 `atlassian-python-api` 中 Jira jql API 的封装，当您需要搜索 Jira 问题单时非常有用。\n    输入该工具的是一个 JQL 查询字符串，它将被传递给 `atlassian-python-api` 的 Jira `jql` 函数。\n    例如，要查找项目 "Test" 中分配给“我”的所有问题单，您将传入以下字符串：\n    project = Test AND assignee = currentUser()\n    或者要查找摘要中包含单词 "test" 的问题单，您将传入以下字符串：\n    summary ~ \'test\'\n    '),
  ('Get Projects',
-  "\n    This tool is a wrapper around atlassian-python-api's Jira project API, \n    useful when you need to fetch all the projects the user has access to, find out how many projects there are, or as an intermediary step that involv searching by projects. \n    there is no input to this tool.\n    "),
+  "\n    该工具是 `atlassian-python-api` 中 Jira project API 的封装， \n    当您需要获取用户有权访问的所有项目、查询项目总数或作为按项目搜索的中间步骤时，它非常有用。 \n    该工具不需要输入。\n    "),
  ('Create Issue',
-  '\n    This tool is a wrapper around atlassian-python-api\'s Jira issue_create API, useful when you need to create a Jira issue. \n    The input to this tool is a dictionary specifying the fields of the Jira issue, and will be passed into atlassian-python-api\'s Jira `issue_create` function.\n    For example, to create a low priority task called "test issue" with description "test description", you would pass in the following dictionary: \n    {{"summary": "test issue", "description": "test description", "issuetype": {{"name": "Task"}}, "priority": {{"name": "Low"}}}}\n    '),
+  '\n    该工具是 `atlassian-python-api` 中 Jira issue_create API 的封装，当您需要创建 Jira 问题单时非常有用。 \n    输入该工具的是一个字典，用于指定 Jira 问题单的字段，它将被传递给 `atlassian-python-api` 的 Jira `issue_create` 函数。\n    例如，要创建一个优先级为“低”且标题为 "test issue"、描述为 "test description" 的任务，您将传入以下字典： \n    {{"summary": "test issue", "description": "test description", "issuetype": {{"name": "Task"}}, "priority": {{"name": "Low"}}}}\n    '),
  ('Catch all Jira API call',
-  '\n    This tool is a wrapper around atlassian-python-api\'s Jira API.\n    There are other dedicated tools for fetching all projects, and creating and searching for issues, \n    use this tool if you need to perform any other actions allowed by the atlassian-python-api Jira API.\n    The input to this tool is a dictionary specifying a function from atlassian-python-api\'s Jira API, \n    as well as a list of arguments and dictionary of keyword arguments to pass into the function.\n    For example, to get all the users in a group, while increasing the max number of results to 100, you would\n    pass in the following dictionary: {{"function": "get_all_users_from_group", "args": ["group"], "kwargs": {{"limit":100}} }}\n    or to find out how many projects are in the Jira instance, you would pass in the following string:\n    {{"function": "projects"}}\n    For more information on the Jira API, refer to https://atlassian-python-api.readthedocs.io/jira.html\n    '),
+  '\n    该工具是 `atlassian-python-api` 中 Jira API 的封装。\n    有其他专门用于获取所有项目、创建和搜索问题单的工具， \n    如果您需要执行 `atlassian-python-api` Jira API 允许的任何其他操作，请使用此工具。\n    输入该工具的是一个字典，用于指定 `atlassian-python-api` 中 Jira API 的一个函数， \n    以及要传递给该函数的参数列表和关键字参数字典。\n    例如，要获取群组中的所有用户，同时将最大结果数增加到 100，您将\n    传入以下字典： {{"function": "get_all_users_from_group", "args": ["group"], "kwargs": {{"limit":100}} }}\n    或者要查询 Jira 实例中有多少个项目，您将传入以下字符串：\n    {{"function": "projects"}}\n    有关 Jira API 的更多信息，请参阅 https://atlassian-python-api.readthedocs.io/jira.html\n    '),
  ('Create confluence page',
-  'This tool is a wrapper around atlassian-python-api\'s Confluence \natlassian-python-api API, useful when you need to create a Confluence page. The input to this tool is a dictionary \nspecifying the fields of the Confluence page, and will be passed into atlassian-python-api\'s Confluence `create_page` \nfunction. For example, to create a page in the DEMO space titled "This is the title" with body "This is the body. You can use \n<strong>HTML tags</strong>!", you would pass in the following dictionary: {{"space": "DEMO", "title":"This is the \ntitle","body":"This is the body. You can use <strong>HTML tags</strong>!"}} ')]
+  '该工具是 `atlassian-python-api` 中 Confluence API 的封装，当您需要创建 Confluence 页面时非常有用。输入该工具的是一个字典，用于指定 Confluence 页面的字段，它将被传递给 `atlassian-python-api` 的 Confluence `create_page` 函数。例如，要在 DEMO 空间中创建标题为 "This is the title"、内容为 "This is the body. You can use <strong>HTML tags</strong>!" 的页面，您将传入以下字典： {{"space": "DEMO", "title":"This is the \ntitle","body":"This is the body. You can use <strong>HTML tags</strong>!"}} ')]
 ```
 
 ```python
@@ -94,16 +94,16 @@ agent.run("make a new issue in project PW to remind me to make more fried rice")
 
 ```output
 > Entering new AgentExecutor chain...
- I need to create an issue in project PW
+ 我需要在项目 PW 中创建一个新的问题单
 Action: Create Issue
 Action Input: {"summary": "Make more fried rice", "description": "Reminder to make more fried rice", "issuetype": {"name": "Task"}, "priority": {"name": "Low"}, "project": {"key": "PW"}}
 Observation: None
-Thought: I now know the final answer
-Final Answer: A new issue has been created in project PW with the summary "Make more fried rice" and description "Reminder to make more fried rice".
+Thought: 我现在知道了最终答案
+Final Answer: 在项目 PW 中已创建了一个新问题单，标题为 "Make more fried rice"，描述为 "Reminder to make more fried rice"。
 
 > Finished chain.
 ```
 
 ```output
-'A new issue has been created in project PW with the summary "Make more fried rice" and description "Reminder to make more fried rice".'
+'在项目 PW 中已创建了一个新问题单，标题为 "Make more fried rice"，描述为 "Reminder to make more fried rice"。'
 ```

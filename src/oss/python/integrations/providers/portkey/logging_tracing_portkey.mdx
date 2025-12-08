@@ -1,12 +1,12 @@
 ---
-title: Log, Trace, and Monitor
+title: 日志记录、链路追踪和监控 (Log, Trace, and Monitor)
 ---
 
-When building apps or agents using LangChain, you end up making multiple API calls to fulfill a single user request. However, these requests are not chained when you want to analyse them. With [**Portkey**](/oss/integrations/providers/portkey/), all the embeddings, completions, and other requests from a single user request will get logged and traced to a common ID, enabling you to gain full visibility of user interactions.
+在使用 LangChain 构建应用程序或智能体（Agent）时，你需要进行多次 API 调用才能完成单个用户请求。然而，当你想要分析这些请求时，它们之间并没有建立起明确的关联链条。通过 [**Portkey**](/oss/integrations/providers/portkey/)，从单个用户请求发出的所有嵌入（embeddings）、补全（completions）和其他请求都将记录并追踪到一个共用的 ID 下，从而使你能够完全掌握用户的交互情况。
 
-This notebook serves as a step-by-step guide on how to log, trace, and monitor LangChain LLM calls using `Portkey` in your LangChain app.
+本指南将作为一步一步的说明，介绍如何在你使用 Portkey 的 LangChain 应用中，对 LangChain 的 LLM 调用进行日志记录、链路追踪和监控。
 
-First, let's import Portkey, OpenAI, and Agent tools
+首先，我们导入 Portkey、OpenAI 和 Agent 工具
 
 ```python
 import os
@@ -16,32 +16,32 @@ from langchain_openai import ChatOpenAI
 from portkey_ai import PORTKEY_GATEWAY_URL, createHeaders
 ```
 
-Paste your OpenAI API key below. [(You can find it here)](https://platform.openai.com/account/api-keys)
+请在下方粘贴你的 OpenAI API 密钥。[(你可以在这里找到它)](https://platform.openai.com/account/api-keys)
 
 ```python
 os.environ["OPENAI_API_KEY"] = "..."
 ```
 
-## Get Portkey API Key
+## 获取 Portkey API 密钥
 
-1. Sign up for [Portkey here](https://app.portkey.ai/signup)
-2. On your [dashboard](https://app.portkey.ai/), click on the profile icon on the bottom left, then click on "Copy API Key"
-3. Paste it below
-
-```python
-PORTKEY_API_KEY = "..."  # Paste your Portkey API Key here
-```
-
-## Set Trace ID
-
-1. Set the trace id for your request below
-2. The Trace ID can be common for all API calls originating from a single request
+1. [在此处](https://app.portkey.ai/signup) 注册 Portkey 账户。
+2. 在你的 [控制面板](https://app.portkey.ai/) 上，点击左下角的头像图标，然后点击 "Copy API Key" (复制 API 密钥)。
+3. 粘贴到下面
 
 ```python
-TRACE_ID = "uuid-trace-id"  # Set trace id here
+PORTKEY_API_KEY = "..."  # 在此处粘贴你的 Portkey API 密钥
 ```
 
-## Generate Portkey Headers
+## 设置追踪 ID (Trace ID)
+
+1. 在下面设置你请求的追踪 ID。
+2. 追踪 ID 可以是源自单个用户请求的所有 API 调用的**通用 ID**。
+
+```python
+TRACE_ID = "uuid-trace-id"  # 在此处设置追踪 ID
+```
+
+## 生成 Portkey 头部信息 (Headers)
 
 ```python
 portkey_headers = createHeaders(
@@ -49,7 +49,7 @@ portkey_headers = createHeaders(
 )
 ```
 
-Define the prompts and the tools to use
+定义要使用的提示词和工具
 
 ```python
 from langchain_classic import hub
@@ -60,56 +60,56 @@ prompt = hub.pull("hwchase17/openai-tools-agent")
 
 @tool
 def multiply(first_int: int, second_int: int) -> int:
-    """Multiply two integers together."""
+    """将两个整数相乘。"""
     return first_int * second_int
 
 
 @tool
 def exponentiate(base: int, exponent: int) -> int:
-    "Exponentiate the base to the exponent power."
+    "计算基数的指数幂。"
     return base**exponent
 
 
 tools = [multiply, exponentiate]
 ```
 
-Run your agent as usual. The **only** change is that we will **include the above headers** in the request now.
+像往常一样运行你的智能体。**唯一**的变化是，我们现在将在请求中**包含上述的头部信息**。
 
 ```python
 model = ChatOpenAI(
     base_url=PORTKEY_GATEWAY_URL, default_headers=portkey_headers, temperature=0
 )
 
-# Construct the OpenAI Tools agent
+# 构建 OpenAI 工具智能体
 agent = create_openai_tools_agent(model, tools, prompt)
 
-# Create an agent executor by passing in the agent and tools
+# 通过传入智能体和工具来创建一个智能体执行器 (AgentExecutor)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 agent_executor.invoke(
     {
-        "input": "Take 3 to the fifth power and multiply that by thirty six, then square the result"
+        "input": "将 3 的 5 次方计算出来，然后将结果乘以 36，最后再将最终结果平方"
     }
 )
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 进入新的 AgentExecutor 链条...
 
-Invoking: `exponentiate` with `{'base': 3, 'exponent': 5}`
+调用: `exponentiate` 参数为 `{'base': 3, 'exponent': 5}`
 
 
 243
-Invoking: `multiply` with `{'first_int': 243, 'second_int': 36}`
+调用: `multiply` 参数为 `{'first_int': 243, 'second_int': 36}`
 
 
 8748
-Invoking: `exponentiate` with `{'base': 8748, 'exponent': 2}`
+调用: `exponentiate` 参数为 `{'base': 8748, 'exponent': 2}`
 
 
-76527504The result of taking 3 to the fifth power, multiplying it by 36, and then squaring the result is 76,527,504.
+76527504将 3 的 5 次方、乘以 36、然后将结果平方的最终结果是 76,527,504。
 
-> Finished chain.
+> 链条完成。
 ```
 
 ```output
@@ -117,34 +117,34 @@ Invoking: `exponentiate` with `{'base': 8748, 'exponent': 2}`
  'output': 'The result of taking 3 to the fifth power, multiplying it by 36, and then squaring the result is 76,527,504.'}
 ```
 
-## How Logging & Tracing Works on Portkey
+## Portkey 上的日志记录与追踪工作原理
 
-**Logging**
+**日志记录 (Logging)**
 
-- Sending your request through Portkey ensures that all of the requests are logged by default
-- Each request log contains `timestamp`, `model name`, `total cost`, `request time`, `request json`, `response json`, and additional Portkey features
+- 通过 Portkey 发送请求可以确保所有请求默认情况下都被记录下来。
+- 每个请求日志包含 `timestamp` (时间戳)、`model name` (模型名称)、`total cost` (总成本)、`request time` (请求时间)、`request json` (请求 JSON)、`response json` (响应 JSON) 以及额外的 Portkey 功能。
 
-**[Tracing](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/traces)**
+**[链路追踪 (Tracing)](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/traces)**
 
-- Trace id is passed along with each request and is visible on the logs on Portkey dashboard
-- You can also set a **distinct trace id** for each request if you want
-- You can append user feedback to a trace id as well. [More info on this here](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/feedback)
+- 追踪 ID 会随每个请求一起传递，并且可以在 Portkey 控制面板的日志中可见。
+- 如果你希望为每个请求设置**不同的追踪 ID**，也是可以做到的。
+- 你也可以向追踪 ID 添加用户反馈。[更多信息请点击这里](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/feedback)。
 
-For the above request, you will be able to view the entire log trace like this
-![View LangChain traces on Portkey](https://assets.portkey.ai/docs/agent_tracing.gif)
+对于上述请求，你将能够以这种方式查看完整的日志追踪：
+![在 Portkey 上查看 LangChain 追踪](https://assets.portkey.ai/docs/agent_tracing.gif)
 
-## Advanced LLMOps Features - Caching, Tagging, Retries
+## 高级 LLMOps 功能 - 缓存、标签和重试
 
-In addition to logging and tracing, Portkey provides more features that add production capabilities to your existing workflows:
+除了日志记录和追踪之外，Portkey 还提供了更多功能，为你的现有工作流增加了生产级别的处理能力：
 
-**Caching**
+**缓存 (Caching)**
 
-Respond to previously served customers queries from cache instead of sending them again to OpenAI. Match exact strings OR semantically similar strings. Cache can save costs and reduce latencies by 20x. [Docs](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic)
+- 从缓存响应之前处理过的客户查询，而不是再次发送给 OpenAI。可以匹配精确字符串或语义上相似的字符串。缓存可以将成本节省高达 20 倍，并显著降低延迟。[文档](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic)
 
-**Retries**
+**重试 (Retries)**
 
-Automatically reprocess any unsuccessful API requests **`upto 5`** times. Uses an **`exponential backoff`** strategy, which spaces out retry attempts to prevent network overload. [Docs](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations)
+- 自动重新处理任何不成功的 API 请求，**最多 `5` 次**。使用**`指数退避 (exponential backoff)`** 策略，该策略会拉开重试尝试之间的间隔，以防止网络过载。[文档](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations)
 
-**Tagging**
+**标签 (Tagging)**
 
-Track and audit each user interaction in high detail with predefined tags. [Docs](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/metadata)
+- 使用预定义的标签，以高度详细的方式跟踪和审计每一次用户交互。[文档](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/metadata)

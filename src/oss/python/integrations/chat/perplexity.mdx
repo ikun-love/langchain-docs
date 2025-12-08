@@ -3,29 +3,29 @@ title: ChatPerplexity
 ---
 
 
-This page will help you get started with Perplexity [chat models](/oss/langchain/models). For detailed documentation of all `ChatPerplexity` features and configurations head to the [API reference](https://python.langchain.com/api_reference/perplexity/chat_models/langchain_perplexity.chat_models.ChatPerplexity.html).
+本页面将帮助您开始使用 Perplexity 的 [chat 模型](/oss/langchain/models)。如需了解所有 `ChatPerplexity` 功能和配置的详细文档，请参阅 [API 参考文档](https://python.langchain.com/api_reference/perplexity/chat_models/langchain_perplexity.chat_models.ChatPerplexity.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support](https://js.langchain.com/docs/integrations/chat/xai) | Downloads | Version |
+| 类名 | 包 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/chat/xai) | 下载量 | 版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | [ChatPerplexity](https://python.langchain.com/api_reference/perplexity/chat_models/langchain_perplexity.chat_models.ChatPerplexity.html) | [langchain-perplexity](https://python.langchain.com/api_reference/perplexity/perplexity.html) | ❌ | beta | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-perplexity?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-perplexity?style=flat-square&label=%20) |
 
-### Model features
+### 模型特性
 
-| [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output) | JSON mode | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming#llm-tokens) | Native async | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming#llm-tokens) | 原生异步 | [Token 使用量](/oss/langchain/models#token-usage) | [对数概率](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
 
-## Setup
+## 设置
 
-To access Perplexity models you'll need to create a Perplexity account, get an API key, and install the `langchain-perplexity` integration package.
+要访问 Perplexity 模型，您需要创建一个 Perplexity 账户，获取一个 API 密钥，并安装 `langchain-perplexity` 集成包。
 
-### Credentials
+### 凭证
 
-Head to [this page](https://www.perplexity.ai/) to sign up for Perplexity and generate an API key. Once you've done this set the `PPLX_API_KEY` environment variable:
+请访问 [此页面](https://www.perplexity.ai/) 注册 Perplexity 并生成 API 密钥。完成此操作后，设置 `PPLX_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -35,7 +35,7 @@ if "PPLX_API_KEY" not in os.environ:
     os.environ["PPLX_API_KEY"] = getpass.getpass("Enter your Perplexity API key: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -47,13 +47,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_perplexity import ChatPerplexity
 ```
 
-The code provided assumes that your PPLX_API_KEY is set in your environment variables. If you would like to manually specify your API key and also choose a different model, you can use the following code:
+提供的代码假设您的 PPLX_API_KEY 已在您的环境中设置。如果您想手动指定 API 密钥并选择不同的模型，可以使用以下代码：
 
 ```python
 chat = ChatPerplexity(temperature=0, pplx_api_key="YOUR_API_KEY", model="sonar")
 ```
 
-You can check a list of available models [here](https://docs.perplexity.ai/docs/model-cards). For reproducibility, we can set the API key dynamically by taking it as an input in this notebook.
+您可以在 [此处](https://docs.perplexity.ai/docs/model-cards) 查看可用模型的列表。为了保证结果的可复现性，我们可以通过接收笔记本中的输入来动态设置 API 密钥。
 
 ```python
 chat = ChatPerplexity(temperature=0, model="sonar")
@@ -73,7 +73,7 @@ response.content
 'The Higgs Boson is an elementary subatomic particle that plays a crucial role in the Standard Model of particle physics, which accounts for three of the four fundamental forces governing the behavior of our universe: the strong and weak nuclear forces, electromagnetism, and gravity. The Higgs Boson is important for several reasons:\n\n1. **Final Elementary Particle**: The Higgs Boson is the last elementary particle waiting to be discovered under the Standard Model. Its detection helps complete the Standard Model and further our understanding of the fundamental forces in the universe.\n\n2. **Mass Generation**: The Higgs Boson is responsible for giving mass to other particles, a process that occurs through its interaction with the Higgs field. This mass generation is essential for the formation of atoms, molecules, and the visible matter we observe in the universe.\n\n3. **Implications for New Physics**: While the detection of the Higgs Boson has confirmed many aspects of the Standard Model, it also opens up new possibilities for discoveries beyond the Standard Model. Further research on the Higgs Boson could reveal insights into the nature of dark matter, supersymmetry, and other exotic phenomena.\n\n4. **Advancements in Technology**: The search for the Higgs Boson has led to significant advancements in technology, such as the development of artificial intelligence and machine learning algorithms used in particle accelerators like the Large Hadron Collider (LHC). These advancements have not only contributed to the discovery of the Higgs Boson but also have potential applications in various other fields.\n\nIn summary, the Higgs Boson is important because it completes the Standard Model, plays a crucial role in mass generation, hints at new physics phenomena beyond the Standard Model, and drives advancements in technology.\n'
 ```
 
-You can format and structure the prompts like you would typically. In the following example, we ask the model to tell us a joke about cats.
+您可以像通常那样格式化和构造提示。在下面的示例中，我们要求模型讲一个关于猫的笑话。
 
 ```python
 chat = ChatPerplexity(temperature=0, model="sonar")
@@ -87,9 +87,9 @@ response.content
 'Here\'s a joke about cats:\n\nWhy did the cat want math lessons from a mermaid?\n\nBecause it couldn\'t find its "core purpose" in life!\n\nRemember, cats are unique and fascinating creatures, and each one has its own special traits and abilities. While some may see them as mysterious or even a bit aloof, they are still beloved pets that bring joy and companionship to their owners. So, if your cat ever seeks guidance from a mermaid, just remember that they are on their own journey to self-discovery!\n'
 ```
 
-## Using Perplexity-specific parameters through `ChatPerplexity`
+## 通过 `ChatPerplexity` 使用特定于 Perplexity 的参数
 
-You can also use Perplexity-specific parameters through the ChatPerplexity class. For example, parameters like search_domain_filter, return_images, return_related_questions or search_recency_filter using the extra_body parameter as shown below:
+您还可以通过 `ChatPerplexity` 类使用特定于 Perplexity 的参数。例如，像 `search_domain_filter`、`return_images`、`return_related_questions` 或 `search_recency_filter` 这样的参数可以使用 `extra_body` 参数来实现，如下所示：
 
 ```python
 chat = ChatPerplexity(temperature=0.7, model="sonar")
@@ -103,11 +103,10 @@ response.content
 "Sure, here's a cat joke for you:\n\nWhy are cats bad storytellers?\n\nBecause they only have one tale. (Pun alert!)\n\nSource: OneLineFun.com [4]"
 ```
 
-### Accessing the search results metadata
+### 访问搜索结果元数据
 
-Perplexity often provides a list of the web pages it consulted (“search_results”).
-You don't need to pass any special parameter — the list is placed in
-`response.additional_kwargs["search_results"]`.
+Perplexity 通常会提供它所参考的网页列表（“search\_results”）。
+您无需传递任何特殊的参数——该列表位于 `response.additional_kwargs["search_results"]` 中。
 
 ```python
 chat = ChatPerplexity(temperature=0, model="sonar")
@@ -116,10 +115,10 @@ response = chat.invoke(
     "What is the tallest mountain in South America?",
 )
 
-# Main answer
+# 主要答案
 print(response.content)
 
-# First two supporting search results
+# 前两条支持性搜索结果
 response.additional_kwargs["search_results"][:2]
 ```
 
@@ -140,7 +139,7 @@ In summary, Aconcagua stands as the tallest mountain in South America at about 6
   'date': '2023-07-05'}]
 ```
 
-## `ChatPerplexity` also supports streaming functionality
+## `ChatPerplexity` 也支持流式传输功能
 
 ```python
 chat = ChatPerplexity(temperature=0.7, model="sonar")
@@ -166,7 +165,7 @@ Here is a list of some famous tourist attractions in Pakistan:
 These attractions showcase the rich history, diverse culture, and natural beauty of Pakistan, making them popular destinations for both local and international tourists.
 ```
 
-## `ChatPerplexity` Supports Structured Outputs for Tier 3+ Users
+## `ChatPerplexity` 为 Tier 3+ 用户支持结构化输出
 
 ```python
 from pydantic import BaseModel

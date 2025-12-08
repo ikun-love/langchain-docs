@@ -1,18 +1,19 @@
+```markdown
 ---
 title: SageMaker
 ---
 
-Let's load the `SageMaker Endpoints Embeddings` class. The class can be used if you host, e.g. your own Hugging Face model on SageMaker.
+我们来加载 `SageMaker Endpoints Embeddings` 类。如果你在 SageMaker 上部署（例如）自己的 Hugging Face 模型，就可以使用这个类。
 
-For instructions on how to do this, please see [here](https://www.philschmid.de/custom-inference-huggingface-sagemaker).
+关于如何部署模型的说明，请参阅 [这里](https://www.philschmid.de/custom-inference-huggingface-sagemaker)。
 
-**Note**: In order to handle batched requests, you will need to adjust the return line in the `predict_fn()` function within the custom `inference.py` script:
+**注意**：为了处理批量请求（batched requests），你需要修改自定义 `inference.py` 脚本中 `predict_fn()` 函数的返回语句：
 
-Change from
+从
 
 `return {"vectors": sentence_embeddings[0].tolist()}`
 
-to:
+修改为：
 
 `return {"vectors": sentence_embeddings.tolist()}`.
 
@@ -34,30 +35,29 @@ class ContentHandler(EmbeddingsContentHandler):
 
     def transform_input(self, inputs: list[str], model_kwargs: Dict) -> bytes:
         """
-        Transforms the input into bytes that can be consumed by SageMaker endpoint.
+        将输入转换为 SageMaker 端点可以消费的 bytes 格式。
         Args:
-            inputs: List of input strings.
-            model_kwargs: Additional keyword arguments to be passed to the endpoint.
+            inputs: 输入字符串列表。
+            model_kwargs: 要传递给端点的额外关键字参数。
         Returns:
-            The transformed bytes input.
+            转换后的 bytes 输入。
         """
-        # Example: inference.py expects a JSON string with a "inputs" key:
+        # 示例：inference.py 期望一个包含 "inputs" 键的 JSON 字符串：
         input_str = json.dumps({"inputs": inputs, **model_kwargs})
         return input_str.encode("utf-8")
 
     def transform_output(self, output: bytes) -> List[List[float]]:
         """
-        Transforms the bytes output from the endpoint into a list of embeddings.
+        将端点返回的 bytes 输出转换为嵌入向量列表。
         Args:
-            output: The bytes output from SageMaker endpoint.
+            output: 来自 SageMaker 端点的 bytes 输出。
         Returns:
-            The transformed output - list of embeddings
-        Note:
-            The length of the outer list is the number of input strings.
-            The length of the inner lists is the embedding dimension.
+            转换后的输出 - 嵌入向量列表
+        注意:
+            外部列表的长度是输入字符串的数量。
+            内部列表的长度是嵌入维度。
         """
-        # Example: inference.py returns a JSON string with the list of
-        # embeddings in a "vectors" key:
+        # 示例：inference.py 返回一个 JSON 字符串，其中 "vectors" 键包含嵌入向量列表：
         response_json = json.loads(output.read().decode("utf-8"))
         return response_json["vectors"]
 
@@ -96,6 +96,6 @@ doc_results = embeddings.embed_documents(["foo"])
 doc_results
 ```
 
-```python
+```
 
 ```

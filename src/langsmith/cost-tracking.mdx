@@ -1,132 +1,132 @@
+```markdown
 ---
-title: Cost tracking
-sidebarTitle: Cost tracking
+title: 成本跟踪
+sidebarTitle: 成本跟踪
 ---
 
-Building agents at scale introduces non-trivial, usage-based costs that can be difficult to track. LangSmith automatically records LLM token usage and costs for major providers, and also allows you to submit custom cost data for any additional components.
+以大规模构建 Agent 会带来难以追踪的、基于使用量的非必要成本。LangSmith 会自动记录主要提供商的 LLM Token 使用情况和成本，同时也允许您为任何附加组件提交自定义成本数据。
 
-This gives you a single, unified view of costs across your entire application, which makes it easy to monitor, understand, and debug your spend.
+这为您提供了跨整个应用程序的统一成本视图，便于监控、理解和调试支出情况。
 
-This guide covers:
-- [Viewing costs in the LangSmith UI](#viewing-costs-in-the-langsmith-ui)
-- [How cost tracking works](#cost-tracking)
-- [How to send custom cost data](#send-custom-cost-data)
+本指南涵盖：
+- [在 LangSmith UI 中查看成本](#viewing-costs-in-the-langsmith-ui)
+- [成本跟踪的工作原理](#cost-tracking)
+- [如何发送自定义成本数据](#send-custom-cost-data)
 
 
-## Viewing costs in the LangSmith UI
-In the [LangSmith UI](https://smith.langchain.com), you can explore usage and spend in three main ways: first by understanding how tokens and costs are broken down, then by viewing those details within individual traces, and finally by inspecting aggregated metrics in project stats and dashboards.
+## 在 LangSmith UI 中查看成本
+在 [LangSmith UI](https://smith.langchain.com) 中，您可以通过三种主要方式来探索使用情况和支出：首先是了解 Token 和成本是如何分解的，然后在单个追踪（trace）中查看这些详细信息，最后是通过检查项目统计数据和仪表板中的聚合指标。
 
-### Token and cost breakdowns
+### Token 和成本分解
+Token 使用量和成本被细分为三个类别：
+- **Input (输入)**：发送给模型的 Prompt 中的 Token。子类型包括：缓存读取（cache reads）、文本 Token、图像 Token 等。
+- **Output (输出)**：模型响应中生成的 Token。子类型包括：推理 Token（reasoning tokens）、文本 Token、图像 Token 等。
+- **Other (其他)**：来自工具调用、检索步骤或任何自定义运行（run）的成本。
 
-Token usage and costs are broken down into three categories:
-- **Input**: Tokens in the prompt sent to the model. Subtypes include: cache reads, text tokens, image tokens, etc
-- **Output**: Tokens generated in the response from the model. Subtypes include: reasoning tokens, text tokens, image tokens, etc
-- **Other**: Costs from tool calls, retrieval steps or any custom runs.
-
-You can view detailed breakdowns by hovering over cost sections in the UI. When available, each section is further categorized by subtype.
+您可以通过将鼠标悬停在 UI 中的成本部分来查看详细的分解情况。在可用时，每个部分会进一步按子类型分类。
 
 <img
   className="block dark:hidden"
   src="/langsmith/images/cost-tooltip-light.png"
-  alt="Cost tooltip"
+  alt="成本工具提示"
 />
 <img
   className="hidden dark:block"
   src="/langsmith/images/cost-tooltip-dark.png"
-  alt="Cost tooltip"
+  alt="成本工具提示"
 />
 
-You can inspect these breakdowns throughout the LangSmith UI, described in the following section.
+您可以在整个 LangSmith UI 中检查这些分解，具体内容在下一节中描述。
 
-### Where to view token and cost breakdowns
+### 在哪里查看 Token 和成本分解
 <AccordionGroup>
-  <Accordion title="In the trace tree">
-    The trace tree shows the most detailed view of token usage and cost (for a single trace).  It displays the total usage for the entire trace, aggregated values for each parent run and token and cost breakdowns for each child run.
+  <Accordion title="在追踪树中 (In the trace tree)">
+    追踪树显示了 Token 使用量和成本最详细的视图（针对单个追踪）。它显示了整个追踪的总使用量，每个父级运行的聚合值，以及每个子级运行的 Token 和成本分解。
 
-    Open any run inside a tracing project to view its trace tree.
+    打开追踪项目中的任何运行即可查看其追踪树。
     <img
     className="block dark:hidden"
     src="/langsmith/images/trace-tree-costs-light.png"
-    alt="Cost tooltip"
+    alt="成本工具提示"
     />
     <img
     className="hidden dark:block"
     src="/langsmith/images/trace-tree-costs-dark.png"
-    alt="Cost tooltip"
+    alt="成本工具提示"
     />
   </Accordion>
 
-  <Accordion title="In project stats">
-  The project stats panel shows the total token usage and cost for all traces in a project.
+  <Accordion title="在项目统计中 (In project stats)">
+  项目统计面板显示了项目中所有追踪的总 Token 使用量和成本。
     <img
         className="block dark:hidden"
         src="/langsmith/images/stats-pane-cost-tracking-light.png"
-        alt="Cost tracking chart"
+        alt="成本跟踪图表"
         />
     <img
         className="hidden dark:block"
         src="/langsmith/images/stats-pane-cost-tracking-dark.png"
-        alt="Cost tracking chart"
+        alt="成本跟踪图表"
         />
   </Accordion>
 
-  <Accordion title="In dashboards">
-    Dashboards help you explore cost and token usage trends over time. The [prebuilt dashboard](/langsmith/dashboards/#prebuilt-dashboards) for a tracing project shows total costs and a cost breakdown by input and output tokens.
+  <Accordion title="在仪表板中 (In dashboards)">
+    仪表板可帮助您随着时间推移探索成本和 Token 使用趋势。追踪项目的[预构建仪表板](/langsmith/dashboards/#prebuilt-dashboards)显示了总成本以及按输入和输出 Token 分割的成本细目。
 
-    You may also configure custom cost tracking charts in [custom dashboards](https://docs.langchain.com/langsmith/dashboards#custom-dashboards).
+    您也可以在[自定义仪表板](https://docs.langchain.com/langsmith/dashboards#custom-dashboards)中配置自定义成本跟踪图表。
 
         <img
         className="block dark:hidden"
         src="/langsmith/images/cost-tracking-chart-light.png"
-        alt="Cost tracking chart"
+        alt="成本跟踪图表"
         />
         <img
         className="hidden dark:block"
         src="/langsmith/images/cost-tracking-chart-dark.png"
-        alt="Cost tracking chart"
+        alt="成本跟踪图表"
         />
 
   </Accordion>
 </AccordionGroup>
 
 
-## Cost tracking
+## 成本跟踪
 
-You can track costs in two ways:
+您可以通过两种方式跟踪成本：
 
-1. Costs for LLM calls can be **automatically derived from token counts and model prices**
-2. Cost for LLM calls or any other run type can be **manually specified as part of the run data**
+1. LLM 调用的成本可以**根据 Token 计数和模型价格自动推导**
+2. LLM 调用或任何其他运行类型的成本可以**作为运行数据的一部分手动指定**
 
-The approach you use will depend on on what you're tracking and how your model pricing is structured:
+您使用的方法取决于您正在跟踪的内容以及模型的定价结构：
 
 
-| Method | Run type: LLM | Run type: Other |
+| 方法 | 运行类型: LLM | 运行类型: 其他 |
 |--------|---------------|-----------------|
-| **Automatically** | <ul><li>Calling LLMs with [LangChain](/oss/langchain/overview)</li><li>Tracing LLM calls to OpenAI, Anthropic or models that follow an OpenAI-compliant format with `@traceable`</li><li> Using LangSmith wrappers for [OpenAI](/langsmith/trace-openai) or [Anthropic](/langsmith/trace-anthropic)</li><li>For other model providers, read the [token and cost information guide](/langsmith/log-llm-trace#provide-token-and-cost-information)</li></ul> | Not applicable. |
-| **Manually** | If LLM call costs are non-linear (eg. follow a custom cost function) | Send costs for any run types, e.g. tool calls, retrieval steps |
+| **自动** | <ul><li>使用 [LangChain](/oss/langchain/overview) 调用 LLM</li><li>追踪到 OpenAI、Anthropic 或遵循 OpenAI 兼容格式的模型调用，并使用 `@traceable`</li><li>使用 LangSmith 包装器来处理 [OpenAI](/langsmith/trace-openai) 或 [Anthropic](/langsmith/trace-anthropic)</li><li>对于其他模型提供商，请阅读[Token 和成本信息指南](/langsmith/log-llm-trace#provide-token-and-cost-information)</li></ul> | 不适用。 |
+| **手动** | 如果 LLM 调用的成本是非线性的（例如，遵循自定义成本函数） | 为任何运行类型发送成本，例如工具调用、检索步骤 |
 
 
-### LLM calls: Automatically track costs based on token counts
+### LLM 调用：根据 Token 计数自动跟踪成本
 
-To compute cost automatically from token usage, you need to provide **token counts**, the **model and provider** and the **model price**.
+要根据 Token 使用量自动计算成本，您需要提供**Token 计数**、**模型和提供商**以及**模型价格**。
 
 <Note>
 
-Follow the instructions below if you’re using model providers whose responses don’t follow the same patterns as one of OpenAI or Anthropic.
+如果您使用的模型提供商的响应与 OpenAI 或 Anthropic 的响应模式不同，请遵循以下说明。
 
-These steps are **only required** if you are *not*:
--  Calling LLMs with [LangChain](/oss/langchain/overview)
-- Using `@traceable` to trace LLM calls to OpenAI, Anthropic or models that follow an OpenAI-compliant format
-- Using LangSmith wrappers for [OpenAI](/langsmith/trace-openai) or [Anthropic](/langsmith/trace-anthropic).
+**只有**当您**不满足**以下条件时，才需要执行这些步骤：
+- 使用 [LangChain](/oss/langchain/overview) 调用 LLM
+- 使用 `@traceable` 来追踪到 OpenAI、Anthropic 或遵循 OpenAI 兼容格式的模型调用
+- 使用 LangSmith 包装器来处理 [OpenAI](/langsmith/trace-openai) 或 [Anthropic](/langsmith/trace-anthropic)。
 </Note>
 
-**1. Send token counts**
+**1. 发送 Token 计数**
 
-Many models include token counts as part of the response. You must extract this information and include it in your run using one of the following methods:
+许多模型都在响应中包含了 Token 计数。您必须提取此信息，并通过以下方法之一将其包含在您的运行中：
 
-<Accordion title="A. Set a `usage_metadata` field on the run’s metadata">
+<Accordion title="A. 在运行的元数据中设置 `usage_metadata` 字段">
 
-Set a `usage_metadata` field on the run's metadata. The advantage of this approach is that you do not need to change your traced function’s runtime outputs
+在运行的元数据中设置 `usage_metadata` 字段。这种方法的优点是您无需更改被追踪函数的运行时输出。
 
 <CodeGroup>
 
@@ -143,13 +143,13 @@ inputs = [
     metadata={"ls_provider": "my_provider", "ls_model_name": "my_model"}
 )
 def chat_model(messages: list):
-    # Imagine this is the real model output format your application expects
+    # 想象这是您的应用程序期望的真实模型输出格式
     assistant_message = {
         "role": "assistant",
         "content": "Sure, what time would you like to book the table for?"
     }
 
-    # Token usage you compute or receive from the provider
+    # 您计算或从提供商处收到的 Token 使用量
     token_usage = {
         "input_tokens": 27,
         "output_tokens": 13,
@@ -157,7 +157,7 @@ def chat_model(messages: list):
         "input_token_details": {"cache_read": 10}
     }
 
-    # Attach token usage to the LangSmith run
+    # 将 Token 使用量附加到 LangSmith 运行中
     run = get_current_run_tree()
     run.set(usage_metadata=token_usage)
 
@@ -176,13 +176,13 @@ const inputs = [
 
 const chatModel = traceable(
   async ({ messages }) => {
-    // The output your application expects
+    // 您的应用程序期望的输出
     const assistantMessage = {
       role: "assistant",
       content: "Sure, what time would you like to book the table for?",
     };
 
-    // Token usage you compute or receive from the provider
+    // 您计算或从提供商处收到的 Token 使用量
     const tokenUsage = {
       input_tokens: 27,
       output_tokens: 13,
@@ -190,7 +190,7 @@ const chatModel = traceable(
       input_token_details: { cache_read: 10 },
     };
 
-    // Attach usage to the LangSmith run
+    // 将使用量附加到 LangSmith 运行中
     const runTree = getCurrentRunTree();
     runTree.metadata.usage_metadata = tokenUsage;
 
@@ -212,8 +212,8 @@ await chatModel({ messages: inputs });
 </CodeGroup>
 </Accordion >
 
-<Accordion title="B. Return a `usage_metadata` field in your traced function's outputs.">
-Include the `usage_metadata` key directly within the object returned by your traced function. LangSmith will extract it from the output.
+<Accordion title="B. 在被追踪函数的输出中返回 `usage_metadata` 字段。">
+将 `usage_metadata` 键直接包含在被追踪函数返回的对象内。LangSmith 将会从输出中提取它。
 
 <CodeGroup>
 
@@ -299,60 +299,60 @@ await chatModel({ messages });
 
 </Accordion>
 
-In either case, the usage metadata should contain a subset of the following LangSmith-recognized fields:
+在任一情况下，使用情况元数据应包含以下 LangSmith 识别字段的子集：
 
-<Accordion title="Usage Metadata Schema and Cost Calculation">
+<Accordion title="使用情况元数据 Schema 和成本计算">
 
-The following fields in the `usage_metadata` dict are recognized by LangSmith. You can view the full [Python types](https://github.com/langchain-ai/langsmith-sdk/blob/e705fbd362be69dd70229f94bc09651ef8056a61/python/langsmith/schemas.py#L1196-L1227) or [TypeScript interfaces](https://github.com/langchain-ai/langsmith-sdk/blob/e705fbd362be69dd70229f94bc09651ef8056a61/js/src/schemas.ts#L637-L689) directly.
+`usage_metadata` 字典中的以下字段被 LangSmith 识别。您可以直接查看完整的 [Python 类型](https://github.com/langchain-ai/langsmith-sdk/blob/e705fbd362be69dd70229f94bc09651ef8056a61/python/langsmith/schemas.py#L1196-L1227) 或 [TypeScript 接口](https://github.com/langchain-ai/langsmith-sdk/blob/e705fbd362be69dd70229f94bc09651ef8056a61/js/src/schemas.ts#L637-L689)。
 
 
 <ParamField path="input_tokens" type="number">
-Number of tokens used in the model input. Sum of all input token types.
+模型输入中使用的 Token 数量。所有输入 Token 类型的总和。
 </ParamField>
 
 <ParamField path="output_tokens" type="number">
-Number of tokens used in the model response. Sum of all output token types.
+模型响应中使用的 Token 数量。所有输出 Token 类型的总和。
 </ParamField>
 
 <ParamField path="total_tokens" type="number">
-Number of tokens used in the input and output. Optional, can be inferred. Sum of input_tokens + output_tokens.
+输入和输出中使用的 Token 总数。可选，可以推断。 input_tokens + output_tokens 的总和。
 </ParamField>
 
 <ParamField path="input_token_details" type="object">
-Breakdown of input token types. Keys are token-type strings, values are counts. Example `{"cache_read": 5}`.
+输入 Token 类型的分解。键是 Token 类型字符串，值是计数。例如 `{"cache_read": 5}`。
 
-Known fields include: `audio`, `text`, `image`, `cache_read`, `cache_creation`. Additional fields are possible depending on the model or provider.
+已知字段包括：`audio`（音频）、`text`（文本）、`image`（图像）、`cache_read`（缓存读取）、`cache_creation`（缓存创建）。根据模型或提供商，可能存在其他字段。
 </ParamField>
 
 <ParamField path="output_token_details" type="object">
-Breakdown of output token types. Keys are token-type strings, values are counts. Example `{"reasoning": 5}`.
+输出 Token 类型的分解。键是 Token 类型字符串，值是计数。例如 `{"reasoning": 5}`。
 
-Known fields include: `audio`, `text`, `image`, `reasoning`. Additional fields are possible depending on the model or provider.
+已知字段包括：`audio`（音频）、`text`（文本）、`image`（图像）、`reasoning`（推理）。根据模型或提供商，可能存在其他字段。
 </ParamField>
 
 <ParamField path="input_cost" type="number">
-Cost of the input tokens.
+输入 Token 的成本。
 </ParamField>
 
 <ParamField path="output_cost" type="number">
-Cost of the output tokens.
+输出 Token 的成本。
 </ParamField>
 
 <ParamField path="total_cost" type="number">
-Cost of the tokens. Optional, can be inferred.  Sum of input_cost + output_cost.
+Token 的总成本。可选，可以推断。 input_cost + output_cost 的总和。
 </ParamField>
 
 <ParamField path="input_cost_details" type="object">
-Details of the input cost. Keys are token-type strings, values are cost amounts.
+输入成本的详细信息。键是 Token 类型字符串，值是成本金额。
 </ParamField>
 
 <ParamField path="output_cost_details" type="object">
-Details of the output cost. Keys are token-type strings, values are cost amounts.
+输出成本的详细信息。键是 Token 类型字符串，值是成本金额。
 </ParamField>
 
-**Cost Calculations**
+**成本计算**
 
-The cost for a run is computed greedily from most-to-least specific token type. Suppose you set a price of \$2 per 1M input tokens with a detailed price of \$1 per 1M `cache_read` input tokens, and \$3 per 1M output tokens. If you uploaded the following usage metadata:
+一个运行的成本是根据 Token 类型的特异性从最具体到最不具体的顺序贪婪计算的。假设您为 1M 输入 Token 设置的价格是 $2，为 1M `cache_read` 输入 Token 设置的详细价格是 $1，为 1M 输出 Token 设置的价格是 $3。如果您上传了以下使用情况元数据：
 
 ```python
 {
@@ -363,11 +363,11 @@ The cost for a run is computed greedily from most-to-least specific token type. 
 }
 ```
 
-Then, the token costs would be computed as follows:
+那么 Token 成本将按如下方式计算：
 
 ```python
-# Notice that LangSmith computes the cache_read cost and then for any
-# remaining input_tokens, the default input price is applied.
+# 请注意，LangSmith 会计算 cache_read 的成本，然后对任何
+# 剩余的 input_tokens 应用默认的输入价格。
 input_cost = 5 * 1e-6 + (20 - 5) * 2e-6  # 3.5e-5
 output_cost = 10 * 3e-6  # 3e-5
 total_cost = input_cost + output_cost  # 6.5e-5
@@ -376,75 +376,75 @@ total_cost = input_cost + output_cost  # 6.5e-5
 </Accordion>
 
 
-**2. Specify model name**
+**2. 指定模型名称**
 
-When using a custom model, the following fields need to be specified in a [run's metadata](/langsmith/add-metadata-tags) in order to associate token counts with costs. It's also helpful to provide these metadata fields to identify the model when viewing traces and when filtering.
+在使用自定义模型时，需要在[运行的元数据](/langsmith/add-metadata-tags)中指定以下字段，以便将 Token 计数与成本相关联。提供这些元数据字段也有助于在查看追踪和筛选时识别模型。
 
-- `ls_provider`: The provider of the model, e.g., “openai”, “anthropic”
-- `ls_model_name`: The name of the model, e.g., “gpt-4o-mini”, “claude-3-opus-20240229”
+- `ls_provider`: 模型的提供商，例如“openai”、“anthropic”。
+- `ls_model_name`: 模型的名称，例如“gpt-4o-mini”、“claude-3-opus-20240229”。
 
 
-**3. Set model prices**
+**3. 设置模型价格**
 
-A model pricing map is used to map model names to their per-token prices to compute costs from token counts. LangSmith's [model pricing table](https://smith.langchain.com/settings/workspaces/models) is used for this.
+模型定价映射（model pricing map）用于将模型名称映射到其逐 Token 价格，以便根据 Token 计数计算成本。LangSmith 的[模型定价表](https://smith.langchain.com/settings/workspaces/models)用于此目的。
 
 <Note>
-The table comes with pricing information for most OpenAI, Anthropic, and Gemini models. You can [add prices for other models](/langsmith/cost-tracking#create-a-new-model-price-entry), or [overwrite pricing for default models](/langsmith/cost-tracking#update-an-existing-model-price-entry) if you have custom pricing.
+该表预设了大多数 OpenAI、Anthropic 和 Gemini 模型的定价信息。如果您有自定义定价，可以[为其他模型添加价格](/langsmith/cost-tracking#create-a-new-model-price-entry)，或[覆盖默认模型的定价](/langsmith/cost-tracking#update-an-existing-model-price-entry)。
 </Note>
 
-For models that have different pricing for different token types (e.g., multimodal or cached tokens), you can specify a breakdown of prices for each token type. Hovering over the `...` next to the input/output prices shows you the price breakdown by token type.
+对于为不同 Token 类型（例如多模态或缓存 Token）具有不同定价的模型，您可以为每种 Token 类型指定价格明细。将鼠标悬停在输入/输出价格旁边的 `...` 上，即可查看按 Token 类型划分的价格明细。
 
 <img
   className="block dark:hidden"
   src="/langsmith/images/model-price-map-light.png"
-  alt="Model price map"
+  alt="模型价格映射"
 />
 <img
   className="hidden dark:block"
   src="/langsmith/images/model-price-map-dark.png"
-  alt="Model price map"
+  alt="模型价格映射"
 />
 
 <Note>
-Updates to the model pricing map are not reflected in the costs for traces already logged. We do not currently support backfilling model pricing changes.
+对模型定价映射的更新不会反映在已记录追踪的成本中。我们目前不支持回填模型定价更改。
 </Note>
 
-<Accordion title="Create a new or modify an existing model price entry">
-    To modify the default model prices, create a new entry with the same model, provider and match pattern as the default entry.
+<Accordion title="创建新的或修改现有的模型价格条目">
+    要修改默认模型价格，请使用与默认条目相同的模型、提供商和匹配模式创建一个新条目。
 
-    To create a *new entry* in the model pricing map, click on the `+ Model` button in the top right corner.
+    要创建模型定价映射中的*新条目*，请点击右上角的 `+ Model` 按钮。
 
     <img
     className="block dark:hidden"
     src="/langsmith/images/new-price-map-entry-light.png"
-    alt="New price map entry interface"
+    alt="新的价格映射条目界面"
     />
     <img
     className="hidden dark:block"
     src="/langsmith/images/new-price-map-entry.png"
-    alt="New price map entry interface"
+    alt="新的价格映射条目界面"
     />
 
-    Here, you can specify the following fields:
+    在这里，您可以指定以下字段：
 
-    * **Model Name**: The human-readable name of the model.
-    * **Input Price**: The cost per 1M input tokens for the model. This number is multiplied by the number of tokens in the prompt to calculate the prompt cost.
-    * **Input Price Breakdown** (Optional): The breakdown of price for each different type of input token, e.g. `cache_read`, `video`, `audio`
-    * **Output Price**: The cost per 1M output tokens for the model. This number is multiplied by the number of tokens in the completion to calculate the completion cost.
-    * **Output Price Breakdown** (Optional): The breakdown of price for each different type of output token, e.g. `reasoning`, `image`, etc.
-    * **Model Activation Date** (Optional): The date from which the pricing is applicable. Only runs after this date will apply this model price.
-    * **Match Pattern**: A regex pattern to match the model name. This is used to match the value for `ls_model_name` in the run metadata.
-    * **Provider** (Optional): The provider of the model. If specified, this is matched against `ls_provider` in the run metadata.
+    * **Model Name (模型名称)**：模型的可读名称。
+    * **Input Price (输入价格)**：模型每 1M 输入 Token 的成本。该数字乘以 Prompt 中的 Token 数量以计算 Prompt 成本。
+    * **Input Price Breakdown (输入价格明细)**（可选）：每种不同类型输入 Token 的价格细分，例如 `cache_read`、`video`（视频）、`audio`（音频）。
+    * **Output Price (输出价格)**：模型每 1M 输出 Token 的成本。该数字乘以完成（completion）中的 Token 数量以计算完成成本。
+    * **Output Price Breakdown (输出价格明细)**（可选）：每种不同类型输出 Token 的价格细分，例如 `reasoning`（推理）、`image`（图像）等。
+    * **Model Activation Date (模型激活日期)**（可选）：定价适用的日期。只有该日期之后记录的运行才会应用此模型价格。
+    * **Match Pattern (匹配模式)**：一个正则表达式，用于匹配模型名称。这用于匹配运行元数据中 `ls_model_name` 的值。
+    * **Provider (提供商)**（可选）：模型的提供商。如果指定，这将与运行元数据中的 `ls_provider` 进行匹配。
 
-    Once you have set up the model pricing map, LangSmith will automatically calculate and aggregate the token-based costs for traces based on the token counts provided in the LLM invocations.
+    设置好模型定价映射后，LangSmith 将根据 LLM 调用中提供的 Token 计数自动计算和汇总追踪的基于 Token 的成本。
 </Accordion>
 
-### LLM calls: Sending costs directly
+### LLM 调用：直接发送成本
 
-If your model follows a non-linear pricing scheme, we recommend calculating costs client-side and sending them to LangSmith as `usage_metadata`.
+如果您的模型遵循非线性定价方案，我们建议在客户端计算成本，并将其作为 `usage_metadata` 发送给 LangSmith。
 
 <Note>
-Gemini 3 Pro Preview and Gemini 2.5 Pro follow a pricing scheme with a stepwise cost function. We support this pricing scheme for Gemini by default. For any other models with non-linear pricing, you will need to follow these instructions to calculate costs.
+Gemini 3 Pro Preview 和 Gemini 2.5 Pro 遵循具有阶梯式成本函数的定价方案。我们默认支持 Gemini 的此定价方案。对于任何具有非线性定价的其他模型，您需要遵循这些说明来计算成本。
 </Note>
 
 
@@ -473,7 +473,7 @@ def chat_model(messages: list):
             }
         ],
         "usage_metadata": {
-            # Specify cost (in dollars) for the inputs and outputs
+            # 指定输入和输出的成本（以美元为单位）
             "input_cost": 1.1e-6,
             "input_cost_details": {"cache_read": 2.3e-7},
             "output_cost": 5.0e-6,
@@ -505,7 +505,7 @@ const chatModel = traceable(
           },
         },
       ],
-      // Specify cost (in dollars) for the inputs and outputs
+      // 指定输入和输出的成本（以美元为单位）
       usage_metadata: {
         input_cost: 1.1e-6,
         input_cost_details: { cache_read: 2.3e-7 },
@@ -513,11 +513,11 @@ const chatModel = traceable(
       },
     };
 
-    // Attach usage metadata to the run
+    // 将使用情况元数据附加到运行中
     const runTree = getCurrentRunTree();
     runTree.metadata.usage_metadata = llmOutput.usage_metadata;
 
-    // Return only the assistant message
+    // 仅返回助手消息
     return llmOutput.choices[0].message;
   },
   {
@@ -536,37 +536,37 @@ await chatModel(messages);
 </CodeGroup>
 
 
-### Other runs: Sending costs
+### 其他运行：发送成本
 
-You can also send cost information for any non-LLM runs, such as tool calls.The cost must be specified in the `total_cost` field under the runs `usage_metadata`.
+您也可以为任何非 LLM 运行（如工具调用）发送成本信息。成本必须在运行 `usage_metadata` 下的 `total_cost` 字段中指定。
 
-<Accordion title="A. Set a `total_cost` field on the run’s usage_metadata">
+<Accordion title="A. 在运行的 `usage_metadata` 中设置 `total_cost` 字段">
 
-Set a `total_cost` field on the run’s `usage_metadata`. The advantage of this approach is that you do not need to change your traced function’s runtime outputs
+在运行的 `usage_metadata` 中设置 `total_cost` 字段。这种方法的优点是您无需更改被追踪函数的运行时输出。
 
 <CodeGroup>
 
 ```python Python
 from langsmith import traceable, get_current_run_tree
 
-# Example tool: get_weather
+# 示例工具：get_weather
 @traceable(run_type="tool", name="get_weather")
 def get_weather(city: str):
-    # Your tool logic goes here
+    # 您的工具逻辑在此处
     result = {
         "temperature_f": 68,
         "condition": "sunny",
         "city": city,
     }
 
-    # Cost for this tool call (computed however you like)
+    # 此工具调用的成本（按您喜欢的方式计算）
     tool_cost = 0.0015
 
-    # Attach usage metadata to the LangSmith run
+    # 将使用情况元数据附加到 LangSmith 运行中
     run = get_current_run_tree()
     run.set(usage_metadata={"total_cost": tool_cost})
 
-    # Return only the actual tool result (no usage info)
+    # 仅返回实际的工具结果（不含使用信息）
     return result
 
 tool_response = get_weather("San Francisco")
@@ -575,26 +575,26 @@ tool_response = get_weather("San Francisco")
 ```typescript TypeScript
 import { traceable, getCurrentRunTree } from "langsmith/traceable";
 
-// Example tool: get_weather
+// 示例工具：get_weather
 const getWeather = traceable(
   async ({ city }) => {
-    // Your tool logic goes here
+    // 您的工具逻辑在此处
     const result = {
       temperature_f: 68,
       condition: "sunny",
       city,
     };
 
-    // Cost for this tool call (computed however you like)
+    // 此工具调用的成本（按您喜欢的方式计算）
     const toolCost = 0.0015;
 
-    // Attach usage metadata to the LangSmith run
+    // 将使用情况元数据附加到 LangSmith 运行中
     const runTree = getCurrentRunTree();
     runTree.metadata.usage_metadata = {
       total_cost: toolCost,
     };
 
-    // Return only the actual tool result (no usage info)
+    // 仅返回实际的工具结果（不含使用信息）
     return result;
   },
   {
@@ -609,29 +609,29 @@ const toolResponse = await getWeather({ city: "San Francisco" });
 </CodeGroup>
 </Accordion >
 
-<Accordion title="B. Return a `total_cost` field in your traced function's outputs.">
-Include the `usage_metadata` key directly within the object returned by your traced function. LangSmith will extract it from the output.
+<Accordion title="B. 在被追踪函数的输出中返回 `total_cost` 字段。">
+将 `usage_metadata` 键直接包含在被追踪函数返回的对象内。LangSmith 将会从输出中提取它。
 
 <CodeGroup>
 
 ```python Python
 from langsmith import traceable
 
-# Example tool: get_weather
+# 示例工具：get_weather
 @traceable(run_type="tool", name="get_weather")
 def get_weather(city: str):
-    # Your tool logic goes here
+    # 您的工具逻辑在此处
     result = {
         "temperature_f": 68,
         "condition": "sunny",
         "city": city,
     }
 
-    # Attach tool call costs here
+    # 在此处附加工具调用成本
     return {
         **result,
         "usage_metadata": {
-            "total_cost": 0.0015,   # <-- cost for this tool call
+            "total_cost": 0.0015,   # <-- 此工具调用的成本
         },
     }
 
@@ -641,21 +641,21 @@ tool_response = get_weather("San Francisco")
 ```typescript TypeScript
 import { traceable } from "langsmith/traceable";
 
-// Example tool: get_weather
+// 示例工具：get_weather
 const getWeather = traceable(
   async ({ city }) => {
-    // Your tool logic goes here
+    // 您的工具逻辑在此处
     const result = {
       temperature_f: 68,
       condition: "sunny",
       city,
     };
 
-    // Attach tool call costs here
+    // 在此处附加工具调用成本
     return {
       ...result,
       usage_metadata: {
-        total_cost: 0.0015,  // <-- cost for this tool call
+        total_cost: 0.0015,  // <-- 此工具调用的成本
       },
     };
   },
@@ -669,3 +669,4 @@ const toolResponse = await getWeather({ city: "San Francisco" });
 ```
 </CodeGroup>
 </Accordion>
+```

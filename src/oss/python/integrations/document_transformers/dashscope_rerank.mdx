@@ -2,9 +2,9 @@
 title: DashScope Reranker
 ---
 
-This notebook shows how to use DashScope Reranker for document compression and retrieval. [DashScope](https://dashscope.aliyun.com/) is the generative AI service from Alibaba Cloud (Aliyun).
+本 Notebook 演示了如何使用 DashScope Reranker 进行文档压缩和检索。 [DashScope](https://dashscope.aliyun.com/) 是阿里云（Alibaba Cloud）提供的生成式 AI 服务。
 
-DashScope's [Text ReRank Model](https://help.aliyun.com/document_detail/2780058.html?spm=a2c4g.2780059.0.0.6d995024FlrJ12) supports reranking documents with a maximum of 4000 tokens. Moreover, it supports Chinese, English, Japanese, Korean, Thai, Spanish, French, Portuguese, Indonesian, Arabic, and over 50 other languages. For more details, please visit [here](https://help.aliyun.com/document_detail/2780059.html?spm=a2c4g.2780058.0.0.3a9e5b1dWeOQjI).
+DashScope 的 [Text ReRank Model](https://help.aliyun.com/document_detail/2780058.html?spm=a2c4g.2780059.0.0.6d995024FlrJ12) 支持对最多包含 4000 个 Token 的文档进行重排序（Reranking）。此外，它支持中文、英文、日文、韩文、泰文、西班牙文、法文、葡萄牙文、印度尼西亚文、阿拉伯文以及其他 50 多种语言。如需了解更多详情，请访问 [此处](https://help.aliyun.com/document_detail/2780059.html?spm=a2c4g.2780058.0.0.3a9e5b1dWeOQjI)。
 
 ```python
 pip install -qU  dashscope
@@ -13,13 +13,13 @@ pip install -qU  dashscope
 ```python
 pip install -qU  faiss
 
-# OR  (depending on Python version)
+# 或者 (取决于 Python 版本)
 
 pip install -qU  faiss-cpu
 ```
 
 ```python
-# To create api key: https://bailian.console.aliyun.com/?apiKey=1#/api-key
+# 创建 API 密钥的链接: https://bailian.console.aliyun.com/?apiKey=1#/api-key
 
 import getpass
 import os
@@ -29,18 +29,18 @@ if "DASHSCOPE_API_KEY" not in os.environ:
 ```
 
 ```python
-# Helper function for printing docs
+# 用于打印文档的辅助函数
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Set up the base vector store retriever
+## 设置基础向量存储检索器 (Base Vector Store Retriever)
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+让我们从初始化一个简单的向量存储检索器开始，并将 2023 年国情咨文（State of the Union speech）的内容切片存储起来。我们可以将检索器设置为检索较多的文档数量（20 个）。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -61,7 +61,7 @@ pretty_print_docs(docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 I understand.
 
@@ -73,13 +73,13 @@ Because people were hurting. We needed to act, and we did.
 
 Few pieces of legislation have done more in a critical moment in our history to lift us out of crisis.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 To all Americans, I will be honest with you, as I’ve always promised. A Russian dictator, invading a foreign country, has costs around the world.
 
@@ -87,7 +87,7 @@ And I’m taking robust action to make sure the pain of our sanctions  is target
 
 Tonight, I can announce that the United States has worked with 30 other countries to release 60 Million barrels of oil from reserves around the world.
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 We cannot let this happen.
 
@@ -95,7 +95,7 @@ Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Le
 
 Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service.
 ----------------------------------------------------------------------------------------------------
-Document 5:
+文档 5:
 
 Tonight I say to the Russian oligarchs and corrupt leaders who have bilked billions of dollars off this violent regime no more.
 
@@ -103,7 +103,7 @@ The U.S. Department of Justice is assembling a dedicated task force to go after 
 
 We are joining with our European allies to find and seize your yachts your luxury apartments your private jets. We are coming for your ill-begotten gains.
 ----------------------------------------------------------------------------------------------------
-Document 6:
+文档 6:
 
 Every Administration says they’ll do it, but we are actually doing it.
 
@@ -111,7 +111,7 @@ We will buy American to make sure everything from the deck of an aircraft carrie
 
 But to compete for the best jobs of the future, we also need to level the playing field with China and other competitors.
 ----------------------------------------------------------------------------------------------------
-Document 7:
+文档 7:
 
 When we invest in our workers, when we build the economy from the bottom up and the middle out together, we can do something we haven’t done in a long time: build a better America.
 
@@ -121,13 +121,13 @@ And I know you’re tired, frustrated, and exhausted.
 
 But I also know this.
 ----------------------------------------------------------------------------------------------------
-Document 8:
+文档 8:
 
 A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
 
 And if we are to advance liberty and justice, we need to secure the Border and fix the immigration system.
 ----------------------------------------------------------------------------------------------------
-Document 9:
+文档 9:
 
 My plan will not only lower costs to give families a fair shot, it will lower the deficit.
 
@@ -137,7 +137,7 @@ But in my administration, the watchdogs have been welcomed back.
 
 We’re going after the criminals who stole billions in relief money meant for small businesses and millions of Americans.
 ----------------------------------------------------------------------------------------------------
-Document 10:
+文档 10:
 
 He will never extinguish their love of freedom. He will never weaken the resolve of the free world.
 
@@ -149,7 +149,7 @@ And so many families are living paycheck to paycheck, struggling to keep up with
 
 I understand.
 ----------------------------------------------------------------------------------------------------
-Document 11:
+文档 11:
 
 And tonight, I’m announcing that the Justice Department will name a chief prosecutor for pandemic fraud.
 
@@ -163,7 +163,7 @@ I’m a capitalist, but capitalism without competition isn’t capitalism.
 
 It’s exploitation—and it drives up prices.
 ----------------------------------------------------------------------------------------------------
-Document 12:
+文档 12:
 
 Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
 
@@ -175,7 +175,7 @@ They keep moving.
 
 And the costs and the threats to America and the world keep rising.
 ----------------------------------------------------------------------------------------------------
-Document 13:
+文档 13:
 
 Cancer is the #2 cause of death in America–second only to heart disease.
 
@@ -188,7 +188,7 @@ More support for patients and families.
 
 To get there, I call on Congress to fund ARPA-H, the Advanced Research Projects Agency for Health.
 ----------------------------------------------------------------------------------------------------
-Document 14:
+文档 14:
 
 It fueled our efforts to vaccinate the nation and combat COVID-19. It delivered immediate economic relief for tens of millions of Americans.
 
@@ -196,7 +196,7 @@ Helped put food on their table, keep a roof over their heads, and cut the cost o
 
 And as my Dad used to say, it gave people a little breathing room.
 ----------------------------------------------------------------------------------------------------
-Document 15:
+文档 15:
 
 America will lead that effort, releasing 30 Million barrels from our own Strategic Petroleum Reserve. And we stand ready to do more if necessary, unified with our allies.
 
@@ -206,7 +206,7 @@ But I want you to know that we are going to be okay.
 
 When the history of this era is written Putin’s war on Ukraine will have left Russia weaker and the rest of the world stronger.
 ----------------------------------------------------------------------------------------------------
-Document 16:
+文档 16:
 
 So that’s my plan. It will grow the economy and lower costs for families.
 
@@ -214,7 +214,7 @@ So what are we waiting for? Let’s get this done. And while you’re at it, con
 
 My plan will not only lower costs to give families a fair shot, it will lower the deficit.
 ----------------------------------------------------------------------------------------------------
-Document 17:
+文档 17:
 
 And we will, as one people.
 
@@ -224,7 +224,7 @@ The United States of America.
 
 May God bless you all. May God protect our troops.
 ----------------------------------------------------------------------------------------------------
-Document 18:
+文档 18:
 
 As I’ve told Xi Jinping, it is never a good bet to bet against the American people.
 
@@ -232,7 +232,7 @@ We’ll create good jobs for millions of Americans, modernizing roads, airports,
 
 And we’ll do it all to withstand the devastating effects of the climate crisis and promote environmental justice.
 ----------------------------------------------------------------------------------------------------
-Document 19:
+文档 19:
 
 And I know you’re tired, frustrated, and exhausted.
 
@@ -245,7 +245,7 @@ We’ve reached a new moment in the fight against COVID-19, with severe cases do
 
 Just a few days ago, the Centers for Disease Control and Prevention—the CDC—issued new mask guidelines.
 ----------------------------------------------------------------------------------------------------
-Document 20:
+文档 20:
 
 Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.
 
@@ -258,9 +258,9 @@ With a duty to one another to the American people to the Constitution.
 And with an unwavering resolve that freedom will always triumph over tyranny.
 ```
 
-## Reranking with DashScopeRerank
+## 使用 DashScopeRerank 进行重排序
 
-Now let's wrap our base retriever with a `ContextualCompressionRetriever`. We'll use the `DashScopeRerank` to rerank the returned results.
+现在，我们用 `ContextualCompressionRetriever` 来封装基础检索器。我们将使用 `DashScopeRerank` 来对返回的结果进行重排序。
 
 ```python
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
@@ -278,13 +278,13 @@ pretty_print_docs(compressed_docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.
 
@@ -296,7 +296,7 @@ With a duty to one another to the American people to the Constitution.
 
 And with an unwavering resolve that freedom will always triumph over tyranny.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 Tonight I say to the Russian oligarchs and corrupt leaders who have bilked billions of dollars off this violent regime no more.
 

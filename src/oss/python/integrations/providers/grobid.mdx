@@ -2,31 +2,30 @@
 title: Grobid
 ---
 
-GROBID is a machine learning library for extracting, parsing, and re-structuring raw documents.
+GROBID 是一个用于提取、解析和重构原始文档的机器学习库。
 
-It is designed and expected to be used to parse academic papers, where it works particularly well.
+它的设计初衷是用于解析学术论文，并且在该领域表现尤其出色。
 
-*Note*: if the articles supplied to Grobid are large documents (e.g. dissertations) exceeding a certain number
-of elements, they might not be processed.
+*注意*：如果提供给 Grobid 的文章是超大文档（例如学位论文），并且其包含的元素数量超过了某个**阈值限制**，则可能无法成功处理。
 
-This page covers how to use the Grobid to parse articles for LangChain.
+本页面将介绍如何使用 Grobid 来解析文章，以便与 LangChain 集成。
 
-## Installation
-The grobid installation is described in details in https://grobid.readthedocs.io/en/latest/Install-Grobid/.
-However, it is probably easier and less troublesome to run grobid through a docker container,
-as documented [here](https://grobid.readthedocs.io/en/latest/Grobid-docker/).
+## 安装
 
-## Use Grobid with LangChain
+Grobid 的详细安装说明请参阅 https://grobid.readthedocs.io/en/latest/Install-Grobid/。
+然而，通过 Docker 容器运行 Grobid 可能会更简单、更少麻烦，相关文档请参见 [此处](https://grobid.readthedocs.io/en/latest/Grobid-docker/)。
 
-Once grobid is installed and up and running (you can check by accessing it http://localhost:8070),
-you're ready to go.
+## 在 LangChain 中使用 Grobid
 
-You can now use the GrobidParser to produce documents
+一旦 Grobid 安装完成并正在运行（您可以通过访问 http://localhost:8070 进行检查），您就可以开始了。
+
+您现在可以使用 `GrobidParser` 来生成文档：
+
 ```python
 from langchain_community.document_loaders.parsers import GrobidParser
 from langchain_community.document_loaders.generic import GenericLoader
 
-#Produce chunks from article paragraphs
+# 从文章段落生成块
 loader = GenericLoader.from_filesystem(
     "/Users/31treehaus/Desktop/Papers/",
     glob="*",
@@ -35,7 +34,7 @@ loader = GenericLoader.from_filesystem(
 )
 docs = loader.load()
 
-#Produce chunks from article sentences
+# 从文章句子生成块
 loader = GenericLoader.from_filesystem(
     "/Users/31treehaus/Desktop/Papers/",
     glob="*",
@@ -44,5 +43,4 @@ loader = GenericLoader.from_filesystem(
 )
 docs = loader.load()
 ```
-Chunk metadata will include Bounding Boxes. Although these are a bit funky to parse,
-they are explained in https://grobid.readthedocs.io/en/latest/Coordinates-in-PDF/
+生成的块（Chunk）的元数据将包含边界框（Bounding Boxes）信息。尽管解析这些边界框数据可能有些复杂，但其解释请参阅 https://grobid.readthedocs.io/en/latest/Coordinates-in-PDF/

@@ -3,30 +3,30 @@ title: S3FileLoader
 ---
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 环境下可用。
 </Tip>
 
-This covers how to load document objects from an s3 file object.
+本指南介绍如何从 S3 文件对象加载文档对象（Document objects）。
 
-## Setup
+## 设置
 
-To run this index you'll need to have Unstructured already set up and ready to use at an available URL endpoint. It can also be configured to run locally.
+要运行此索引（loader），你需要确保 Unstructured 已经设置好，并且可以通过一个可用的 URL 端点访问。它也可以配置为在本地运行。
 
-See the docs [here](/oss/integrations/document_loaders/file_loaders/unstructured) for information on how to do that.
+有关如何进行设置的更多信息，请参阅[此处](/oss/integrations/document_loaders/file_loaders/unstructured)的文档。
 
-You'll also need to install the official AWS SDK:
+你还需要安装官方 AWS SDK：
 
 ```bash npm
 npm install @langchain/community @langchain/core @aws-sdk/client-s3
 ```
 
-## Usage
+## 用法
 
-Once Unstructured is configured, you can use the S3 loader to load files and then convert them into a Document.
+一旦 Unstructured 配置完成，你就可以使用 S3 加载器（loader）来加载文件，然后将它们转换为 `Document` 对象。
 
-You can optionally provide a s3Config parameter to specify your bucket region, access key, and secret access key. If these are not provided, you will need to have them in your environment (e.g., by running `aws configure`).
+你可以选择提供一个 `s3Config` 参数来指定你的存储桶区域（bucket region）、访问密钥（access key）和秘密访问密钥（secret access key）。如果未提供这些信息，你需要确保它们已配置在你的环境变量中（例如，通过运行 `aws configure`）。
 
 ```typescript
 import { S3Loader } from "@langchain/community/document_loaders/web/s3";
@@ -42,7 +42,7 @@ const loader = new S3Loader({
     },
   },
   unstructuredAPIURL: "http://localhost:8000/general/v0/general",
-  unstructuredAPIKey: "", // this will be soon required
+  unstructuredAPIKey: "", // 此处很快将要求提供密钥
 });
 
 const docs = await loader.load();

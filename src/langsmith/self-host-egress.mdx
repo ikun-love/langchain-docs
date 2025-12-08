@@ -1,56 +1,56 @@
 ---
-title: Egress for subscription metrics and operational metadata
-sidebarTitle: Configure egress for subscription metrics
+title: 订阅指标和操作元数据的出口配置
+sidebarTitle: 配置订阅指标的出口
 ---
 
 <Info>
-This section only applies to customers who are not running in offline mode and assumes you are using a self-hosted LangSmith instance serving version 0.9.0 or later. Previous versions of LangSmith did not have this feature.
+此部分仅适用于未在离线模式下运行的客户，并假设您使用的是服务于 **0.9.0** 或更高版本的自托管 LangSmith 实例。早期版本的 LangSmith 不具备此功能。
 </Info>
 
-Self-Hosted LangSmith instances store all information locally and will never send sensitive information outside of your network. We currently only track platform usage for billing purposes according to the entitlements in your order. In order to better remotely support our customers, we do require egress to `https://beacon.langchain.com`.
+自托管 LangSmith 实例会将所有信息本地存储，并且永远不会将敏感信息发送到您的网络之外。根据您的订单中的授权，我们目前仅出于计费目的跟踪平台使用情况。为了更好地远程支持我们的客户，我们确实需要向 `https://beacon.langchain.com` 开放出口访问权限。
 
-In the future, we will be introducing support diagnostics to help us ensure that LangSmith is running at an optimal level within your environment.
+将来，我们将引入支持诊断功能，以帮助我们确保 LangSmith 在您的环境中以最佳状态运行。
 
 <Warning>
-**This will require egress to `https://beacon.langchain.com` from your network. Refer to the [allowlisting IP section](/langsmith/cloud#allowlisting-ip-addresses) for static IP addresses, if needed.**
+**这要求您的网络必须能够访问 `https://beacon.langchain.com`。如果需要静态 IP 地址，请参阅 [允许列表 IP 部分](/langsmith/cloud#allowlisting-ip-addresses)。**
 </Warning>
 
-Generally, data that we send to Beacon can be categorized as follows:
+通常，我们发送到 Beacon 的数据可按如下方式分类：
 
-* Subscription Metrics
+* 订阅指标 (Subscription Metrics)
 
-  * Subscription metrics are used to determine level of access and utilization of LangSmith. This includes, but are not limited to:
+  * 订阅指标用于确定 LangSmith 的访问级别和利用率。这包括但不限于：
 
-    * Number of traces
-    * Seats allocated per contract
-    * Seats in currently use
+    * 跟踪 (traces) 的数量
+    * 根据合同分配的席位数 (Seats)
+    * 当前正在使用的席位数
 
-* Operational Metadata
-  * This metadata will contain and collect the above subscription metrics to assist with remote support, allowing the LangChain team to diagnose and troubleshoot performance issues more effectively and proactively.
+* 操作元数据 (Operational Metadata)
+  * 此元数据将包含并收集上述订阅指标，以协助远程支持，使 LangChain 团队能够更有效、更主动地诊断和解决性能问题。
 
-## LangSmith Telemetry
+## LangSmith 遥测 (Telemetry)
 
-As of version ***0.11***, LangSmith deployments will by default send telemetry data back to our backend. All telemetry data is associated with an organization and deployment, but never identified with individual users. We ***do not collect PII*** (personally identifiable information) in any form.
+从 ***0.11*** 版本开始，LangSmith 部署将默认向我们的后端发送遥测数据。所有遥测数据都与组织和部署相关联，但绝不会与单个用户标识。我们***不会***以任何形式收集 PII（个人身份信息）。
 
-### What we use it for
+### 我们用它来做什么
 
-* To provide more proactive support and faster troubleshooting of self-hosted instances.
-* Assisting with performance tuning.
-* Understanding real-world usage to prioritize improvements.
+* 为自托管实例提供更主动的支持和更快的故障排除。
+* 协助进行性能调优。
+* 了解真实世界的使用情况，以便优先改进。
 
-### What we collect
+### 我们收集什么
 
-* **Request metadata**: anonymized request counts, sizes, and durations.
-* **Database metrics**: query durations, error rates, and performance counters.
-* **Operational LangSmith traces**: traces with timing and error information for high-latency or failed requests. These are **not** customer traces, these are operational traces about the functioning of the LangSmith instance.
+* **请求元数据**: 匿名化的请求计数、大小和持续时间。
+* **数据库指标**: 查询持续时间、错误率和性能计数器。
+* **操作性 LangSmith 跟踪**: 包含延迟和错误信息的跟踪记录，用于处理高延迟或失败的请求。这些**不是**客户的跟踪记录，而是关于 LangSmith 实例运行情况的操作性跟踪记录。
 
 <Info>
-We do not collect actual payload contents, database records, or any data that can identify your end users or customers.
+我们不收集实际的负载内容 (payload contents)、数据库记录或任何可以识别您的最终用户或客户的数据。
 </Info>
 
-### How to disable
+### 如何禁用
 
-Set the following values in your `langsmith_config.yaml` file:
+在您的 `langsmith_config.yaml` 文件中设置以下值：
 
 ```yaml
 config:
@@ -59,17 +59,17 @@ config:
     traces: false
 ```
 
-## Example payloads
+## 示例负载 (Example payloads)
 
-In an effort to maximize transparency, we provide sample payloads here:
+为了最大限度地保持透明度，我们在 [下面] 提供示例负载：
 
-### License Verification
+### 许可证验证 (License Verification)
 
-**Endpoint:**
+**端点 (Endpoint):**
 
 `POST beacon.langchain.com/v1/beacon/verify`
 
-**Request:**
+**请求 (Request):**
 
 ```json
 {
@@ -77,21 +77,21 @@ In an effort to maximize transparency, we provide sample payloads here:
 }
 ```
 
-**Response:**
+**响应 (Response):**
 
 ```json
 {
-  "token": "Valid JWT" //Short-lived JWT token to avoid repeated license checks
+  "token": "Valid JWT" // 用于避免重复许可证检查的短期 JWT 令牌
 }
 ```
 
-### Usage Reporting
+### 用量报告 (Usage Reporting)
 
-**Endpoint:**
+**端点 (Endpoint):**
 
 `POST beacon.langchain.com/v1/beacon/ingest-traces`
 
-**Request:**
+**请求 (Request):**
 
 ```json
 {
@@ -115,21 +115,21 @@ In an effort to maximize transparency, we provide sample payloads here:
 }
 ```
 
-**Response:**
+**响应 (Response):**
 
 ```json
 {
-  "inserted_count": 1 //Number of transactions successfully ingested
+  "inserted_count": 1 // 成功摄取 (ingested) 的事务数量
 }
 ```
 
-### Telemetry: Operational LangSmith Metrics
+### 遥测：操作性 LangSmith 指标 (Telemetry: Operational LangSmith Metrics)
 
-**Endpoint:**
+**端点 (Endpoint):**
 
 `POST beacon.langchain.com/v1/beacon/v1/metrics`
 
-**Request:**
+**请求 (Request):**
 
 ```json
 {
@@ -157,7 +157,7 @@ In an effort to maximize transparency, we provide sample payloads here:
             {
               "name": "langsmith_http_requests_latency",
               "unit": "seconds",
-              "description": "Request latency of LangSmith services",
+              "description": "LangSmith 服务的请求延迟",
               "gauge": {
                 "dataPoints": [
                   {
@@ -182,7 +182,7 @@ In an effort to maximize transparency, we provide sample payloads here:
             {
               "name": "langsmith_http_requests_failed",
               "unit": "1",
-              "description": "Counter of failed requests for LangSmith services",
+              "description": "LangSmith 服务的失败请求计数器",
               "sum": {
                 "dataPoints": [
                   {
@@ -214,13 +214,13 @@ In an effort to maximize transparency, we provide sample payloads here:
 }
 ```
 
-### Telemetry: Operational LangSmith Traces
+### 遥测：操作性 LangSmith 跟踪 (Telemetry: Operational LangSmith Traces)
 
-**Endpoint:**
+**端点 (Endpoint):**
 
 `POST beacon.langchain.com/v1/beacon/v1/traces`
 
-**Request:**
+**请求 (Request):**
 
 ```json
 {
@@ -299,6 +299,6 @@ In an effort to maximize transparency, we provide sample payloads here:
 }
 ```
 
-## Our Commitment
+## 我们的承诺 (Our Commitment)
 
-LangChain will not store any sensitive information in the Subscription Metrics or Operational Metadata. Any data collected will not be shared with a third party. If you have any concerns about the data being sent, please reach out to your account team.
+LangChain 不会在订阅指标或操作元数据中存储任何敏感信息。收集到的任何数据都不会与第三方共享。如果您对发送的数据有任何疑虑，请联系您的客户团队。

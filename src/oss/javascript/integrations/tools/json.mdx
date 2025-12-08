@@ -1,11 +1,11 @@
 ---
-title: JSON Agent Toolkit
+title: JSON Agent 工具包
 ---
 
-This example shows how to load and use an agent with a JSON toolkit.
+此示例展示了如何加载和使用带有 JSON 工具包的 Agent。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 软件包的常规说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -21,7 +21,9 @@ import { JsonToolkit, createJsonAgent } from "@langchain/classic/agents";
 export const run = async () => {
   let data: JsonObject;
   try {
+    // 读取 YAML 文件
     const yamlFile = fs.readFileSync("openai_openapi.yaml", "utf8");
+    // 解析 YAML 内容
     data = yaml.load(yamlFile) as JsonObject;
     if (!data) {
       throw new Error("Failed to load OpenAPI spec");
@@ -31,14 +33,18 @@ export const run = async () => {
     return;
   }
 
+  // 使用加载的数据创建 JsonSpec，并初始化 JsonToolkit
   const toolkit = new JsonToolkit(new JsonSpec(data));
+  // 初始化 OpenAI 模型实例
   const model = new OpenAI({ temperature: 0 });
+  // 创建 JSON Agent 执行器
   const executor = createJsonAgent(model, toolkit);
 
   const input = `What are the required parameters in the request body to the /completions endpoint?`;
 
   console.log(`Executing with input "${input}"...`);
 
+  // 调用执行器
   const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);

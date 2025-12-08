@@ -1,29 +1,30 @@
+```markdown
 ---
-title: Exa Search
+title: Exa 搜索
 ---
 
-Exa is a search engine fully designed for use by LLMs. Search for documents on the internet using **natural language queries**, then retrieve **cleaned HTML content** from desired documents.
+Exa 是一个完全为大型语言模型（LLM）设计的搜索引擎。它允许你使用 **自然语言查询** 在互联网上搜索文档，然后从目标文档中检索 **清理过的 HTML 内容**。
 
-Unlike keyword-based search (Google), Exa's neural search capabilities allow it to semantically understand queries and return relevant documents. For example, we could search `"fascinating article about cats"` and compare the search results from [Google](https://www.google.com/search?q=fascinating+article+about+cats) and [Exa](https://search.exa.ai/search?q=fascinating%20article%20about%20cats&autopromptString=Here%20is%20a%20fascinating%20article%20about%20cats%3A). Google gives us SEO-optimized listicles based on the keyword "fascinating". Exa just works.
+与基于关键词的搜索（如 Google）不同，Exa 的神经搜索（neural search）功能使其能够语义化地理解查询并返回相关的文档。例如，我们可以搜索 `"fascinating article about cats"`（关于猫的有趣文章），然后比较 [Google](https://www.google.com/search?q=fascinating+article+about+cats) 和 [Exa](https://search.exa.ai/search?q=fascinating%20article%20about%20cats&autopromptString=Here%20is%20a%20fascinating%20article%20about%20cats%3A) 的搜索结果。Google 提供了基于关键词 "fascinating" 的经过 SEO 优化的列表文章。而 Exa 更直接有效。
 
-This notebook goes over how to use Exa Search with LangChain.
+本教程将介绍如何在 LangChain 中使用 Exa 搜索功能。
 
-## Setup
+## 设置 (Setup)
 
-### Installation
+### 安装 (Installation)
 
-Install the LangChain Exa integration package:
+安装 LangChain Exa 集成包：
 
 ```python
 pip install -qU langchain-exa
 
-# and some deps for this notebook
+# 本 Notebook 所需的其他依赖
 pip install -qU langchain langchain-openai langchain-community
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-You'll need an Exa API key to use this integration. Get $10 free credit (plus more by completing certain actions like making your first search) by [signing up here](https://dashboard.exa.ai/).
+你需要一个 Exa API 密钥才能使用此集成。通过 [此处注册](https://dashboard.exa.ai/)，即可获得 10 美元的免费额度（完成首次搜索等操作还可获得更多）。
 
 ```python
 import getpass
@@ -33,17 +34,17 @@ if not os.environ.get("EXA_API_KEY"):
     os.environ["EXA_API_KEY"] = getpass.getpass("Exa API key:\n")
 ```
 
-## Using ExaSearchResults Tool
+## 使用 ExaSearchResults 工具
 
-ExaSearchResults is a tool that can be used with LangChain agents to perform Exa searches. It provides a more structured interface for search operations:
+`ExaSearchResults` 是一个可与 LangChain 代理（agent）配合使用的工具，用于执行 Exa 搜索。它为搜索操作提供了一个更结构化的接口：
 
 ```python
 from langchain_exa import ExaSearchResults
 
-# Initialize the ExaSearchResults tool
+# 初始化 ExaSearchResults 工具
 search_tool = ExaSearchResults(exa_api_key=os.environ["EXA_API_KEY"])
 
-# Perform a search query
+# 执行搜索查询
 search_results = search_tool._run(
     query="When was the last time the New York Knicks won the NBA Championship?",
     num_results=5,
@@ -54,36 +55,36 @@ search_results = search_tool._run(
 print("Search Results:", search_results)
 ```
 
-### Advanced Features for ExaSearchResults
+### ExaSearchResults 的高级功能
 
-You can use advanced search options like controlling search type, live crawling, and content filtering:
+你可以使用高级搜索选项，例如控制搜索类型、实时抓取（live crawling）和内容过滤：
 
 ```python
-# Perform a search query with advanced options
+# 使用高级选项执行搜索查询
 search_results = search_tool._run(
     query="Latest AI research papers",
-    num_results=10,  # Number of results (1-100)
-    type="auto",  # Can be "neural", "keyword", or "auto"
-    livecrawl="always",  # Can be "always", "fallback", or "never"
-    text_contents_options={"max_characters": 2000},  # Limit text length
-    summary={"query": "generate one liner"},  # Custom summary prompt
+    num_results=10,  # 结果数量 (1-100)
+    type="auto",  # 可以是 "neural"（神经）、"keyword"（关键词）或 "auto"（自动）
+    livecrawl="always",  # 可以是 "always"（总是）、"fallback"（回退）或 "never"（从不）
+    text_contents_options={"max_characters": 2000},  # 限制文本长度
+    summary={"query": "generate one liner"},  # 自定义摘要提示词
 )
 
 print("Advanced Search Results:")
 print(search_results)
 ```
 
-## Using ExaFindSimilarResults Tool
+## 使用 ExaFindSimilarResults 工具
 
-ExaFindSimilarResults allows you to find webpages similar to a given URL. This is useful for finding related content or competitive analysis:
+`ExaFindSimilarResults` 允许你根据给定的 URL 查找相似的网页。这在查找相关内容或进行竞争分析时非常有用：
 
 ```python
 from langchain_exa import ExaFindSimilarResults
 
-# Initialize the ExaFindSimilarResults tool
+# 初始化 ExaFindSimilarResults 工具
 find_similar_tool = ExaFindSimilarResults(exa_api_key=os.environ["EXA_API_KEY"])
 
-# Find similar results based on a URL
+# 根据 URL 查找相似结果
 similar_results = find_similar_tool._run(
     url="http://espn.com", num_results=5, text_contents_options=True, highlights=True
 )
@@ -91,11 +92,11 @@ similar_results = find_similar_tool._run(
 print("Similar Results:", similar_results)
 ```
 
-## Use within an Agent
+## 在代理中使用 (Use within an Agent)
 
-We can use the ExaSearchResults and ExaFindSimilarResults tools with a LangGraph agent. This gives the agent the ability to dynamically search for information and find similar content based on the user's queries.
+我们可以将 `ExaSearchResults` 和 `ExaFindSimilarResults` 工具与 LangGraph 代理配合使用。这使得代理能够根据用户的查询动态地搜索信息和查找相似内容。
 
-First, let's set up the language model. You'll need to provide your OpenAI API key:
+首先，我们需要设置语言模型。你需要提供你的 OpenAI API 密钥：
 
 ```python
 import getpass
@@ -104,7 +105,7 @@ if not os.environ.get("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API key:\n")
 ```
 
-We will need to install langgraph:
+我们需要安装 `langgraph`：
 
 ```python
 pip install -qU langgraph
@@ -116,10 +117,10 @@ from langchain_exa import ExaFindSimilarResults, ExaSearchResults
 from langchain.agents import create_agent
 
 
-# Initialize the language model
+# 初始化语言模型
 model = init_chat_model(model="gpt-4o", model_provider="openai", temperature=0)
 
-# Initialize Exa Tools
+# 初始化 Exa 工具
 exa_search = ExaSearchResults(
     exa_api_key=os.environ["EXA_API_KEY"],
     max_results=5,
@@ -130,10 +131,10 @@ exa_find_similar = ExaFindSimilarResults(
     max_results=5,
 )
 
-# Create agent with both tools
+# 使用两个工具创建代理
 agent = create_agent(model, [exa_search, exa_find_similar])
 
-# Example 1: Basic search
+# 示例 1：基本搜索
 user_input = "What are the latest developments in quantum computing?"
 
 for step in agent.stream(
@@ -143,54 +144,53 @@ for step in agent.stream(
     step["messages"][-1].pretty_print()
 ```
 
-## Using ExaSearchRetriever
+## 使用 ExaSearchRetriever
 
-ExaSearchRetriever is a retriever that uses Exa Search to retrieve relevant documents.
+`ExaSearchRetriever` 是一个使用 Exa 搜索来检索相关文档的检索器（retriever）。
 
-<Note>
-**The `max_characters` parameter for **TextContentsOptions** used to be called `max_length` which is now deprecated. Make sure to use `max_characters` instead.**
+> **注意**
+>
+> `TextContentsOptions` 中用于指定文本内容长度的参数 `max_characters` 以前被称为 `max_length`，现在已被弃用。请确保使用 `max_characters`。
 
-</Note>
+### 基本用法
 
-### Basic Usage
-
-Here's a simple example of using ExaSearchRetriever:
+以下是使用 `ExaSearchRetriever` 的简单示例：
 
 ```python
 from langchain_exa import ExaSearchRetriever
 
-# Create a new instance of the ExaSearchRetriever
+# 创建 ExaSearchRetriever 的新实例
 exa = ExaSearchRetriever(exa_api_key=os.environ["EXA_API_KEY"])
 
-# Search for a query and save the results
+# 搜索查询并保存结果
 results = exa.invoke("What is the capital of France?")
 
-# Print the results
+# 打印结果
 print(results)
 ```
 
-### Advanced Features
+### 高级功能
 
-You can use advanced features like controlling the number of results, search type, live crawling, summaries, and text content options:
+你可以使用高级功能，例如控制结果数量、搜索类型、实时抓取、摘要和文本内容选项：
 
 ```python
 from langchain_exa import ExaSearchRetriever
 
-# Create a new instance with advanced options
+# 使用高级选项创建新实例
 exa = ExaSearchRetriever(
     exa_api_key=os.environ["EXA_API_KEY"],
-    k=20,  # Number of results (1-100)
-    type="auto",  # Can be "neural", "keyword", or "auto"
-    livecrawl="always",  # Can be "always", "fallback", or "never"
-    text_contents_options={"max_characters": 3000},  # Limit text length
-    # Custom prompt for an LLM generated summary of page content
+    k=20,  # 结果数量 (1-100)
+    type="auto",  # 可以是 "neural"（神经）、"keyword"（关键词）或 "auto"（自动）
+    livecrawl="always",  # 可以是 "always"（总是）、"fallback"（回退）或 "never"（从不）
+    text_contents_options={"max_characters": 3000},  # 限制文本长度
+    # 用于 LLM 生成页面内容摘要的自定义提示词
     summary={"query": "generate one line summary in simple words."},
 )
 
-# Search with advanced options
+# 使用高级选项进行搜索
 results = exa.invoke("Latest developments in quantum computing")
 print(f"Found {len(results)} results")
-for result in results[:3]:  # Print first 3 results
+for result in results[:3]:  # 打印前 3 个结果
     print(f"Title: {result.metadata.get('title', 'N/A')}")
     print(f"URL: {result.metadata.get('url', 'N/A')}")
     print(f"Summary: {result.metadata.get('summary', 'N/A')}")
@@ -199,6 +199,7 @@ for result in results[:3]:  # Print first 3 results
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all Exa API features and configurations, visit the [Exa API documentation](https://docs.exa.ai/).
+有关所有 Exa API 功能和配置的详细文档，请访问 [Exa API 文档](https://docs.exa.ai/)。
+```

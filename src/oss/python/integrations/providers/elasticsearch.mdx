@@ -2,30 +2,29 @@
 title: Elasticsearch
 ---
 
-> [Elasticsearch](https://www.elastic.co/elasticsearch/) is a distributed, RESTful search and analytics engine.
-> It provides a distributed, multi-tenant-capable full-text search engine with an HTTP web interface and schema-free
-> JSON documents.
+> [Elasticsearch](https://www.elastic.co/elasticsearch/) 是一个分布式、RESTful 的搜索和分析引擎。
+> 它提供了一个分布式的、支持多租户的全文本搜索引擎，带有一个 HTTP Web 接口和无模式（schema-free）的 JSON 文档。
 
-## Installation and Setup
+## 安装与设置 (Installation and Setup)
 
-### Setup Elasticsearch
+### 设置 Elasticsearch (Setup Elasticsearch)
 
-There are two ways to get started with Elasticsearch:
+启动 Elasticsearch 有两种方式：
 
-#### Install Elasticsearch on your local machine via Docker
+#### 通过 Docker 在本地机器上安装 Elasticsearch
 
-Example: Run a single-node Elasticsearch instance with security disabled.
-This is not recommended for production use.
+示例：通过运行一个禁用了安全特性的单节点 Elasticsearch 实例。
+**注意：不推荐在生产环境中使用此配置。**
 
 ```bash
     docker run -p 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" -e "xpack.security.http.ssl.enabled=false" docker.elastic.co/elasticsearch/elasticsearch:8.9.0
 ```
 
-#### Deploy Elasticsearch on Elastic Cloud
+#### 在 Elastic Cloud 上部署 Elasticsearch
 
-`Elastic Cloud` is a managed Elasticsearch service. Signup for a [free trial](https://cloud.elastic.co/registration?utm_source=langchain&utm_content=documentation).
+`Elastic Cloud` 是一个托管式（managed）的 Elasticsearch 服务。请注册 [免费试用](https://cloud.elastic.co/registration?utm_source=langchain&utm_content=documentation)。
 
-### Install Client
+### 安装客户端 (Install Client)
 
 <CodeGroup>
 ```bash pip
@@ -39,23 +38,23 @@ uv add langchain-elasticsearch
 ```
 </CodeGroup>
 
-## Embedding models
+## 嵌入模型 (Embedding models)
 
-See a [usage example](/oss/integrations/text_embedding/elasticsearch).
+请参阅 [使用示例](/oss/integrations/text_embedding/elasticsearch)。
 
 ```python
 from langchain_elasticsearch import ElasticsearchEmbeddings
 ```
 
-## Vector store
+## 向量存储 (Vector store)
 
-See a [usage example](/oss/integrations/vectorstores/elasticsearch).
+请参阅 [使用示例](/oss/integrations/vectorstores/elasticsearch)。
 
 ```python
 from langchain_elasticsearch import ElasticsearchStore
 ```
 
-### Third-party integrations
+### 第三方集成 (Third-party integrations)
 
 #### EcloudESVectorStore
 
@@ -63,14 +62,13 @@ from langchain_elasticsearch import ElasticsearchStore
 from langchain_community.vectorstores.ecloud_vector_search import EcloudESVectorStore
 ```
 
-## Retrievers
+## 检索器 (Retrievers)
 
 ### ElasticsearchRetriever
 
-The `ElasticsearchRetriever` enables flexible access to all Elasticsearch features
-through the Query DSL.
+`ElasticsearchRetriever` 使得能够通过 Query DSL 灵活地访问所有 Elasticsearch 功能。
 
-See a [usage example](/oss/integrations/retrievers/elasticsearch_retriever).
+请参阅 [使用示例](/oss/integrations/retrievers/elasticsearch_retriever)。
 
 ```python
 from langchain_elasticsearch import ElasticsearchRetriever
@@ -78,30 +76,29 @@ from langchain_elasticsearch import ElasticsearchRetriever
 
 ### BM25
 
-See a [usage example](/oss/integrations/retrievers/elastic_search_bm25).
+请参阅 [使用示例](/oss/integrations/retrievers/elastic_search_bm25)。
 
 ```python
 from langchain_community.retrievers import ElasticSearchBM25Retriever
 ```
 
-## LLM cache
-
+## LLM 缓存 (LLM cache)
 
 ```python
 from langchain_elasticsearch import ElasticsearchCache
 ```
 
-## Byte Store
+## 字节存储 (Byte Store)
 
-See a [usage example](/oss/integrations/stores/elasticsearch).
+请参阅 [使用示例](/oss/integrations/stores/elasticsearch)。
 
 ```python
 from langchain_elasticsearch import ElasticsearchEmbeddingsCache
 ```
 
-## Chain
+## 链 (Chain)
 
-It is a chain for interacting with Elasticsearch Database.
+这是一个用于与 Elasticsearch 数据库进行交互的链模块。
 
 ```python
 from langchain.chains.elasticsearch_database import ElasticsearchDatabaseChain

@@ -2,43 +2,41 @@
 title: Zep Cloud
 ---
 
-> [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
-> With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
-> while also reducing hallucinations, latency, and cost.
+> [Zep](https://www.getzep.com) 是 AI 助手应用的长期记忆服务。
+> 使用 Zep，您可以让 AI 助手具备回忆过去对话的能力，无论这些对话发生多么久远，
+> 同时还能减少幻觉（Hallucinations）、延迟（Latency）和成本。
 
-**Note:** The `ZepCloudVectorStore` works with `Documents` and is intended to be used as a `Retriever`.
-It offers separate functionality to Zep's `ZepCloudMemory` class, which is designed for persisting, enriching
-and searching your user's chat history.
+**注意：** `ZepCloudVectorStore` 与 `Documents` 配合使用，并设计为用作 `Retriever`（检索器）。
+它提供的功能与 Zep 的 `ZepCloudMemory` 类是分开的，后者专为持久化、丰富和搜索用户的聊天历史记录而设计。
 
-## Why Zep's VectorStore?
+## 为什么选择 Zep 的 VectorStore？
 
-Zep automatically embeds documents added to the Zep Vector Store using low-latency models local to the Zep server.
-The Zep TS/JS client can be used in non-Node edge environments. These two together with Zep's chat memory functionality
-make Zep ideal for building conversational LLM apps where latency and performance are important.
+Zep 会自动为添加到 Zep 向量存储（Vector Store）的文档创建嵌入（Embeddings），使用的是 Zep 服务器本地的低延迟模型。
+Zep 的 TS/JS 客户端可以在非 Node 的边缘环境中（Edge environments）使用。这两点，结合 Zep 的聊天记忆功能，
+使得 Zep 对于构建需要考虑延迟和性能的对话式 LLM 应用来说是理想的选择。
 
-### Supported Search Types
+### 支持的搜索类型
 
-Zep supports both similarity search and Maximal Marginal Relevance (MMR) search. MMR search is particularly useful
-for Retrieval Augmented Generation applications as it re-ranks results to ensure diversity in the returned documents.
+Zep 支持相似度搜索（similarity search）和最大边际相关性搜索（Maximal Marginal Relevance, MMR）搜索。MMR 搜索对于检索增强生成（Retrieval Augmented Generation, RAG）应用尤其有用，因为它会对结果进行重新排序，以确保返回的文档具有多样性。
 
-## Installation
+## 安装
 
-Sign up for [Zep Cloud](https://app.getzep.com/) and create a project.
+注册 [Zep Cloud](https://app.getzep.com/) 并创建一个项目。
 
-Follow the [Zep Cloud Typescript SDK Installation Guide](https://help.getzep.com/sdks) to install and get started with Zep.
+遵循 [Zep Cloud Typescript SDK 安装指南](https://help.getzep.com/sdks) 来安装并开始使用 Zep。
 
-## Usage
+## 用法
 
-You'll need your Zep Cloud Project API Key to use the Zep VectorStore. See the [Zep Cloud docs](https://help.getzep.com/projects) for more information.
+您需要您的 Zep Cloud 项目 API Key 才能使用 Zep VectorStore。有关更多信息，请参阅 [Zep Cloud 文档](https://help.getzep.com/projects)。
 
-Zep auto embeds all documents by default, and it's not expecting to receive any embeddings from the user.
-Since LangChain requires passing in a @[`Embeddings`] instance, we pass in `FakeEmbeddings`.
+Zep 默认情况下会自动嵌入所有文档，它不期望从用户接收任何嵌入向量。
+由于 LangChain 要求传入一个 @[`Embeddings`] 实例，我们传入 `FakeEmbeddings`。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+请参阅[此部分](/oss/langchain/install)以获取安装 LangChain 包的一般说明。
 </Tip>
 
-### Example: Creating a ZepVectorStore from Documents & Querying
+### 示例：从 Documents 创建 ZepVectorStore 并进行查询
 
 ```bash npm
 npm install @getzep/zep-cloud @langchain/openai @langchain/community @langchain/core
@@ -52,15 +50,16 @@ import { randomUUID } from "crypto";
 
 const loader = new TextLoader("src/document_loaders/example_data/example.txt");
 const docs = await loader.load();
+// 随机选取 UUID 的前几位作为集合名称的一部分，以确保唯一性
 const collectionName = `collection${randomUUID().split("-")[0]}`;
 
 const zepConfig = {
-  // Your Zep Cloud Project API key https://help.getzep.com/projects
+  // 您的 Zep Cloud 项目 API 密钥 https://help.getzep.com/projects
   apiKey: "<Zep Api Key>",
   collectionName,
 };
 
-// We're using fake embeddings here, because Zep Cloud handles embedding for you
+// 我们在这里使用 fake embeddings，因为 Zep Cloud 会为您处理文档嵌入
 const embeddings = new FakeEmbeddings();
 
 const vectorStore = await ZepCloudVectorStore.fromDocuments(
@@ -69,7 +68,7 @@ const vectorStore = await ZepCloudVectorStore.fromDocuments(
   zepConfig
 );
 
-// Wait for the documents to be embedded
+// 等待文档被嵌入完成
 // eslint-disable-next-line no-constant-condition
 while (true) {
   const c = await vectorStore.client.document.getCollection(collectionName);
@@ -96,7 +95,7 @@ console.log("MMR Results:");
 console.log(JSON.stringify(results2));
 ```
 
-### Example: Using ZepCloudVectorStore with Expression Language
+### 示例：在表达式语言中使用 ZepCloudVectorStore
 
 ```typescript
 import { ZepClient } from "@getzep/zep-cloud";
@@ -119,11 +118,11 @@ async function combineDocuments(docs: Document[], documentSeparator = "\n\n") {
   return docStrings.join(documentSeparator);
 }
 
-// Your Zep Collection Name
+// 您的 Zep 集合名称
 const collectionName = "<Zep Collection Name>";
 
 const zepClient = new ZepClient({
-  // Your Zep Cloud Project API key https://help.getzep.com/projects
+  // 您的 Zep Cloud 项目 API 密钥 https://help.getzep.com/projects
   apiKey: "<Zep Api Key>",
 });
 
@@ -144,16 +143,20 @@ const model = new ChatOpenAI({
   temperature: 0.8,
   model: "gpt-3.5-turbo-1106",
 });
+// 将 VectorStore 转换为检索器
 const retriever = vectorStore.asRetriever();
 
+// 设置和检索的 Runnable 步骤
 const setupAndRetrieval = RunnableMap.from({
   context: new RunnableLambda({
+    // 此 Lambda 函数负责检索文档并将其合并成一个字符串
     func: (input: string) => retriever.invoke(input).then(combineDocuments),
   }),
-  question: new RunnablePassthrough(),
+  question: new RunnablePassthrough(), // 原样传递问题
 });
 const outputParser = new StringOutputParser();
 
+// 构建完整的链式调用
 const chain = setupAndRetrieval
   .pipe(prompt)
   .pipe(model)
@@ -167,7 +170,7 @@ const result = await chain.invoke("Project Gutenberg?");
 console.log("result", result);
 ```
 
-## Related
+## 相关内容
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储 [概念指南](/oss/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/integrations/vectorstores)

@@ -2,42 +2,42 @@
 title: Nebius
 ---
 
-The `NebiusRetriever` enables efficient similarity search using embeddings from [Nebius AI Studio](https://studio.nebius.ai/). It leverages high-quality embedding models to enable semantic search over documents.
+`NebiusRetriever` 启用高效的相似性搜索，它使用来自 [Nebius AI Studio](https://studio.nebius.ai/) 的嵌入（embeddings）。它利用高质量的嵌入模型，对文档执行语义搜索。
 
-This retriever is optimized for scenarios where you need to perform similarity search over a collection of documents, but don't need to persist the vectors to a vector database. It performs vector similarity search in-memory using matrix operations, making it efficient for medium-sized document collections.
+该检索器针对以下场景进行了优化：您需要在文档集合上执行相似性搜索，但又不需要将向量持久化到向量数据库中。它使用矩阵运算在内存中执行向量相似性搜索，这对于中等规模的文档集合来说非常高效。
 
-## Setup
+## 设置 (Setup)
 
-### Installation
+### 安装 (Installation)
 
-The Nebius integration can be installed via pip:
+可以通过 pip 安装 Nebius 集成：
 
 ```python
 pip install -U langchain-nebius
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-Nebius requires an API key that can be passed as an initialization parameter `api_key` or set as the environment variable `NEBIUS_API_KEY`. You can obtain an API key by creating an account on [Nebius AI Studio](https://studio.nebius.ai/).
+Nebius 需要一个 API 密钥，该密钥可以作为初始化参数 `api_key` 传递，或者设置为环境变量 `NEBIUS_API_KEY`。您可以通过在 [Nebius AI Studio](https://studio.nebius.ai/) 上创建账户来获取 API 密钥。
 
 ```python
 import getpass
 import os
 
-# Make sure you've set your API key as an environment variable
+# 确保您已将 API 密钥设置为环境变量
 if "NEBIUS_API_KEY" not in os.environ:
     os.environ["NEBIUS_API_KEY"] = getpass.getpass("Enter your Nebius API key: ")
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-The `NebiusRetriever` requires a `NebiusEmbeddings` instance and a list of documents. Here's how to initialize it:
+`NebiusRetriever` 需要一个 `NebiusEmbeddings` 实例和一份文档列表。初始化方法如下：
 
 ```python
 from langchain_core.documents import Document
 from langchain_nebius import NebiusEmbeddings, NebiusRetriever
 
-# Create sample documents
+# 创建示例文档
 docs = [
     Document(
         page_content="Paris is the capital of France", metadata={"country": "France"}
@@ -74,25 +74,25 @@ docs = [
     ),
 ]
 
-# Initialize embeddings
+# 初始化嵌入模型
 embeddings = NebiusEmbeddings()
 
-# Create retriever
+# 创建检索器
 retriever = NebiusRetriever(
     embeddings=embeddings,
     docs=docs,
-    k=3,  # Number of documents to return
+    k=3,  # 要返回的文档数量
 )
 ```
 
-## Usage
+## 用法 (Usage)
 
-### Retrieve Relevant Documents
+### 检索相关文档 (Retrieve Relevant Documents)
 
-You can use the retriever to find documents related to a query:
+您可以使用检索器来查找与查询相关的文档：
 
 ```python
-# Query for European capitals
+# 查询欧洲首都
 query = "What are some capitals in Europe?"
 results = retriever.invoke(query)
 
@@ -110,12 +110,12 @@ Top 3 results:
 3. Rome is the capital of Italy (Country: Italy)
 ```
 
-### Using get_relevant_documents
+### 使用 get\_relevant\_documents
 
-You can also use the `get_relevant_documents` method directly (though `invoke` is the preferred interface):
+您也可以直接使用 `get_relevant_documents` 方法（尽管 `invoke` 是推荐的接口）：
 
 ```python
-# Query for Asian countries
+# 查询亚洲国家
 query = "What are the capitals in Asia?"
 results = retriever.get_relevant_documents(query)
 
@@ -133,14 +133,14 @@ Top 3 results:
 3. Canberra is the capital of Australia (Country: Australia)
 ```
 
-### Customizing Number of Results
+### 自定义结果数量 (Customizing Number of Results)
 
-You can adjust the number of results at query time by passing `k` as a parameter:
+您可以通过在查询时传递 `k` 参数来调整返回结果的数量：
 
 ```python
-# Query for a specific country, with custom k
+# 查询特定国家，使用自定义 k
 query = "Where is France?"
-results = retriever.invoke(query, k=1)  # Override default k
+results = retriever.invoke(query, k=1)  # 覆盖默认的 k 值
 
 print(f"Query: {query}")
 print(f"Top {len(results)} result:")
@@ -154,9 +154,9 @@ Top 1 result:
 1. Paris is the capital of France (Country: France)
 ```
 
-### Async Support
+### 异步支持 (Async Support)
 
-NebiusRetriever supports async operations:
+`NebiusRetriever` 支持异步操作：
 
 ```python
 import asyncio
@@ -183,17 +183,17 @@ Top 3 results:
 3. Paris is the capital of France (Country: France)
 ```
 
-### Handling Empty Documents
+### 处理空文档 (Handling Empty Documents)
 
 ```python
-# Create a retriever with empty documents
+# 创建一个包含空文档的检索器
 empty_retriever = NebiusRetriever(
     embeddings=embeddings,
     docs=[],
-    k=2,  # Empty document list
+    k=2,  # 文档列表为空
 )
 
-# Test the retriever with empty docs
+# 使用空文档测试检索器
 results = empty_retriever.invoke("What are the capitals of European countries?")
 print(f"Number of results: {len(results)}")
 ```
@@ -202,9 +202,9 @@ print(f"Number of results: {len(results)}")
 Number of results: 0
 ```
 
-## Use within a chain
+## 在链中使用 (Use within a chain)
 
-NebiusRetriever works seamlessly in LangChain RAG pipelines. Here's an example of creating a simple RAG chain with the NebiusRetriever:
+`NebiusRetriever` 可以在 LangChain RAG（检索增强生成）管道中无缝工作。以下是如何使用 `NebiusRetriever` 创建一个简单的 RAG 链的示例：
 
 ```python
 from langchain_core.output_parsers import StrOutputParser
@@ -212,10 +212,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_nebius import ChatNebius
 
-# Initialize LLM
+# 初始化 LLM
 llm = ChatNebius(model="meta-llama/Llama-3.3-70B-Instruct-fast")
 
-# Create a prompt template
+# 创建提示模板
 prompt = ChatPromptTemplate.from_template(
     """
 Answer the question based only on the following context:
@@ -228,12 +228,12 @@ Question: {question}
 )
 
 
-# Format documents function
+# 格式化文档函数
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-# Create RAG chain
+# 创建 RAG 链
 rag_chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
     | prompt
@@ -241,7 +241,7 @@ rag_chain = (
     | StrOutputParser()
 )
 
-# Run the chain
+# 运行链
 answer = rag_chain.invoke("What are three European capitals?")
 print(answer)
 ```
@@ -254,21 +254,21 @@ Based on the context provided, three European capitals are:
 3. Rome
 ```
 
-### Creating a Search Tool
+### 创建搜索工具 (Creating a Search Tool)
 
-You can use the `NebiusRetrievalTool` to create a tool for agents:
+您可以使用 `NebiusRetrievalTool` 为代理（Agents）创建工具：
 
 ```python
 from langchain_nebius import NebiusRetrievalTool
 
-# Create a retrieval tool
+# 创建一个检索工具
 tool = NebiusRetrievalTool(
     retriever=retriever,
     name="capital_search",
     description="Search for information about capital cities around the world",
 )
 
-# Use the tool
+# 使用工具
 result = tool.invoke({"query": "capitals in Europe", "k": 3})
 print("Tool results:")
 print(result)
@@ -286,24 +286,24 @@ Document 3:
 Rome is the capital of Italy
 ```
 
-## How It Works
+## 工作原理 (How It Works)
 
-The NebiusRetriever works by:
+`NebiusRetriever` 的工作流程如下：
 
-1. During initialization:
-   - It stores the provided documents
-   - It uses the provided NebiusEmbeddings to compute embeddings for all documents
-   - These embeddings are stored in memory for quick retrieval
+1. 在初始化时：
+   - 它存储提供的文档
+   - 它使用提供的 NebiusEmbeddings 为所有文档计算嵌入向量
+   - 这些向量被存储在内存中，以便快速检索
 
-2. During retrieval (`invoke` or `get_relevant_documents`):
-   - It embeds the query using the same embedding model
-   - It computes similarity scores between the query embedding and all document embeddings
-   - It returns the top-k documents sorted by similarity
+2. 在检索时 (`invoke` 或 `get_relevant_documents`)：
+   - 它使用相同的嵌入模型对查询进行嵌入
+   - 它计算查询嵌入与所有文档嵌入之间的相似度分数
+   - 它返回按相似度排序的前 k 个文档
 
-This approach is efficient for medium-sized document collections, as it avoids the need for a separate vector database while still providing high-quality semantic search.
+这种方法对于中等规模的文档集合非常高效，因为它避免了对单独的向量数据库的需求，同时仍然提供高质量的语义搜索。
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For more details about the Nebius AI Studio API, visit the [Nebius AI Studio Documentation](https://studio.nebius.com/api-reference).
+有关 Nebius AI Studio API 的更多详细信息，请访问 [Nebius AI Studio 文档](https://studio.nebius.com/api-reference)。

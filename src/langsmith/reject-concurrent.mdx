@@ -1,15 +1,15 @@
 ---
-title: Reject Concurrent
-sidebarTitle: Reject
+title: 拒绝并发
+sidebarTitle: 拒绝
 ---
 
-This guide assumes knowledge of what double-texting is, which you can learn about in the [double-texting conceptual guide](/langsmith/double-texting).
+本指南假设您了解什么是“重复发送”（double-texting），您可以在[重复发送概念指南](/langsmith/double-texting)中了解相关信息。
 
-The guide covers the `reject` option for double texting, which rejects the new run of the graph by throwing an error and continues with the original run until completion. Below is a quick example of using the `reject` option.
+本指南涵盖了用于重复发送的 `reject` 选项。此选项会通过抛出错误来拒绝新的图（graph）的运行实例，并让原始运行实例继续执行直到完成。下面是使用 `reject` 选项的一个快速示例。
 
-## Setup
+## 设置
 
-First, we will define a quick helper function for printing out JS and CURL model outputs (you can skip this if using Python):
+首先，我们将定义一个快速的辅助函数来打印出 JavaScript 和 CURL 模型输出（如果使用 Python，则可以跳过此步骤）：
 
 <Tabs>
     <Tab title="Javascript">
@@ -49,7 +49,7 @@ First, we will define a quick helper function for printing out JS and CURL model
     </Tab>
 </Tabs>
 
-Now, let's import our required packages and instantiate our client, assistant, and thread.
+现在，我们导入所需的包并实例化客户端（client）、助手（assistant）和线程（thread）。
 
 <Tabs>
     <Tab title="Python">
@@ -59,7 +59,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     from langgraph_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
-    # Using the graph deployed with the name "agent"
+    # 使用名称为 "agent" 的已部署图
     assistant_id = "agent"
     thread = await client.threads.create()
     ```
@@ -69,7 +69,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     import { Client } from "@langchain/langgraph-sdk";
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
-    // Using the graph deployed with the name "agent"
+    // 使用名称为 "agent" 的已部署图
     const assistantId = "agent";
     const thread = await client.threads.create();
     ```
@@ -84,9 +84,9 @@ Now, let's import our required packages and instantiate our client, assistant, a
     </Tab>
 </Tabs>
 
-## Create runs
+## 创建运行实例（Create runs）
 
-Now we can run a thread and try to run a second one with the "reject" option, which should fail since we have already started a run:
+现在我们可以运行一个线程，并尝试使用 "reject" 选项运行第二个线程。由于我们已经启动了一个运行实例，第二次尝试应该会失败：
 
 <Tabs>
     <Tab title="Python">
@@ -151,21 +151,21 @@ Now we can run a thread and try to run a second one with the "reject" option, wh
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 Failed to start concurrent run Client error '409 Conflict' for url 'http://localhost:8123/threads/f9e7088b-8028-4e5c-88d2-9cc9a2870e50/runs'
 For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409
 ```
 
-## View run results
+## 查看运行结果（View run results）
 
-We can verify that the original thread finished executing:
+我们可以验证原始线程已经完成了执行：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # wait until the original run completes
+    # 等待原始运行实例完成
     await client.runs.join(thread["thread_id"], run["run_id"])
 
     state = await client.threads.get_state(thread["thread_id"])
@@ -199,7 +199,7 @@ We can verify that the original thread finished executing:
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 ================================ Human Message =================================

@@ -1,48 +1,48 @@
 ---
-title: Trace query syntax
-sidebarTitle: Trace query syntax
+title: 追踪查询语法
+sidebarTitle: 追踪查询语法
 ---
 
-Using the method in the SDK or endpoint in the API, you can filter runs to analyze and export.
+使用 SDK 中的方法或 API 中的端点，您可以过滤追踪（runs）以进行分析和导出。
 
-## Filter arguments
+## 过滤参数
 
-| Keys                          | Description                                                                                                                                                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `project_id` / `project_name` | The project(s) to fetch runs from - can be a single project or a list of projects.                                                                                                                                             |
-| `trace_id`                    | Fetch runs that are part of a specific trace.                                                                                                                                                                                  |
-| `run_type`                    | The type of run to get, such as `llm`, `chain`, `tool`, `retriever`, etc.                                                                                                                                                      |
-| `dataset_name` / `dataset_id` | Fetch runs that are associated with an example row in the specified dataset. This is useful for comparing prompts or models over a given dataset.                                                                              |
-| `reference_example_id`        | Fetch runs that are associated with a specific example row. This is useful for comparing prompts or models on a given input.                                                                                                   |
-| `parent_run_id`               | Fetch runs that are children of a given run. This is useful for fetching runs grouped together using the context manager or for fetching an agent trajectory.                                                                  |
-| `error`                       | Fetch runs that errored or did not error.                                                                                                                                                                                      |
-| `run_ids`                     | Fetch runs with a given list of run ids. Note: **This will ignore all other filtering arguments.**                                                                                                                             |
-| `filter`                      | Fetch runs that match a given structured filter statement. See the guide below for more information.                                                                                                                           |
-| `trace_filter`                | Filter to apply to the ROOT run in the trace tree. This is meant to be used in conjunction with the regular `filter` parameter to let you filter runs by attributes of the root run within a trace.                            |
-| `tree_filter`                 | Filter to apply to OTHER runs in the trace tree, including sibling and child runs. This is meant to be used in conjunction with the regular `filter` parameter to let you filter runs by attributes of any run within a trace. |
-| `is_root`                     | Only return root runs.                                                                                                                                                                                                         |
-| `select`                      | Select the fields to return in the response. By default, all fields are returned. See [run data format](/langsmith/run-data-format) for available fields.                                                                                                                                              |
-| `query` (_experimental_)      | Natural language query, which translates your query into a filter statement.                                                                                                                                                   |
+| 键 (Keys) | 描述 (Description) |
+| :--- | :--- |
+| `project_id` / `project_name` | 要从中获取追踪（runs）的项目——可以单个项目或项目列表。 |
+| `trace_id` | 获取属于特定追踪的 runs。 |
+| `run_type` | 要获取的追踪类型，例如 `llm`、`chain`、`tool`、`retriever` 等。 |
+| `dataset_name` / `dataset_id` | 获取与指定数据集中示例行关联的 runs。这对于比较给定数据集上的提示或模型很有用。 |
+| `reference_example_id` | 获取与特定示例行关联的 runs。这对于比较给定输入上的提示或模型很有用。 |
+| `parent_run_id` | 获取给定追踪的子 runs。这对于使用上下文管理器分组获取 runs 或获取 Agent 的轨迹（trajectory）很有用。 |
+| `error` | 获取发生错误或未发生错误的 runs。 |
+| `run_ids` | 使用给定的 run ID 列表来获取 runs。注意：**这将忽略所有其他过滤参数。** |
+| `filter` | 获取与给定结构化过滤语句匹配的 runs。有关更多信息，请参阅下面的指南。 |
+| `trace_filter` | 应用于追踪树中 ROOT run 的过滤器。此参数旨在与常规 `filter` 参数结合使用，允许您根据追踪中根 run 的属性来过滤 runs。 |
+| `tree_filter` | 应用于追踪树中其他 runs（包括同级和子 runs）的过滤器。此参数旨在与常规 `filter` 参数结合使用，允许您根据追踪中任何 run 的属性来过滤 runs。 |
+| `is_root` | 仅返回根 run。 |
+| `select` | 选择响应中返回的字段。默认情况下，返回所有字段。有关可用字段，请参阅 [run data format](/langsmith/run-data-format)。 |
+| `query` (实验性) | 自然语言查询，它会将您的查询转化为过滤语句。 |
 
 <Note>
-**Performance tip**: Passing the `select` parameter and excluding `inputs` and `outputs` from the list can significantly improve query performance and reduce response sizes, especially for large runs.
+**性能提示**: 传递 `select` 参数并从列表中排除 `inputs` 和 `outputs` 可以显著提高查询性能并减小响应大小，特别是对于大型追踪。
 </Note>
 
-## Filter query language
+## 过滤查询语言
 
-LangSmith supports powerful filtering capabilities with a filter query language to permit complex filtering operations when fetching runs.
+LangSmith 通过过滤查询语言支持强大的过滤功能，允许在获取 runs 时进行复杂的过滤操作。
 
-The filtering grammar is based on common comparators on fields in the run object. Supported comparators include:
+过滤语法基于对 run 对象上字段的常见比较器。支持的比较器包括：
 
--   `gte` (greater than or equal to)
--   `gt` (greater than)
--   `lte` (less than or equal to)
--   `lt` (less than)
--   `eq` (equal to)
--   `neq` (not equal to)
--   `has` (check if run contains a tag or metadata json blob)
--   `search` (search for a substring in a string field)
+-   `gte` (大于或等于)
+-   `gt` (大于)
+-   `lte` (小于或等于)
+-   `lt` (小于)
+-   `eq` (等于)
+-   `neq` (不等于)
+-   `has` (检查 run 是否包含标签或元数据 JSON blob)
+-   `search` (在字符串字段中搜索子字符串)
 
-Additionally, you can combine multiple comparisons through the `and` operator.
+此外，您可以通过 `and` 运算符组合多个比较。
 
-These can be applied on fields of the run object, such as its `id`, `name`, `run_type`, `start_time` / `end_time`, `latency`, `total_tokens`, `error`, `execution_order`, `tags`, and any associated feedback through `feedback_key` and `feedback_score`.
+这些比较器可以应用于 run 对象的字段，例如其 `id`、`name`、`run_type`、`start_time` / `end_time`、`latency`、`total_tokens`、`error`、`execution_order`、`tags`，以及任何相关的反馈信息（通过 `feedback_key` 和 `feedback_score`）。

@@ -1,34 +1,34 @@
 ---
-title: Azure Cosmos DB NoSQL Semantic Cache
+title: Azure Cosmos DB NoSQL 语义缓存
 ---
 
-> The Semantic Cache feature is supported with Azure Cosmos DB for NoSQL integration, enabling users to retrieve cached responses based on semantic similarity between the user input and previously cached results. It leverages [AzureCosmosDBNoSQLVectorStore](/oss/integrations/vectorstores/azure_cosmosdb_nosql), which stores vector embeddings of cached prompts. These embeddings enable similarity-based searches, allowing the system to retrieve relevant cached results.
+> 语义缓存（Semantic Cache）功能支持与 Azure Cosmos DB for NoSQL 的集成，它允许用户根据用户输入与先前缓存的结果之间的语义相似性来检索缓存的响应。该功能利用了 [`AzureCosmosDBNoSQLVectorStore`](/oss/integrations/vectorstores/azure_cosmosdb_nosql)，该向量存储用于存储缓存提示的向量嵌入（vector embeddings）。这些嵌入使得基于相似性的搜索成为可能，从而允许系统检索相关的缓存结果。
 
-If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
+如果您还没有 Azure 帐户，可以 [创建一个永久免费帐户](https://azure.microsoft.com/free/) 开始使用。
 
-## Setup
+## 设置
 
-You'll first need to install the [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) package:
+您首先需要安装 [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) 包：
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅 [此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/azure-cosmosdb @langchain/core
 ```
 
-You'll also need to have an Azure Cosmos DB for NoSQL instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal).
+您还需要一个正在运行的 Azure Cosmos DB for NoSQL 实例。您可以按照 [本指南](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal) 在 Azure 门户上部署免费版本，而无需任何费用。
 
-Once you have your instance running, make sure you have the connection string. If you are using Managed Identity, you need to have the endpoint. You can find them in the Azure Portal, under the "Settings / Keys" section of your instance.
+实例运行后，请确保您拥有连接字符串（connection string）。如果您使用的是托管身份（Managed Identity），则需要终结点（endpoint）。您可以在 Azure 门户中，在实例的“设置 / 密钥”部分找到它们。
 
 <Info>
-**When using Azure Managed Identity and role-based access control, you must ensure that the database and container have been created beforehand. RBAC does not provide permissions to create databases and containers. You can get more information about the permission model in the [Azure Cosmos DB documentation](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model).**
+**当使用 Azure 托管身份和基于角色的访问控制（RBAC）时，您必须确保数据库和容器已预先创建。RBAC 不提供创建数据库和容器的权限。您可以在 [Azure Cosmos DB 文档](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model) 中了解有关权限模型的更多信息。**
 
 
 </Info>
 
-## Usage example
+## 使用示例
 
 ```typescript
 import {
@@ -41,16 +41,16 @@ const embeddings = new OpenAIEmbeddings();
 const config: AzureCosmosDBNoSQLConfig = {
   databaseName: "<DATABASE_NAME>",
   containerName: "<CONTAINER_NAME>",
-  // use endpoint to initiate client with managed identity
+  // 使用 endpoint 来初始化带有托管身份的客户端
   connectionString: "<CONNECTION_STRING>",
 };
 
 /**
- * Sets the threshold similarity score for returning cached results based on vector distance.
- * Cached output is returned only if the similarity score meets or exceeds this threshold;
- * otherwise, a new result is generated. Default is 0.6, adjustable via the constructor
- * to suit various distance functions and use cases.
- * (see: https://aka.ms/CosmosVectorSearch).
+ * 设置相似性分数阈值，用于基于向量距离返回缓存结果。
+ * 仅当相似性分数达到或超过此阈值时才会返回缓存的输出；
+ * 否则，将生成一个新结果。默认值为 0.6，可通过构造函数进行调整，
+ * 以适应各种距离函数和用例。
+ * (参见: https://aka.ms/CosmosVectorSearch)。
  */
 
 const similarityScoreThreshold = 0.5;
@@ -62,7 +62,7 @@ const cache = new AzureCosmosDBNoSQLSemanticCache(
 
 const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
 
-// Invoke the model to perform an action
+// 调用模型执行操作
 const response1 = await model.invoke("Do something random!");
 console.log(response1);
 /*

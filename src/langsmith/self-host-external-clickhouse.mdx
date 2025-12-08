@@ -1,119 +1,119 @@
 ---
-title: Connect to an external ClickHouse database
-sidebarTitle: Connect to an external ClickHouse database
+title: 连接到外部 ClickHouse 数据库
+sidebarTitle: 连接到外部 ClickHouse 数据库
 ---
 
-ClickHouse is a high-performance, column-oriented database system. It allows for fast ingestion of data and is optimized for analytical queries.
+ClickHouse 是一个高性能的列式数据库系统。它支持快速的数据摄取，并针对分析查询进行了优化。
 
-LangSmith uses ClickHouse as the primary data store for traces and feedback. By default, self-hosted LangSmith will use an internal ClickHouse database that is bundled with the LangSmith instance. This is run as a stateful set in the same Kubernetes cluster as the LangSmith application or as a Docker container on the same host as the LangSmith application.
+LangSmith 使用 ClickHouse 作为其跟踪（traces）和反馈（feedback）的主要数据存储。默认情况下，自托管的 LangSmith 会使用一个与 LangSmith 实例捆绑的内部 ClickHouse 数据库。这个数据库通常作为有状态集（stateful set）在 LangSmith 应用程序所在的同一个 Kubernetes 集群中运行，或者作为与 LangSmith 应用程序在同一主机上的 Docker 容器运行。
 
-However, you can configure LangSmith to use an external ClickHouse database for easier management and scaling. By configuring an external ClickHouse database, you can manage backups, scaling, and other operational tasks for your database. While Clickhouse is not yet a native service in Azure, AWS, or Google Cloud, you can run LangSmith with an external ClickHouse database in the following ways:
+然而，您可以配置 LangSmith 以使用外部的 ClickHouse 数据库，以便于管理和扩展。通过配置外部 ClickHouse 数据库，您可以更方便地管理数据库的备份、扩展和其他运维任务。尽管 ClickHouse 目前在 Azure、AWS 或 Google Cloud 中还不是原生服务，但您可以通过以下方式使用外部 ClickHouse 数据库运行 LangSmith：
 
-* [LangSmith-managed ClickHouse](/langsmith/langsmith-managed-clickhouse)
+* [LangSmith 管理的 ClickHouse](/langsmith/langsmith-managed-clickhouse)
 
-* Provision a [ClickHouse Cloud](https://clickhouse.cloud/) either directly or through a cloud provider marketplace:
+* 直接或通过云提供商市场（Marketplace）配置 [ClickHouse Cloud](https://clickhouse.cloud/)：
 
     * [Azure Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/clickhouse.clickhouse_cloud?tab=Overview)
   * [Google Cloud Marketplace](https://console.cloud.google.com/marketplace/product/clickhouse-public/clickhouse-cloud)
   * [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-jettukeanwrfc)
 
-* On a VM in your cloud provider
+* 在您云提供商的虚拟机（VM）上
 
 <Note>
-Using the first two options (LangSmith-managed ClickHouse or ClickHouse Cloud) will provision a Clickhouse service OUTSIDE of your VPC. However, both options support private endpoints, meaning that you can direct traffic to the ClickHouse service without exposing it to the public internet (eg via AWS PrivateLink, or GCP Private Service Connect).
+使用前两个选项（LangSmith 管理的 ClickHouse 或 ClickHouse Cloud）将会在您的 VPC 外部配置 Clickhouse 服务。然而，这两个选项都支持私有端点（private endpoints），这意味着您可以将流量引导至 ClickHouse 服务，而无需将其暴露给公共互联网（例如通过 AWS PrivateLink 或 GCP Private Service Connect）。
 
-Additionally, sensitive information can be configured to be not stored in Clickhouse. Please contact support via [support.langchain.com](https://support.langchain.com) for more information.
+此外，敏感信息可以配置为不存储在 Clickhouse 中。请通过 [support.langchain.com](https://support.langchain.com) 联系支持团队以获取更多信息。
 </Note>
 
-## Requirements
+## 要求
 
-* A provisioned ClickHouse instance that your LangSmith application will have network access to (see above for options).
-* A user with admin access to the ClickHouse database. This user will be used to create the necessary tables, indexes, and views.
-* We support both standalone ClickHouse and externally managed clustered deployments. For clustered deployments, ensure all nodes are running the same version. Note that clustered setups are not supported with bundled ClickHouse installations.
-* We only support ClickHouse versions >= 23.9. Use of ClickHouse versions >= 24.2 requires LangSmith v0.6 or later.
-* We rely on a few configuration parameters to be set on your ClickHouse instance. These are detailed below:
+* 一个已配置的 ClickHouse 实例，并且您的 LangSmith 应用程序可以访问该实例的网络（参见上文获取选项）。
+* 一个对 ClickHouse 数据库具有管理权限（admin access）的用户。此用户将用于创建必要的表、索引和视图。
+* 我们支持独立的（standalone）ClickHouse 和外部管理的集群部署。对于集群部署，请确保所有节点运行相同的版本。请注意，捆绑的 ClickHouse 安装不支持集群设置。
+* 我们仅支持 ClickHouse 版本 >= 23.9。使用 ClickHouse 版本 >= 24.2 需要 LangSmith v0.6 或更高版本。
+* 我们依赖于在您的 ClickHouse 实例上设置的几个配置参数。这些参数在下面详细说明：
 
 ```xml
 <profiles>
   <default>
-      <async_insert>1</async_insert> # Turn on async insert
-      <async_insert_max_data_size>25000000</async_insert_max_data_size> # Flush data to disk after 25MB. You may need to adjust this based on your workload.
-      <wait_for_async_insert>0</wait_for_async_insert> # Disable waiting for async insert by default
-      <parallel_view_processing>1</parallel_view_processing> # Enable parallel view processing
-      <materialize_ttl_after_modify>0</materialize_ttl_after_modify> # Disable TTL materialization after modify
-      <wait_for_async_insert_timeout>120</wait_for_async_insert_timeout> # Set the timeout for waiting for async insert
-      <lightweight_deletes_sync>0</lightweight_deletes_sync> # Disable lightweight deletes sync
-      <allow_materialized_view_with_bad_select>1</allow_materialized_view_with_bad_select> # Allow materialized views with legacy SELECT statements that cause CH to fail
+      <async_insert>1</async_insert> # 开启异步插入
+      <async_insert_max_data_size>25000000</async_insert_max_data_size> # 达到 25MB 后将数据刷写到磁盘。您可能需要根据您的工作负载进行调整。
+      <wait_for_async_insert>0</wait_for_async_insert> # 默认禁用等待异步插入
+      <parallel_view_processing>1</parallel_view_processing> # 启用并行视图处理
+      <materialize_ttl_after_modify>0</materialize_ttl_after_modify> # 修改后禁用 TTL 物化
+      <wait_for_async_insert_timeout>120</wait_for_async_insert_timeout> # 设置等待异步插入的超时时间
+      <lightweight_deletes_sync>0</lightweight_deletes_sync> # 禁用轻量级删除同步
+      <allow_materialized_view_with_bad_select>1</allow_materialized_view_with_bad_select> # 允许使用可能导致 CH 失败的传统 SELECT 语句的物化视图
   </default>
 </profiles>
 ```
 
 <Warning>
-Our system has been tuned to work with the above configuration parameters. Changing these parameters may result in unexpected behavior.
+我们的系统已针对上述配置参数进行了调优。更改这些参数可能会导致意外行为。
 </Warning>
 
-## HA Replicated Clickhouse Cluster
+## 高可用（HA）复制的 Clickhouse 集群
 
 <Warning>
-By default, the setup process above will only work with a single node Clickhouse cluster.
+默认情况下，上述设置过程仅适用于单节点 Clickhouse 集群。
 </Warning>
 
-If you would like to use a multi-node Clickhouse cluster for HA, we support this with additional required configuration. This setup can use a Clickhouse cluster with multiple nodes where data replicated via Zookeeper or Clickhouse Keeper. For more information on Clickhouse replication, see [Clickhouse Data Replication Docs](https://clickhouse.com/docs/architecture/replication).
+如果您想使用多节点 Clickhouse 集群来实现高可用性（HA），我们需要额外的配置支持。这种设置可以使用包含多个节点的 Clickhouse 集群，其中数据通过 Zookeeper 或 Clickhouse Keeper 进行复制。有关 Clickhouse 复制的更多信息，请参阅 [Clickhouse 数据复制文档](https://clickhouse.com/docs/architecture/replication)。
 
-In order to setup LangSmith with a replicated multi-node Clickhouse setup:
+要在配置了复制的多节点 Clickhouse 设置下部署 LangSmith，您需要：
 
-* You need to have a Clickhouse cluster that is setup with Keeper or Zookeeper for data replication and the appropriate settings. See [Clickhouse Replication Setup Docs](https://clickhouse.com/docs/architecture/replication).
-* You need to set the cluster setting in the [LangSmith Configuration](#configuration) section, specifically the `cluster` settings to match your Clickhouse Cluster name. This will use the `Replicated` table engines when running the Clickhouse migrations.
-* If in addition to HA, you would like to load balance among the Clickhouse nodes (to distribute reads or writes), we suggest using a load balancer or DNS load balancing to round robin among your Clickhouse servers.
-* **Note**: You will need to enable your `cluster` setting before launching LangSmith for the first time and running the Clickhouse migrations. This is a requirement since the table engine will need to be created as a `Replicated` table engine vs the non replicated engine type.
+* 您需要有一个配置了 Keeper 或 Zookeeper 用于数据复制以及相应设置的 Clickhouse 集群。请参阅 [Clickhouse 复制设置文档](https://clickhouse.com/docs/en/architecture/replication)。
+* 您需要在 [配置](#configuration) 部分的 LangSmith 配置中设置 `cluster` 设置，使其与您的 Clickhouse 集群名称匹配。这将导致在运行 Clickhouse 迁移时使用 `Replicated` 表引擎。
+* 如果除了 HA 之外，您还想在 Clickhouse 节点之间进行负载均衡（以分配读写），我们建议使用负载均衡器或 DNS 负载均衡来进行轮询（round robin）。
+* **注意**：在首次启动 LangSmith 并运行 Clickhouse 迁移之前，您需要启用 `cluster` 设置。这是一个要求，因为表引擎需要被创建为 `Replicated` 表引擎类型，而不是非复制类型。
 
-When running migrations with `cluster` enabled, the migration will create the `Replicated` table engine flavor. This means that data will be replicated among the servers in the cluster. This is a master-master setup where any server can process reads, writes, or merges.
-
-<Note>
-For an example setup of a replicated ClickHouse cluster, refer to the [replicated ClickHouse section](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/examples/replicated-clickhouse/README.md) in the LangSmith Helm chart repo, under examples.
-</Note>
-
-## LangSmith-managed ClickHouse
-
-* If using LangSmith-managed ClickHouse, you will need to set up a VPC peering connection between the LangSmith VPC and the ClickHouse VPC. Please contact support via [support.langchain.com](https://support.langchain.com) for more information.
-* You will also need to set up Blob Storage. You can read more about Blob Storage in the [Blob Storage documentation](/langsmith/self-host-blob-storage).
+当启用 `cluster` 运行迁移时，迁移将创建 `Replicated` 表引擎版本。这意味着数据将在集群中的服务器之间复制。这是一个主-主（master-master）设置，任何服务器都可以处理读、写或合并操作。
 
 <Note>
-ClickHouse installations managed by LangSmith use a SharedMerge engine, which automatically clusters them and separates compute from storage.
+有关复制 ClickHouse 集群设置的示例，请参阅 LangSmith Helm Chart 仓库中 `langsmith` 图表下的示例部分：[复制的 ClickHouse 部分](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/examples/replicated-clickhouse/README.md)。
 </Note>
 
-For more information, refer to the [managed ClickHouse](/langsmith/langsmith-managed-clickhouse) page.
+## LangSmith 管理的 ClickHouse
 
-## Parameters
+* 如果使用 LangSmith 管理的 ClickHouse，您需要在 LangSmith VPC 和 ClickHouse VPC 之间设置 VPC 对等连接（VPC peering connection）。请通过 [support.langchain.com](https://support.langchain.com) 联系支持团队以获取更多信息。
+* 您还需要设置 Blob 存储。您可以在 [Blob 存储文档](/langsmith/self-host-blob-storage) 中阅读有关 Blob 存储的更多信息。
 
-You will need to provide several parameters to your LangSmith installation to configure an external ClickHouse database. These parameters include:
+<Note>
+LangSmith 管理的 ClickHouse 安装使用 SharedMerge 引擎，该引擎会自动将它们集群化，并将计算与存储分离。
+</Note>
 
-* Host: The hostname or IP address of the ClickHouse database
-* HTTP Port: The port that the ClickHouse database listens on for HTTP connections
-* Native Port: The port that the ClickHouse database listens on for [native connections](https://clickhouse.com/docs/en/interfaces/tcp)
-* Database: The name of the ClickHouse database that LangSmith should use
-* Username: The username to use to connect to the ClickHouse database
-* Password: The password to use to connect to the ClickHouse database
-* Cluster (Optional): The name of the ClickHouse cluster if using an external Clickhouse cluster. When set, LangSmith will run migrations on the cluster and replicate data across instances.
+如需更多信息，请参阅 [托管的 ClickHouse](/langsmith/langsmith-managed-clickhouse) 页面。
+
+## 参数
+
+您需要向 LangSmith 安装提供几个参数来配置外部 ClickHouse 数据库。这些参数包括：
+
+* Host：ClickHouse 数据库的主机名或 IP 地址
+* HTTP Port：ClickHouse 数据库监听 HTTP 连接的端口
+* Native Port：ClickHouse 数据库监听 [原生连接](https://clickhouse.com/docs/en/interfaces/tcp) 的端口
+* Database：LangSmith 应使用的 ClickHouse 数据库的名称
+* Username：用于连接到 ClickHouse 数据库的用户名
+* Password：用于连接到 ClickHouse 数据库的密码
+* Cluster（可选）：如果使用外部 Clickhouse 集群，则是 ClickHouse 集群的名称。设置此项后，LangSmith 将在集群上运行迁移并将数据跨实例复制。
 
 <Warning>
-Important considerations for clustered deployments:
+关于集群部署的重要注意事项：
 
-* Clustered setups must be configured on a fresh schema - existing standalone ClickHouse instances cannot be converted to clustered mode.
+* 集群设置必须在全新的 Schema 上配置——现有的独立 ClickHouse 实例不能转换为集群模式。
 
-* Clustering is only supported with externally managed ClickHouse deployments. It is not compatible with bundled ClickHouse installations as these do not include required ZooKeeper configurations.
+* 集群仅支持外部管理的 ClickHouse 部署。它与捆绑的 ClickHouse 安装不兼容，因为后者不包含必需的 ZooKeeper 配置。
 
-* When using a clustered deployment, LangSmith will automatically:
+* 当使用集群部署时，LangSmith 将自动执行以下操作：
 
-* Run database migrations across all nodes in the cluster
-* Configure tables for data replication across the cluster
+* 在集群的所有节点上运行数据库迁移
+* 配置表以在集群中复制数据
 
-Note that while data is replicated across nodes, LangSmith does not configure distributed tables or handle query routing - queries will be directed to the specified host. You will need to handle any load balancing or query distribution at the infrastructure level if desired.
+请注意，虽然数据会在节点间复制，但 LangSmith 不会配置分布式表或处理查询路由——查询将直接发送到指定的 Host。如果您需要，您需要在基础设施层面处理任何负载均衡或查询分发。
 </Warning>
 
-## Configuration
+## 配置
 
-With these parameters in hand, you can configure your LangSmith instance to use the provisioned ClickHouse database. You can do this by modifying the `config.yaml` file for your LangSmith Helm Chart installation or the `.env` file for your Docker installation.
+掌握了这些参数后，您就可以配置您的 LangSmith 实例以使用已配置的 ClickHouse 数据库。您可以通过修改 LangSmith Helm Chart 安装的 `config.yaml` 文件或 Docker 安装的 `.env` 文件来完成此操作。
 
 <CodeGroup>
 
@@ -128,21 +128,21 @@ clickhouse:
     password: "password"
     database: "default"
     tls: false
-    cluster: "my_cluster_name"  # Optional: Set this if using an external Clickhouse cluster
+    cluster: "my_cluster_name"  # 可选：如果使用外部 Clickhouse 集群，请设置此项
 ```
 
 ```bash Docker
-# In your .env file
-CLICKHOUSE_HOST=langchain-clickhouse # Change to your Clickhouse host if using external Clickhouse. Otherwise, leave it as is
-CLICKHOUSE_USER=default # Change to your Clickhouse user if needed
-CLICKHOUSE_DB=default # Change to your Clickhouse database if needed
-CLICKHOUSE_PORT=8123 # Change to your Clickhouse port if needed
-CLICKHOUSE_TLS=false # Change to true if you are using TLS to connect to Clickhouse. Otherwise, leave it as is
-CLICKHOUSE_PASSWORD=password # Change to your Clickhouse password if needed
-CLICKHOUSE_NATIVE_PORT=9000 # Change to your Clickhouse native port if needed
-CLICKHOUSE_CLUSTER=my_cluster_name # Optional: Set this if using an external Clickhouse cluster
+# 在您的 .env 文件中
+CLICKHOUSE_HOST=langchain-clickhouse # 如果使用外部 Clickhouse，请更改为您的 Clickhouse 主机。否则保持不变
+CLICKHOUSE_USER=default # 如果需要，请更改为您 Clickhouse 用户名
+CLICKHOUSE_DB=default # 如果需要，请更改为您 Clickhouse 数据库名称
+CLICKHOUSE_PORT=8123 # 如果需要，请更改为您 Clickhouse 端口
+CLICKHOUSE_TLS=false # 如果您使用 TLS 连接到 Clickhouse，请更改为 true。否则保持不变
+CLICKHOUSE_PASSWORD=password # 如果需要，请更改为您 Clickhouse 密码
+CLICKHOUSE_NATIVE_PORT=9000 # 如果需要，请更改为您 Clickhouse 原生端口
+CLICKHOUSE_CLUSTER=my_cluster_name # 可选：如果使用外部 Clickhouse 集群，请设置此项
 ```
 
 </CodeGroup>
 
-Once configured, you should be able to reinstall your LangSmith instance. If everything is configured correctly, your LangSmith instance should now be using your external ClickHouse database.
+配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在应该正在使用您的外部 ClickHouse 数据库。

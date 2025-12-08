@@ -1,29 +1,30 @@
+```markdown
 ---
-title: Control plane API reference for LangSmith Deployment
-sidebarTitle: Control plane API
+title: LangSmith 部署的控制平面 API 参考
+sidebarTitle: 控制平面 API
 ---
 
-The control plane API is part of [LangSmith Deployment](/langsmith/deployments). With the control plane API, you can programmatically create, manage, and automate your [Agent Server](/langsmith/agent-server) deployments—for example, as part of a custom CI/CD workflow.
+控制平面 API 是 [LangSmith 部署](/langsmith/deployments) 的一部分。借助控制平面 API，您可以以编程方式创建、管理和自动化您的 [Agent Server](/langsmith/agent-server) 部署，例如将其作为自定义 CI/CD 工作流的一部分。
 
-<Card title="API Reference" href="https://api.host.langchain.com/docs" icon="book">
-  View the full Control Plane API reference documentation
+<Card title="API 参考" href="https://api.host.langchain.com/docs" icon="book">
+  查看完整的控制平面 API 参考文档
 </Card>
 
-## Host
+## 主机 (Host)
 
-The control plane hosts for Cloud data regions:
+控制平面为主机托管云数据区域：
 
-| US | EU |
+| US (美国) | EU (欧洲) |
 |----|----|
 | `https://api.host.langchain.com` | `https://eu.api.host.langchain.com` |
 
-**Note**: Self-hosted deployments of LangSmith will have a custom host for the control plane. The control plane APIs can be accessed at the path `/api-host`. For example, `http(s)://<host>/api-host/v2/deployments`. See [here](../langsmith/self-host-usage#configuring-the-application-you-want-to-use-with-langsmith) for more details.
+**注意**: LangSmith 的自托管部署将为主控制平面拥有一个自定义主机。可以通过路径 `/api-host` 访问控制平面 API。例如：`http(s)://<host>/api-host/v2/deployments`。有关更多详细信息，请参见[此处](../langsmith/self-host-usage#configuring-the-application-you-want-to-use-with-langsmith)。
 
-## Authentication
+## 身份验证 (Authentication)
 
-To authenticate with the control plane API, set the `X-Api-Key` header to a valid LangSmith API key and set the `X-Tenant-Id` header to a valid workspace ID to target.
+要使用控制平面 API 进行身份验证，请将 `X-Api-Key` 标头设置为有效的 LangSmith API 密钥，并将 `X-Tenant-Id` 标头设置为有效的**工作区 ID** 以进行定位。
 
-Example `curl` command:
+示例 `curl` 命令：
 
 ```shell
 curl --request GET \
@@ -32,20 +33,20 @@ curl --request GET \
   --header 'X-Tenant-Id': WORKSPACE_ID'
 ```
 
-## Versioning
+## 版本控制 (Versioning)
 
-Each endpoint path is prefixed with a version (e.g. `v1`, `v2`).
+每个端点路径都以版本前缀（例如 `v1`, `v2`）。
 
-## Quick Start
+## 快速开始 (Quick Start)
 
-1. Call `POST /v2/deployments` to create a new Deployment. The response body contains the Deployment ID (`id`) and the ID of the latest (and first) revision (`latest_revision_id`).
-2. Call `GET /v2/deployments/{deployment_id}` to retrieve the Deployment. Set `deployment_id` in the URL to the value of Deployment ID (`id`).
-3. Poll for revision `status` until `status` is `DEPLOYED` by calling `GET /v2/deployments/{deployment_id}/revisions/{latest_revision_id}`.
-4. Call `PATCH /v2/deployments/{deployment_id}` to update the deployment.
+1. 调用 `POST /v2/deployments` 来创建一个新的部署 (Deployment)。响应体包含部署 ID (`id`) 和最新（也是第一个）修订版的 ID (`latest_revision_id`)。
+2. 调用 `GET /v2/deployments/{deployment_id}` 来检索该部署。将 URL 中的 `deployment_id` 设置为部署 ID (`id`) 的值。
+3. 通过调用 `GET /v2/deployments/{deployment_id}/revisions/{latest_revision_id}` 轮询修订版的 `status`，直到 `status` 为 `DEPLOYED`（已部署）。
+4. 调用 `PATCH /v2/deployments/{deployment_id}` 来更新部署。
 
-## Example Code
+## 示例代码 (Example Code)
 
-Below is example Python code that demonstrates how to orchestrate the control plane APIs to create a deployment, update the deployment, and delete the deployment.
+下面是一段示例 Python 代码，演示了如何编排控制平面 API 来创建部署、更新部署和删除部署。
 
 ```python
 import os
@@ -57,16 +58,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# required environment variables
+# 必需的环境变量
 CONTROL_PLANE_HOST = os.getenv("CONTROL_PLANE_HOST")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 WORKSPACE_ID = os.getenv("WORKSPACE_ID")
 INTEGRATION_ID = os.getenv("INTEGRATION_ID")
-MAX_WAIT_TIME = 1800  # 30 mins
+MAX_WAIT_TIME = 1800  # 30 分钟
 
 
 def get_headers() -> dict:
-    """Return common headers for requests to the control plane API."""
+    """返回向控制平面 API 发起请求所需的通用标头。"""
     return {
         "X-Api-Key": LANGSMITH_API_KEY,
         "X-Tenant-Id": WORKSPACE_ID,
@@ -74,7 +75,7 @@ def get_headers() -> dict:
 
 
 def create_deployment() -> str:
-    """Create deployment. Return deployment ID."""
+    """创建部署。返回部署 ID。"""
     headers = get_headers()
     headers["Content-Type"] = "application/json"
 
@@ -119,30 +120,30 @@ def create_deployment() -> str:
     )
 
     if response.status_code != 201:
-        raise Exception(f"Failed to create deployment: {response.text}")
+        raise Exception(f"创建部署失败: {response.text}")
 
     deployment_id = response.json()["id"]
-    print(f"Created deployment {deployment_name} ({deployment_id})")
+    print(f"已创建部署 {deployment_name} ({deployment_id})")
     return deployment_id
 
 
 def get_deployment(deployment_id: str) -> dict:
-    """Get deployment."""
+    """获取部署。"""
     response = requests.get(
         url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
         headers=get_headers(),
     )
 
     if response.status_code != 200:
-        raise Exception(f"Failed to get deployment ID {deployment_id}: {response.text}")
+        raise Exception(f"获取部署 ID {deployment_id} 失败: {response.text}")
 
     return response.json()
 
 
 def list_revisions(deployment_id: str) -> list[dict]:
-    """List revisions.
+    """列出修订版。
 
-    Return list is sorted by created_at in descending order (latest first).
+    返回的列表按 created_at 降序排序（最新的在前）。
     """
     response = requests.get(
         url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}/revisions",
@@ -151,7 +152,7 @@ def list_revisions(deployment_id: str) -> list[dict]:
 
     if response.status_code != 200:
         raise Exception(
-            f"Failed to list revisions for deployment ID {deployment_id}: {response.text}"
+            f"列出部署 ID {deployment_id} 的修订版失败: {response.text}"
         )
 
     return response.json()
@@ -161,24 +162,24 @@ def get_revision(
     deployment_id: str,
     revision_id: str,
 ) -> dict:
-    """Get revision."""
+    """获取修订版。"""
     response = requests.get(
         url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}/revisions/{revision_id}",
         headers=get_headers(),
     )
 
     if response.status_code != 200:
-        raise Exception(f"Failed to get revision ID {revision_id}: {response.text}")
+        raise Exception(f"获取修订版 ID {revision_id} 失败: {response.text}")
 
     return response.json()
 
 
 def patch_deployment(deployment_id: str) -> None:
-    """Patch deployment."""
+    """更新部署。"""
     headers = get_headers()
     headers["Content-Type"] = "application/json"
 
-    # This creates a new revision because source_revision_config is included
+    # 因为包含了 source_revision_config，所以这将创建一个新的修订版
     response = requests.patch(
         url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
         headers=headers,
@@ -194,13 +195,13 @@ def patch_deployment(deployment_id: str) -> None:
     )
 
     if response.status_code != 200:
-        raise Exception(f"Failed to patch deployment: {response.text}")
+        raise Exception(f"更新部署失败: {response.text}")
 
-    print(f"Patched deployment ID {deployment_id}")
+    print(f"已更新部署 ID {deployment_id}")
 
 
 def wait_for_deployment(deployment_id: str, revision_id: str) -> None:
-    """Wait for revision status to be DEPLOYED."""
+    """等待修订版状态变为 DEPLOYED（已部署）。"""
     start_time = time.time()
     revision, status = None, None
     while time.time() - start_time < MAX_WAIT_TIME:
@@ -209,19 +210,19 @@ def wait_for_deployment(deployment_id: str, revision_id: str) -> None:
         if status == "DEPLOYED":
             break
         elif "FAILED" in status:
-            raise Exception(f"Revision ID {revision_id} failed: {revision}")
+            raise Exception(f"修订版 ID {revision_id} 失败: {revision}")
 
-        print(f"Waiting for revision ID {revision_id} to be DEPLOYED...")
+        print(f"正在等待修订版 ID {revision_id} 变为 DEPLOYED...")
         time.sleep(60)
 
     if status != "DEPLOYED":
         raise Exception(
-            f"Timeout waiting for revision ID {revision_id} to be DEPLOYED: {revision}"
+            f"等待修订版 ID {revision_id} 变为 DEPLOYED 超时: {revision}"
         )
 
 
 def delete_deployment(deployment_id: str) -> None:
-    """Delete deployment."""
+    """删除部署。"""
     response = requests.delete(
         url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
         headers=get_headers(),
@@ -229,31 +230,31 @@ def delete_deployment(deployment_id: str) -> None:
 
     if response.status_code != 204:
         raise Exception(
-            f"Failed to delete deployment ID {deployment_id}: {response.text}"
+            f"删除部署 ID {deployment_id} 失败: {response.text}"
         )
 
-    print(f"Deployment ID {deployment_id} deleted")
+    print(f"部署 ID {deployment_id} 已删除")
 
 
 if __name__ == "__main__":
-    # create deployment and get the latest revision
+    # 创建部署并获取最新修订版
     deployment_id = create_deployment()
     revisions = list_revisions(deployment_id)
     latest_revision = revisions["resources"][0]
     latest_revision_id = latest_revision["id"]
 
-    # wait for latest revision to be DEPLOYED
+    # 等待最新修订版部署完成
     wait_for_deployment(deployment_id, latest_revision_id)
 
-    # patch the deployment and get the latest revision
+    # 更新部署并获取最新修订版
     patch_deployment(deployment_id)
     revisions = list_revisions(deployment_id)
     latest_revision = revisions["resources"][0]
     latest_revision_id = latest_revision["id"]
 
-    # wait for latest revision to be DEPLOYED
+    # 等待最新修订版部署完成
     wait_for_deployment(deployment_id, latest_revision_id)
 
-    # delete the deployment
+    # 删除部署
     delete_deployment(deployment_id)
 ```

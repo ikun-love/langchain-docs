@@ -1,27 +1,27 @@
 ---
-title: How to add custom lifespan events
-sidebarTitle: Add custom lifespan events
+title: 如何添加自定义生命周期事件
+sidebarTitle: 添加自定义生命周期事件
 ---
-When deploying agents to LangSmith, you often need to initialize resources like database connections when your server starts up, and ensure they're properly closed when it shuts down. Lifespan events let you hook into your server's startup and shutdown sequence to handle these critical setup and teardown tasks.
+在将 Agent 部署到 LangSmith 时，您通常需要在服务器启动时初始化资源（例如数据库连接），并确保在服务器关闭时正确关闭它们。生命周期事件（Lifespan events）允许您钩入服务器的启动和关闭顺序中，以处理这些关键的设置（setup）和清理（teardown）任务。
 
-This works the same way as [adding custom routes](/langsmith/custom-routes). You just need to provide your own [`Starlette`](https://www.starlette.io/applications/) app (including [`FastAPI`](https://fastapi.tiangolo.com/), [`FastHTML`](https://fastht.ml/) and other compatible apps).
+这个过程与[添加自定义路由](/langsmith/custom-routes)的方式完全相同。您只需要提供自己的 [`Starlette`](https://www.starlette.io/applications/) 应用程序（包括 [`FastAPI`](https://fastapi.tiangolo.com/)、[`FastHTML`](https://fastht.ml/) 和其他兼容的应用程序）即可。
 
-Below is an example using FastAPI.
+下面是一个使用 FastAPI 的示例。
 
 <Note>
-"Python only"
-We currently only support custom lifespan events in Python deployments with `langgraph-api>=0.0.26`.
+“仅 Python 支持”
+目前，我们只在 Python 部署中支持自定义生命周期事件，并且要求 `langgraph-api>=0.0.26`。
 </Note>
 
-## Create app
+## 创建应用
 
-Starting from an **existing** LangSmith application, add the following lifespan code to your `webapp.py` file. If you are starting from scratch, you can create a new app from a template using the CLI.
+从一个**现有**的 LangSmith 应用程序开始，将以下生命周期代码添加到您的 `webapp.py` 文件中。如果您是从头开始，可以使用 CLI 从模板创建新应用：
 
 ```bash
 langgraph new --template=new-langgraph-project-python my_new_project
 ```
 
-Once you have a LangGraph project, add the following app code:
+拥有 LangGraph 项目后，添加以下应用代码：
 
 ```python {highlight={19}}
 # ./src/agent/webapp.py
@@ -32,24 +32,24 @@ from sqlalchemy.orm import sessionmaker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # for example...
+    # 例如...
     engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
-    # Create reusable session factory
+    # 创建可重用的会话工厂对象
     async_session = sessionmaker(engine, class_=AsyncSession)
-    # Store in app state
+    # 存储在应用状态中
     app.state.db_session = async_session
     yield
-    # Clean up connections
+    # 清理连接
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
 
-# ... can add custom routes if needed.
+# ... 如果需要，可以添加自定义路由。
 ```
 
-## Configure `langgraph.json`
+## 配置 `langgraph.json`
 
-Add the following to your `langgraph.json` configuration file. Make sure the path points to the `webapp.py` file you created above.
+将以下内容添加到您的 `langgraph.json` 配置文件中。请确保路径指向您创建的 `webapp.py` 文件。
 
 ```json
 {
@@ -61,24 +61,24 @@ Add the following to your `langgraph.json` configuration file. Make sure the pat
   "http": {
     "app": "./src/agent/webapp.py:app"
   }
-  // Other configuration options like auth, store, etc.
+  // 其他配置选项，如 auth, store 等。
 }
 ```
 
-## Start server
+## 启动服务器
 
-Test the server out locally:
+在本地测试服务器：
 
 ```bash
 langgraph dev --no-browser
 ```
 
-You should see your startup message printed when the server starts, and your cleanup message when you stop it with `Ctrl+C`.
+当服务器启动时，您应该会看到您的启动消息被打印出来；当使用 `Ctrl+C` 停止服务器时，会看到您的清理消息。
 
-## Deploying
+## 部署
 
-You can deploy your app as-is to cloud or to your self-hosted platform.
+您可以按原样将您的应用部署到云端或自托管平台。
 
-## Next steps
+## 后续步骤
 
-Now that you've added lifespan events to your deployment, you can use similar techniques to add [custom routes](/langsmith/custom-routes) or [custom middleware](/langsmith/custom-middleware) to further customize your server's behavior.
+现在您已经为部署添加了生命周期事件，您可以使用类似的技术来添加[自定义路由](/langsmith/custom-routes) 或 [自定义中间件](/langsmith/custom-middleware)，以进一步定制服务器的行为。

@@ -2,27 +2,27 @@
 title: Cloudflare Vectorize
 ---
 
-If you're deploying your project in a Cloudflare worker, you can use [Cloudflare Vectorize](https://developers.cloudflare.com/vectorize/) with LangChain.js.
-It's a powerful and convenient option that's built directly into Cloudflare.
+如果您在 Cloudflare Worker 中部署项目，可以使用 LangChain.js 集成 [Cloudflare Vectorize](https://developers.cloudflare.com/vectorize/)。
 
-## Setup
+这是一个强大而便捷的选项，它直接内置于 Cloudflare 中。
+
+## 设置 (Setup)
 
 <Tip>
-**Compatibility**
+**兼容性 (Compatibility)**
 
-Cloudflare Vectorize is currently in open beta, and requires a Cloudflare account on a paid plan to use.
+Cloudflare Vectorize 目前处于公开测试阶段 (open beta)，使用它需要您拥有 Cloudflare 付费套餐的账户。
 </Tip>
 
-After [setting up your project](https://developers.cloudflare.com/vectorize/get-started/intro/#prerequisites),
-create an index by running the following Wrangler command:
+在[设置好您的项目](https://developers.cloudflare.com/vectorize/get-started/intro/#prerequisites)后，通过运行以下 Wrangler 命令来创建一个索引 (index)：
 
 ```bash
 $ npx wrangler vectorize create <index_name> --preset @cf/baai/bge-small-en-v1.5
 ```
 
-You can see a full list of options for the `vectorize` command [in the official documentation](https://developers.cloudflare.com/workers/wrangler/commands/#vectorize).
+您可以在[官方文档](https://developers.cloudflare.com/workers/wrangler/commands/#vectorize)中查看 `vectorize` 命令的完整选项列表。
 
-You'll then need to update your `wrangler.toml` file to include an entry for `[[vectorize]]`:
+接下来，您需要更新 `wrangler.toml` 文件，为其添加一个 `[[vectorize]]` 条目：
 
 ```toml
 [[vectorize]]
@@ -30,21 +30,21 @@ binding = "VECTORIZE_INDEX"
 index_name = "<index_name>"
 ```
 
-Finally, you'll need to install the LangChain Cloudflare integration package:
+最后，您需要安装 LangChain Cloudflare 集成包：
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的常规说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/cloudflare @langchain/core
 ```
-## Usage
+## 用法 (Usage)
 
-Below is an example worker that adds documents to a vectorstore, queries it, or clears it depending on the path used. It also uses [Cloudflare Workers AI Embeddings](/oss/integrations/text_embedding/cloudflare_ai).
+下面是一个 Worker 示例，它根据所使用的路径向向量存储中添加文档、查询它或清除它。该示例还使用了[Cloudflare Workers AI Embeddings](/oss/integrations/text_embedding/cloudflare_ai)。
 
 <Note>
-If running locally, be sure to run wrangler as `npx wrangler dev --remote`!
+如果在本地运行，请确保使用 `npx wrangler dev --remote` 来启动 wrangler！
 </Note>
 
 ```toml
@@ -93,7 +93,7 @@ export default {
       const results = await store.similaritySearch("hello", 5);
       return Response.json(results);
     } else if (pathname === "/load") {
-      // Upsertion by id is supported
+      // 支持通过 id 进行插入或更新 (Upsertion by id is supported)
       await store.addDocuments(
         [
           {
@@ -123,11 +123,10 @@ export default {
 };
 ```
 
-You can also pass a `filter` parameter to filter by previously loaded metadata.
-See [the official documentation](https://developers.cloudflare.com/vectorize/learning/metadata-filtering/)
-for information on the required format.
+您也可以传入一个 `filter` 参数来根据先前加载的元数据进行过滤。
+有关所需格式的信息，请参阅[官方文档](https://developers.cloudflare.com/vectorize/learning/metadata-filtering/)。
 
-## Related
+## 相关 (Related)
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储概念指南 [conceptual guide](/oss/integrations/vectorstores)
+- 向量存储操作指南 [how-to guides](/oss/integrations/vectorstores)

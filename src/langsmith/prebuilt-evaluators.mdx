@@ -1,17 +1,18 @@
+```markdown
 ---
-title: How to use prebuilt evaluators
-sidebarTitle: Use prebuilt evaluators
+title: 如何使用预构建的评估器
+sidebarTitle: 使用预构建的评估器
 ---
 
-LangSmith integrates with the open-source openevals package to provide a suite of prebuilt evaluators that you can use as starting points for evaluation.
+LangSmith 与开源的 openevals 库进行了集成，提供了一套预构建的评估器，您可以将其作为评估的起点。
 
 <Note>
-This how-to guide will demonstrate how to set up and run one type of evaluator (LLM-as-a-judge). For a complete list of prebuilt evaluators with usage examples, refer to the [openevals](https://github.com/langchain-ai/openevals) and [agentevals](https://github.com/langchain-ai/agentevals) repos.
+本操作指南将演示如何设置和运行一种评估器（**LLM 充当裁判**，即 LLM-as-a-judge）。如需查看包含使用示例的完整预构建评估器列表，请参阅 [openevals](https://github.com/langchain-ai/openevals) 和 [agentevals](https://github.com/langchain-ai/agentevals) 仓库。
 </Note>
 
-## Setup
+## 设置
 
-You'll need to install the `openevals` package to use the pre-built LLM-as-a-judge evaluator.
+您需要安装 `openevals` 包才能使用预构建的 LLM-as-a-judge 评估器。
 
 <CodeGroup>
 
@@ -25,21 +26,21 @@ yarn add openevals @langchain/core
 
 </CodeGroup>
 
-You'll also need to set your OpenAI API key as an environment variable, though you can choose different providers too:
+您还需要将 OpenAI API 密钥设置为环境变量，当然，您也可以选择其他提供商：
 
 ```bash
 export OPENAI_API_KEY="your_openai_api_key"
 ```
 
-We'll also use LangSmith's [pytest](/langsmith/pytest) integration for Python and [Vitest/Jest](/langsmith/vitest-jest) for TypeScript to run our evals. `openevals` also integrates seamlessly with the [`evaluate`](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate) method as well. See the [appropriate guides](/langsmith/pytest) for setup instructions.
+我们还将使用 LangSmith 的 Python 集成（[pytest](/langsmith/pytest)）和 TypeScript 的集成（[Vitest/Jest](/langsmith/vitest-jest)）来运行评估。`openevals` 也能与 [`evaluate`](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate) 方法无缝集成。请参阅相应的指南以获取设置说明（Python 的 [pytest](/langsmith/pytest)，TypeScript 的 [Vitest/Jest](/langsmith/vitest-jest)）。
 
-## Running an evaluator
+## 运行评估器
 
-The general flow is simple: import the evaluator or factory function from `openevals`, then run it within your test file with inputs, outputs, and reference outputs. LangSmith will automatically log the evaluator's results as feedback.
+总体流程很简单：从 `openevals` 导入评估器或工厂函数，然后在测试文件中使用输入（inputs）、输出（outputs）和参考输出（reference outputs）来运行它。LangSmith 将自动将评估器的结果记录为反馈。
 
-Note that not all evaluators will require each parameter (the exact match evaluator only requires outputs and reference outputs, for example). Additionally, if your LLM-as-a-judge prompt requires additional variables, passing them in as kwargs will format them into the prompt.
+请注意，并非所有评估器都需要每个参数（例如，精确匹配评估器仅需要 outputs 和 reference outputs）。此外，如果您的 LLM-as-a-judge 提示词需要额外的变量，将它们作为 `kwargs` 传入会将其格式化到提示词中。
 
-Set up your test file like this:
+像这样设置您的测试文件：
 
 <CodeGroup>
 
@@ -55,7 +56,7 @@ correctness_evaluator = create_llm_as_judge(
     model="openai:o3-mini",
 )
 
-# Mock standin for your application
+# 模拟您的应用程序
 def my_llm_app(inputs: dict) -> str:
     return "Doodads have increased in price by 10% in the past year."
 
@@ -87,7 +88,7 @@ const correctnessEvaluator = createLLMAsJudge({
     model: "openai:o3-mini",
 });
 
-// Mock standin for your application
+// 模拟您的应用程序
 const myLLMApp = async (_inputs: Record<string, unknown>) => {
     return "Doodads have increased in price by 10% in the past year.";
 };
@@ -114,13 +115,13 @@ ls.describe("Correctness", () => {
 
 </CodeGroup>
 
-The `feedback_key`/`feedbackKey` parameter will be used as the name of the feedback in your experiment.
+`feedback_key` / `feedbackKey` 参数将用作实验中反馈的名称。
 
-Running the eval in your terminal will result in something like the following:
+在终端中运行评估将产生如下所示的结果：
 
 ![Prebuilt evaluator terminal result](/langsmith/images/prebuilt-eval-result.png)
 
-You can also pass prebuilt evaluators directly into the `evaluate` method if you have already created a dataset in LangSmith. If using Python, this requires `langsmith>=0.3.11`:
+如果您已经在 LangSmith 中创建了数据集，也可以将预构建的评估器直接传递给 `evaluate` 方法。在使用 Python 时，这需要 `langsmith>=0.3.11`：
 
 <CodeGroup>
 
@@ -137,7 +138,7 @@ conciseness_evaluator = create_llm_as_judge(
 )
 
 experiment_results = client.evaluate(
-    # This is a dummy target function, replace with your actual LLM-based system
+    # 这是一个虚拟的目标函数，请替换为您实际的 LLM 系统
     lambda inputs: "What color is the sky?",
     data="Sample dataset",
     evaluators=[
@@ -164,4 +165,5 @@ await evaluate((inputs) => "What color is the sky?", {
 
 </CodeGroup>
 
-For a complete list of available evaluators, see the [openevals](https://github.com/langchain-ai/openevals) and [agentevals](https://github.com/langchain-ai/agentevals) repos.
+有关可用评估器的完整列表，请参阅 [openevals](https://github.com/langchain-ai/openevals) 和 [agentevals](https://github.com/langchain-ai/agentevals) 仓库。
+```

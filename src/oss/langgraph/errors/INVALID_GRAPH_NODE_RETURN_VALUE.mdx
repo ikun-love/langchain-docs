@@ -3,15 +3,14 @@ title: INVALID_GRAPH_NODE_RETURN_VALUE
 ---
 
 :::python
-A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph)
-received a non-dict return type from a node. Here's an example:
+LangGraph 的 [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) 从某个节点接收到了非字典（dict）类型的返回值。示例如下：
 
 ```python
 class State(TypedDict):
     some_key: str
 
 def bad_node(state: State):
-    # Should return a dict with a value for "some_key", not a list
+    # 应该返回一个包含 "some_key" 值的字典，而不是一个列表
     return ["whoops"]
 
 builder = StateGraph(State)
@@ -21,7 +20,7 @@ builder.add_node(bad_node)
 graph = builder.compile()
 ```
 
-Invoking the above graph will result in an error like this:
+调用上述图（graph）将导致如下错误：
 
 ```python
 graph.invoke({ "some_key": "someval" });
@@ -29,15 +28,14 @@ graph.invoke({ "some_key": "someval" });
 
 ```
 InvalidUpdateError: Expected dict, got ['whoops']
-For troubleshooting, visit: https://python.langchain.com/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE
+有关故障排除，请访问: https://python.langchain.com/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE
 ```
 
-Nodes in your graph must return a dict containing one or more keys defined in your state.
+图中的节点**必须**返回一个字典，该字典包含你所定义状态中一个或多个键。
 :::
 
 :::js
-A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph)
-received a non-object return type from a node. Here's an example:
+LangGraph 的 [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) 从某个节点接收到了非对象（object）类型的返回值。示例如下：
 
 ```typescript
 import * as z from "zod";
@@ -48,7 +46,7 @@ const State = z.object({
 });
 
 const badNode = (state: z.infer<typeof State>) => {
-  // Should return an object with a value for "someKey", not an array
+  // 应该返回一个包含 "someKey" 值的对象，而不是一个数组
   return ["whoops"];
 };
 
@@ -58,7 +56,7 @@ const builder = new StateGraph(State).addNode("badNode", badNode);
 const graph = builder.compile();
 ```
 
-Invoking the above graph will result in an error like this:
+调用上述图（graph）将导致如下错误：
 
 ```typescript
 await graph.invoke({ someKey: "someval" });
@@ -66,20 +64,20 @@ await graph.invoke({ someKey: "someval" });
 
 ```
 InvalidUpdateError: Expected object, got ['whoops']
-For troubleshooting, visit: https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE
+有关故障排除，请访问: https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE
 ```
 
-Nodes in your graph must return an object containing one or more keys defined in your state.
+图中的节点**必须**返回一个对象，该对象包含你所定义状态中一个或多个键。
 :::
 
-## Troubleshooting
+## 故障排除 (Troubleshooting)
 
-The following may help resolve this error:
+以下方法可能有助于解决此错误：
 
 :::python
-* If you have complex logic in your node, make sure all code paths return an appropriate dict for your defined state.
+* 如果你的节点中包含复杂的逻辑，请确保所有代码路径都返回一个与你定义的 `State` 结构相匹配的字典。
 :::
 
 :::js
-* If you have complex logic in your node, make sure all code paths return an appropriate object for your defined state.
+* 如果你的节点中包含复杂的逻辑，请确保所有代码路径都返回一个与你定义的 `State` 结构相匹配的对象。
 :::

@@ -2,12 +2,12 @@
 title: Azure ML
 ---
 
-[Azure ML](https://azure.microsoft.com/en-us/products/machine-learning/) is a platform used to build, train, and deploy machine learning models. Users can explore the types of models to deploy in the Model Catalog, which provides foundational and general purpose models from different providers.
+[Azure ML](https://azure.microsoft.com/en-us/products/machine-learning/) 是一个用于构建、训练和部署机器学习模型的平台。用户可以在模型目录（Model Catalog）中探索要部署的模型类型，该目录提供了来自不同提供商的基础模型和通用模型。
 
-This notebook goes over how to use an LLM hosted on an `Azure ML Online Endpoint`.
+本 Notebook 将介绍如何使用托管在 `Azure ML Online Endpoint` 上的 LLM。
 
 ```python
-##Installing the langchain packages needed to use the integration
+## 安装使用集成所需的 langchain 包
 pip install -qU langchain-community
 ```
 
@@ -15,29 +15,31 @@ pip install -qU langchain-community
 from langchain_community.llms.azureml_endpoint import AzureMLOnlineEndpoint
 ```
 
-## Set up
+## 设置
 
-You must [deploy a model on Azure ML](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-foundation-models?view=azureml-api-2#deploying-foundation-models-to-endpoints-for-inferencing) or [to Azure AI Foundry (formerly Azure AI Studio](https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-open) and obtain the following parameters:
+您必须 [在 Azure ML 上部署模型](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-foundation-models?view=azureml-api-2#deploying-foundation-models-to-endpoints-for-inferencing) 或 [部署到 Azure AI Foundry（原 Azure AI Studio）](https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-open)，并获取以下参数：
 
-* `endpoint_url`: The REST endpoint url provided by the endpoint.
-* `endpoint_api_type`: Use `endpoint_type='dedicated'` when deploying models to **Dedicated endpoints** (hosted managed infrastructure). Use `endpoint_type='serverless'` when deploying models using the **Pay-as-you-go** offering (model as a service).
-* `endpoint_api_key`: The API key provided by the endpoint.
-* `deployment_name`: (Optional) The deployment name of the model using the endpoint.
+* `endpoint_url`: 端点提供的 REST 终结点 URL。
+* `endpoint_api_type`:
+    * 当将模型部署到 **专用终结点 (Dedicated endpoints)**（托管管理基础架构）时，使用 `endpoint_type='dedicated'`。
+    * 当使用 **按使用付费 (Pay-as-you-go)** 方案（模型即服务）部署模型时，使用 `endpoint_type='serverless'`。
+* `endpoint_api_key`: 端点提供的 API 密钥。
+* `deployment_name`: (可选) 使用该端点的模型的部署名称。
 
-## Content Formatter
+## 内容格式化器 (Content Formatter)
 
-The `content_formatter` parameter is a handler class for transforming the request and response of an AzureML endpoint to match with required schema. Since there are a wide range of models in the model catalog, each of which may process data differently from one another, a `ContentFormatterBase` class is provided to allow users to transform data to their liking. The following content formatters are provided:
+`content_formatter` 参数是一个处理程序类，用于转换 AzureML 端点的请求和响应，以适应所需的 schema。由于模型目录中的模型范围很广，每个模型处理数据的方式可能不同，因此提供了一个 `ContentFormatterBase` 类，允许用户根据自己的需要转换数据。提供的 `ContentFormatter` 类包括：
 
-* `GPT2ContentFormatter`: Formats request and response data for GPT2
-* `DollyContentFormatter`: Formats request and response data for the Dolly-v2
-* `HFContentFormatter`: Formats request and response data for text-generation Hugging Face models
-* `CustomOpenAIContentFormatter`: Formats request and response data for models like LLaMa2 that follow OpenAI API compatible scheme.
+* `GPT2ContentFormatter`: 为 GPT2 格式化请求和响应数据。
+* `DollyContentFormatter`: 为 Dolly-v2 格式化请求和响应数据。
+* `HFContentFormatter`: 为文本生成 Hugging Face 模型格式化请求和响应数据。
+* `CustomOpenAIContentFormatter`: 为遵循 OpenAI API 兼容方案的模型（如 LLaMa2）格式化请求和响应数据。
 
-*Note: `OSSContentFormatter` is being deprecated and replaced with `GPT2ContentFormatter`. The logic is the same but `GPT2ContentFormatter` is a more suitable name. You can still continue to use `OSSContentFormatter` as the changes are backwards compatible.*
+*注意：`OSSContentFormatter` 正在被弃用，并被 `GPT2ContentFormatter` 取代。逻辑是相同的，但 `GPT2ContentFormatter` 是一个更合适的名称。由于更改是向后兼容的，您仍然可以使用 `OSSContentFormatter`。*
 
-## Examples
+## 示例
 
-### Example: LlaMa 2 completions with real-time endpoints
+### 示例：使用实时终结点的 LlaMa 2 补全
 
 ```python
 from langchain_community.llms.azureml_endpoint import (
@@ -57,14 +59,14 @@ response = llm.invoke("Write me a song about sparkling water:")
 response
 ```
 
-Model parameters can also be indicated during invocation:
+在调用时也可以指定模型参数：
 
 ```python
 response = llm.invoke("Write me a song about sparkling water:", temperature=0.5)
 response
 ```
 
-### Example: Chat completions with pay-as-you-go deployments (model as a service)
+### 示例：使用按使用付费部署的聊天补全（模型即服务）
 
 ```python
 from langchain_community.llms.azureml_endpoint import (
@@ -84,9 +86,9 @@ response = llm.invoke("Write me a song about sparkling water:")
 response
 ```
 
-### Example: Custom content formatter
+### 示例：自定义内容格式化器
 
-Below is an example using a summarization model from Hugging Face.
+下面是一个使用 Hugging Face 摘要模型的示例。
 
 ```python
 import json
@@ -154,7 +156,7 @@ summarized_text = llm.invoke(large_text)
 print(summarized_text)
 ```
 
-### Example: Dolly with LLMChain
+### 示例：使用 LLMChain 的 Dolly
 
 ```python
 from langchain.chains import LLMChain
@@ -180,9 +182,9 @@ chain = LLMChain(llm=llm, prompt=prompt)
 print(chain.invoke({"word_count": 100, "topic": "how to make friends"}))
 ```
 
-## Serializing an LLM
+## 序列化 LLM
 
-You can also save and load LLM configurations
+您也可以保存和加载 LLM 配置。
 
 ```python
 from langchain_community.llms.loading import load_llm

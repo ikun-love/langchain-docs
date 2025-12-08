@@ -1,13 +1,12 @@
 ---
-title: Infinity Reranker
+title: Infinity 重排序器 (Reranker)
 ---
 
-`Infinity` is a high-throughput, low-latency REST API for serving text-embeddings, reranking models and clip.
-For more info, please visit [here](https://github.com/michaelfeil/infinity?tab=readme-ov-file#reranking).
+`Infinity` 是一个用于提供文本嵌入（text-embeddings）、重排序模型（reranking models）和 Clip 服务的**高吞吐量、低延迟**的 REST API。更多信息请访问 [这里](https://github.com/michaelfeil/infinity?tab=readme-ov-file#reranking)。
 
-This notebook shows how to use Infinity Reranker for document compression and retrieval.
+本 Jupyter Notebook 展示了如何使用 Infinity Reranker 进行文档压缩和检索。
 
-You can launch an Infinity Server with a reranker model in CLI:
+您可以通过命令行（CLI）启动一个带有重排序模型的 Infinity 服务器：
 
 ```bash
 pip install "infinity-emb[all]"
@@ -21,24 +20,24 @@ pip install -qU  infinity_client
 ```python
 pip install -qU  faiss
 
-# OR  (depending on Python version)
+# 或者 (取决于您的 Python 版本)
 
 pip install -qU  faiss-cpu
 ```
 
 ```python
-# Helper function for printing docs
+# 用于美观地打印文档的辅助函数
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Set up the base vector store retriever
+## 设置基础向量存储检索器 (Vector Store Retriever)
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+我们首先初始化一个简单的向量存储检索器，并将 2023 年“国情咨文”演讲稿（分割成块）存储进去。我们可以将检索器设置为检索较高的文档数量（20 个）。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -59,13 +58,13 @@ pretty_print_docs(docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 We cannot let this happen.
 
@@ -73,13 +72,13 @@ Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Le
 
 Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
 
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 He will never extinguish their love of freedom. He will never weaken the resolve of the free world.
 
@@ -91,7 +90,7 @@ And so many families are living paycheck to paycheck, struggling to keep up with
 
 I understand.
 ----------------------------------------------------------------------------------------------------
-Document 5:
+文档 5:
 
 As Ohio Senator Sherrod Brown says, “It’s time to bury the label “Rust Belt.”
 
@@ -103,13 +102,13 @@ Inflation is robbing them of the gains they might otherwise feel.
 
 I get it. That’s why my top priority is getting prices under control.
 ----------------------------------------------------------------------------------------------------
-Document 6:
+文档 6:
 
 A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
 
 And if we are to advance liberty and justice, we need to secure the Border and fix the immigration system.
 ----------------------------------------------------------------------------------------------------
-Document 7:
+文档 7:
 
 It’s not only the right thing to do—it’s the economically smart thing to do.
 
@@ -121,7 +120,7 @@ Advancing liberty and justice also requires protecting the rights of women.
 
 The constitutional right affirmed in Roe v. Wade—standing precedent for half a century—is under attack as never before.
 ----------------------------------------------------------------------------------------------------
-Document 8:
+文档 8:
 
 I understand.
 
@@ -133,7 +132,7 @@ Because people were hurting. We needed to act, and we did.
 
 Few pieces of legislation have done more in a critical moment in our history to lift us out of crisis.
 ----------------------------------------------------------------------------------------------------
-Document 9:
+文档 9:
 
 Third – we can end the shutdown of schools and businesses. We have the tools we need.
 
@@ -143,7 +142,7 @@ We’re doing that here in the federal government. The vast majority of federal 
 
 Our schools are open. Let’s keep it that way. Our kids need to be in school.
 ----------------------------------------------------------------------------------------------------
-Document 10:
+文档 10:
 
 He met the Ukrainian people.
 
@@ -153,7 +152,7 @@ Groups of citizens blocking tanks with their bodies. Everyone from students to r
 
 In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
 ----------------------------------------------------------------------------------------------------
-Document 11:
+文档 11:
 
 The widow of Sergeant First Class Heath Robinson.
 
@@ -167,7 +166,7 @@ But cancer from prolonged exposure to burn pits ravaged Heath’s lungs and body
 
 Danielle says Heath was a fighter to the very end.
 ----------------------------------------------------------------------------------------------------
-Document 12:
+文档 12:
 
 Danielle says Heath was a fighter to the very end.
 
@@ -181,7 +180,7 @@ The VA is pioneering new ways of linking toxic exposures to diseases, already he
 
 And tonight, I’m announcing we’re expanding eligibility to veterans suffering from nine respiratory cancers.
 ----------------------------------------------------------------------------------------------------
-Document 13:
+文档 13:
 
 We can do all this while keeping lit the torch of liberty that has led generations of immigrants to this land—my forefathers and so many of yours.
 
@@ -191,7 +190,7 @@ Revise our laws so businesses have the workers they need and families don’t wa
 
 It’s not only the right thing to do—it’s the economically smart thing to do.
 ----------------------------------------------------------------------------------------------------
-Document 14:
+文档 14:
 
 He rejected repeated efforts at diplomacy.
 
@@ -201,7 +200,7 @@ We prepared extensively and carefully.
 
 We spent months building a coalition of other freedom-loving nations from Europe and the Americas to Asia and Africa to confront Putin.
 ----------------------------------------------------------------------------------------------------
-Document 15:
+文档 15:
 
 As I’ve told Xi Jinping, it is never a good bet to bet against the American people.
 
@@ -209,7 +208,7 @@ We’ll create good jobs for millions of Americans, modernizing roads, airports,
 
 And we’ll do it all to withstand the devastating effects of the climate crisis and promote environmental justice.
 ----------------------------------------------------------------------------------------------------
-Document 16:
+文档 16:
 
 Tonight I say to the Russian oligarchs and corrupt leaders who have bilked billions of dollars off this violent regime no more.
 
@@ -217,7 +216,7 @@ The U.S. Department of Justice is assembling a dedicated task force to go after 
 
 We are joining with our European allies to find and seize your yachts your luxury apartments your private jets. We are coming for your ill-begotten gains.
 ----------------------------------------------------------------------------------------------------
-Document 17:
+文档 17:
 
 Look at cars.
 
@@ -239,7 +238,7 @@ More infrastructure and innovation in America.
 
 More goods moving faster and cheaper in America.
 ----------------------------------------------------------------------------------------------------
-Document 18:
+文档 18:
 
 So that’s my plan. It will grow the economy and lower costs for families.
 
@@ -247,7 +246,7 @@ So what are we waiting for? Let’s get this done. And while you’re at it, con
 
 My plan will not only lower costs to give families a fair shot, it will lower the deficit.
 ----------------------------------------------------------------------------------------------------
-Document 19:
+文档 19:
 
 Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
 
@@ -259,7 +258,7 @@ They keep moving.
 
 And the costs and the threats to America and the world keep rising.
 ----------------------------------------------------------------------------------------------------
-Document 20:
+文档 20:
 
 It’s based on DARPA—the Defense Department project that led to the Internet, GPS, and so much more.
 
@@ -274,9 +273,9 @@ My fellow Americans—tonight , we have gathered in a sacred space—the citadel
 In this Capitol, generation after generation, Americans have debated great questions amid great strife, and have done great things.
 ```
 
-## Reranking with InfinityRerank
+## 使用 InfinityRerank 进行重排序 (Reranking with InfinityRerank)
 
-Now let's wrap our base retriever with a `ContextualCompressionRetriever`. We'll use the `InfinityRerank` to rerank the returned results.
+现在我们使用 `ContextualCompressionRetriever` 来包装基础检索器。我们将使用 `InfinityRerank` 来对返回的结果进行重新排序。
 
 ```python
 from infinity_client import Client
@@ -297,13 +296,13 @@ pretty_print_docs(compressed_docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 As Ohio Senator Sherrod Brown says, “It’s time to bury the label “Rust Belt.”
 
@@ -315,7 +314,7 @@ Inflation is robbing them of the gains they might otherwise feel.
 
 I get it. That’s why my top priority is getting prices under control.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
 

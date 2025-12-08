@@ -2,26 +2,26 @@
 title: Clarifai
 ---
 
->[Clarifai](https://www.clarifai.com/) is an AI Platform that provides the full AI lifecycle ranging from data exploration, data labeling, model training, evaluation, and inference. A Clarifai application can be used as a vector database after uploading inputs.
+> [Clarifai](https://www.clarifai.com/) 是一个 AI 平台，提供完整的 AI 生命周期服务，涵盖数据探索、数据标注、模型训练、评估和推理。上传输入（Inputs）后，Clarifai 应用还可以用作向量数据库。
 
-This notebook shows how to use functionality related to the `Clarifai` vector database. Examples are shown to demonstrate text semantic search capabilities. Clarifai also supports semantic search with images, video frames, and localized search (see [Rank](https://docs.clarifai.com/api-guide/search/rank)) and attribute search (see [Filter](https://docs.clarifai.com/api-guide/search/filter)).
+本教程展示了如何使用与 `Clarifai` 向量数据库相关的各项功能。示例将演示文本语义搜索能力。Clarifai 还支持图像、视频帧的语义搜索，以及局部搜索（参见 [Rank](https://docs.clarifai.com/api-guide/search/rank)）和属性搜索（参见 [Filter](https://docs.clarifai.com/api-guide/search/filter)）。
 
-To use Clarifai, you must have an account and a Personal Access Token (PAT) key.
-[Check here](https://clarifai.com/settings/security) to get or create a PAT.
+要使用 Clarifai，您必须拥有一个账户和一个个人访问令牌（PAT）密钥。
+请[点击此处](https://clarifai.com/settings/security)获取或创建 PAT。
 
-# Dependencies
+# 依赖
 
 ```python
-# Install required dependencies
+# 安装所需的依赖项
 pip install -qU  clarifai langchain-community
 ```
 
-# Imports
+# 导入
 
-Here we will be setting the personal access token. You can find your PAT under settings/security on the platform.
+这里我们将设置个人访问令牌。您可以在平台的 settings/security 下找到您的 PAT。
 
 ```python
-# Please login and get your API key from  https://clarifai.com/settings/security
+# 请登录并从 https://clarifai.com/settings/security 获取您的 API 密钥
 from getpass import getpass
 
 CLARIFAI_PAT = getpass()
@@ -32,17 +32,17 @@ CLARIFAI_PAT = getpass()
 ```
 
 ```python
-# Import the required modules
+# 导入所需的模块
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import Clarifai
 from langchain_text_splitters import CharacterTextSplitter
 ```
 
-# Setup
+# 设置
 
-Setup the user id and app id where the text data will be uploaded. Note: when creating that application please select an appropriate base workflow for indexing your text documents such as the Language-Understanding workflow.
+设置将上传文本数据的用户 ID (`USER_ID`) 和应用 ID (`APP_ID`)。注意：在创建该应用时，请选择一个适合的基准工作流（Base Workflow）来索引您的文本文档，例如“语言理解工作流”（Language-Understanding workflow）。
 
-You will have to first create an account on [Clarifai](https://clarifai.com/login) and then create an application.
+您需要先在 [Clarifai](https://clarifai.com/login) 上创建一个账户，然后创建一个应用。
 
 ```python
 USER_ID = "USERNAME_ID"
@@ -50,9 +50,9 @@ APP_ID = "APPLICATION_ID"
 NUMBER_OF_DOCS = 2
 ```
 
-## From Texts
+## 从文本创建
 
-Create a Clarifai vectorstore from a list of texts. This section will upload each text with its respective metadata to a Clarifai Application. The Clarifai Application can then be used for semantic search to find relevant texts.
+从一系列文本列表中创建 Clarifai 向量存储。此部分会将每个文本及其相应的元数据上传到 Clarifai 应用。然后，该 Clarifai 应用可用于语义搜索，以查找相关的文本。
 
 ```python
 texts = [
@@ -69,7 +69,7 @@ metadatas = [
 ]
 ```
 
-Alternatively you have an option to give custom input ids to the inputs.
+或者，您可以选择为输入提供自定义输入 ID。
 
 ```python
 idlist = ["text1", "text2", "text3", "text4", "text5"]
@@ -80,7 +80,7 @@ metadatas = [
 ```
 
 ```python
-# There is an option to initialize clarifai vector store with pat as argument!
+# 也可以选择在初始化 clarifai 向量存储时传入 pat 参数！
 clarifai_vector_db = Clarifai(
     user_id=USER_ID,
     app_id=APP_ID,
@@ -88,18 +88,18 @@ clarifai_vector_db = Clarifai(
 )
 ```
 
-Upload data into clarifai app.
+将数据上传到 clarifai 应用。
 
 ```python
-# upload with metadata and custom input ids.
+# 使用元数据和自定义输入 ID 上传。
 response = clarifai_vector_db.add_texts(texts=texts, ids=idlist, metadatas=metadatas)
 
-# upload without metadata (Not recommended)- Since you will not be able to perform Search operation with respect to metadata.
-# custom input_id (optional)
+# 不带元数据上传（不推荐）- 因为您将无法根据元数据执行搜索操作。
+# 自定义输入 ID（可选）
 response = clarifai_vector_db.add_texts(texts=texts)
 ```
 
-You can create a clarifai vector DB store and ingest all the inputs into your app directly by,
+您可以通过以下方式直接创建一个 clarifai 向量 DB 存储并将所有输入摄取（ingest）到您的应用中：
 
 ```python
 clarifai_vector_db = Clarifai.from_texts(
@@ -110,7 +110,7 @@ clarifai_vector_db = Clarifai.from_texts(
 )
 ```
 
-Search similar texts using similarity search function.
+使用相似性搜索函数搜索相似文本。
 
 ```python
 docs = clarifai_vector_db.similarity_search("I would like to see you")
@@ -121,24 +121,25 @@ docs
 [Document(page_content='I really enjoy spending time with you', metadata={'text': 'I really enjoy spending time with you', 'id': 'text1', 'source': 'book 1', 'category': ['books', 'modern']})]
 ```
 
-Further you can filter your search results by metadata.
+此外，您还可以通过元数据过滤搜索结果。
 
 ```python
-# There is lots powerful filtering you can do within an app by leveraging metadata filters.
-# This one will limit the similarity query to only the texts that have key of "source" matching value of "book 1"
+# 通过利用元数据过滤器，您可以在应用内执行大量强大的过滤操作。
+# 此处限制相似性查询仅针对“source”键值匹配“book 1”的文本
 book1_similar_docs = clarifai_vector_db.similarity_search(
     "I would love to see you", filter={"source": "book 1"}
 )
 
-# you can also use lists in the input's metadata and then select things that match an item in the list. This is useful for categories like below:
+# 您也可以在输入的元数据中使用列表，然后选择匹配列表中某个项的内容。
+# 这对于如下所示的类别很有用：
 book_category_similar_docs = clarifai_vector_db.similarity_search(
     "I would love to see you", filter={"category": ["books"]}
 )
 ```
 
-## From Documents
+## 从文档创建
 
-Create a Clarifai vectorstore from a list of Documents. This section will upload each document with its respective metadata to a Clarifai Application. The Clarifai Application can then be used for semantic search to find relevant documents.
+从文档列表中创建 Clarifai 向量存储。此部分会将每个文档及其相应的元数据上传到 Clarifai 应用。然后，该 Clarifai 应用可用于语义搜索，以查找相关的文档。
 
 ```python
 loader = TextLoader("your_local_file_path.txt")
@@ -153,7 +154,7 @@ APP_ID = "APPLICATION_ID"
 NUMBER_OF_DOCS = 4
 ```
 
-Create a clarifai vector DB class and ingest all your documents into clarifai App.
+创建 clarifai 向量 DB 类并将所有文档摄取到 clarifai 应用中。
 
 ```python
 clarifai_vector_db = Clarifai.from_documents(
@@ -169,9 +170,9 @@ docs = clarifai_vector_db.similarity_search("Texts related to population")
 docs
 ```
 
-## From existing App
+## 从现有应用创建
 
-Within Clarifai we have great tools for adding data to applications (essentially projects) via API or UI. Most users will already have done that before interacting with LangChain so this example will use the data in an existing app to perform searches. Check out our [API docs](https://docs.clarifai.com/api-guide/data/create-get-update-delete) and [UI docs](https://docs.clarifai.com/portal-guide/data). The Clarifai Application can then be used for semantic search to find relevant documents.
+在 Clarifai 内部，我们有很棒的工具可以通过 API 或 UI 向应用程序（本质上是项目）添加数据。大多数用户在与 LangChain 交互之前就已经完成了这项工作，所以此示例将使用现有应用中的数据来执行搜索。请查看我们的 [API 文档](https://docs.clarifai.com/api-guide/data/create-get-update-delete) 和 [UI 文档](https://docs.clarifai.com/portal-guide/data)。然后，Clarifai 应用可用于语义搜索，以查找相关的文档。
 
 ```python
 USER_ID = "USERNAME_ID"
@@ -201,6 +202,6 @@ docs[0].page_content
 "President Wilson, generally acclaimed as the leader of the world's democracies,\nphrased for civilization the arguments against autocracy in the great peace conference\nafter the war. The President headed the American delegation to that conclave of world\nre-construction. With him as delegates to the conference were Robert Lansing, Secretary\nof State; Henry White, former Ambassador to France and Italy; Edward M. House and\nGeneral Tasker H. Bliss.\nRepresenting American Labor at the International Labor conference held in Paris\nsimultaneously with the Peace Conference were Samuel Gompers, president of the\nAmerican Federation of Labor; William Green, secretary-treasurer of the United Mine\nWorkers of America; John R. Alpine, president of the Plumbers' Union; James Duncan,\npresident of the International Association of Granite Cutters; Frank Duffy, president of\nthe United Brotherhood of Carpenters and Joiners, and Frank Morrison, secretary of the\nAmerican Federation of Labor.\nEstimating the share of each Allied nation in the great victory, mankind will\nconclude that the heaviest cost in proportion to prewar population and treasure was paid\nby the nations that first felt the shock of war, Belgium, Serbia, Poland and France. All\nfour were the battle-grounds of huge armies, oscillating in a bloody frenzy over once\nfertile fields and once prosperous towns.\nBelgium, with a population of 8,000,000, had a casualty list of more than 350,000;\nFrance, with its casualties of 4,000,000 out of a population (including its colonies) of\n90,000,000, is really the martyr nation of the world. Her gallant poilus showed the world\nhow cheerfully men may die in defense of home and liberty. Huge Russia, including\nhapless Poland, had a casualty list of 7,000,000 out of its entire population of\n180,000,000. The United States out of a population of 110,000,000 had a casualty list of\n236,117 for nineteen months of war; of these 53,169 were killed or died of disease;\n179,625 were wounded; and 3,323 prisoners or missing."
 ```
 
-```python
+```
 
 ```

@@ -2,45 +2,44 @@
 title: Together AI
 ---
 
-[Together AI](https://www.together.ai/) offers an API to query [50+ leading open-source models](https://docs.together.ai/docs/inference-models) in a couple lines of code.
+[Together AI](https://www.together.ai/) 提供了一个 API，允许你仅用几行代码就能查询 [50 多个领先的开源模型](https://docs.together.ai/docs/inference-models)。
 
-This example goes over how to use LangChain to interact with Together AI models.
+本示例将介绍如何使用 LangChain 与 Together AI 模型进行交互。
 
-## Installation
+## 安装
 
 ```python
 pip install -U langchain-together
 ```
 
-## Environment
+## 环境配置
 
-To use Together AI, you'll need an API key which you can find here:
-[api.together.ai/settings/api-keys](https://api.together.ai/settings/api-keys). This can be passed in as an init param
-`together_api_key` or set as environment variable `TOGETHER_API_KEY`.
+要使用 Together AI，你需要一个 API 密钥，可以在此处找到：
+[api.together.ai/settings/api-keys](https://api.together.ai/settings/api-keys)。可以将此密钥作为初始化参数 `together_api_key` 传入，或者将其设置为环境变量 `TOGETHER_API_KEY`。
 
-## Example
+## 示例
 
 ```python
-# Querying chat models with Together AI
+# 使用 Together AI 查询聊天模型
 
 from langchain_together import ChatTogether
 
-# choose from our 50+ models here: https://docs.together.ai/docs/inference-models
+# 从我们的 50 多个模型中进行选择：https://docs.together.ai/docs/inference-models
 chat = ChatTogether(
     # together_api_key="YOUR_API_KEY",
     model="meta-llama/Llama-3-70b-chat-hf",
 )
 
-# stream the response back from the model
+# 从模型处流式接收响应
 for m in chat.stream("Tell me fun things to do in NYC"):
     print(m.content, end="", flush=True)
 
-# if you don't want to do streaming, you can use the invoke method
+# 如果你不想使用流式传输，可以使用 invoke 方法
 # chat.invoke("Tell me fun things to do in NYC")
 ```
 
 ```python
-# Querying code and language models with Together AI
+# 使用 Together AI 查询代码和语言模型
 
 from langchain_together import Together
 

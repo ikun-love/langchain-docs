@@ -1,21 +1,22 @@
+```markdown
 ---
-title: Use threads
-sidebarTitle: Use threads
+title: 使用线程 (Threads)
+sidebarTitle: 使用线程
 ---
 
-This guide shows you how to create, view, and inspect _threads_. Threads work with [assistants](/langsmith/assistants) to enable [stateful](/oss/langgraph/persistence) execution of your [deployed graphs](/langsmith/deployments).
+本指南将向您展示如何创建、查看和检查 _线程_ (threads)。线程与 [助手 (assistants)](/langsmith/assistants) 配合使用，以实现您的 [已部署图 (deployed graphs)](/langsmith/deployments) 的 [有状态 (stateful)](/oss/langgraph/persistence) 执行。
 
-## Understand threads
+## 理解线程
 
-A thread is a persistent conversation container that maintains state across multiple runs. Each time you execute a run on a thread, the graph processes the input with the thread's current state and updates that state with new information.
+线程是一个持久化的对话容器，它在多次运行之间维护状态。每次在线程上执行一次运行 (run) 时，图 (graph) 都会利用线程的当前状态来处理输入，并用新信息更新该状态。
 
-Threads enable stateful interactions by preserving conversation history and context between runs. Without threads, each run would be stateless, with no memory of previous interactions. Threads are particularly useful for:
+线程通过保存对话历史记录和上下文，实现了有状态的交互。如果没有线程，每次运行都将是无状态的，没有关于先前交互的记忆。线程在以下场景中特别有用：
 
-- Multi-turn conversations where the assistant needs to remember what was discussed.
-- Long-running tasks that require maintaining context across multiple steps.
-- User-specific state management where each user has their own conversation history.
+- 需要助手记住讨论内容的**多轮对话**。
+- 需要跨多个步骤维护上下文的**长时间运行任务**。
+- 需要为每个用户维护独立对话历史记录的**特定用户状态管理**。
 
-The diagram illustrates how a thread maintains state across two runs. The second run has access to the messages from the first run, allowing the assistant to understand that the context of "What about tomorrow?" refers to the weather query from the first run:
+下面的图表说明了线程如何在两次运行中维护状态。第二次运行可以访问第一次运行中的消息，使助手能够理解 "What about tomorrow?"（明天怎么样？）的上下文指的是第一次运行中的天气查询：
 
 ```mermaid
 sequenceDiagram
@@ -24,55 +25,55 @@ sequenceDiagram
     participant Assistant
     participant Graph
 
-    Note over Thread: Thread ID: abc-123<br/>Persistent conversation
+    Note over Thread: 线程 ID: abc-123<br/>持久化对话
 
-    User->>Thread: Run 1: "What's the weather?"
-    Thread->>Assistant: Use Assistant Config
-    Assistant->>Graph: Execute with context
-    Graph-->>Thread: Update State<br/>{messages: [user_msg, ai_response]}
-    Thread-->>User: Response
+    User->>Thread: 运行 1: "What's the weather?" (今天天气如何？)
+    Thread->>Assistant: 使用助手配置
+    Assistant->>Graph: 使用上下文执行
+    Graph-->>Thread: 更新状态<br/>{messages: [用户消息, AI 响应]}
+    Thread-->>User: 响应
 
-    Note over Thread: State persisted ✓
+    Note over Thread: 状态已持久化 ✓
 
-    User->>Thread: Run 2: "What about tomorrow?"
-    Note over Thread: Previous messages<br/>still in state
-    Thread->>Assistant: Use Assistant Config
-    Assistant->>Graph: Execute with full history
-    Graph-->>Thread: Update State<br/>{messages: [...prev, new_msgs]}
-    Thread-->>User: Response with context
+    User->>Thread: 运行 2: "What about tomorrow?" (明天呢？)
+    Note over Thread: 上一条消息<br/>仍在状态中
+    Thread->>Assistant: 使用助手配置
+    Assistant->>Graph: 使用完整历史记录执行
+    Graph-->>Thread: 更新状态<br/>{messages: [...prev, 新消息]}
+    Thread-->>User: 带上下文的响应
 ```
 
-- A thread maintains a persistent conversation with a unique thread ID.
-- Each run applies the assistant's configuration to the graph execution.
-- State is updated after each run and persists for subsequent runs.
-- Later runs have access to the full conversation history.
+- 线程使用唯一的线程 ID 维护一个**持久化的对话**。
+- 每次运行都会将助手的配置应用于图的执行。
+- 状态在每次运行后更新并为后续运行**持久化**。
+- 后续运行可以访问**完整的对话历史记录**。
 
 <Note>
-- **[Assistants](/langsmith/assistants)** define the configuration (model, prompts, tools) for how your graph executes. When creating a run, you can specify either a **graph ID** (e.g., `"agent"`) to use the default assistant, or an **assistant ID** (UUID) to use a specific configuration.
-- **Threads** maintain the state and conversation history.
-- **Runs** combine an assistant and thread to execute your graph with a specific configuration and state.
+- **[助手](/langsmith/assistants)** 定义了图执行方式的配置（模型、提示、工具）。创建运行时，您可以指定 **图 ID**（例如，`"agent"`）来使用默认助手，或者指定 **助手 ID**（UUID）来使用特定配置。
+- **线程** 维护状态和对话历史记录。
+- **运行** 将助手和线程结合起来，使用特定的配置和状态来执行您的图。
 </Note>
 
-## Create a thread
+## 创建线程
 
-To run your graph with state persistence, you must first create a thread:
+要使用状态持久化运行图，您必须首先创建一个线程：
 
 <Tabs>
 <Tab title="SDK">
 
-### Empty thread
+### 空线程
 
-To create a new thread, use one of:
+要创建一个新线程，请使用以下任一方法：
 
 <CodeGroup>
 ```python Python
 from langgraph_sdk import get_client
 
-# Initialize the client with your deployment URL
+# 使用您的部署 URL 初始化客户端
 client = get_client(url=<DEPLOYMENT_URL>)
 
-# Create an empty thread
-# This creates a new thread with no initial state
+# 创建一个空线程
+# 这会创建一个没有初始状态的新线程
 thread = await client.threads.create()
 
 print(thread)
@@ -81,11 +82,11 @@ print(thread)
 ```javascript JavaScript
 import { Client } from "@langchain/langgraph-sdk";
 
-// Initialize the client with your deployment URL
+// 使用您的部署 URL 初始化客户端
 const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
 
-// Create an empty thread
-// This creates a new thread with no initial state
+// 创建一个空线程
+// 这会创建一个没有初始状态的新线程
 const thread = await client.threads.create();
 
 console.log(thread);
@@ -99,9 +100,9 @@ curl --request POST \
 ```
 </CodeGroup>
 
-For more information, refer to the @[Python][ThreadsClient.create] and @[JS][ThreadsClient.create] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/create-thread) reference.
+有关更多信息，请参阅 @[Python][ThreadsClient.create] 和 @[JS][ThreadsClient.create] SDK 文档，或 [REST API](/langsmith/agent-server-api/threads/create-thread) 参考。
 
-Output:
+输出：
 
 ```json
 {
@@ -114,20 +115,20 @@ Output:
 }
 ```
 
-### Copy thread
+### 复制线程
 
-Alternatively, if you already have a thread in your application whose state you wish to copy, you can use the `copy` method. This will create an independent thread whose history is identical to the original thread at the time of the operation:
+或者，如果您在应用程序中已经有一个希望复制其状态的线程，可以使用 `copy` 方法。这将创建一个独立的新线程，其历史记录在操作时与原始线程相同：
 
 <CodeGroup>
 ```python Python
-# Copy an existing thread
-# The new thread will have the same state as the original at the time of copying
+# 复制一个现有线程
+# 新线程将在复制时具有与原始线程相同的状态
 copied_thread = await client.threads.copy(thread["thread_id"])
 ```
 
 ```javascript JavaScript
-// Copy an existing thread
-// The new thread will have the same state as the original at the time of copying
+// 复制一个现有线程
+// 新线程将在复制时具有与原始线程相同的状态
 const copiedThread = await client.threads.copy(thread["thread_id"]);
 ```
 
@@ -137,36 +138,37 @@ curl --request POST --url <DEPLOYMENT_URL>/threads/thread["thread_id"]/copy \
 ```
 </CodeGroup>
 
-For more information, refer to the @[Python][ThreadsClient.copy] and @[JS][ThreadsClient.copy] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/copy-thread) reference.
+有关更多信息，请参阅 @[Python][ThreadsClient.copy] 和 @[JS][ThreadsClient.copy] SDK 文档，或 [REST API](/langsmith/agent-server-api/threads/copy-thread) 参考。
 
-### Prepopulated State
+### 预填充状态 (Prepopulated State)
 
-You can create a thread with an arbitrary pre-defined state by providing a list of `supersteps` into the `create` method. The `supersteps` describe a sequence of state updates that establish the initial state of the thread. This is useful when you want to:
+通过向 `create` 方法提供一个 `supersteps` 列表，您可以使用任意预定义的状态来创建线程。`supersteps` 描述了一系列状态更新，用于建立线程的初始状态。当您想要：
 
-- Create a thread with existing conversation history.
-- Migrate conversations from another system.
-- Set up test scenarios with specific initial states.
-- Resume conversations from a previous session.
+- 创建具有现有对话历史记录的线程。
+- 从另一个系统迁移对话。
+- 设置具有特定初始状态的测试场景。
+- 从先前的会话中恢复对话。
+时，这很有用。
 
-For more information on checkpoints and state management, refer to the [LangGraph persistence documentation](/oss/langgraph/persistence).
+有关检查点和状态管理的更多信息，请参阅 [LangGraph 持久化文档](/oss/langgraph/persistence)。
 
 <CodeGroup>
 ```python Python
 from langgraph_sdk import get_client
 
-# Initialize the client
+# 初始化客户端
 client = get_client(url=<DEPLOYMENT_URL>)
 
-# Create a thread with pre-populated conversation history
-# The supersteps define a sequence of state updates that build up the initial state
+# 创建一个带有预填充对话历史记录的线程
+# supersteps 定义了一系列状态更新，用于构建初始状态
 thread = await client.threads.create(
-  graph_id="agent",  # Specify which graph this thread is for
+  graph_id="agent",  # 指定此线程对应的图
   supersteps=[
     {
       updates: [
         {
           values: {},
-          as_node: '__input__',  # Initial input node
+          as_node: '__input__',  # 初始输入节点
         },
       ],
     },
@@ -181,7 +183,7 @@ thread = await client.threads.create(
               },
             ],
           },
-          as_node: '__start__',  # User's first message
+          as_node: '__start__',  # 用户的第一个消息
         },
       ],
     },
@@ -196,7 +198,7 @@ thread = await client.threads.create(
               },
             ],
           },
-          as_node: 'call_model',  # Assistant's response
+          as_node: 'call_model',  # 助手的响应
         },
       ],
     },
@@ -208,19 +210,19 @@ print(thread)
 ```javascript JavaScript
 import { Client } from "@langchain/langgraph-sdk";
 
-// Initialize the client
+// 初始化客户端
 const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
 
-// Create a thread with pre-populated conversation history
-// The supersteps define a sequence of state updates that build up the initial state
+// 创建一个带有预填充对话历史记录的线程
+// supersteps 定义了一系列状态更新，用于构建初始状态
 const thread = await client.threads.create({
-    graphId: 'agent',  // Specify which graph this thread is for
+    graphId: 'agent',  // 指定此线程对应的图
     supersteps: [
     {
       updates: [
         {
           values: {},
-          asNode: '__input__',  // Initial input node
+          asNode: '__input__',  // 初始输入节点
         },
       ],
     },
@@ -235,7 +237,7 @@ const thread = await client.threads.create({
               },
             ],
           },
-          asNode: '__start__',  // User's first message
+          asNode: '__start__',  // 用户的第一个消息
         },
       ],
     },
@@ -250,7 +252,7 @@ const thread = await client.threads.create({
               },
             ],
           },
-          asNode: 'call_model',  // Assistant's response
+          asNode: 'call_model',  // 助手的响应
         },
       ],
     },
@@ -268,7 +270,7 @@ curl --request POST \
 ```
 </CodeGroup>
 
-Output:
+输出：
 
 ```json
 {
@@ -311,40 +313,40 @@ Output:
 </Tab>
 <Tab title="UI">
 
-You can also create threads directly from the [LangSmith UI](https://smith.langchain.com):
+您还可以直接从 [LangSmith UI](https://smith.langchain.com) 创建线程：
 
-1. Navigate to your [deployment](/langsmith/deployments).
-2. Select the **Threads** tab.
-3. Click **+ New thread**.
-4. Optionally provide metadata or initial state for the thread.
-5. Click **Create thread**.
+1. 导航到您的 [部署 (deployment)](/langsmith/deployments)。
+2. 选择 **Threads** 标签页。
+3. 点击 **+ New thread** (新建线程)。
+4. 可选择为线程提供元数据或初始状态。
+5. 点击 **Create thread** (创建线程)。
 
-The newly created thread will appear in the threads table and can be used for runs immediately.
+新创建的线程将出现在线程表中，并可立即用于运行。
 
 </Tab>
 </Tabs>
 
-## List threads
+## 列出线程
 
 <Tabs>
 <Tab title="SDK">
 
-To list threads, use the `search` method. This will list the threads in the application that match the provided filters:
+要列出线程，请使用 `search` 方法。这将列出与提供的过滤器匹配的应用程序中的线程：
 
-### Filter by thread status
+### 按线程状态过滤
 
-Use the `status` field to filter threads based on their status. Supported values are `idle`, `busy`, `interrupted`, and `error`. For example, to view `idle` threads:
+使用 `status` 字段可根据线程状态进行过滤。支持的值包括 `idle`（空闲）、`busy`（忙碌）、`interrupted`（中断）和 `error`（错误）。例如，要查看 `idle` 线程：
 
 <CodeGroup>
 ```python Python
-# Search for idle threads
-# The status filter accepts: idle, busy, interrupted, error
+# 搜索空闲线程
+# status 过滤器接受：idle, busy, interrupted, error
 print(await client.threads.search(status="idle", limit=1))
 ```
 
 ```javascript JavaScript
-// Search for idle threads
-// The status filter accepts: idle, busy, interrupted, error
+// 搜索空闲线程
+// status 过滤器接受：idle, busy, interrupted, error
 console.log(await client.threads.search({ status: "idle", limit: 1 }));
 ```
 
@@ -356,9 +358,9 @@ curl --request POST \
 ```
 </CodeGroup>
 
-For more information, refer to the @[Python][ThreadsClient.search] and @[JS][ThreadsClient.search] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/search-threads) reference.
+有关更多信息，请参阅 @[Python][ThreadsClient.search] 和 @[JS][ThreadsClient.search] SDK 文档，或 [REST API](/langsmith/agent-server-api/threads/search-threads) 参考。
 
-Output:
+输出：
 
 ```json
 [
@@ -377,20 +379,20 @@ Output:
 ]
 ```
 
-### Filter by metadata
+### 按元数据过滤
 
-The `search` method allows you to filter on metadata. This is useful for finding threads associated with specific graphs, users, or custom metadata you've added to threads:
+`search` 方法允许您根据元数据进行过滤。这对于查找与特定图、用户或您添加到线程的自定义元数据相关的线程非常有用：
 
 <CodeGroup>
 ```python Python
-# Search for threads with specific metadata
-# Metadata filtering is useful for organizing threads by graph, user, or custom tags
+# 搜索具有特定元数据的线程
+# 元数据过滤有助于按图、用户或自定义标签组织线程
 print((await client.threads.search(metadata={"graph_id":"agent"}, limit=1)))
 ```
 
 ```javascript JavaScript
-// Search for threads with specific metadata
-// Metadata filtering is useful for organizing threads by graph, user, or custom tags
+// 搜索具有特定元数据的线程
+// 元数据过滤有助于按图、用户或自定义标签组织线程
 console.log((await client.threads.search({ metadata: { "graph_id": "agent" }, limit: 1 })));
 ```
 
@@ -402,7 +404,7 @@ curl --request POST \
 ```
 </CodeGroup>
 
-Output:
+输出：
 
 ```json
 [
@@ -421,46 +423,46 @@ Output:
 ]
 ```
 
-### Sorting
+### 排序
 
-The SDK also supports sorting threads by `thread_id`, `status`, `created_at`, and `updated_at` using the `sort_by` and `sort_order` parameters.
+SDK 还支持使用 `sort_by` 和 `sort_order` 参数按 `thread_id`、`status`、`created_at` 和 `updated_at` 对线程进行排序。
 
 </Tab>
 <Tab title="UI">
 
-You can also view and manage threads in a deployment via the [LangSmith UI](https://smith.langchain.com):
+您也可以在 [LangSmith UI](https://smith.langchain.com) 中查看和管理部署中的线程：
 
-1. Navigate to your [deployment](/langsmith/deployments).
-2. Select the **Threads** tab.
+1. 导航到您的 [部署 (deployment)](/langsmith/deployments)。
+2. 选择 **Threads** 标签页。
 
-This will load a table of all threads in your deployment.
+这将加载部署中所有线程的表格。
 
-**Filter by thread status:** Select a status in the top bar to filter threads by `idle`, `busy`, `interrupted`, or `error`.
+**按线程状态过滤：** 在顶部栏选择一个状态以按 `idle`、`busy`、`interrupted` 或 `error` 过滤线程。
 
-**Sort threads:** Click on the arrow icon for any column header to sort by that property (`thread_id`, `status`, `created_at`, or `updated_at`).
+**排序线程：** 单击任何列标题旁的箭头图标，按该属性（`thread_id`、`status`、`created_at` 或 `updated_at`）排序。
 
 </Tab>
 </Tabs>
 
-## Inspect threads
+## 检查线程
 
 <Tabs>
 <Tab title="SDK">
 
-### Get Thread
+### 获取线程 (Get Thread)
 
-To view a specific thread given its `thread_id`, use the @[`get`][ThreadsClient.get] method:
+要根据 `thread_id` 查看特定线程，请使用 @[`get`][ThreadsClient.get] 方法：
 
 <CodeGroup>
 ```python Python
-# Retrieve a specific thread by its ID
-# Returns the thread metadata including status, creation time, and metadata
+# 通过其 ID 检索特定线程
+# 返回线程元数据，包括状态、创建时间和元数据
 print((await client.threads.get(thread["thread_id"])))
 ```
 
 ```javascript JavaScript
-// Retrieve a specific thread by its ID
-// Returns the thread metadata including status, creation time, and metadata
+// 通过其 ID 检索特定线程
+// 返回线程元数据，包括状态、创建时间和元数据
 console.log((await client.threads.get(thread["thread_id"])));
 ```
 
@@ -471,7 +473,7 @@ curl --request GET \
 ```
 </CodeGroup>
 
-Output:
+输出：
 
 ```json
 {
@@ -488,22 +490,22 @@ Output:
 }
 ```
 
-For more information, refer to the @[Python][ThreadsClient.get] and @[JS][ThreadsClient.get] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/get-thread) reference.
+有关更多信息，请参阅 @[Python][ThreadsClient.get] 和 @[JS][ThreadsClient.get] SDK 文档，或 [REST API](/langsmith/agent-server-api/threads/get-thread) 参考。
 
-### Inspect thread state
+### 检查线程状态 (Inspect thread state)
 
-To view the current state of a given thread, use the @[`get_state`][ThreadsClient.get_state] method. This returns the current values, next nodes to execute, and checkpoint information:
+要查看给定线程的当前状态，请使用 @[`get_state`][ThreadsClient.get_state] 方法。它返回当前值、下一个要执行的节点以及检查点信息：
 
 <CodeGroup>
 ```python Python
-# Get the current state of a thread
-# Returns values, next nodes, tasks, checkpoint info, and metadata
+# 获取线程的当前状态
+# 返回值、下一个节点、任务、检查点信息和元数据
 print((await client.threads.get_state(thread["thread_id"])))
 ```
 
 ```javascript JavaScript
-// Get the current state of a thread
-// Returns values, next nodes, tasks, checkpoint info, and metadata
+// 获取线程的当前状态
+// 返回值、下一个节点、任务、检查点信息和元数据
 console.log((await client.threads.getState(thread["thread_id"])));
 ```
 
@@ -514,7 +516,7 @@ curl --request GET \
 ```
 </CodeGroup>
 
-Output:
+输出：
 
 ```json
 {
@@ -579,27 +581,27 @@ Output:
 }
 ```
 
-For more information, refer to the @[Python][ThreadsClient.get_state] and @[JS][ThreadsClient.get_state] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/get-thread-state) reference.
+---
 
-Optionally, to view the state of a thread at a given checkpoint, pass in the checkpoint ID. This is useful for inspecting the thread state at a specific point in its execution history.
+可选地，如果传入检查点 ID，您可以查看线程在给定检查点的状态。这对于在执行历史记录中的特定时间点检查线程状态非常有用。
 
-First, get the checkpoint ID from the thread's history:
+首先，从线程历史记录中获取检查点 ID：
 
 <CodeGroup>
 ```python Python
-# Get the thread history to find checkpoint IDs
+# 获取线程历史记录以查找检查点 ID
 history = await client.threads.get_history(thread_id=thread["thread_id"])
-checkpoint_id = history[0]["checkpoint_id"]  # Get the most recent checkpoint
+checkpoint_id = history[0]["checkpoint_id"]  # 获取最近的检查点
 ```
 
 ```javascript JavaScript
-// Get the thread history to find checkpoint IDs
+// 获取线程历史记录以查找检查点 ID
 const history = await client.threads.getHistory(thread["thread_id"]);
-const checkpointId = history[0].checkpoint_id;  // Get the most recent checkpoint
+const checkpointId = history[0].checkpoint_id;  // 获取最近的检查点
 ```
 
 ```bash cURL
-# Get the thread history to find checkpoint IDs
+# 获取线程历史记录以查找检查点 ID
 curl --request POST \
 --url <DEPLOYMENT_URL>/threads/thread["thread_id"]/history \
 --header 'Content-Type: application/json' \
@@ -607,12 +609,12 @@ curl --request POST \
 ```
 </CodeGroup>
 
-Then use the checkpoint ID to get the state at that specific point:
+然后使用检查点 ID 获取该特定时间点的状态：
 
 <CodeGroup>
 ```python Python
-# Get thread state at a specific checkpoint
-# Useful for inspecting historical state or debugging
+# 在特定检查点获取线程状态
+# 有助于检查历史状态或调试
 thread_state = await client.threads.get_state(
   thread_id=thread["thread_id"],
   checkpoint_id=checkpoint_id
@@ -620,8 +622,8 @@ thread_state = await client.threads.get_state(
 ```
 
 ```javascript JavaScript
-// Get thread state at a specific checkpoint
-// Useful for inspecting historical state or debugging
+// 在特定检查点获取线程状态
+// 有助于检查历史状态或调试
 const threadState = await client.threads.getState(thread["thread_id"], checkpointId);
 ```
 
@@ -632,17 +634,17 @@ curl --request GET \
 ```
 </CodeGroup>
 
-### Inspect full thread history
+### 检查完整线程历史记录 (Inspect full thread history)
 
-To view a thread's history, use the @[`get_history`][ThreadsClient.get_history] method. This returns a list of every state the thread experienced, allowing you to trace the full execution path:
+要查看线程历史记录，请使用 @[`get_history`][ThreadsClient.get_history] 方法。它返回线程经历的**每一个状态**的列表，使您能够追踪完整的执行路径：
 
 <CodeGroup>
 ```python Python
-# Get the full history of a thread
-# Returns a list of all state snapshots from the thread's execution
+# 获取线程的完整历史记录
+# 返回线程执行中所有状态快照的列表
 history = await client.threads.get_history(
   thread_id=thread["thread_id"],
-  limit=10  # Optional: limit the number of states returned
+  limit=10  # 可选：限制返回的状态数量
 )
 
 for state in history:
@@ -651,12 +653,12 @@ for state in history:
 ```
 
 ```javascript JavaScript
-// Get the full history of a thread
-// Returns a list of all state snapshots from the thread's execution
+// 获取线程的完整历史记录
+// 返回线程执行中所有状态快照的列表
 const history = await client.threads.getHistory(
   thread["thread_id"],
   {
-    limit: 10  // Optional: limit the number of states returned
+    limit: 10  // 可选：限制返回的状态数量
   }
 );
 
@@ -674,24 +676,25 @@ curl --request POST \
 ```
 </CodeGroup>
 
-This method is particularly useful for:
-- Debugging execution flow by seeing how state evolved.
-- Understanding decision points in your graph's execution.
-- Auditing conversation history and state changes.
-- Replaying or analyzing past interactions.
+此方法特别适用于：
+- 通过查看状态如何演变来进行**调试**执行流程。
+- 理解图中决策点的状态变化。
+- **审计**对话历史记录和状态更改。
+- 回放或分析过去的交互。
 
-For more information, refer to the @[Python][ThreadsClient.get_history] and @[JS][ThreadsClient.get_history] SDK docs, or the [REST API](/langsmith/agent-server-api/threads/get-thread-history) reference.
+有关更多信息，请参阅 @[Python][ThreadsClient.get_history] 和 @[JS][ThreadsClient.get_history] SDK 文档，或 [REST API](/langsmith/agent-server-api/threads/get-thread-history) 参考。
 
 </Tab>
 <Tab title="UI">
 
-You can also view and inspect threads in the [LangSmith UI](https://smith.langchain.com):
+您也可以在 [LangSmith UI](https://smith.langchain.com) 中查看和检查线程：
 
-1. Navigate to your [deployment](/langsmith/deployments).
-2. Select the **Threads** tab to view all threads.
-3. Click on a thread to inspect its current state.
+1. 导航到您的 [部署 (deployment)](/langsmith/deployments)。
+2. 选择 **Threads** 标签页以查看所有线程。
+3. 点击任一线程以检查其当前状态。
 
-To view the full thread history and perform detailed debugging, click **Open in Studio** to open the thread in [Studio](/langsmith/studio). Studio provides a visual interface for exploring the thread's execution history, state changes, and checkpoint details.
+要查看完整的线程历史记录并执行详细调试，请点击 **Open in Studio** 在 [Studio](/langsmith/studio) 中打开该线程。Studio 提供了一个可视化的界面来探索线程的执行历史、状态变化和检查点详情。
 
 </Tab>
 </Tabs>
+```

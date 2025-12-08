@@ -1,121 +1,121 @@
 ---
-title: Perigon
+title: Perigon（皮里贡）
 ---
 
-The Perigon API suite provides fast, structured access to global news and events, helping you build real-time, data-driven products. Whether you're tracking emerging risks, surfacing relevant articles, or uncovering key insights, Perigon gives you the tools to do it programmatically.
+Perigon API 套件提供快速、结构化的方式来访问全球新闻和事件数据，帮助您构建实时、数据驱动的产品。无论您是在跟踪新兴风险、挖掘相关文章，还是揭示关键见解，Perigon 都能为您提供以编程方式完成这些任务的工具。
 
-Unlike traditional keyword-based search, Perigon's semantic search capabilities allow it to understand queries contextually and return relevant documents.
+与传统的基于关键字的搜索不同，Perigon 的**语义搜索**功能使其能够理解查询的上下文并返回最相关的文档。
 
-This notebook demonstrates how to use Perigon's retrievers with LangChain for both news articles and Wikipedia content.
+本指南（Notebook）演示了如何将 Perigon 的检索器与 LangChain 结合使用，分别用于新闻文章和维基百科内容。
 
-## Setup
+## 设置 (Setup)
 
-### Installation
+### 安装 (Installation)
 
-Install the LangChain Perigon integration package:
+安装 LangChain Perigon 集成包：
 
 ```python
 pip install -qU langchain-perigon
 
-# and some deps for this notebook
+# 本指南所需的其他依赖项
 pip install -qU langchain langchain-openai langchain-community
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-You'll need a Perigon API key to use this integration. Sign up at [Perigon.io](https://perigon.io/) for your API key.
+要使用此集成，您需要一个 Perigon API 密钥。请访问 [Perigon.io](https://perigon.io/) 注册并获取您的 API 密钥。
 
 ```python
 import getpass
 import os
 
 if not os.environ.get("PERIGON_API_KEY"):
-    os.environ["PERIGON_API_KEY"] = getpass.getpass("Perigon API key:\n")
+    os.environ["PERIGON_API_KEY"] = getpass.getpass("Perigon API 密钥:\n")
 ```
 
-## Using ArticlesRetriever
+## 使用 ArticlesRetriever (文章检索器)
 
-The ArticlesRetriever allows you to search through news articles using semantic search capabilities:
+`ArticlesRetriever` 允许您利用语义搜索能力来搜索新闻文章：
 
-### Basic Usage
+### 基本用法 (Basic Usage)
 
 ```python
 from langchain_perigon import ArticlesRetriever
 
-# Create a new instance of the ArticlesRetriever
-# PERIGON_API_KEY is automatically read from environment variables
+# 创建 ArticlesRetriever 的新实例
+# PERIGON_API_KEY 会自动从环境变量中读取
 retriever = ArticlesRetriever()
 
 try:
-    # Search for articles using semantic search
+    # 使用语义搜索查询文章
     documents = retriever.invoke("artificial intelligence developments")
 
-    # Check if we got results
+    # 检查是否获得了结果
     if not documents:
-        print("No articles found for the given query.")
+        print("未找到与给定查询相关的文章。")
     else:
-        print(f"Found {len(documents)} articles")
+        print(f"找到了 {len(documents)} 篇文章")
 
-        # Display first 3 results with metadata
+        # 显示前 3 个结果及元数据
         for doc in documents[:3]:
-            # Safely extract metadata with fallbacks
-            print(f"Title: {doc.metadata.get('title', 'N/A')}")
+            # 安全地提取元数据并提供回退值
+            print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
             print(f"URL: {doc.metadata.get('url', 'N/A')}")
-            print(f"Published: {doc.metadata.get('publishedAt', 'N/A')}")
-            print(f"Content: {doc.page_content[:200]}...")
+            print(f"发布时间 (Published): {doc.metadata.get('publishedAt', 'N/A')}")
+            print(f"内容 (Content): {doc.page_content[:200]}...")
             print("-" * 80)
 except Exception as e:
-    print(f"Error retrieving articles: {e}")
+    print(f"检索文章时发生错误: {e}")
 ```
 
-### Advanced Features with Filtering
+### 带有过滤的高级功能 (Advanced Features with Filtering)
 
-You can use advanced filtering options to narrow down your search results:
+您可以使用高级过滤选项来缩小搜索结果范围：
 
 ```python
 from langchain_perigon import ArticlesRetriever, ArticlesFilter
 
-# Create retriever with custom parameters
-# PERIGON_API_KEY is automatically read from environment variables
+# 使用自定义参数创建检索器
+# PERIGON_API_KEY 会自动从环境变量中读取
 retriever = ArticlesRetriever(
-    k=10  # Number of results to return
+    k=10  # 返回结果的数量
 )
 
-# Define advanced filter options
+# 定义高级过滤选项
 options: ArticlesFilter = {
     "size": 10,
-    "showReprints": False,  # Exclude reprints
+    "showReprints": False,  # 排除转载文章
     "filter": {
-        "country": "us",  # Only US articles
-        "category": "tech",  # Technology category
-        "source": ["techcrunch.com", "wired.com"]  # Specific sources
+        "country": "us",  # 仅限美国文章
+        "category": "tech",  # 技术类别
+        "source": ["techcrunch.com", "wired.com"]  # 指定来源
     }
 }
 
 try:
-    # Search with advanced filters applied
+    # 应用高级过滤器进行搜索
     documents = retriever.invoke("machine learning breakthroughs", options=options)
 
     if not documents:
-        print("No articles found matching the filter criteria.")
+        print("未找到符合过滤条件的文章。")
     else:
-        print(f"Found {len(documents)} filtered articles")
+        print(f"找到了 {len(documents)} 篇经过筛选的文章")
 
-        # Display results with relevant metadata
+        # 显示带有相关元数据的结果
         for doc in documents[:3]:
-            print(f"Title: {doc.metadata.get('title', 'N/A')}")
-            print(f"Source: {doc.metadata.get('source', 'N/A')}")
-            print(f"Category: {doc.metadata.get('category', 'N/A')}")
-            print(f"Content: {doc.page_content[:150]}...")
+            print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
+            print(f"来源 (Source): {doc.metadata.get('source', 'N/A')}")
+            print(f"类别 (Category): {doc.metadata.get('category', 'N/A')}")
+            print(f"内容 (Content): {doc.page_content[:150]}...")
             print("-" * 80)
 
 except Exception as e:
-    print(f"Error retrieving filtered articles: {e}")
+    print(f"检索过滤后的文章时发生错误: {e}")
 ```
 
-### Location-Based Filtering
+### 基于位置的过滤 (Location-Based Filtering)
 
-You can filter articles by geographic relevance:
+您可以按地理位置相关性过滤文章：
 
 ```python
 from langchain_perigon.types import ArticlesFilter
@@ -123,7 +123,7 @@ from langchain_perigon import ArticlesRetriever
 
 retriever = ArticlesRetriever()
 
-# Filter by location
+# 按地点过滤
 location_options: ArticlesFilter = {
     "size": 5,
     "filter": {"country": "us", "state": "CA", "city": "San Francisco"},
@@ -131,110 +131,109 @@ location_options: ArticlesFilter = {
 
 documents = retriever.invoke("startup funding rounds", options=location_options)
 
-print(f"Found {len(documents)} San Francisco startup articles")
+print(f"找到了 {len(documents)} 篇关于旧金山初创公司融资的文章")
 for doc in documents:
-    print(f"Title: {doc.metadata.get('title', 'N/A')}")
+    print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
     print("-" * 60)
 ```
 
-## Using WikipediaRetriever
+## 使用 WikipediaRetriever (维基百科检索器)
 
-The WikipediaRetriever provides semantic search capabilities over Wikipedia content with rich metadata:
+`WikipediaRetriever` 提供了针对维基百科内容的语义搜索能力，并提供丰富的元数据：
 
-### Basic Usage
+### 基本用法 (Basic Usage)
 
 ```python
 from langchain_perigon import WikipediaRetriever
 
-# Create a new instance of the WikipediaRetriever
-# PERIGON_API_KEY is automatically read from environment variables
+# 创建 WikipediaRetriever 的新实例
+# PERIGON_API_KEY 会自动从环境变量中读取
 wiki_retriever = WikipediaRetriever()
 
 try:
-    # Search for Wikipedia articles using semantic search
+    # 使用语义搜索查询维基百科文章
     documents = wiki_retriever.invoke("quantum computing")
 
-    # Validate results before processing
+    # 处理前验证结果
     if not documents:
-        print("No Wikipedia articles found for the given query.")
+        print("未找到与给定查询相关的维基百科文章。")
     else:
-        print(f"Found {len(documents)} Wikipedia articles")
+        print(f"找到了 {len(documents)} 篇维基百科文章")
 
-        # Display first 3 results with rich metadata
+        # 显示前 3 个结果及丰富的元数据
         for doc in documents[:3]:
-            # Extract Wikipedia-specific metadata safely
-            print(f"Title: {doc.metadata.get('title', 'N/A')}")
-            print(f"Pageviews: {doc.metadata.get('pageviews', 'N/A')}")
+            # 提取特定于维基百科的元数据
+            print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
+            print(f"页面浏览量 (Pageviews): {doc.metadata.get('pageviews', 'N/A')}")
             print(f"Wikidata ID: {doc.metadata.get('wikidataId', 'N/A')}")
-            print(f"Content: {doc.page_content[:200]}...")
+            print(f"内容 (Content): {doc.page_content[:200]}...")
             print("-" * 80)
 except Exception as e:
-    print(f"Error retrieving Wikipedia articles: {e}")
+    print(f"检索维基百科文章时发生错误: {e}")
 ```
 
-### Advanced Wikipedia Search
+### 高级维基百科搜索 (Advanced Wikipedia Search)
 
-You can filter Wikipedia results by popularity, categories, and other metadata:
+您可以按流行度、类别和其他元数据过滤维基百科结果：
 
 ```python
 from langchain_perigon import WikipediaRetriever, WikipediaOptions
 
-# Create retriever with custom parameters
-# PERIGON_API_KEY is automatically read from environment variables
+# 使用自定义参数创建检索器
+# PERIGON_API_KEY 会自动从环境变量中读取
 wiki_retriever = WikipediaRetriever(k=5)
 
-# Define advanced filter options
+# 定义高级过滤选项
 wiki_options: WikipediaOptions = {
     "size": 5,
-    "pageviewsFrom": 100,  # Only popular pages with 100+ daily views
+    "pageviewsFrom": 100,  # 仅限日浏览量达到 100 次以上的热门页面
     "filter": {
-        "wikidataInstanceOfLabel": ["academic discipline"],
-        "category": ["Computer science", "Physics"],
+        "wikidataInstanceOfLabel": ["academic discipline"],  # 学科实例
+        "category": ["Computer science", "Physics"],  # 计算机科学或物理类别
     },
 }
 
-# Search with filters
+# 应用过滤器进行搜索
 documents = wiki_retriever.invoke("machine learning", options=wiki_options)
 
-print(f"Found {len(documents)} academic Wikipedia articles")
+print(f"找到了 {len(documents)} 篇学术性的维基百科文章")
 for doc in documents:
-    print(f"Title: {doc.metadata.get('title', 'N/A')}")
-    print(f"Daily pageviews: {doc.metadata.get('pageviews', 'N/A')}")
-    print(f"Instance of: {doc.metadata.get('wikidataInstanceOf', 'N/A')}")
-    print(f"Wiki code: {doc.metadata.get('wikiCode', 'N/A')}")
+    print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
+    print(f"每日浏览量 (Daily pageviews): {doc.metadata.get('pageviews', 'N/A')}")
+    print(f"实例类型 (Instance of): {doc.metadata.get('wikidataInstanceOf', 'N/A')}")
+    print(f"Wiki 代码 (Wiki code): {doc.metadata.get('wikiCode', 'N/A')}")
     print("-" * 80)
 ```
 
-### Time-Based Wikipedia Filtering
+### 基于时间的维基百科过滤 (Time-Based Wikipedia Filtering)
 
-Filter Wikipedia articles by revision dates:
+按修订日期过滤维基百科文章：
 
 ```python
 from langchain_perigon import WikipediaRetriever, WikipediaOptions
 
 wiki_retriever = WikipediaRetriever()
 
-# Filter by recent revisions
+# 按近期修订版本过滤
 recent_options: WikipediaOptions = {
     "size": 10,
-    "wiki_revision_from": "2025-09-22T00:00:00.000",  # Recently updated articles
-    "filter": {"with_pageviews": True},  # Only articles with pageview data
+    "wiki_revision_from": "2025-09-22T00:00:00.000",  # 最近更新的文章
+    "filter": {"with_pageviews": True},  # 仅包含有页面浏览量数据的文章
 }
 
 documents = wiki_retriever.invoke("artificial intelligence", options=recent_options)
 
-print(f"Found {len(documents)} recently updated AI articles")
+print(f"找到了 {len(documents)} 篇最近更新的 AI 文章")
 for doc in documents:
-    print(f"Title: {doc.metadata.get('title', 'N/A')}")
-    print(f"Last revision: {doc.metadata.get('wikiRevisionTs', 'N/A')}")
-    print(f"Pageviews: {doc.metadata.get('pageviews', 'N/A')}")
+    print(f"标题 (Title): {doc.metadata.get('title', 'N/A')}")
+    print(f"最后修订时间 (Last revision): {doc.metadata.get('wikiRevisionTs', 'N/A')}")
+    print(f"浏览量 (Pageviews): {doc.metadata.get('pageviews', 'N/A')}")
     print("-" * 60)
-
 ```
 
-## Async Usage
+## 异步用法 (Async Usage)
 
-Both retrievers support asynchronous operations for better performance:
+两种检索器都支持异步操作，以提高性能：
 
 ```python
 import asyncio
@@ -247,35 +246,35 @@ from langchain_perigon import (
 
 
 async def search_both():
-    """Perform concurrent searches across news articles and Wikipedia.
+    """执行跨新闻文章和维基百科的并发搜索。
 
-    Returns:
-        tuple: (news_articles, wikipedia_docs) - Results from both retrievers
+    返回:
+        tuple: (news_articles, wikipedia_docs) - 来自两个检索器的结果
 
-    Raises:
-        Exception: If either retriever fails or API errors occur
+    引发:
+        Exception: 如果任一检索器失败或发生 API 错误
     """
-    # Initialize retrievers with automatic API key detection
+    # 初始化检索器，自动检测 API 密钥
     articles_retriever = ArticlesRetriever()
     wiki_retriever = WikipediaRetriever()
 
-    # Configure search options for targeted results
+    # 配置搜索选项以获取目标结果
     articles_options: ArticlesFilter = {
-        "size": 3,  # Limit to 3 articles for faster response
+        "size": 3,  # 限制为 3 篇文章以加快响应速度
         "filter": {
-            "country": "us",      # US-based news sources
-            "category": "tech",   # Technology category only
+            "country": "us",      # 美国新闻来源
+            "category": "tech",   # 仅限技术类别
         },
     }
 
-    # Filter Wikipedia results by popularity (pageviews)
+    # 按流行度（浏览量）过滤维基百科结果
     wiki_options: WikipediaOptions = {
-        "size": 3,           # Limit to 3 articles
-        "pageviewsFrom": 50  # Only articles with 50+ daily views
+        "size": 3,           # 限制为 3 篇文章
+        "pageviewsFrom": 50  # 仅限每日浏览量达到 50 次以上的文章
     }
 
     try:
-        # Perform concurrent async searches for better performance
+        # 执行并发异步搜索以提高性能
         articles_task = articles_retriever.ainvoke(
             "climate change", options=articles_options
         )
@@ -283,45 +282,45 @@ async def search_both():
             "climate change", options=wiki_options
         )
 
-        # Wait for both searches to complete simultaneously
+        # 等待两个搜索同时完成
         articles, wiki_docs = await asyncio.gather(
             articles_task, wiki_task, return_exceptions=True
         )
 
-        # Handle potential exceptions from either retriever
+        # 处理任一检索器可能出现的异常
         if isinstance(articles, Exception):
-            print(f"Articles retrieval failed: {articles}")
+            print(f"文章检索失败: {articles}")
             articles = []
         if isinstance(wiki_docs, Exception):
-            print(f"Wikipedia retrieval failed: {wiki_docs}")
+            print(f"维基百科检索失败: {wiki_docs}")
             wiki_docs = []
 
         return articles, wiki_docs
 
     except Exception as e:
-        print(f"Error in concurrent search: {e}")
+        print(f"并发搜索中发生错误: {e}")
         return [], []
 
 
-# Run async search with error handling
+# 运行异步搜索并进行错误处理
 try:
     articles, wiki_docs = asyncio.run(search_both())
 
-    # Display results summary
-    print(f"Found {len(articles)} news articles and {len(wiki_docs)} Wikipedia articles")
+    # 显示结果摘要
+    print(f"找到了 {len(articles)} 篇新闻文章和 {len(wiki_docs)} 篇维基百科文章")
 
-    # Show sample results if available
+    # 如果有结果，则显示样本结果
     if articles:
-        print(f"Sample article: {articles[0].metadata.get('title', 'N/A')}")
+        print(f"样本文章标题: {articles[0].metadata.get('title', 'N/A')}")
     if wiki_docs:
-        print(f"Sample Wikipedia: {wiki_docs[0].metadata.get('title', 'N/A')}")
+        print(f"样本维基百科标题: {wiki_docs[0].metadata.get('title', 'N/A')}")
 
 except Exception as e:
-    print(f"Async search failed: {e}")
+    print(f"异步搜索失败: {e}")
 ```
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all Perigon API features and configurations, visit the [Perigon API documentation](https://dev.perigon.io/docs).
+有关所有 Perigon API 功能和配置的详细文档，请访问 [Perigon API 文档](https://dev.perigon.io/docs)。

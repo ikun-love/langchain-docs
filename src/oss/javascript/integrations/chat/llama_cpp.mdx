@@ -3,38 +3,38 @@ title: ChatLlamaCpp
 ---
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 上可用。
 </Tip>
 
-This module is based on the [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp), allowing you to work with a locally running LLM. This allows you to work with a much smaller quantized model capable of running on a laptop environment, ideal for testing and scratch padding ideas without running up a bill!
+该模块基于用于 [llama.cpp](https://github.com/ggerganov/llama.cpp) 的 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js 绑定，允许您使用本地运行的大语言模型 (LLM)。这使得您能够使用量化后、体积更小的模型，这些模型能够在笔记本电脑环境中运行，非常适合在不产生高昂费用的情况下进行测试和初步构思！
 
-## Setup
+## 设置 (Setup)
 
-You'll need to install major version `3` of the [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) module to communicate with your local model.
+您需要安装 `node-llama-cpp` 的主要版本 `3` 才能与您的本地模型进行通信。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install -S node-llama-cpp@3 @langchain/community @langchain/core
 ```
 
-You will also need a local Llama 3 model (or a model supported by [node-llama-cpp](https://github.com/withcatai/node-llama-cpp)). You will need to pass the path to this model to the LlamaCpp module as a part of the parameters (see example).
+您还需要一个本地的 Llama 3 模型（或 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) 支持的模型）。您需要将此模型的路径作为参数的一部分传递给 LlamaCpp 模块（参见示例）。
 
-Out-of-the-box `node-llama-cpp` is tuned for running on a MacOS platform with support for the Metal GPU of Apple M-series of processors. If you need to turn this off or need support for the CUDA architecture then refer to the documentation at [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/).
+开箱即用的 `node-llama-cpp` 默认针对在 MacOS 平台上运行进行了优化，支持 Apple M 系列处理器的 Metal GPU。如果您需要禁用此功能或需要支持 CUDA 架构，请参阅 [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/) 上的文档。
 
-For advice on getting and preparing `llama3` see the documentation for the LLM version of this module.
+关于获取和准备 `llama3` 的建议，请参阅此模块 LLM 版本的文档。
 
-A note to LangChain.js contributors: if you want to run the tests associated with this module you will need to put the path to your local model in the environment variable `LLAMA_PATH`.
+给 LangChain.js 贡献者的一个注意事项：如果您想运行与此模块相关的测试，您需要在环境变量 `LLAMA_PATH` 中设置本地模型的路径。
 
-## Usage
+## 用法 (Usage)
 
-### Basic use
+### 基本使用 (Basic use)
 
-In this case we pass in a prompt wrapped as a message and expect a response.
+在这种情况下，我们传入一个被包装成消息的提示 (prompt)，并期望得到一个响应。
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -64,9 +64,9 @@ console.log({ response });
 */
 ```
 
-### System messages
+### 系统消息 (System messages)
 
-We can also provide a system message, note that with the `llama_cpp` module a system message will cause the creation of a new session.
+我们也可以提供一个系统消息。请注意，对于 `llama_cpp` 模块，系统消息将导致创建一个新的会话 (session)。
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -99,9 +99,9 @@ console.log({ response });
 */
 ```
 
-### Chains
+### 链式调用 (Chains)
 
-This module can also be used with chains, note that using more complex chains will require suitably powerful version of `llama3` such as the 70B version.
+此模块也可以与链 (chains) 一起使用。请注意，使用更复杂的链条需要使用足够强大的 `llama3` 版本，例如 70B 版本。
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -135,9 +135,9 @@ console.log({ response });
 */
 ```
 
-### Streaming
+### 流式传输 (Streaming)
 
-We can also stream with Llama CPP, this can be using a raw 'single prompt' string:
+我们也可以使用 Llama CPP 进行流式传输。这可以使用原始的“单个提示”字符串：
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -172,7 +172,7 @@ for await (const chunk of stream) {
 */
 ```
 
-Or you can provide multiple messages, note that this takes the input and then submits a Llama3 formatted prompt to the model.
+或者，您可以提供多条消息。请注意，这会获取输入，然后将 Llama3 格式化的提示提交给模型。
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -223,7 +223,7 @@ for await (const chunk of stream) {
 */
 ```
 
-Using the `invoke` method, we can also achieve stream generation, and use `signal` to abort the generation.
+使用 `invoke` 方法，我们也可以实现流式生成，并使用 `signal` 来中止生成过程。
 
 ```typescript
 import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
@@ -282,7 +282,7 @@ await model.invoke(
 */
 ```
 
-## Related
+## 相关 (Related)
 
-- Chat model [conceptual guide](/oss/langchain/models)
-- Chat model [how-to guides](/oss/langchain/models)
+- Chat 模型[概念指南](/oss/langchain/models)
+- Chat 模型[操作指南](/oss/langchain/models)

@@ -1,12 +1,12 @@
 ---
-title: Memorize
+title: 记忆
 ---
 
-Fine-tuning LLM itself to memorize information using unsupervised learning.
+使用无监督学习对大型语言模型（LLM）本身进行微调，以记忆信息。
 
-This tool requires LLMs that support fine-tuning. Currently, only `langchain.llms import GradientLLM` is supported.
+此工具要求 LLM 支持微调。目前，仅支持 `langchain.llms import GradientLLM`。
 
-## Imports
+## 导入
 
 ```python
 import os
@@ -17,47 +17,47 @@ from langchain.memory import ConversationBufferMemory
 from langchain_community.llms import GradientLLM
 ```
 
-## Set the Environment API Key
+## 设置环境变量 API 密钥
 
-Make sure to get your API key from Gradient AI. You are given $10 in free credits to test and fine-tune different models.
+请确保从 Gradient AI 获取您的 API 密钥。您将获得 $10 的免费积分，用于测试和微调不同的模型。
 
 ```python
 from getpass import getpass
 
 if not os.environ.get("GRADIENT_ACCESS_TOKEN", None):
-    # Access token under https://auth.gradient.ai/select-workspace
+    # 访问令牌见 https://auth.gradient.ai/select-workspace
     os.environ["GRADIENT_ACCESS_TOKEN"] = getpass("gradient.ai access token:")
 if not os.environ.get("GRADIENT_WORKSPACE_ID", None):
-    # `ID` listed in `$ gradient workspace list`
-    # also displayed after login at at https://auth.gradient.ai/select-workspace
+    # `ID` 可通过 `$ gradient workspace list` 查看
+    # 登录后在 https://auth.gradient.ai/select-workspace 也会显示
     os.environ["GRADIENT_WORKSPACE_ID"] = getpass("gradient.ai workspace id:")
 if not os.environ.get("GRADIENT_MODEL_ADAPTER_ID", None):
-    # `ID` listed in `$ gradient model list --workspace-id "$GRADIENT_WORKSPACE_ID"`
+    # `ID` 可通过 `$ gradient model list --workspace-id "$GRADIENT_WORKSPACE_ID"` 查看
     os.environ["GRADIENT_MODEL_ID"] = getpass("gradient.ai model id:")
 ```
 
-Optional: Validate your Environment variables `GRADIENT_ACCESS_TOKEN` and `GRADIENT_WORKSPACE_ID` to get currently deployed models.
+可选：验证您的环境变量 `GRADIENT_ACCESS_TOKEN` 和 `GRADIENT_WORKSPACE_ID`，以获取当前部署的模型。
 
-## Create the `GradientLLM` instance
+## 创建 `GradientLLM` 实例
 
-You can specify different parameters such as the model name, max tokens generated, temperature, etc.
+您可以指定不同的参数，例如模型名称、生成的最大 token 数、温度（temperature）等。
 
 ```python
 llm = GradientLLM(
     model_id=os.environ["GRADIENT_MODEL_ID"],
-    # # optional: set new credentials, they default to environment variables
+    # # 可选：设置新凭证，默认为环境变量
     # gradient_workspace_id=os.environ["GRADIENT_WORKSPACE_ID"],
     # gradient_access_token=os.environ["GRADIENT_ACCESS_TOKEN"],
 )
 ```
 
-## Load tools
+## 加载工具
 
 ```python
 tools = load_tools(["memorize"], llm=llm)
 ```
 
-## Initiate the Agent
+## 初始化智能体（Agent）
 
 ```python
 agent = initialize_agent(
@@ -69,9 +69,9 @@ agent = initialize_agent(
 )
 ```
 
-## Run the agent
+## 运行智能体
 
-Ask the agent to memorize a piece of text.
+要求智能体记忆一段文本。
 
 ```python
 agent.run(
@@ -81,11 +81,11 @@ agent.run(
 
 ```output
 > Entering new AgentExecutor chain...
-I should memorize this fact.
+我应该记住这个事实。
 Action: Memorize
 Action Input: Zara T
 Observation: Train complete. Loss: 1.6853971333333335
-Thought:I now know the final answer.
+Thought:我现在知道最终答案了。
 Final Answer: Zara Tubikova set a world
 
 > Finished chain.

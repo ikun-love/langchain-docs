@@ -1,8 +1,8 @@
 ---
-title: Self Hosted
+title: 自托管
 ---
 
-Let's load the `SelfHostedEmbeddings`, `SelfHostedHuggingFaceEmbeddings`, and `SelfHostedHuggingFaceInstructEmbeddings` classes.
+让我们加载 `SelfHostedEmbeddings`、`SelfHostedHuggingFaceEmbeddings` 和 `SelfHostedHuggingFaceInstructEmbeddings` 类。
 
 ```python
 import runhouse as rh
@@ -14,20 +14,20 @@ from langchain_community.embeddings import (
 ```
 
 ```python
-# For an on-demand A100 with GCP, Azure, or Lambda
+# 针对 GCP、Azure 或 Lambda 上的按需 A100 实例
 gpu = rh.cluster(name="rh-a10x", instance_type="A100:1", use_spot=False)
 
-# For an on-demand A10G with AWS (no single A100s on AWS)
+# 针对 AWS 上的按需 A10G 实例（AWS 上没有单个 A100）
 # gpu = rh.cluster(name='rh-a10x', instance_type='g5.2xlarge', provider='aws')
 
-# For an existing cluster
+# 针对现有集群
 # gpu = rh.cluster(ips=['<ip of the cluster>'],
 #                  ssh_creds={'ssh_user': '...', 'ssh_private_key':'<path_to_key>'},
 #                  name='my-cluster')
 ```
 
 ```python
-embeddings = SelfHostedHuggingFaceEmbeddings(hardware=gpu)
+embeddings = SelfHostedEmbeddings(hardware=gpu)
 ```
 
 ```python
@@ -38,13 +38,13 @@ text = "This is a test document."
 query_result = embeddings.embed_query(text)
 ```
 
-And similarly for SelfHostedHuggingFaceInstructEmbeddings:
+对于 `SelfHostedHuggingFaceInstructEmbeddings` 也是类似的：
 
 ```python
 embeddings = SelfHostedHuggingFaceInstructEmbeddings(hardware=gpu)
 ```
 
-Now let's load an embedding model with a custom load function:
+现在让我们使用自定义加载函数来加载一个嵌入模型：
 
 ```python
 def get_pipeline():
@@ -61,7 +61,7 @@ def get_pipeline():
 
 
 def inference_fn(pipeline, prompt):
-    # Return last hidden state of the model
+    # 返回模型的最后一个隐藏状态
     if isinstance(prompt, list):
         return [emb[0][-1] for emb in pipeline(prompt)]
     return pipeline(prompt)[0][-1]
@@ -80,6 +80,6 @@ embeddings = SelfHostedEmbeddings(
 query_result = embeddings.embed_query(text)
 ```
 
-```python
+```
 
 ```

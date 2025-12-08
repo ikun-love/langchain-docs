@@ -2,33 +2,33 @@
 title: FireCrawl
 ---
 
-[FireCrawl](https://firecrawl.dev/?ref=langchain) crawls and convert any website into LLM-ready data. It crawls all accessible subpages and give you clean markdown and metadata for each. No sitemap required.
+[FireCrawl](https://firecrawl.dev/?ref=langchain) 可以抓取并转换任何网站内容为 LLM（大语言模型）可用的数据。它会抓取所有可访问的子页面，并为每个页面提供干净的 Markdown 和元数据。无需提供站点地图（sitemap）。
 
-FireCrawl handles complex tasks such as reverse proxies, caching, rate limits, and content blocked by JavaScript. Built by the [mendable.ai](https://mendable.ai) team.
+FireCrawl 能够处理复杂的任务，例如反向代理、缓存、速率限制以及由 JavaScript 阻止的内容。由 [mendable.ai](https://mendable.ai) 团队构建。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/firecrawl/)|
+| 类（Class） | 包（Package） | 本地（Local） | 可序列化（Serializable） | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/firecrawl/)|
 | :--- | :--- | :---: | :---: |  :---: |
 | [FireCrawlLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.firecrawl.FireCrawlLoader.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ✅ |
 
-### Loader features
+### 加载器特性
 
-| Source | Document Lazy Loading | Native Async Support
+| 源（Source） | 文档延迟加载（Document Lazy Loading） | 原生异步支持（Native Async Support）
 | :---: | :---: | :---: |
 | FireCrawlLoader | ✅ | ❌ |
 
-## Setup
+## 设置
 
 ```python
 pip install firecrawl-py
 ```
 
-## Usage
+## 用法
 
-You will need to get your own API key. See [firecrawl.dev](https://firecrawl.dev)
+您需要获取自己的 API 密钥。请参阅 [firecrawl.dev](https://firecrawl.dev)
 
 ```python
 from langchain_community.document_loaders.firecrawl import FireCrawlLoader
@@ -59,13 +59,13 @@ for doc in loader.lazy_load():
 pages
 ```
 
-## Modes
+## 模式（Modes）
 
-- `scrape`: Scrape single url and return the markdown.
-- `crawl`: Crawl the url and all accessible sub pages and return the markdown for each one.
-- `map`: Maps the URL and returns a list of semantically related pages.
+- `scrape`: 抓取单个 URL 并返回 Markdown 内容。
+- `crawl`: 抓取 URL 及其所有可访问的子页面，并为每个页面返回 Markdown 内容。
+- `map`: 对目标 URL 进行映射，返回一组语义相关的页面列表。
 
-### Crawl
+### 抓取（Crawl）
 
 ```python
 loader = FireCrawlLoader(
@@ -84,11 +84,11 @@ print(pages[0].page_content[:100])
 print(pages[0].metadata)
 ```
 
-#### Crawl Options
+#### 抓取选项（Crawl Options）
 
-You can also pass `params` to the loader. This is a dictionary of options to pass to the crawler. See the [FireCrawl API documentation](https://github.com/mendableai/firecrawl-py) for more information.
+您还可以向加载器传递 `params` 参数。这是一个需要传递给爬虫的选项字典。有关更多信息，请参阅 [FireCrawl API 文档](https://github.com/mendableai/firecrawl-py)。
 
-### Map
+### 映射（Map）
 
 ```python
 loader = FireCrawlLoader(api_key="YOUR_API_KEY", url="firecrawl.dev", mode="map")
@@ -102,12 +102,12 @@ docs = loader.load()
 docs
 ```
 
-#### Map Options
+#### 映射选项（Map Options）
 
-You can also pass `params` to the loader. This is a dictionary of options to pass to the loader. See the [FireCrawl API documentation](https://github.com/mendableai/firecrawl-py) for more information.
+您还可以向加载器传递 `params` 参数。这是一个需要传递给爬虫的选项字典。有关更多信息，请参阅 [FireCrawl API 文档](https://github.com/mendableai/firecrawl-py)。
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `FireCrawlLoader` features and configurations head to the API reference: [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.firecrawl.FireCrawlLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.firecrawl.FireCrawlLoader.html)
+有关 `FireCrawlLoader` 所有功能和配置的详细文档，请查阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.firecrawl.FireCrawlLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.firecrawl.FireCrawlLoader.html)

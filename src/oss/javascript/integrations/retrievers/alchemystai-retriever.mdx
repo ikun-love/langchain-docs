@@ -1,18 +1,19 @@
 ---
-title: Alchemyst AI Retriever
-description: "Integrate the Alchemyst AI Retriever into your Generative AI Application"
+title: Alchemyst AI 检索器
+description: "将 Alchemyst AI 检索器集成到您的生成式 AI 应用程序中"
 ---
 
-# Alchemyst AI Retriever
+# Alchemyst AI 检索器 (Retriever)
 
-The [**Alchemyst AI Retriever**](https://getalchemystai.com) enables your generative AI applications to retrieve relevant context and knowledge. It sources this information from the Alchemyst platform. It provides a unified interface for accessing, searching, and retrieving data to enhance LLM and agent responses.
-## Setup
+[**Alchemyst AI 检索器**](https://getalchemystai.com) 能够让您的生成式 AI 应用程序检索相关的上下文和知识。它从 Alchemyst 平台获取这些信息，并提供一个统一的接口，用于访问、搜索和检索数据，以增强大型语言模型 (LLM) 和智能体 (Agent) 的响应质量。
 
-1. If you don't have an account, [sign up for a new account](https://platform.getalchemystai.com/signup) on the Alchemyst Platform.
-2. After logging in, go to [**Alchemyst Platform Settings**](https://platform.getalchemystai.com/settings) to get your API keys.
+## 设置 (Setup)
+
+1. 如果您还没有账户，请在 Alchemyst 平台 [注册一个新账户](https://platform.getalchemystai.com/signup)。
+2. 登录后，前往 [**Alchemyst 平台设置**](https://platform.getalchemystai.com/settings) 获取您的 API 密钥。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅 [本节](/oss/langchain/install)。
 </Tip>
 
 <CodeGroup>
@@ -33,7 +34,7 @@ bun add @alchemystai/langchain-js
 ```
 </CodeGroup>
 
-## Usage
+## 用法 (Usage)
 
 ```typescript
 import { AlchemystRetriever } from "@alchemystai/langchain-js";
@@ -42,7 +43,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Instantiate the retriever with your API key and optional config
+// 使用您的 API 密钥和可选配置实例化检索器
 const retriever = new AlchemystRetriever({
   apiKey: process.env.ALCHEMYST_AI_API_KEY!,
   similarityThreshold: 0.8,
@@ -50,17 +51,18 @@ const retriever = new AlchemystRetriever({
   scope: "internal"
 });
 
-// Example: Use the retriever in a LangChain pipeline
+// 示例：在 LangChain 流程中使用检索器
 async function main() {
-  // Create a simple pipeline that retrieves documents and outputs their content
+  // 创建一个简单的流程 (pipeline)，用于检索文档并输出其内容
   const pipeline = RunnableSequence.from([
     async (input: string) => {
       const docs = await retriever.getRelevantDocuments(input);
+      // 将所有检索到的文档内容连接起来，文档之间用 "---" 分隔
       return docs.map(doc => doc.pageContent).join("\n---\n");
     }
   ]);
 
-  const query = "Show me the latest HR policies"; // Put your business/practical query here
+  const query = "Show me the latest HR policies"; // 放入您的业务/实际查询内容
   const result = await pipeline.invoke(query);
 
   console.log("Retrieved Documents:\n", result);
@@ -69,5 +71,5 @@ async function main() {
 main().catch(console.error);
 ```
 
-## Support and Feedback
-For support, feedback, or to report issues, please visit the [Alchemyst AI Documentation](https://docs.getalchemystai.com), where you'll find the latest contact and community information.
+## 支持和反馈 (Support and Feedback)
+如需支持、反馈或报告问题，请访问 [Alchemyst AI 文档](https://docs.getalchemystai.com)，您可以在那里找到最新的联系方式和社区信息。

@@ -1,13 +1,14 @@
+```markdown
 ---
-title: Add metadata and tags to traces
-sidebarTitle: Add metadata and tags to traces
+title: 为追踪信息添加元数据和标签
+sidebarTitle: 为追踪信息添加元数据和标签
 ---
 
-LangSmith supports sending arbitrary metadata and tags along with traces.
+LangSmith 支持在追踪信息（traces）中附带任意的元数据（metadata）和标签（tags）。
 
-Tags are strings that can be used to categorize or label a trace. Metadata is a dictionary of key-value pairs that can be used to store additional information about a trace.
+标签（Tags）是字符串，可用于对追踪信息进行分类或标记。元数据（Metadata）是一个键值对的字典，可用于存储关于追踪信息的额外信息。
 
-Both are useful for associating additional information with a trace, such as the environment in which it was executed, the user who initiated it, or an internal correlation ID. For more information on tags and metadata, see the [Concepts](/langsmith/observability-concepts#tags) page. For information on how to query traces and runs by metadata and tags, see the [Filter traces in the application](/langsmith/filter-traces-in-application) page.
+这两者都非常有用，可以关联额外信息到追踪信息中，例如执行时的环境、发起操作的用户，或者内部关联 ID。关于标签和元数据的更多信息，请参阅 [Concepts](/langsmith/observability-concepts#tags) 页面。关于如何通过元数据和标签查询追踪信息和运行（runs）的信息，请参阅 [Filter traces in the application](/langsmith/filter-traces-in-application) 页面。
 
 <CodeGroup>
 
@@ -22,9 +23,9 @@ messages = [
     {"role": "user", "content": "Hello!"}
 ]
 
-    # You can set metadata & tags **statically** when decorating a function
-    # Use the @traceable decorator with tags and metadata
-    # Ensure that the LANGSMITH_TRACING environment variables are set for @traceable to work
+    # 您可以在装饰函数时**静态地**设置元数据和标签
+    # 使用带有 tags 和 metadata 参数的 @traceable 装饰器
+    # 确保已设置 LANGSMITH_TRACING 环境变量，以便 @traceable 生效
     @ls.traceable(
         run_type="llm",
         name="OpenAI Call Decorator",
@@ -34,7 +35,7 @@ messages = [
     def call_openai(
         messages: list[dict], model: str = "gpt-4o-mini"
     ) -> str:
-        # You can also dynamically set metadata on the parent run:
+        # 您也可以在父级运行中动态设置元数据：
         rt = ls.get_current_run_tree()
         rt.metadata["some-conditional-key"] = "some-val"
         rt.tags.extend(["another-tag"])
@@ -45,12 +46,11 @@ messages = [
 
     call_openai(
         messages,
-        # To add at **invocation time**, when calling the function.
-        # via the langsmith_extra parameter
+        # 若想在函数**调用时**添加，请通过 langsmith_extra 参数传入
         langsmith_extra={"tags": ["my-other-tag"], "metadata": {"my-other-key": "my-value"}}
     )
 
-    # Alternatively, you can use the context manager
+    # 或者，您可以使用上下文管理器
     with ls.trace(
         name="OpenAI Call Trace",
         run_type="llm",
@@ -65,7 +65,7 @@ messages = [
         rt.metadata["some-conditional-key"] = "some-val"
         rt.end(outputs={"output": chat_completion})
 
-# You can use the same techniques with the wrapped client
+# 您可以使用相同的技术处理被包装的 client
 patched_client = wrap_openai(
     client, tracing_extra={"metadata": {"my-key": "my-value"}, "tags": ["a-tag"]}
 )
@@ -112,8 +112,9 @@ import { wrapOpenAI } from "langsmith/wrappers";
         }
     );
 
-// Call the traceable function
+// 调用可追踪函数
 await traceableCallOpenAI(messages);
 ```
 
 </CodeGroup>
+```

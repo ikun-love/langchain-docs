@@ -1,16 +1,16 @@
 ---
-title: LocalAI Reranker
+title: LocalAI 重排序器
 ---
 
 <Info>
-**`langchain-localai` is a 3rd party integration package for LocalAI. It provides a simple way to use LocalAI services in LangChain.**
+**`langchain-localai` 是一个用于 LocalAI 的第三方集成包。它提供了一种在 LangChain 中使用 LocalAI 服务 的便捷方式。**
 
-The source code is available on [GitHub](https://github.com/mkhludnev/langchain-localai)
+源代码可在 [GitHub](https://github.com/mkhludnev/langchain-localai) 上获取
 </Info>
 
-This notebook shows how to use [LocalAI Reranker API](https://localai.io/features/reranker/) for document compression and retrieval.
+本示例展示了如何使用 [LocalAI Reranker API](https://localai.io/features/reranker/) 进行文档压缩和检索。
 
-Let's load the `LocalAIRerank` class. In order to use the `LocalAIRerank` class, you need to have the LocalAI service hosted somewhere and configure the reranker. See the documentation at [localai.io/basics/getting_started/index.html](https://localai.io/basics/getting_started/index.html) and [localai.io/features/reranker/index.html](https://localai.io/features/reranker/index.html).
+让我们加载 `LocalAIRerank` 类。为了使用此类，您需要在某个地方部署 LocalAI 服务并配置重排序器（reranker）。请参阅 [localai.io/basics/getting_started/index.html](https://localai.io/basics/getting_started/index.html) 和 [localai.io/features/reranker/index.html](https://localai.io/features/reranker/index.html) 上的文档。
 
 ```python
 pip install -U langchain-localai
@@ -21,8 +21,8 @@ import os
 from langchain_localai import LocalAIRerank
 from langchain_core.documents import Document
 
-# Set your LocalAI/OpenAI API key as an environment variable for security.
-# For example, in your shell: export OPENAI_API_KEY="your-key-here"
+# 为安全起见，请将您的 LocalAI/OpenAI API 密钥设置为环境变量。
+# 例如，在您的 shell 中：export OPENAI_API_KEY="your-key-here"
 reranker = LocalAIRerank(
     openai_api_key=os.environ.get("OPENAI_API_KEY"),
     model="bge-reranker-v2-m3",

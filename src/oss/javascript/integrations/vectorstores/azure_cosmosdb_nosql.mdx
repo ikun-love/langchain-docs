@@ -2,86 +2,86 @@
 title: Azure Cosmos DB for NoSQL
 ---
 
-> [Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/) provides support for querying items with flexible schemas and native support for JSON. It now offers vector indexing and search. This feature is designed to handle high-dimensional vectors, enabling efficient and accurate vector search at any scale. You can now store vectors directly in the documents alongside your data. Each document in your database can contain not only traditional schema-free data, but also high-dimensional vectors as other properties of the documents.
+> [Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/) 支持使用灵活的架构和对 JSON 的原生支持来查询项目。它现在提供向量索引和搜索功能。此功能旨在处理高维向量，从而能够在任何规模上实现高效、准确的向量搜索。您现在可以将向量与数据一起直接存储在文档中。数据库中的每个文档不仅可以包含传统上无模式的数据，还可以包含作为文档其他属性的高维向量。
 
-Learn how to leverage the vector search capabilities of Azure Cosmos DB for NoSQL from [this page](https://learn.microsoft.com/azure/cosmos-db/nosql/vector-search). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
+请通过[此页面](https://learn.microsoft.com/azure/cosmos-db/nosql/vector-search)了解如何利用 Azure Cosmos DB for NoSQL 的向量搜索功能。如果您没有 Azure 帐户，可以[创建一个免费帐户](https://azure.microsoft.com/free/)开始使用。
 
-## Setup
+## 设置 (Setup)
 
-You'll first need to install the [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) package:
+您首先需要安装 [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) 包：
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/azure-cosmosdb @langchain/core
 ```
-You'll also need to have an Azure Cosmos DB for NoSQL instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal).
+您还需要运行一个 Azure Cosmos DB for NoSQL 实例。您可以按照[此指南](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal)在 Azure Portal 上免费部署一个版本，无需任何费用。
 
-Once you have your instance running, make sure you have the connection string. You can find them in the Azure Portal, under the "Settings / Keys" section of your instance. Then you need to set the following environment variables:
+实例运行后，请确保您拥有连接字符串（connection string）。您可以在 Azure Portal 中，在实例的“设置 / 密钥 (Settings / Keys)”部分找到它们。然后，您需要设置以下环境变量：
 
 ```bash .env example
-# Use connection string to authenticate
+# 使用连接字符串进行身份验证
 AZURE_COSMOSDB_NOSQL_CONNECTION_STRING=
 
-# Use managed identity to authenticate
+# 使用托管身份进行身份验证
 AZURE_COSMOSDB_NOSQL_ENDPOINT=
 ```
 
-### Using Azure Managed Identity
+### 使用 Azure 托管身份 (Azure Managed Identity)
 
-If you're using Azure Managed Identity, you can configure the credentials like this:
+如果您使用 Azure 托管身份，可以按如下方式配置凭据：
 
 ```typescript
 import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-// Create Azure Cosmos DB vector store
+// 创建 Azure Cosmos DB 向量存储
 const store = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-  // Or use environment variable AZURE_COSMOSDB_NOSQL_ENDPOINT
+  // 或者使用环境变量 AZURE_COSMOSDB_NOSQL_ENDPOINT
   endpoint: "https://my-cosmosdb.documents.azure.com:443/",
 
-  // Database and container must already exist
+  // 数据库和容器必须已存在
   databaseName: "my-database",
   containerName: "my-container",
 });
 ```
 
 <Info>
-**When using Azure Managed Identity and role-based access control, you must ensure that the database and container have been created beforehand. RBAC does not provide permissions to create databases and containers. You can get more information about the permission model in the [Azure Cosmos DB documentation](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model).**
+**在使用 Azure 托管身份和基于角色的访问控制 (RBAC) 时，您必须确保数据库和容器已提前创建。RBAC 不提供创建数据库和容器的权限。您可以在 [Azure Cosmos DB 文档](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model)中找到有关权限模型的更多信息。**
 
 
 </Info>
 
-### Security considerations when using filters
+### 使用筛选器时的安全注意事项
 
 <Warning>
-**Using filters with user-provided input can be a security risk if the data is not sanitized properly. Follow the recommendation below to prevent potential security issues.**
+**如果不对用户提供的数据进行适当清理，使用带有所提供输入的筛选器可能会带来安全风险。请遵循以下建议以防止潜在的安全问题。**
 
 
 </Warning>
 
-Allowing raw user input to be concatenated into SQL-like clauses - such as `WHERE ${userFilter}` - introduces a critical risk of SQL injection attacks, potentially exposing unintended data or compromising your system's integrity. To mitigate this, always use Azure Cosmos DB's parameterized query mechanism, passing in `@param` placeholders, which cleanly separates the query logic from user-provided input.
+允许将原始用户输入连接到类似 SQL 的子句中（例如 `WHERE ${userFilter}`）会引入 SQL 注入攻击的关键风险，可能暴露非预期数据或损害系统完整性。为减轻此风险，请始终使用 Azure Cosmos DB 的参数化查询机制，传入 `@param` 占位符，从而清晰地将查询逻辑与用户提供的内容分离开来。
 
-Here is an example of unsafe code:
+这是一个不安全代码的示例：
 
 ```typescript
 import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
 
 const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {});
 
-// Unsafe: user-controlled input injected into the query
-const userId = req.query.userId; // e.g. "123' OR 1=1"
+// 不安全：将用户控制的输入注入到查询中
+const userId = req.query.userId; // 例如 "123' OR 1=1"
 const unsafeQuerySpec = {
   query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`,
 };
 
 await store.delete({ filter: unsafeQuerySpec });
 ```
-If the attacker provides `123 OR 1=1`, then the query becomes `SELECT * FROM c WHERE c.metadata.userId = '123' OR 1=1`, which forces the condition to always be true, causing it to bypass the intended filter and delete all documents.
+如果攻击者提供 `123 OR 1=1`，则查询将变为 `SELECT * FROM c WHERE c.metadata.userId = '123' OR 1=1`，这会强制条件始终为真，从而绕过预期的筛选条件并删除所有文档。
 
-To prevent this injection risk, you define a placeholder like `@userId` and Cosmos DB binds the user input separately as a parameter, ensuring it is treated strictly as data and not executable query logic as shown below.
+为防止此注入风险，您定义一个占位符，如 `@userId`，Cosmos DB 会将用户输入作为参数单独绑定，确保它被严格视为数据而不是可执行的查询逻辑，如下所示。
 
 ```typescript
 import { SqlQuerySpec } from "@azure/cosmos";
@@ -94,14 +94,13 @@ const safeQuerySpec: SqlQuerySpec = {
 await store.delete({ filter: safeQuerySpec });
 ```
 
-Now, if the attacker enters `123 OR 1=1`, the input will be treated as a literal string value to match, and not as part of the query structure.
+现在，如果攻击者输入 `123 OR 1=1`，该输入将被视为字面字符串值进行匹配，而不是查询结构的一部分。
 
-Please refer to the official documentation on [parameterized queries in Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries) for more usage examples and best practices.
+有关更多用法示例和最佳实践，请参阅 Azure Cosmos DB for NoSQL 中[参数化查询](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries)的官方文档。
 
-## Usage example
+## 用法示例 (Usage example)
 
-Below is an example that indexes documents from a file in Azure Cosmos DB for NoSQL, runs a vector search query, and finally uses a chain to answer a question in natural language
-based on the retrieved documents.
+下面的示例演示了如何将文件中的文档索引到 Azure Cosmos DB for NoSQL 中，运行向量搜索查询，最后使用链根据检索到的文档以自然语言回答问题。
 
 ```typescript
 import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
@@ -112,7 +111,7 @@ import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
 import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-// Load documents from file
+// 从文件加载文档
 const loader = new TextLoader("./state_of_the_union.txt");
 const rawDocuments = await loader.load();
 const splitter = new RecursiveCharacterTextSplitter({
@@ -121,7 +120,7 @@ const splitter = new RecursiveCharacterTextSplitter({
 });
 const documents = await splitter.splitDocuments(rawDocuments);
 
-// Create Azure Cosmos DB vector store
+// 创建 Azure Cosmos DB 向量存储
 const store = await AzureCosmosDBNoSQLVectorStore.fromDocuments(
   documents,
   new OpenAIEmbeddings(),
@@ -131,12 +130,12 @@ const store = await AzureCosmosDBNoSQLVectorStore.fromDocuments(
   }
 );
 
-// Performs a similarity search
+// 执行相似性搜索
 const resultDocuments = await store.similaritySearch(
   "What did the president say about Ketanji Brown Jackson?"
 );
 
-console.log("Similarity search results:");
+console.log("相似性搜索结果:");
 console.log(resultDocuments[0].pageContent);
 /*
   Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections.
@@ -148,7 +147,7 @@ console.log(resultDocuments[0].pageContent);
   And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 */
 
-// Use the store as part of a chain
+// 将存储用作链的一部分
 const model = new ChatOpenAI({ model: "gpt-3.5-turbo-1106" });
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
   [
@@ -172,17 +171,17 @@ const res = await chain.invoke({
   input: "What is the president's top priority regarding prices?",
 });
 
-console.log("Chain response:");
+console.log("链响应:");
 console.log(res.answer);
 /*
   The president's top priority is getting prices under control.
 */
 
-// Clean up
+// 清理
 await store.delete();
 ```
 
-## Related
+## 相关 (Related)
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储[概念指南](/oss/integrations/vectorstores)
+- 向量存储[操作指南](/oss/integrations/vectorstores)

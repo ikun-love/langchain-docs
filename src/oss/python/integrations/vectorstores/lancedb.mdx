@@ -2,9 +2,9 @@
 title: LanceDB
 ---
 
->[LanceDB](https://lancedb.com/) is an open-source database for vector-search built with persistent storage, which greatly simplifies retrevial, filtering and management of embeddings. Fully open source.
+>[LanceDB](https://lancedb.com/) 是一个开源的向量搜索数据库，它构建在持久化存储之上，极大地简化了向量嵌入的检索、过滤和管理。完全开源。
 
-This notebook shows how to use functionality related to the `LanceDB` vector database based on the Lance data format.
+本 Notebook 展示了如何使用基于 Lance 数据格式的 `LanceDB` 向量数据库相关的功能。
 
 ```python
 ! pip install tantivy
@@ -18,7 +18,7 @@ This notebook shows how to use functionality related to the `LanceDB` vector dat
 ! pip install lancedb
 ```
 
-We want to use @[`OpenAIEmbeddings`] so we have to get the OpenAI API Key.
+我们希望使用 @[`OpenAIEmbeddings`] 模型，因此需要获取 OpenAI API 密钥。
 
 ```python
 import getpass
@@ -45,12 +45,12 @@ documents = CharacterTextSplitter().split_documents(documents)
 embeddings = OpenAIEmbeddings()
 ```
 
-##### For LanceDB cloud, you can invoke the vector store as follows
+##### 对于 LanceDB Cloud，您可以按如下方式调用向量存储：
 
 ```python
-db_url = "db://lang_test" # url of db you created
-api_key = "xxxxx" # your API key
-region="us-east-1-dev"  # your selected region
+db_url = "db://lang_test" # 您创建的 db 的 url
+api_key = "xxxxx" # 您的 API 密钥
+region="us-east-1-dev"  # 您选择的区域
 
 vector_store = LanceDB(
     uri=db_url,
@@ -61,7 +61,7 @@ vector_store = LanceDB(
     )
 ```
 
-You can also add `region`, `api_key`, `uri` to `from_documents()` classmethod
+您也可以将 `region`、`api_key`、`uri` 添加到 `from_documents()` 类方法中。
 
 ```python
 from lancedb.rerankers import LinearCombinationReranker
@@ -148,7 +148,7 @@ print("reranker : ", docsearch._reranker)
 reranker :  <lancedb.rerankers.linear_combination.LinearCombinationReranker object at 0x107ef1130>
 ```
 
-Additionaly, to explore the table you can load it into a df or save it in a csv file:
+此外，要探索该表，您可以将其加载到 DataFrame 中或保存为 csv 文件：
 
 ```python
 tbl = docsearch.get_table()
@@ -156,7 +156,7 @@ print("tbl:", tbl)
 pd_df = tbl.to_pandas()
 # pd_df.to_csv("docsearch.csv", index=False)
 
-# you can also create a new vector store object using an older connection object:
+# 您也可以使用旧的连接对象创建一个新的向量存储对象：
 vector_store = LanceDB(connection=tbl, embedding=embeddings)
 ```
 
@@ -167,7 +167,7 @@ docs = docsearch.similarity_search(
 
 print("metadata :", docs[0].metadata)
 
-# or you can directly supply SQL string filters :
+# 或者您可以直接提供 SQL 字符串过滤器：
 
 print("\nSQL filtering :\n")
 docs = docsearch.similarity_search(query=query, filter="text LIKE '%Officer Rivera%'")
@@ -240,7 +240,7 @@ We’ve set up joint patrols with Mexico and Guatemala to catch more human traff
 We’re putting in place dedicated immigration judges so families fleeing persecution and violence can have their cases heard faster.
 ```
 
-## Adding images
+## 添加图像
 
 ```python
 ! pip install -U langchain-experimental
@@ -263,7 +263,7 @@ import os
 
 import requests
 
-# List of image URLs to download
+# 要下载的图片 URL 列表
 image_urls = [
     "https://github.com/raghavdixit99/assets/assets/34462078/abf47cc4-d979-4aaa-83be-53a2115bf318",
     "https://github.com/raghavdixit99/assets/assets/34462078/93be928e-522b-4e37-889d-d4efd54b2112",
@@ -271,14 +271,14 @@ image_urls = [
 
 texts = ["bird", "dragon"]
 
-# Directory to save images
+# 保存图片的目录
 dir_name = "./photos/"
 
-# Create directory if it doesn't exist
+# 如果目录不存在，则创建它
 os.makedirs(dir_name, exist_ok=True)
 
 image_uris = []
-# Download and save each image
+# 下载并保存每张图片
 for i, url in enumerate(image_urls, start=1):
     response = requests.get(url)
     path = os.path.join(dir_name, f"image{i}.jpg")

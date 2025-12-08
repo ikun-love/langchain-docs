@@ -2,36 +2,33 @@
 title: Beautiful Soup
 ---
 
->[Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) is a Python package for parsing
-> HTML and XML documents (including having malformed markup, i.e. non-closed tags, so named after tag soup).
-> It creates a parse tree for parsed pages that can be used to extract data from HTML,[3] which
-> is useful for web scraping.
+>[Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) 是一个用于解析 HTML 和 XML 文档的 Python 包（它甚至可以处理格式不规范的标记，例如未闭合的标签，这也是它名字“Beautiful Soup”（即“一锅乱炖”）的由来）。它为解析后的页面创建了一个解析树，可以用于从 HTML 中提取数据，[3] 这对于网络爬取（web scraping）非常有用。
 
-`Beautiful Soup` offers fine-grained control over HTML content, enabling specific tag extraction, removal, and content cleaning.
+`Beautiful Soup` 提供了对 HTML 内容的精细控制，支持提取特定标签、删除（不需要的内容）以及清洗内容。
 
-It's suited for cases where you want to extract specific information and clean up the HTML content according to your needs.
+它适用于你需要根据特定需求提取关键信息并清理 HTML 内容的场景。
 
-For example, we can scrape text content within `<p>, <li>, <div>, and <a>` tags from the HTML content:
+例如，我们可以从 HTML 内容中抓取 `<p>, <li>, <div>, 和 <a>` 标签内的文本内容：
 
-* `<p>`: The paragraph tag. It defines a paragraph in HTML and is used to group together related sentences and/or phrases.
+* `<p>`：段落标签。它在 HTML 中定义一个段落，用于将相关的句子和/或短语组合在一起。
 
-* `<li>`: The list item tag. It is used within ordered (`<ol>`) and unordered (`<ul>`) lists to define individual items within the list.
+* `<li>`：列表项标签。它用于有序列表 (`<ol>`) 和无序列表 (`<ul>`) 中，以定义列表中的各个独立项目。
 
-* `<div>`: The division tag. It is a block-level element used to group other inline or block-level elements.
+* `<div>`：分区标签。它是一个块级元素，用于将其他内联或块级元素组合在一起。
 
-* `<a>`: The anchor tag. It is used to define hyperlinks.
+* `<a>`：锚点标签。它用于定义超链接。
 
 ```python
 from langchain_community.document_loaders import AsyncChromiumLoader
 from langchain_community.document_transformers import BeautifulSoupTransformer
 
-# Load HTML
+# 加载 HTML
 loader = AsyncChromiumLoader(["https://www.wsj.com"])
 html = loader.load()
 ```
 
 ```python
-# Transform
+# 转换
 bs_transformer = BeautifulSoupTransformer()
 docs_transformed = bs_transformer.transform_documents(
     html, tags_to_extract=["p", "li", "div", "a"]

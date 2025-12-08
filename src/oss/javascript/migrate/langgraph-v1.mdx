@@ -1,11 +1,11 @@
 ---
-title: LangGraph v1 migration guide
-sidebarTitle: Migration guide
+title: LangGraph v1 迁移指南
+sidebarTitle: LangGraph v1
 ---
 
-This guide outlines changes in LangGraph v1 and how to migrate from previous versions. For a high-level overview of what's new, see the [release notes](/oss/releases/langgraph-v1).
+本指南概述了 LangGraph v1 中的变更以及如何从早期版本进行迁移。要了解新功能的高级概述，请参阅[发布说明](/oss/releases/langgraph-v1)。
 
-To upgrade,
+要升级，请运行以下命令：
 
 <CodeGroup>
 ```bash npm
@@ -22,28 +22,28 @@ bun add @langchain/langgraph@latest @langchain/core@latest
 ```
 </CodeGroup>
 
-## Summary of changes
+## 变更摘要
 
-| Area | What changed |
+| 领域 | 变更内容 |
 |------|--------------|
-| React prebuilt | `createReactAgent` deprecated; use LangChain `createAgent` |
-| Interrupts | Typed interrupts supported via `interrupts` config |
-| `toLangGraphEventStream` removed | Use `graph.stream` with the desired `encoding` format |
-| `useStream` | Supports custom transports |
+| React 预构建组件 | `createReactAgent` 已弃用；请使用 LangChain 的 `createAgent` |
+| 中断（Interrupts） | 通过 `interrupts` 配置支持类型化的中断 |
+| `toLangGraphEventStream` 已移除 | 使用带有所需 `encoding` 格式的 `graph.stream` |
+| `useStream` | 支持自定义传输（transports） |
 
 ---
 
-## Deprecation: `createReactAgent` → `createAgent`
+## 弃用：`createReactAgent` → `createAgent`
 
-LangGraph v1 deprecates the `createReactAgent` prebuilt. Use LangChain's `createAgent`, which runs on LangGraph and adds a flexible middleware system.
+LangGraph v1 弃用了 `createReactAgent` 预构建组件。请使用 LangChain 的 `createAgent`，它运行在 LangGraph 之上，并增加了一个灵活的中间件系统。
 
-See the LangChain v1 docs for details:
+有关详细信息，请参阅 LangChain v1 文档：
 
-- [Release notes](/oss/releases/langchain-v1#createagent)
-- [Migration guide](/oss/migrate/langchain-v1#createagent)
+- [发布说明](/oss/releases/langchain-v1#createagent)
+- [迁移指南](/oss/migrate/langchain-v1#createagent)
 
 <CodeGroup>
-```typescript v1 (new)
+```typescript v1 (新)
 import { createAgent } from "langchain";
 
 const agent = createAgent({
@@ -52,7 +52,7 @@ const agent = createAgent({
   systemPrompt: "You are a helpful assistant.", // [!code highlight]
 });
 ```
-```typescript v0 (old)
+```typescript v0 (旧)
 import { createReactAgent } from "@langchain/langgraph/prebuilts";
 
 const agent = createReactAgent({
@@ -64,12 +64,12 @@ const agent = createReactAgent({
 </CodeGroup>
 ---
 
-## Typed interrupts
+## 类型化的中断（Typed interrupts）
 
-You can now define interrupt types at graph construction to strictly type the values passed to and received from interrupts.
+现在可以在图（graph）构建时定义中断类型，以便严格限定传递给中断和从中接收的值的类型。
 
 <CodeGroup>
-```typescript v1 (new)
+```typescript v1 (新)
 import { StateGraph, interrupt } from "@langchain/langgraph";
 import * as z from "zod";
 
@@ -88,7 +88,7 @@ const graph = new StateGraph(State, graphConfig)
   })
   .compile();
 ```
-```typescript v0 (old)
+```typescript v0 (旧)
 import { StateGraph } from "@langchain/langgraph";
 
 const graph = new StateGraph(State)
@@ -100,16 +100,16 @@ const graph = new StateGraph(State)
 ```
 </CodeGroup>
 
-See [Interrupts](/oss/langgraph/interrupts) to learn more.
+要了解更多信息，请参阅[中断](/oss/langgraph/interrupts)。
 
 ---
 
-## Event stream encoding
+## 事件流编码（Event stream encoding）
 
-The low-level `toLangGraphEventStream` helper is removed. Streaming responses are handled by the SDK; when using low-level clients, select the wire format via an `encoding` option passed to `graph.stream`.
+底层的 `toLangGraphEventStream` 辅助函数已被移除。SDK 会处理流式响应；在使用底层客户端时，通过传递给 `graph.stream` 的 `encoding` 选项来选择网络协议格式。
 
 <CodeGroup>
-```typescript v1 (new)
+```typescript v1 (新)
 const stream = await graph.stream(input, {
   encoding: "text/event-stream",
   streamMode: ["values", "messages"],
@@ -119,7 +119,7 @@ return new Response(stream, {
   headers: { "Content-Type": "text/event-stream" }, // [!code highlight]
 });
 ```
-```typescript v0 (old)
+```typescript v0 (旧)
 return toLangGraphEventStreamResponse({
   stream: graph.streamEvents(input, {
     version: "v2",
@@ -131,12 +131,12 @@ return toLangGraphEventStreamResponse({
 
 ---
 
-## Breaking changes
+## 破坏性变更（Breaking changes）
 
-### Dropped Node 18 support
+### 移除了对 Node 18 的支持
 
-All LangGraph packages now require **Node.js 20 or higher**. Node.js 18 reached [end of life](https://nodejs.org/en/about/releases/) in March 2025.
+所有 LangGraph 包现在都要求 **Node.js 20 或更高版本**。Node.js 18 已于 2025 年 3 月达到[生命周期终止](https://nodejs.org/en/about/releases/)。
 
-### New build outputs
+### 新的构建输出
 
-Builds for all langgraph packages now use a bundler based approach instead of using raw typescript outputs. If you were importing files from the `dist/` directory (which is not recommended), you will need to update your imports to use the new module system.
+所有 langgraph 包的构建现在使用基于打包器（bundler）的方法，而不是使用原始的 TypeScript 输出。如果您之前从 `dist/` 目录导入文件（不推荐这样做），则需要更新导入以使用新的模块系统。

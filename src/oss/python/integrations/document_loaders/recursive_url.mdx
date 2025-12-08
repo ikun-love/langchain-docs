@@ -1,40 +1,41 @@
+```markdown
 ---
-title: Recursive URL
+title: 递归 URL
 ---
 
-The `RecursiveUrlLoader` lets you recursively scrape all child links from a root URL and parse them into Documents.
+`RecursiveUrlLoader` 允许你从一个根 URL 递归地抓取所有子链接，并将它们解析为 `Document` 对象。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/recursive_url_loader/)|
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/recursive_url_loader/)|
 | :--- | :--- | :---: | :---: |  :---: |
 | [RecursiveUrlLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ✅ |
 
-### Loader features
+### 加载器特性
 
-| Source | Document Lazy Loading | Native Async Support
+| 来源 (Source) | 文档惰性加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
 | :---: | :---: | :---: |
 | RecursiveUrlLoader | ✅ | ❌ |
 
-## Setup
+## 设置
 
-### Credentials
+### 凭证
 
-No credentials are required to use the `RecursiveUrlLoader`.
+使用 `RecursiveUrlLoader` 不需要任何凭证。
 
-### Installation
+### 安装
 
-The `RecursiveUrlLoader` lives in the `langchain-community` package. There's no other required packages, though you will get richer default Document metadata if you have ``beautifulsoup4` installed as well.
+`RecursiveUrlLoader` 位于 `langchain-community` 包中。没有其他必需的包，但是如果你同时安装了 ``beautifulsoup4`，你将获得更丰富的默认 `Document` 元数据。
 
 ```python
 pip install -qU langchain-community beautifulsoup4 lxml
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our document loader object and load Documents:
+现在我们可以实例化文档加载器对象并加载 `Document`：
 
 ```python
 from langchain_community.document_loaders import RecursiveUrlLoader
@@ -55,13 +56,11 @@ loader = RecursiveUrlLoader(
 )
 ```
 
-## Load
+## 加载
 
-Use `.load()` to synchronously load into memory all Documents, with one
-Document per visited URL. Starting from the initial URL, we recurse through
-all linked URLs up to the specified max_depth.
+使用 `.load()` 方法将所有 `Document` 同步加载到内存中，每个访问过的 URL 对应一个 `Document`。加载过程从初始 URL 开始，递归遍历所有链接的 URL，直到达到指定的 `max_depth`（最大深度）。
 
-Let's run through a basic example of how to use the `RecursiveUrlLoader` on the [Python 3.9 Documentation](https://docs.python.org/3.9/).
+我们来看一个使用 `RecursiveUrlLoader` 加载 [Python 3.9 文档](https://docs.python.org/3.9/)的基本示例。
 
 ```python
 docs = loader.load()
@@ -80,7 +79,7 @@ docs[0].metadata
  'language': None}
 ```
 
-Great! The first document looks like the root page we started from. Let's look at the metadata of the next document
+很好！第一个文档看起来就是我们开始的根页面。让我们查看下一个文档的元数据：
 
 ```python
 docs[1].metadata
@@ -93,7 +92,7 @@ docs[1].metadata
  'language': None}
 ```
 
-That url looks like a child of our root page, which is great! Let's move on from metadata to examine the content of one of our documents
+该 URL 看起来是我们根页面的一个子页面，非常棒！我们从元数据转向检查其中一个文档的内容：
 
 ```python
 print(docs[0].page_content[:300])
@@ -110,18 +109,18 @@ print(docs[0].page_content[:300])
     <link rel=
 ```
 
-That certainly looks like HTML that comes from the url [docs.python.org/3.9/](https://docs.python.org/3.9/), which is what we expected. Let's now look at some variations we can make to our basic example that can be helpful in different situations.
+这确实看起来像是来自 URL [docs.python.org/3.9/](https://docs.python.org/3.9/) 的 HTML，这正是我们所期望的。现在让我们看看可以对基本示例进行哪些有助于不同场景的修改。
 
-## Lazy loading
+## 惰性加载 (Lazy loading)
 
-If we're loading a  large number of Documents and our downstream operations can be done over subsets of all loaded Documents, we can lazily load our Documents one at a time to minimize our memory footprint:
+如果我们要加载大量 `Document`，并且下游操作可以在所有已加载文档的子集上进行，我们可以逐个惰性加载这些文档，以最小化内存占用：
 
 ```python
 pages = []
 for doc in loader.lazy_load():
     pages.append(doc)
     if len(pages) >= 10:
-        # do some paged operation, e.g.
+        # 执行一些分页操作，例如：
         # index.upsert(page)
 
         pages = []
@@ -132,11 +131,11 @@ for doc in loader.lazy_load():
   soup = BeautifulSoup(html, "lxml")
 ```
 
-In this example we never have more than 10 Documents loaded into memory at a time.
+在这个例子中，我们同时加载到内存中的 `Document` 数量永远不会超过 10 个。
 
-## Adding an Extractor
+## 添加提取器 (Adding an Extractor)
 
-By default the loader sets the raw HTML from each link as the Document page content. To parse this HTML into a more human/LLM-friendly format you can pass in a custom `extractor` method:
+默认情况下，加载器将每个链接返回的原始 HTML 设置为 `Document` 的页面内容。为了将此 HTML 解析为对人类/LLM 更友好的格式，您可以传入一个自定义的 `extractor` 方法：
 
 ```python
 import re
@@ -174,14 +173,15 @@ Python 3.10 (security-fixes)
 Python 3.9 (securit
 ```
 
-This looks much nicer!
+这看起来漂亮多了！
 
-You can similarly pass in a `metadata_extractor` to customize how Document metadata is extracted from the HTTP response. See the [API reference](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html) for more on this.
+类似地，您可以传入一个 `metadata_extractor` 来自定义如何从 HTTP 响应中提取 `Document` 元数据。有关更多信息，请参阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html)。
 
 ---
 
-## API reference
+## API 参考
 
-These examples show just a few of the ways in which you can modify the default `RecursiveUrlLoader`, but there are many more modifications that can be made to best fit your use case. Using the parameters `link_regex` and `exclude_dirs` can help you filter out unwanted URLs, `aload()` and `alazy_load()` can be used for aynchronous loading, and more.
+这些示例展示了修改默认 `RecursiveUrlLoader` 的几种方式，但还有许多其他修改可以更好地适应您的使用场景。使用参数 `link_regex` 和 `exclude_dirs` 可以帮助您过滤掉不需要的 URL；`aload()` 和 `alazy_load()` 可用于异步加载，等等。
 
-For detailed information on configuring and calling the `RecursiveUrlLoader`, please see the API reference: [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html).
+有关配置和调用 `RecursiveUrlLoader` 的详细信息，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.recursive_url_loader.RecursiveUrlLoader.html)。
+```

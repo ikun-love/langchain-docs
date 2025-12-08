@@ -1,35 +1,36 @@
+```markdown
 ---
-title: ByteDanceDoubaoEmbeddings
+title: 字节跳动豆包嵌入模型
 ---
 
-This will help you get started with ByteDanceDoubao [embedding models](/oss/integrations/text_embedding) using LangChain.  For detailed documentation on `ByteDanceDoubaoEmbeddings` features and configuration options, please refer to the [API reference](https://api.js.langchain.com/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html).
+这将帮助您开始使用 LangChain 中的字节跳动豆包 (ByteDanceDoubao) [嵌入模型](/oss/integrations/text_embedding)。有关 `ByteDanceDoubaoEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Py support | Downloads | Version |
+| 类名 | 包名 | 本地 | Py 支持 | 下载量 | 版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [ByteDanceDoubaoEmbeddings](https://api.js.langchain.com/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html) | [@langchain/community](https://api.js.langchain.com/modules/_langchain_community.html) | ❌ | ❌ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-You'll need to sign up for an [ARK API key](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) and set it as an environment variable named `ARK_API_KEY`. Then you should [create a entrypoint](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint) for embedding models, and use the entrypoint's name as `model`.
+您需要注册一个 [ARK API 密钥](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey)，并将其设置为名为 `ARK_API_KEY` 的环境变量。然后，您应该为嵌入模型 [创建一个入口点](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint)，并使用该入口点的名称作为 `model` 的值。
 
-Then, you'll need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package
+接下来，您需要安装 [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) 包。
 
-### Credentials
+### 凭证
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您希望获得模型调用的自动化追踪，还可以取消注释以下行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```bash
 # export LANGCHAIN_TRACING_V2="true"
 # export LANGCHAIN_API_KEY="your-api-key"
 ```
 
-### Installation
+### 安装
 
-The LangChain ByteDanceDoubaoEmbeddings integration lives in the `@langchain/community` package:
+LangChain 的字节跳动豆包嵌入模型集成位于 `@langchain/community` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -43,57 +44,57 @@ pnpm add @langchain/community
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and embed text:
+现在我们可以实例化模型对象并嵌入文本了：
 
 ```typescript
 import { ByteDanceDoubaoEmbeddings } from "@langchain/community/embeddings/bytedance_doubao";
 
 const embeddings = new ByteDanceDoubaoEmbeddings({
-  model: 'ep-xxx-xxx' // your entrypoint's name
+  model: 'ep-xxx-xxx' // 您的入口点名称
 });
 ```
 
-## Indexing and Retrieval
+## 索引和检索
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our RAG tutorials under the [**Learn** tab](/oss/learn/).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅 [**学习** 标签页](/oss/learn/) 下的 RAG 教程。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document using the demo [`MemoryVectorStore`](/oss/integrations/vectorstores/memory).
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来进行数据索引和检索。在此示例中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
-// Create a vector store with a sample text
+// 使用示例文本创建向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
-const text = "LangChain is the framework for building context-aware reasoning applications";
+const text = "LangChain 是构建上下文感知推理应用的框架";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: text, metadata: {} }],
   embeddings,
 );
 
-// Use the vector store as a retriever that returns a single document
+// 使用向量存储作为检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
-// Retrieve the most similar text
-const retrievedDocuments = await retriever.invoke("What is LangChain?");
+// 检索最相似的文本
+const retrievedDocuments = await retriever.invoke("什么是 LangChain?");
 
 retrievedDocuments[0].pageContent;
 ```
 
 ```output
-LangChain is the framework for building context-aware reasoning applications
+LangChain 是构建上下文感知推理应用的框架
 ```
 
-## Direct Usage
+## 直接使用
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embedDocument(...)` and `embeddings.embedQuery(...)` to create embeddings for the text(s) used in `fromDocuments` and the retriever's `invoke` operations, respectively.
+在底层，向量存储和检索器的实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 中使用的文本和检索器的 `invoke` 操作创建嵌入向量。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
-### Embed single texts
+### 嵌入单个文本
 
-You can embed queries for search with `embedQuery`. This generates a vector representation specific to the query:
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -126,12 +127,12 @@ console.log(singleVector.slice(0, 100));
 ]
 ```
 
-### Embed multiple texts
+### 嵌入多个文本
 
-You can embed multiple texts for indexing with `embedDocuments`. The internals used for this method may (but do not have to) differ from embedding queries:
+您可以使用 `embedDocuments` 来嵌入多个文本用于索引。此方法内部使用的机制可能（但不一定）与嵌入查询的方法不同：
 
 ```typescript
-const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
+const text2 = "LangGraph 是一个用于使用 LLM 构建有状态、多代理应用程序的库";
 
 const vectors = await embeddings.embedDocuments([text, text2]);
 
@@ -186,13 +187,14 @@ console.log(vectors[1].slice(0, 100));
 ]
 ```
 
-## Related
+## 相关资源
 
-- Embedding model [conceptual guide](/oss/integrations/text_embedding)
-- Embedding model [how-to guides](/oss/integrations/text_embedding)
+- 嵌入模型 [概念指南](/oss/integrations/text_embedding)
+- 嵌入模型 [操作指南](/oss/integrations/text_embedding)
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all ByteDanceDoubaoEmbeddings features and configurations head to the [API reference](https://api.js.langchain.com/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html).
+有关所有 ByteDanceDoubaoEmbeddings 功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html)。
+```

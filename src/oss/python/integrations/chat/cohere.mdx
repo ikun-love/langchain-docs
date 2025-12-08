@@ -2,19 +2,19 @@
 title: Cohere
 ---
 
-This notebook covers how to get started with [Cohere chat models](https://cohere.com/chat).
+本 Notebook 介绍如何开始使用 [Cohere 聊天模型](https://cohere.com/chat)。
 
-Head to the [API reference](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.cohere.ChatCohere.html) for detailed documentation of all attributes and methods.
+请转到 [API 参考](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.cohere.ChatCohere.html) 以获取所有属性和方法的详细文档。
 
-## Setup
+## 设置 (Setup)
 
-The integration lives in the `langchain-cohere` package. We can install these with:
+该集成位于 `langchain-cohere` 包中。我们可以使用以下命令进行安装：
 
 ```bash
 pip install -U langchain-cohere
 ```
 
-We'll also need to get a [Cohere API key](https://cohere.com/) and set the `COHERE_API_KEY` environment variable:
+我们还需要获取一个 [Cohere API 密钥](https://cohere.com/) 并设置 `COHERE_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -23,16 +23,16 @@ import os
 os.environ["COHERE_API_KEY"] = getpass.getpass()
 ```
 
-It's also helpful (but not needed) to set up [LangSmith](https://smith.langchain.com/) for best-in-class observability
+设置 [LangSmith](https://smith.langchain.com/)（用于实现一流的可观测性）也是有帮助的（但并非必需）：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-## Usage
+## 使用 (Usage)
 
-ChatCohere supports all [ChatModel](/oss/langchain/models) functionality:
+`ChatCohere` 支持所有 [ChatModel](/oss/langchain/models) 功能：
 
 ```python
 from langchain_cohere import ChatCohere
@@ -77,9 +77,9 @@ chat.batch([messages])
 [AIMessage(content='4 && 5', additional_kwargs={'documents': None, 'citations': None, 'search_results': None, 'search_queries': None, 'is_search_required': None, 'generation_id': '6770ca86-f6c3-4ba3-a285-c4772160612f', 'token_count': {'prompt_tokens': 68, 'response_tokens': 3, 'total_tokens': 71, 'billed_tokens': 57}}, response_metadata={'documents': None, 'citations': None, 'search_results': None, 'search_queries': None, 'is_search_required': None, 'generation_id': '6770ca86-f6c3-4ba3-a285-c4772160612f', 'token_count': {'prompt_tokens': 68, 'response_tokens': 3, 'total_tokens': 71, 'billed_tokens': 57}}, id='run-8d6fade2-1b39-4e31-ab23-4be622dd0027-0')]
 ```
 
-## Tool calling
+## 工具调用 (Tool calling)
 
-Cohere supports tool calling functionalities!
+Cohere 支持工具调用功能！
 
 ```python
 from langchain.messages import (

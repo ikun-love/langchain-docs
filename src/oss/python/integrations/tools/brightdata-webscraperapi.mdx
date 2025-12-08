@@ -2,31 +2,31 @@
 title: BrightDataWebScraperAPI
 ---
 
-[Bright Data](https://brightdata.com/) provides a powerful Web Scraper API that allows you to extract structured data from 100+ ppular domains, including Amazon product details, LinkedIn profiles, and more, making it particularly useful for AI agents requiring reliable structured web data feeds.
+[Bright Data](https://brightdata.com/) 提供了一个功能强大的 Web Scraper API，它允许您从 100 多个热门域名中提取结构化数据，例如亚马逊产品详情、领英个人资料等。这使得它对于需要可靠结构化网络数据源的 AI 智能体特别有用。
 
-## Overview
+## 概览
 
-### Integration details
+### 集成详情
 
-|Class|Package|Serializable|JS support|Version|
+|类名|包名|可序列化|JS 支持|版本|
 |:--|:--|:-:|:-:|:-:|
 |[BrightDataWebScraperAPI](https://pypi.org/project/langchain-brightdata/)|[langchain-brightdata](https://pypi.org/project/langchain-brightdata/)|✅|❌|![PyPI - Version](https://img.shields.io/pypi/v/langchain-brightdata?style=flat-square&label=%20)|
 
-### Tool features
+### 工具特性
 
-|Native async|Returns artifact|Return data|Pricing|
+|原生异步|返回构件 (Artifact)|返回数据|定价|
 |:-:|:-:|:--|:-:|
-|❌|❌|Structured data from websites (Amazon products, LinkedIn profiles, etc.)|Requires Bright Data account|
+|❌|❌|来自网站的结构化数据（如亚马逊产品、领英资料等）|需要 Bright Data 账户|
 
-## Setup
+## 设置
 
-The integration lives in the `langchain-brightdata` package.
+该集成位于 `langchain-brightdata` 包中。
 
 ```python
 pip install langchain-brightdata
 ```
 
-You'll need a Bright Data API key to use this tool. You can set it as an environment variable:
+要使用此工具，您需要一个 Bright Data API 密钥。您可以将其设置为环境变量：
 
 ```python
 import os
@@ -34,7 +34,7 @@ import os
 os.environ["BRIGHT_DATA_API_KEY"] = "your-api-key"
 ```
 
-Or pass it directly when initializing the tool:
+或者在初始化工具时直接传入：
 
 ```python
 from langchain_brightdata import BrightDataWebScraperAPI
@@ -42,32 +42,32 @@ from langchain_brightdata import BrightDataWebScraperAPI
 scraper_tool = BrightDataWebScraperAPI(bright_data_api_key="your-api-key")
 ```
 
-## Instantiation
+## 实例化
 
-Here we show how to instantiate an instance of the BrightDataWebScraperAPI tool. This tool allows you to extract structured data from various websites including Amazon product details, LinkedIn profiles, and more using Bright Data's Dataset API.
+以下展示了如何实例化 `BrightDataWebScraperAPI` 工具。此工具允许您使用 Bright Data 的数据集 API，从包括亚马逊产品详情、领英个人资料等在内的各种网站中提取结构化数据。
 
-The tool accepts various parameters during instantiation:
+该工具支持在实例化时传入多种参数：
 
-- `bright_data_api_key` (required, str): Your Bright Data API key for authentication.
-- `dataset_mapping` (optional, Dict[str, str]): A dictionary mapping dataset types to their corresponding Bright Data dataset IDs. The default mapping includes:
+- `bright_data_api_key` (必需, str): 您的 Bright Data API 密钥，用于身份验证。
+- `dataset_mapping` (可选, Dict[str, str]): 一个字典，用于将数据集类型映射到其对应的 Bright Data 数据集 ID。默认映射包括：
   - "amazon_product": "gd_l7q7dkf244hwjntr0"
   - "amazon_product_reviews": "gd_le8e811kzy4ggddlq"
   - "linkedin_person_profile": "gd_l1viktl72bvl7bjuj0"
   - "linkedin_company_profile": "gd_l1vikfnt1wgvvqz95w"
 
-## Invocation
+## 调用
 
-### Basic Usage
+### 基本用法
 
 ```python
 from langchain_brightdata import BrightDataWebScraperAPI
 
-# Initialize the tool
+# 初始化工具
 scraper_tool = BrightDataWebScraperAPI(
-    bright_data_api_key="your-api-key"  # Optional if set in environment variables
+    bright_data_api_key="your-api-key"  # 如果已设置环境变量则可以省略
 )
 
-# Extract Amazon product data
+# 提取亚马逊产品数据
 results = scraper_tool.invoke(
     {"url": "https://www.amazon.com/dp/B08L5TNJHG", "dataset_type": "amazon_product"}
 )
@@ -75,26 +75,26 @@ results = scraper_tool.invoke(
 print(results)
 ```
 
-### Advanced Usage with Parameters
+### 高级用法与参数传递
 
 ```python
 from langchain_brightdata import BrightDataWebScraperAPI
 
-# Initialize with default parameters
+# 使用默认参数初始化
 scraper_tool = BrightDataWebScraperAPI(bright_data_api_key="your-api-key")
 
-# Extract Amazon product data with location-specific pricing
+# 提取具有特定地区定价的亚马逊产品数据
 results = scraper_tool.invoke(
     {
         "url": "https://www.amazon.com/dp/B08L5TNJHG",
         "dataset_type": "amazon_product",
-        "zipcode": "10001",  # Get pricing for New York City
+        "zipcode": "10001",  # 获取纽约市的定价信息
     }
 )
 
 print(results)
 
-# Extract LinkedIn profile data
+# 提取领英个人资料数据
 linkedin_results = scraper_tool.invoke(
     {
         "url": "https://www.linkedin.com/in/satyanadella/",
@@ -105,28 +105,28 @@ linkedin_results = scraper_tool.invoke(
 print(linkedin_results)
 ```
 
-## Customization Options
+## 定制化选项
 
-The BrightDataWebScraperAPI tool accepts several parameters for customization:
+`BrightDataWebScraperAPI` 工具接受多个参数以进行定制：
 
-|Parameter|Type|Description|
+|参数名|类型|描述|
 |:--|:--|:--|
-|`url`|str|The URL to extract data from|
-|`dataset_type`|str|Type of dataset to use (e.g., "amazon_product")|
-|`zipcode`|str|Optional zipcode for location-specific data|
+|`url`|str|要从中提取数据的 URL|
+|`dataset_type`|str|使用的数据集类型（例如："amazon_product"）|
+|`zipcode`|str|用于获取特定地区数据的可选邮政编码|
 
-## Available Dataset Types
+## 可用的数据集类型
 
-The tool supports the following dataset types for structured data extraction:
+该工具支持以下数据集类型用于结构化数据提取：
 
-|Dataset Type|Description|
+|数据集类型|描述|
 |:--|:--|
-|`amazon_product`|Extract detailed Amazon product data|
-|`amazon_product_reviews`|Extract Amazon product reviews|
-|`linkedin_person_profile`|Extract LinkedIn person profile data|
-|`linkedin_company_profile`|Extract LinkedIn company profile data|
+|`amazon_product`|提取详细的亚马逊产品数据|
+|`amazon_product_reviews`|提取亚马逊产品评论|
+|`linkedin_person_profile`|提取领英个人资料数据|
+|`linkedin_company_profile`|提取领英公司资料数据|
 
-## Use within an agent
+## 在 Agent 中使用
 
 ```python
 from langchain_brightdata import BrightDataWebScraperAPI
@@ -134,19 +134,19 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 
 
-# Initialize the LLM
+# 初始化 LLM
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key="your-api-key")
 
-# Initialize the Bright Data Web Scraper API tool
+# 初始化 Bright Data Web Scraper API 工具
 scraper_tool = BrightDataWebScraperAPI(bright_data_api_key="your-api-key")
 
-# Create the agent with the tool
+# 使用工具创建 Agent
 agent = create_agent(llm, [scraper_tool])
 
-# Provide a user query
+# 提供用户查询
 user_input = "Scrape Amazon product data for https://www.amazon.com/dp/B0D2Q9397Y?th=1 in New York (zipcode 10001)."
 
-# Stream the agent's step-by-step output
+# 流式输出 Agent 的分步结果
 for step in agent.stream(
     {"messages": user_input},
     stream_mode="values",
@@ -156,6 +156,6 @@ for step in agent.stream(
 
 ---
 
-## API reference
+## API 参考
 
-- [Bright Data API Documentation](https://docs.brightdata.com/scraping-automation/web-scraper-api/overview)
+- [Bright Data API 文档](https://docs.brightdata.com/scraping-automation/web-scraper-api/overview)

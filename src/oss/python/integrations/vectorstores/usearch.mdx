@@ -2,15 +2,15 @@
 title: USearch
 ---
 
->[USearch](https://unum-cloud.github.io/usearch/) is a Smaller & Faster Single-File Vector Search Engine
+>[USearch](https://unum-cloud.github.io/usearch/) 是一款更小、更快的单文件向量搜索引擎
 
->USearch's base functionality is identical to FAISS, and the interface should look familiar if you have ever investigated Approximate Nearest Neigbors search. FAISS is a widely recognized standard for high-performance vector search engines. USearch and FAISS both employ the same HNSW algorithm, but they differ significantly in their design principles. USearch is compact and broadly compatible without sacrificing performance, with a primary focus on user-defined metrics and fewer dependencies.
+>USearch 的核心功能与 FAISS **完全相同**，如果您曾研究过近似最近邻（Approximate Nearest Neighbors, ANN）搜索，那么其接口应该会感觉很熟悉。FAISS 是高性能向量搜索引擎领域中公认的广泛标准。USearch 和 FAISS 都采用了相同的 HNSW 算法，但在设计原则上存在显著差异。USearch 的设计目标是保持紧凑和广泛的兼容性，同时不牺牲性能，其主要关注点在于用户自定义的度量标准和更少的依赖项。
 
 ```python
 pip install -qU  usearch langchain-community
 ```
 
-We want to use @[`OpenAIEmbeddings`] so we have to get the OpenAI API Key.
+我们希望使用 @[`OpenAIEmbeddings`]，因此我们需要获取 OpenAI API 密钥。
 
 ```python
 import getpass
@@ -59,9 +59,9 @@ One of the most serious constitutional responsibilities a President has is nomin
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ```
 
-## Similarity Search with score
+## 相似性搜索（Similarity Search）与得分
 
-The `similarity_search_with_score` method allows you to return not only the documents but also the distance score of the query to them. The returned distance score is L2 distance. Therefore, a lower score is better.
+`similarity_search_with_score` 方法允许您不仅返回匹配的文档，还返回查询与这些文档之间的**距离得分**。返回的距离得分是 L2 距离（欧氏距离）。因此，**得分越低越好**。
 
 ```python
 docs_and_scores = db.similarity_search_with_score(query)

@@ -1,15 +1,15 @@
 ---
-title: Rollback Concurrent
-sidebarTitle: Rollback
+title: 回滚并发
+sidebarTitle: 回滚
 ---
 
-This guide assumes knowledge of what double-texting is, which you can learn about in the [double-texting conceptual guide](/langsmith/double-texting).
+本指南假设您了解什么是双重执行（double-texting），您可以在[双重执行概念指南](/langsmith/double-texting)中了解相关信息。
 
-The guide covers the `rollback` option for double texting, which interrupts the prior run of the graph and starts a new one with the double-text. This option is very similar to the `interrupt` option, but in this case the first run is completely deleted from the database and cannot be restarted. Below is a quick example of using the `rollback` option.
+本指南涵盖了双重执行（double texting）的 `rollback` 选项，该选项会中断图（graph）的先前的运行，并使用新的双重执行启动一次新的运行。此选项与 `interrupt` 选项非常相似，但在此情况下，第一次运行将从数据库中**完全删除**，并且无法重新启动。下面是使用 `rollback` 选项的快速示例。
 
-## Setup
+## 设置 (Setup)
 
-First, we will define a quick helper function for printing out JS and CURL model outputs (you can skip this if using Python):
+首先，我们将定义一个快速的辅助函数来打印 JS 和 CURL 模型输出（如果使用 Python，则可以跳过此部分）：
 
 <Tabs>
     <Tab title="Javascript">
@@ -49,7 +49,7 @@ First, we will define a quick helper function for printing out JS and CURL model
     </Tab>
 </Tabs>
 
-Now, let's import our required packages and instantiate our client, assistant, and thread.
+现在，让我们导入所需的包并实例化我们的客户端（client）、助手（assistant）和线程（thread）。
 
 <Tabs>
     <Tab title="Python">
@@ -61,7 +61,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     from langgraph_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
-    # Using the graph deployed with the name "agent"
+    # 使用名为 "agent" 的图（graph）进行部署
     assistant_id = "agent"
     thread = await client.threads.create()
     ```
@@ -71,7 +71,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     import { Client } from "@langchain/langgraph-sdk";
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
-    // Using the graph deployed with the name "agent"
+    // 使用名为 "agent" 的图（graph）进行部署
     const assistantId = "agent";
     const thread = await client.threads.create();
     ```
@@ -86,14 +86,14 @@ Now, let's import our required packages and instantiate our client, assistant, a
     </Tab>
 </Tabs>
 
-## Create runs
+## 创建运行 (Create runs)
 
-Now let's run a thread with the multitask parameter set to "rollback":
+现在让我们使用 `multitask` 参数设置为 `"rollback"` 来运行一个线程：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # the first run will be rolled back
+    # 第一次运行将被回滚
     rolled_back_run = await client.runs.create(
         thread["thread_id"],
         assistant_id,
@@ -105,13 +105,13 @@ Now let's run a thread with the multitask parameter set to "rollback":
         input={"messages": [{"role": "user", "content": "what's the weather in nyc?"}]},
         multitask_strategy="rollback",
     )
-    # wait until the second run completes
+    # 等待第二次运行完成
     await client.runs.join(thread["thread_id"], run["run_id"])
     ```
     </Tab>
     <Tab title="Javascript">
     ```js
-    // the first run will be interrupted
+    // 第一次运行将被中断（interrupted）
     let rolledBackRun = await client.runs.create(
       thread["thread_id"],
       assistantId,
@@ -127,7 +127,7 @@ Now let's run a thread with the multitask parameter set to "rollback":
       }
     );
 
-    // wait until the second run completes
+    // 等待第二次运行完成
     await client.runs.join(thread["thread_id"], run["run_id"]);
     ```
     </Tab>
@@ -152,9 +152,9 @@ Now let's run a thread with the multitask parameter set to "rollback":
     </Tab>
 </Tabs>
 
-## View run results
+## 查看运行结果 (View run results)
 
-We can see that the thread has data only from the second run
+我们可以看到，线程只包含第二次运行的数据。
 
 <Tabs>
     <Tab title="Python">
@@ -187,7 +187,7 @@ We can see that the thread has data only from the second run
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 ================================ Human Message =================================
@@ -210,7 +210,7 @@ Name: tavily_search_results_json
 The weather API results show that the current weather in New York City is sunny with a temperature of around 85°F (29°C). The wind is light at around 2-3 mph from the south-southeast. Overall it looks like a nice sunny summer day in NYC.
 ```
 
-Verify that the original, rolled back run was deleted
+验证原始的、被回滚的运行已被删除
 
 <Tabs>
     <Tab title="Python">
@@ -232,7 +232,7 @@ Verify that the original, rolled back run was deleted
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 Original run was correctly deleted

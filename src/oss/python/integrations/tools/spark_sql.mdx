@@ -1,12 +1,12 @@
 ---
-title: Spark SQL Toolkit
+title: Spark SQL 工具包
 ---
 
-This notebook shows how to use agents to interact with `Spark SQL`. Similar to [SQL Database Agent](/oss/integrations/tools/sql_database), it is designed to address general inquiries about `Spark SQL` and facilitate error recovery.
+本 Notebook 展示了如何使用代理（agents）与 `Spark SQL` 进行交互。类似于 [SQL 数据库代理](/oss/integrations/tools/sql_database)，此工具包旨在解决关于 `Spark SQL` 的一般查询，并促进错误恢复。
 
-**NOTE: Note that, as this agent is in active development, all answers might not be correct. Additionally, it is not guaranteed that the agent won't perform DML statements on your Spark cluster given certain questions. Be careful running it on sensitive data!**
+**注意：请注意，由于此代理目前处于积极开发阶段，并非所有回答都可能正确。此外，不能保证在某些特定问题下，代理不会对您的 Spark 集群执行 DML（数据操作语言）语句。在处理敏感数据时请务必小心使用！**
 
-## Initialization
+## 初始化
 
 ```python
 from langchain_community.agent_toolkits import SparkSQLToolkit, create_spark_sql_agent
@@ -61,7 +61,7 @@ only showing top 20 rows
 ```
 
 ```python
-# Note, you can also connect to Spark via Spark connect. For example:
+# 注意，您也可以通过 Spark Connect 连接到 Spark。例如：
 # db = SparkSQL.from_uri("sc://localhost:15002", schema=schema)
 spark_sql = SparkSQL(schema=schema)
 llm = ChatOpenAI(temperature=0)
@@ -69,7 +69,7 @@ toolkit = SparkSQLToolkit(db=spark_sql, llm=llm)
 agent_executor = create_spark_sql_agent(llm=llm, toolkit=toolkit, verbose=True)
 ```
 
-## Example: describing a table
+## 示例：描述一个表
 
 ```python
 agent_executor.run("Describe the titanic table")
@@ -80,7 +80,7 @@ agent_executor.run("Describe the titanic table")
 Action: list_tables_sql_db
 Action Input:
 Observation: titanic
-Thought:I found the titanic table. Now I need to get the schema and sample rows for the titanic table.
+Thought:我找到了 titanic 表。现在我需要获取 titanic 表的 schema 和样本行。
 Action: schema_sql_db
 Action Input: titanic
 Observation: CREATE TABLE langchain_example.titanic (
@@ -105,8 +105,8 @@ PassengerId Survived Pclass Name Sex Age SibSp Parch Ticket Fare Cabin Embarked
 2 1 1 Cumings, Mrs. John Bradley (Florence Briggs Thayer) female 38.0 1 0 PC 17599 71.2833 C85 C
 3 1 3 Heikkinen, Miss. Laina female 26.0 0 0 STON/O2. 3101282 7.925 None S
 */
-Thought:I now know the schema and sample rows for the titanic table.
-Final Answer: The titanic table has the following columns: PassengerId (INT), Survived (INT), Pclass (INT), Name (STRING), Sex (STRING), Age (DOUBLE), SibSp (INT), Parch (INT), Ticket (STRING), Fare (DOUBLE), Cabin (STRING), and Embarked (STRING). Here are some sample rows from the table:
+Thought:我现在知道了 titanic 表的 schema 和样本行。
+Final Answer: titanic 表具有以下列：PassengerId (INT), Survived (INT), Pclass (INT), Name (STRING), Sex (STRING), Age (DOUBLE), SibSp (INT), Parch (INT), Ticket (STRING), Fare (DOUBLE), Cabin (STRING) 和 Embarked (STRING)。以下是该表的一些样本行：
 
 1. PassengerId: 1, Survived: 0, Pclass: 3, Name: Braund, Mr. Owen Harris, Sex: male, Age: 22.0, SibSp: 1, Parch: 0, Ticket: A/5 21171, Fare: 7.25, Cabin: None, Embarked: S
 2. PassengerId: 2, Survived: 1, Pclass: 1, Name: Cumings, Mrs. John Bradley (Florence Briggs Thayer), Sex: female, Age: 38.0, SibSp: 1, Parch: 0, Ticket: PC 17599, Fare: 71.2833, Cabin: C85, Embarked: C
@@ -119,7 +119,7 @@ Final Answer: The titanic table has the following columns: PassengerId (INT), Su
 'The titanic table has the following columns: PassengerId (INT), Survived (INT), Pclass (INT), Name (STRING), Sex (STRING), Age (DOUBLE), SibSp (INT), Parch (INT), Ticket (STRING), Fare (DOUBLE), Cabin (STRING), and Embarked (STRING). Here are some sample rows from the table: \n\n1. PassengerId: 1, Survived: 0, Pclass: 3, Name: Braund, Mr. Owen Harris, Sex: male, Age: 22.0, SibSp: 1, Parch: 0, Ticket: A/5 21171, Fare: 7.25, Cabin: None, Embarked: S\n2. PassengerId: 2, Survived: 1, Pclass: 1, Name: Cumings, Mrs. John Bradley (Florence Briggs Thayer), Sex: female, Age: 38.0, SibSp: 1, Parch: 0, Ticket: PC 17599, Fare: 71.2833, Cabin: C85, Embarked: C\n3. PassengerId: 3, Survived: 1, Pclass: 3, Name: Heikkinen, Miss. Laina, Sex: female, Age: 26.0, SibSp: 0, Parch: 0, Ticket: STON/O2. 3101282, Fare: 7.925, Cabin: None, Embarked: S'
 ```
 
-## Example: running queries
+## 示例：运行查询
 
 ```python
 agent_executor.run("whats the square root of the average age?")
@@ -130,7 +130,7 @@ agent_executor.run("whats the square root of the average age?")
 Action: list_tables_sql_db
 Action Input:
 Observation: titanic
-Thought:I should check the schema of the titanic table to see if there is an age column.
+Thought:我应该检查 titanic 表的 schema，看看是否有 age 列。
 Action: schema_sql_db
 Action Input: titanic
 Observation: CREATE TABLE langchain_example.titanic (
@@ -155,18 +155,18 @@ PassengerId Survived Pclass Name Sex Age SibSp Parch Ticket Fare Cabin Embarked
 2 1 1 Cumings, Mrs. John Bradley (Florence Briggs Thayer) female 38.0 1 0 PC 17599 71.2833 C85 C
 3 1 3 Heikkinen, Miss. Laina female 26.0 0 0 STON/O2. 3101282 7.925 None S
 */
-Thought:There is an Age column in the titanic table. I should write a query to calculate the average age and then find the square root of the result.
+Thought:titanic 表中有一个 Age 列。我应该编写一个查询来计算平均年龄，然后计算该结果的平方根。
 Action: query_checker_sql_db
 Action Input: SELECT SQRT(AVG(Age)) as square_root_of_avg_age FROM titanic
 Observation: The original query seems to be correct. Here it is again:
 
 SELECT SQRT(AVG(Age)) as square_root_of_avg_age FROM titanic
-Thought:The query is correct, so I can execute it to find the square root of the average age.
+Thought:查询是正确的，所以我可以执行它来找到平均年龄的平方根。
 Action: query_sql_db
 Action Input: SELECT SQRT(AVG(Age)) as square_root_of_avg_age FROM titanic
 Observation: [('5.449689683556195',)]
-Thought:I now know the final answer
-Final Answer: The square root of the average age is approximately 5.45.
+Thought:我现在知道了最终答案
+Final Answer: 平均年龄的平方根大约是 5.45。
 
 > Finished chain.
 ```
@@ -184,7 +184,7 @@ agent_executor.run("What's the name of the oldest survived passenger?")
 Action: list_tables_sql_db
 Action Input:
 Observation: titanic
-Thought:I should check the schema of the titanic table to see what columns are available.
+Thought:我应该检查 titanic 表的 schema，看看有哪些可用的列。
 Action: schema_sql_db
 Action Input: titanic
 Observation: CREATE TABLE langchain_example.titanic (
@@ -209,16 +209,16 @@ PassengerId Survived Pclass Name Sex Age SibSp Parch Ticket Fare Cabin Embarked
 2 1 1 Cumings, Mrs. John Bradley (Florence Briggs Thayer) female 38.0 1 0 PC 17599 71.2833 C85 C
 3 1 3 Heikkinen, Miss. Laina female 26.0 0 0 STON/O2. 3101282 7.925 None S
 */
-Thought:I can use the titanic table to find the oldest survived passenger. I will query the Name and Age columns, filtering by Survived and ordering by Age in descending order.
+Thought:我可以使用 titanic 表来查找年龄最大的幸存者。我将查询 Name 和 Age 列，按 Survived 过滤，并按 Age 降序排序。
 Action: query_checker_sql_db
 Action Input: SELECT Name, Age FROM titanic WHERE Survived = 1 ORDER BY Age DESC LIMIT 1
 Observation: SELECT Name, Age FROM titanic WHERE Survived = 1 ORDER BY Age DESC LIMIT 1
-Thought:The query is correct. Now I will execute it to find the oldest survived passenger.
+Thought:查询是正确的。现在我将执行它来找到年龄最大的幸存者。
 Action: query_sql_db
 Action Input: SELECT Name, Age FROM titanic WHERE Survived = 1 ORDER BY Age DESC LIMIT 1
 Observation: [('Barkworth, Mr. Algernon Henry Wilson', '80.0')]
-Thought:I now know the final answer.
-Final Answer: The oldest survived passenger is Barkworth, Mr. Algernon Henry Wilson, who was 80 years old.
+Thought:我现在知道了最终答案。
+Final Answer: 年龄最大的幸存者是 Barkworth, Mr. Algernon Henry Wilson，他 80 岁。
 
 > Finished chain.
 ```

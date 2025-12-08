@@ -1,51 +1,51 @@
 ---
-title: TencentHunyuan
+title: 腾讯混元
 ---
 
-The `TencentHunyuanEmbeddings` class uses the Tencent Hunyuan API to generate embeddings for a given text.
+`TencentHunyuanEmbeddings` 类使用腾讯云混元 API 为给定的文本生成向量表示（Embeddings）。
 
-## Setup
+## 设置
 
-1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
-2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
-3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+1. [在此处](https://cloud.tencent.com/register) 注册腾讯云账户。
+2. [在此处](https://console.cloud.tencent.com/cam/capi) 创建 SecretID 和 SecretKey。
+3. 将 SecretID 和 SecretKey 设置为环境变量，分别命名为 `TENCENT_SECRET_ID` 和 `TENCENT_SECRET_KEY`。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
-If you are using LangChain.js in a browser environment, you'll also need to install the following dependencies:
+如果您在浏览器环境中使用 LangChain.js，则还需要安装以下依赖项：
 
 ```bash npm
 npm install crypto-js
 ```
 
-And then make sure that you import from the `web` as shown below.
+然后确保您像下面所示那样从 `web` 模块导入。
 
-## Usage
+## 用法
 
-Here's an example:
+这是一个示例：
 
 ```typescript
-// in nodejs environment
+// 在 nodejs 环境中
 import { TencentHunyuanEmbeddings } from "@langchain/community/embeddings/tencent_hunyuan";
 
-// in browser environment
+// 在浏览器环境中
 // import { TencentHunyuanEmbeddings } from "@langchain/community/embeddings/tencent_hunyuan/web";
 
-/* Embed queries */
+/* 嵌入查询 */
 const embeddings = new TencentHunyuanEmbeddings();
 const res = await embeddings.embedQuery("你好，世界！");
 console.log(res);
-/* Embed documents */
+/* 嵌入文档 */
 const documentRes = await embeddings.embedDocuments(["你好，世界！", "再见"]);
 console.log({ documentRes });
 ```
 
-## Related
+## 相关
 
-- Embedding model [conceptual guide](/oss/integrations/text_embedding)
-- Embedding model [how-to guides](/oss/integrations/text_embedding)
+- 文本嵌入模型[概念指南](/oss/integrations/text_embedding)
+- 文本嵌入模型[操作指南](/oss/integrations/text_embedding)

@@ -2,45 +2,45 @@
 title: Gel
 ---
 
-> An implementation of LangChain vectorstore abstraction using `gel` as the backend.
+> 一个使用 `gel` 作为后端的 LangChain 向量存储抽象的实现。
 
-[Gel](https://www.geldata.com/) is an open-source PostgreSQL data layer optimized for fast development to production cycle. It comes with a high-level strictly typed graph-like data model, composable hierarchical query language, full SQL support, migrations, Auth and AI modules.
+[Gel](https://www.geldata.com/) 是一个开源的 PostgreSQL 数据层，它针对快速从开发到生产的周期进行了优化。它提供了一个高层次的、严格类型化的类图数据模型、可组合的分层查询语言、完整的 SQL 支持、迁移（migrations）、认证（Auth）和 AI 模块。
 
-The code lives in an integration package called [langchain-gel](https://github.com/geldata/langchain-gel).
+相关代码位于一个名为 [langchain-gel](https://github.com/geldata/langchain-gel) 的集成包中。
 
-## Setup
+## 设置 (Setup)
 
-First install relevant packages:
+首先安装相关的包：
 
 ```python
 ! pip install -qU gel langchain-gel
 ```
 
-## Initialization
+## 初始化 (Initialization)
 
-In order to use Gel as a backend for your `VectorStore`, you're going to need a working Gel instance.
-Fortunately, it doesn't have to involve Docker containers or anything complicated, unless you want to!
+为了将 Gel 作为 `VectorStore` 的后端，你需要一个可用的 Gel 实例。
+幸运的是，除非你特别需要，否则这不需要涉及 Docker 容器或任何复杂的操作！
 
-To set up a local instance, run:
+要设置一个本地实例，运行：
 
 ```python
 ! gel project init --non-interactive
 ```
 
-If you are using [Gel Cloud](https://cloud.geldata.com/) (and you should!), add one more argument to that command:
+如果你使用的是 [Gel Cloud](https://cloud.geldata.com/)（强烈推荐！），请在该命令中添加一个额外的参数：
 
 ```bash
 gel project init --server-instance <org-name>/<instance-name>
 ```
 
-For a comprehensive list of ways to run Gel, take a look at [Running Gel](https://docs.geldata.com/reference/running) section of the reference docs.
+要查看运行 Gel 的各种方法的完整列表，请参阅参考文档的 [Running Gel](https://docs.geldata.com/reference/running) 部分。
 
-### Set up the schema
+### 设置 Schema
 
-[Gel schema](https://docs.geldata.com/reference/datamodel) is an explicit high-level description of your application's data model.
-Aside from enabling you to define exactly how your data is going to be laid out, it drives Gel's many powerful features such as links, access policies, functions, triggers, constraints, indexes, and more.
+[Gel schema](https://docs.geldata.com/reference/datamodel) 是对你的应用程序数据模型的显式高层描述。
+除了能够精确定义数据的布局方式之外，它还驱动了 Gel 的许多强大功能，例如链接（links）、访问策略（access policies）、函数（functions）、触发器（triggers）、约束（constraints）、索引（indexes）等等。
 
-The LangChain's @[`VectorStore`] expects the following layout for the schema:
+LangChain 的 @[`VectorStore`] 期望 Schema 具有以下布局：
 
 ```python
 schema_content = """
@@ -68,16 +68,16 @@ with open("dbschema/default.gel", "w") as f:
     f.write(schema_content)
 ```
 
-In order to apply schema changes to the database, run a migration using Gel's [migration mechanism](https://docs.geldata.com/reference/datamodel/migrations):
+为了将 Schema 更改应用到数据库，请使用 Gel 的 [迁移机制 (migration mechanism)](https://docs.geldata.com/reference/datamodel/migrations) 运行迁移：
 
 ```python
 ! gel migration create --non-interactive
 ! gel migrate
 ```
 
-From this point onward, `GelVectorStore` can be used as a drop-in replacement for any other vectorstore available in LangChain.
+从现在开始，`GelVectorStore` 可以作为 LangChain 中任何其他向量存储的即插即用替代品。
 
-## Instantiation
+## 实例化 (Instantiation)
 
 <EmbeddingTabs/>
 
@@ -97,11 +97,11 @@ vector_store = GelVectorStore(
 )
 ```
 
-## Manage vector store
+## 管理向量存储 (Manage vector store)
 
-### Add items to vector store
+### 向向量存储添加条目 (Add items to vector store)
 
-Note that adding documents by ID will over-write any existing documents that match that ID.
+请注意，按 ID 添加文档将覆盖任何匹配该 ID 的现有文档。
 
 ```python
 from langchain_core.documents import Document
@@ -152,39 +152,39 @@ docs = [
 vector_store.add_documents(docs, ids=[doc.metadata["id"] for doc in docs])
 ```
 
-### Delete items from vector store
+### 从向量存储中删除条目 (Delete items from vector store)
 
 ```python
 vector_store.delete(ids=["3"])
 ```
 
-## Query vector store
+## 查询向量存储 (Query vector store)
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+一旦创建了向量存储并将相关文档添加进去，在运行链（chain）或代理（agent）时，你很可能会希望查询它。
 
-### Filtering Support
+### 过滤支持 (Filtering Support)
 
-The vectorstore supports a set of filters that can be applied against the metadata fields of the documents.
+向量存储支持一组可以应用于文档元数据字段的过滤器。
 
-| Operator | Meaning/Category        |
+| 运算符 (Operator) | 含义/类别 (Meaning/Category) |
 |----------|-------------------------|
-| \$eq      | Equality (==)           |
-| \$ne      | Inequality (!=)         |
-| \$lt      | Less than (&lt;)           |
-| \$lte     | Less than or equal (&lt;=) |
-| \$gt      | Greater than (>)        |
-| \$gte     | Greater than or equal (>=) |
-| \$in      | Special Cased (in)      |
-| \$nin     | Special Cased (not in)  |
-| \$between | Special Cased (between) |
-| \$like    | Text (like)             |
-| \$ilike   | Text (case-insensitive like) |
-| \$and     | Logical (and)           |
-| \$or      | Logical (or)            |
+| \$eq      | 等于 (==)           |
+| \$ne      | 不等于 (!=)           |
+| \$lt      | 小于 (&lt;)           |
+| \$lte     | 小于或等于 (&lt;=)           |
+| \$gt      | 大于 (>)        |
+| \$gte     | 大于或等于 (>=)           |
+| \$in      | 特殊情况 (in)      |
+| \$nin     | 特殊情况 (not in)      |
+| \$between | 特殊情况 (between) |
+| \$like    | 文本 (like)             |
+| \$ilike   | 文本 (不区分大小写的 like) |
+| \$and     | 逻辑 (and)           |
+| \$or      | 逻辑 (or)            |
 
-### Query directly
+### 直接查询 (Query directly)
 
-Performing a simple similarity search can be done as follows:
+执行简单的相似性搜索可以按如下方式进行：
 
 ```python
 results = vector_store.similarity_search(
@@ -194,7 +194,7 @@ for doc in results:
     print(f"* {doc.page_content} [{doc.metadata}]")
 ```
 
-If you provide a dict with multiple fields, but no operators, the top level will be interpreted as a logical **AND** filter
+如果你提供一个包含多个字段但没有运算符的字典，顶层将被解释为逻辑 **AND** 过滤器。
 
 ```python
 vector_store.similarity_search(
@@ -220,7 +220,7 @@ vector_store.similarity_search(
 )
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果你希望执行相似性搜索并接收相应的分数，可以运行：
 
 ```python
 results = vector_store.similarity_search_with_score(query="cats", k=1)
@@ -228,25 +228,25 @@ for doc, score in results:
     print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
 ```
 
-### Query by turning into retriever
+### 通过转换为检索器查询 (Query by turning into retriever)
 
-You can also transform the vector store into a retriever for easier usage in your chains.
+你也可以将向量存储转换为检索器（retriever），以便在链中使用更加方便。
 
 ```python
 retriever = vector_store.as_retriever(search_kwargs={"k": 1})
 retriever.invoke("kitty")
 ```
 
-## Usage for retrieval-augmented generation
+## 用于检索增强生成 (RAG) 的用法 (Usage for retrieval-augmented generation)
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何使用此向量存储进行检索增强生成 (RAG) 的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag)
-- [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)
+- [代理式 RAG](/oss/langgraph/agentic-rag)
+- [检索文档](/oss/langchain/retrieval)
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all GelVectorStore features and configurations head to the API reference: [python.langchain.com/api_reference/](https://python.langchain.com/api_reference/)
+有关所有 `GelVectorStore` 特性和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/](https://python.langchain.com/api_reference/)

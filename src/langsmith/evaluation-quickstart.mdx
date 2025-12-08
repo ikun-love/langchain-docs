@@ -1,58 +1,58 @@
 ---
-title: Evaluation quickstart
-sidebarTitle: Quickstart
+title: 评估快速开始
+sidebarTitle: 快速开始
 ---
 
 import WorkspaceSecret from '/snippets/langsmith/set-workspace-secrets.mdx';
 
-[_Evaluations_](/langsmith/evaluation-concepts) are a quantitative way to measure the performance of LLM applications. LLMs can behave unpredictably, even small changes to prompts, models, or inputs can significantly affect results. Evaluations provide a structured way to identify failures, compare versions, and build more reliable AI applications.
+[_评估_](/langsmith/evaluation-concepts) 是量化衡量 LLM 应用性能的手段。大型语言模型（LLMs）的行为可能难以预测，即使是对提示词（Prompts）、模型或输入进行微小更改，都可能显著影响结果。评估提供了一种结构化的方式来识别故障、比较不同版本，并构建更可靠的 AI 应用。
 
-Running an evaluation in LangSmith requires three key components:
+在 LangSmith 中运行评估需要三个核心组件：
 
-- [_Dataset_](/langsmith/evaluation-concepts#datasets): A set of test inputs (and optionally, expected outputs).
-- [_Target function_](/langsmith/define-target-function): The part of your application you want to test—this might be a single LLM call with a new prompt, one module, or your entire workflow.
-- [_Evaluators_](/langsmith/evaluation-concepts#evaluators): Functions that score your target function’s outputs.
+- [_数据集_](/langsmith/evaluation-concepts#datasets)：一组测试输入（以及可选的预期输出）。
+- [_目标函数_](/langsmith/define-target-function)：您希望测试的应用部分——这可能是一次单一的 LLM 调用（带新提示词）、一个模块，或您的整个工作流程。
+- [_评估器_](/langsmith/evaluation-concepts#evaluators)：用于对目标函数的输出来评分的函数。
 
-This quickstart guides you through running a starter evaluation that checks the correctness of LLM responses, using either the LangSmith SDK or UI.
+本快速入门指南将指导您完成运行启动评估的过程，该评估使用 LangSmith SDK 或 UI 来检查 LLM 回答的正确性。
 
 <Tip>
-If you prefer to watch a video on getting started with tracing, refer to the datasets and evaluations [Video guide](#video-guide).
+如果您更喜欢观看关于入门跟踪的视频，请参阅数据集和评估 [视频指南](#video-guide)。
 </Tip>
 
-## Prerequisites
+## 先决条件 (Prerequisites)
 
-Before you begin, make sure you have:
+在开始之前，请确保您拥有：
 
-- **A LangSmith account**: Sign up or log in at [smith.langchain.com](https://smith.langchain.com).
-- **A LangSmith API key**: Follow the [Create an API key](/langsmith/create-account-api-key#create-an-api-key) guide.
-- **An OpenAI API key**: Generate this from the [OpenAI dashboard](https://platform.openai.com/account/api-keys).
+- **一个 LangSmith 账户**：在 [smith.langchain.com](https://smith.langchain.com) 注册或登录。
+- **一个 LangSmith API 密钥**：遵循 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南。
+- **一个 OpenAI API 密钥**：从 [OpenAI 仪表板](https://platform.openai.com/account/api-keys) 生成。
 
-**Select the UI or SDK filter for instructions:**
+**选择 UI 或 SDK 筛选器以查看相应说明：**
 
 <Tabs>
 <Tab title="UI" icon="window">
 
-## 1. Set workspace secrets
+## 1. 设置工作区密钥 (Set workspace secrets)
 
 <WorkspaceSecret/>
 
-## 2. Create a prompt
+## 2. 创建一个提示词 (Create a prompt)
 
-LangSmith's [Prompt Playground](/langsmith/observability-concepts#prompt-playground) makes it possible to run evaluations over different prompts, new models, or test different model configurations.
+LangSmith 的 [提示词游乐场](/langsmith/observability-concepts#prompt-playground) 使得可以对不同的提示词、新模型或不同的模型配置运行评估。
 
-1. In the [LangSmith UI](https://smith.langchain.com), navigate to the **Playground** under **Prompt Engineering**.
-1. Under the **Prompts** panel, modify the **system** prompt to:
+1. 在 [LangSmith UI](https://smith.langchain.com) 中，导航到 **Prompt Engineering** 下的 **Playground**。
+1. 在 **Prompts** 面板下，将 **system** 提示词修改为：
 
     ```
     Answer the following question accurately:
     ```
 
-    Leave the **Human** message as is: `{question}`.
+    将 **Human** 消息保持原样：`{question}`。
 
-## 3. Create a dataset
+## 3. 创建一个数据集 (Create a dataset)
 
-1. Click **Set up Evaluation**, which will open a **New Experiment** table at the bottom of the page.
-1. In the **Select or create a new dataset** dropdown, click the **+ New** button to create a new dataset.
+1. 点击 **Set up Evaluation**，这将打开页面底部的 **New Experiment** 表格。
+1. 在 **Select or create a new dataset** 下拉菜单中，点击 **+ New** 按钮以创建一个新数据集。
 
     <div style={{ textAlign: 'center' }}>
     <img
@@ -68,23 +68,23 @@ LangSmith's [Prompt Playground](/langsmith/observability-concepts#prompt-playgro
     />
     </div>
 
-1. Add the following examples to the dataset:
+1. 向数据集中添加以下示例：
 
-    | Inputs                                                   | Reference Outputs                                 |
-    | -------------------------------------------------------- | ------------------------------------------------- |
+    | 输入 (Inputs)                                            | 参考输出 (Reference Outputs)                              |
+    | -------------------------------------------------------- | --------------------------------------------------------- |
     | question: Which country is Mount Kilimanjaro located in? | output: Mount Kilimanjaro is located in Tanzania. |
     | question: What is Earth's lowest point?                  | output: Earth's lowest point is The Dead Sea.     |
 
-1. Click **Save** and enter a name to save your newly created dataset.
+1. 点击 **Save** 并输入一个名称以保存您创建的新数据集。
 
-## 4. Add an evaluator
+## 4. 添加一个评估器 (Add an evaluator)
 
-1. Click **+ Evaluator** and select **Correctness** from the **Pre-built Evaluator** options.
-1. In the **Correctness** panel, click **Save**.
+1. 点击 **+ Evaluator**，然后在 **Pre-built Evaluator** 选项中选择 **Correctness**（正确性）。
+1. 在 **Correctness** 面板中，点击 **Save**。
 
-## 5. Run your evaluation
+## 5. 运行您的评估 (Run your evaluation)
 
-1. Select <Icon icon="circle-play" /> **Start** on the top right to run your evaluation. This will create an [_experiment_](/langsmith/evaluation-concepts#experiment) with a preview in the **New Experiment** table. You can view in full by clicking the experiment name.
+1. 点击右上角的 <Icon icon="circle-play" /> **Start** 来运行您的评估。这将创建一个 [_实验_](/langsmith/evaluation-concepts#experiment)，并在 **New Experiment** 表格中显示一个预览。您可以点击实验名称来查看完整内容。
 
     <div style={{ textAlign: 'center' }}>
     <img
@@ -100,27 +100,27 @@ LangSmith's [Prompt Playground](/langsmith/observability-concepts#prompt-playgro
     />
     </div>
 
-## Next steps
+## 后续步骤 (Next steps)
 
 <Tip>
-To learn more about running experiments in LangSmith, read the [evaluation conceptual guide](/langsmith/evaluation-concepts).
+要了解有关在 LangSmith 中运行实验的更多信息，请阅读 [评估概念指南](/langsmith/evaluation-concepts)。
 </Tip>
 
-- For more details on evaluations, refer to the [Evaluation documentation](/langsmith/evaluation).
-- Learn how to [create and manage datasets in the UI](/langsmith/manage-datasets-in-application#set-up-your-dataset).
-- Learn how to [run an evaluation from the prompt playground](/langsmith/run-evaluation-from-prompt-playground).
+- 有关评估的更多详细信息，请参阅 [评估文档](/langsmith/evaluation)。
+- 了解如何在 UI 中 [创建和管理数据集](/langsmith/manage-datasets-in-application#set-up-your-dataset)。
+- 了解如何从提示词游乐场 [运行评估](/langsmith/run-evaluation-from-prompt-playground)。
 
 </Tab>
 
 <Tab title="SDK" icon="code">
 
 <Tip>
-This guide uses prebuilt LLM-as-judge evaluators from the open-source [`openevals`](https://github.com/langchain-ai/openevals) package. OpenEvals includes a set of commonly used evaluators and is a great starting point if you're new to evaluations. If you want greater flexibility in how you evaluate your apps, you can also [define completely custom evaluators](/langsmith/code-evaluator).
+本指南使用来自开源包 [`openevals`](https://github.com/langchain-ai/openevals) 的预构建 LLM 裁判评估器。OpenEvals 包含一组常用的评估器，是评估新手的一个很好的起点。如果您希望在评估应用方面具有更大的灵活性，您还可以 [定义完全自定义的评估器](/langsmith/code-evaluator)。
 </Tip>
 
-## 1. Install dependencies
+## 1. 安装依赖项 (Install dependencies)
 
-In your terminal, create a directory for your project and install the dependencies in your environment:
+在终端中，创建一个项目目录并在您的环境中安装依赖项：
 
 <CodeGroup>
 
@@ -141,17 +141,17 @@ npx tsc --init
 </CodeGroup>
 
 <Info>
-If you are using `yarn` as your package manager, you will also need to manually install `@langchain/core` as a peer dependency of `openevals`. This is not required for LangSmith evals in general, you may define evaluators [using arbitrary custom code](/langsmith/code-evaluator).
+如果您使用 `yarn` 作为包管理器，您还需要手动安装 `@langchain/core` 作为 `openevals` 的对等依赖项（peer dependency）。这对于 LangSmith 评估本身不是必需的，您可以 [使用任意自定义代码定义评估器](/langsmith/code-evaluator)。
 </Info>
 
-## 2. Set up environment variables
+## 2. 设置环境变量 (Set up environment variables)
 
-Set the following environment variables:
+设置以下环境变量：
 
 - `LANGSMITH_TRACING`
 - `LANGSMITH_API_KEY`
-- `OPENAI_API_KEY` (or your LLM provider's API key)
-- (optional) `LANGSMITH_WORKSPACE_ID`: If your LangSmith API key is linked to multiple [workspaces](/langsmith/administration-overview#workspaces), set this variable to specify which workspace to use.
+- `OPENAI_API_KEY`（或您的 LLM 提供商的 API 密钥）
+- (可选) `LANGSMITH_WORKSPACE_ID`：如果您的 LangSmith API 密钥链接到多个[工作区](/langsmith/administration-overview#workspaces)，请设置此变量以指定要使用的工作区。
 
 ``` bash
 export LANGSMITH_TRACING=true
@@ -160,17 +160,17 @@ export OPENAI_API_KEY="<your-openai-api-key>"
 export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
 ```
 <Note>
-If you're using Anthropic, use the [Anthropic wrapper](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) to trace your calls. For other providers, use [the traceable wrapper](/langsmith/annotate-code#use-%40traceable-%2F-traceable).
+如果您使用的是 Anthropic，请使用 [Anthropic 封装器](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) 来跟踪您的调用。对于其他提供商，请使用 [可跟踪封装器](/langsmith/annotate-code#use-%40traceable-%2F-traceable)。
 </Note>
 
-## 3. Create a dataset
+## 3. 创建数据集 (Create a dataset)
 
-1. Create a file and add the following code, which will:
+1. 创建一个文件并添加以下代码，它将：
 
-    - Import the `Client` to connect to LangSmith.
-    - Create a dataset.
-    - Define example [_inputs_ and _outputs_](/langsmith/evaluation-concepts#examples).
-    - Associate the input and output pairs with that dataset in LangSmith so they can be used in evaluations.
+    - 导入 `Client` 以连接到 LangSmith。
+    - 创建一个数据集。
+    - 定义示例[_输入_和_输出_](/langsmith/evaluation-concepts#examples)。
+    - 将输入和输出对关联到 LangSmith 中的该数据集，以便它们可用于评估。
 
     <CodeGroup>
 
@@ -249,7 +249,7 @@ If you're using Anthropic, use the [Anthropic wrapper](/langsmith/annotate-code#
 
     </CodeGroup>
 
-1. In your terminal, run the `dataset` file to create the datasets you'll use to evaluate your app:
+1. 在终端中运行 `dataset` 文件以创建将用于评估应用的那些数据集：
 
     <CodeGroup>
     ```bash Python
@@ -261,17 +261,17 @@ If you're using Anthropic, use the [Anthropic wrapper](/langsmith/annotate-code#
 
     </CodeGroup>
 
-    You'll see the following output:
+    您将看到以下输出：
 
     ```bash
     Created dataset: Sample dataset
     ```
 
-## 4. Create your target function
+## 4. 创建您的目标函数 (Create your target function)
 
-Define a [target function](/langsmith/define-target-function) that contains what you're evaluating. In this guide, you'll define a target function that contains a single LLM call to answer a question.
+定义一个包含您要评估内容（目标函数）的[目标函数](/langsmith/define-target-function)。在本指南中，您将定义一个包含单个 LLM 调用的目标函数来回答一个问题。
 
-Add the following to an `eval` file:
+将以下内容添加到 `eval` 文件中：
 
 <CodeGroup>
 
@@ -320,23 +320,23 @@ async function target(inputs: Record<string, any>): Promise<Record<string, any>>
 </CodeGroup>
 
 
-## 5. Define an evaluator
+## 5. 定义一个评估器 (Define an evaluator)
 
-In this step, you’re telling LangSmith how to grade the answers your app produces.
+在这一步，您告诉 LangSmith 如何给应用的输出评分。
 
-Import a prebuilt evaluation prompt (`CORRECTNESS_PROMPT`) from [`openevals`](https://github.com/langchain-ai/openevals) and a helper that wraps it into an [_LLM-as-judge evaluator_](/langsmith/evaluation-concepts#llm-as-judge), which will score the application's output.
+从 [`openevals`](https://github.com/langchain-ai/openevals) 导入一个预构建的评估提示词 (`CORRECTNESS_PROMPT`)，以及一个将提示词封装成[_LLM 裁判评估器_](/langsmith/evaluation-concepts#llm-as-judge) 的辅助函数，该评估器将对应用的输出进行评分。
 
 <Info>
-`CORRECTNESS_PROMPT` is just an f-string with variables for `"inputs"`, `"outputs"`, and `"reference_outputs"`. See [here](https://github.com/langchain-ai/openevals#customizing-prompts) for more information on customizing OpenEvals prompts.
+`CORRECTNESS_PROMPT` 只是一个带有 `"inputs"`、`"outputs"` 和 `"reference_outputs"` 变量的 f-string。有关自定义 OpenEvals 提示词的更多信息，请参阅[此处](https://github.com/langchain-ai/openevals#customizing-prompts)。
 </Info>
 
-The evaluator compares:
+评估器比较：
 
-- `inputs`: what was passed into your target function (e.g., the question text).
-- `outputs`: what your target function returned (e.g., the model’s answer).
-- `reference_outputs`: the ground truth answers you attached to each dataset example in [Step 3](#3-create-a-dataset).
+- `inputs`：传入目标函数的参数（例如，问题文本）。
+- `outputs`：目标函数返回的内容（例如，模型的答案）。
+- `reference_outputs`：您在[步骤 3](#3-create-a-dataset) 中附加到每个数据集示例的真实答案。
 
-Add the following highlighted code to your `eval` file:
+将以下加亮点代码添加到您的 `eval` 文件中：
 
 <CodeGroup>
 
@@ -416,17 +416,17 @@ async function correctnessEvaluator(run: {
 
 </CodeGroup>
 
-## 6. Run and view results
+## 6. 运行并查看结果 (Run and view results)
 
-To run the evaluation experiment, you'll call `evaluate(...)`, which:
+要运行评估实验，您需要调用 `evaluate(...)`，它会执行以下操作：
 
-- Pulls example from the dataset you created in [Step 3](#3-create-a-dataset).
-- Sends each example's inputs to your target function from [Step 4](#4-add-an-evaluator).
-- Collects the outputs (the model's answers).
-- Passes the outputs along with the `reference_outputs` to your evaluator from [Step 5](#5-define-an-evaluator).
-- Records all results in LangSmith as an experiment, so you can view them in the UI.
+- 从[步骤 3](#3-create-a-dataset) 中创建的数据集中提取示例。
+- 将每个示例的输入发送到[步骤 4](#4-add-an-evaluator) 中的目标函数。
+- 收集输出（模型的答案）。
+- 将输出与`reference_outputs`一起传递给[步骤 5](#5-define-an-evaluator) 中的评估器。
+- 将所有结果作为实验记录在 LangSmith 中，以便您可以在 UI 中查看它们。
 
-1. Add the highlighted code to your `eval` file:
+1. 将以下加亮点代码添加到您的 `eval` 文件中：
 
     <CodeGroup>
 
@@ -544,7 +544,7 @@ To run the evaluation experiment, you'll call `evaluate(...)`, which:
 
     </CodeGroup>
 
-1. Run your evaluator:
+1. 运行您的评估器：
 
     <CodeGroup>
 
@@ -558,7 +558,7 @@ To run the evaluation experiment, you'll call `evaluate(...)`, which:
 
     </CodeGroup>
 
-1. You'll receive a link to view the evaluation results and metadata for the experiment results:
+1. 您将收到一个链接，用于查看评估结果和实验的元数据：
 
     ```
     View the evaluation results for experiment: 'first-eval-in-langsmith-00000000' at: https://smith.langchain.com/o/6551f9c4-2685-4a08-86b9-1b29643deb3d/datasets/e5fde557-c274-4e49-b39d-000000000000/compare?selectedSessions=70b11778-6a28-4cdb-be81-000000000000
@@ -566,7 +566,7 @@ To run the evaluation experiment, you'll call `evaluate(...)`, which:
     <ExperimentResults first-eval-in-langsmith-00000000>
     ```
 
-1. Follow the link in the output of your evaluation run to access the **Datasets & Experiments** page in the [LangSmith UI](https://smith.langchain.com), and explore the results of the experiment. This will direct you to the created experiment with a table showing the **Inputs**, **Reference Output**, and **Outputs**. You can select a dataset to open an expanded view of the results.
+1. 按照评估运行输出中的链接，访问 [LangSmith UI](https://smith.langchain.com) 中的 **Datasets & Experiments** 页面，探索实验结果。这将引导您进入创建的实验，其中有一个表格显示了**输入 (Inputs)**、**参考输出 (Reference Output)** 和**输出 (Outputs)**。您可以选择一个数据集以打开结果的扩展视图。
 
     <div style={{ textAlign: 'center' }}>
     <img
@@ -582,19 +582,19 @@ To run the evaluation experiment, you'll call `evaluate(...)`, which:
     />
     </div>
 
-## Next steps
+## 后续步骤 (Next steps)
 
-Here are some topics you might want to explore next:
+以下是一些您可能希望接下来探索的主题：
 
-- [Evaluation concepts](/langsmith/evaluation-concepts) provides descriptions of the key terminology for evaluations in LangSmith.
-- [OpenEvals README](https://github.com/langchain-ai/openevals) to see all available prebuilt evaluators and how to customize them.
-- [Define custom evaluators](/langsmith/code-evaluator).
-- [Python](https://docs.smith.langchain.com/reference/python/reference) or [TypeScript](https://docs.smith.langchain.com/reference/js) SDK references for comprehensive descriptions of every class and function.
+- [评估概念](/langsmith/evaluation-concepts) 提供了 LangSmith 中评估关键术语的描述。
+- [OpenEvals README](https://github.com/langchain-ai/openevals) 以查看所有可用的预构建评估器以及如何自定义它们。
+- [定义自定义评估器](/langsmith/code-evaluator)。
+- [Python](https://docs.smith.langchain.com/reference/python/reference) 或 [TypeScript](https://docs.smith.langchain.com/reference/js) SDK 参考，以获取每个类和函数的全面描述。
 
 </Tab>
 </Tabs>
 
-## Video guide
+## 视频指南 (Video guide)
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/iEgjJyk3aTw?si=C7BPKXPmdE1yAflv"

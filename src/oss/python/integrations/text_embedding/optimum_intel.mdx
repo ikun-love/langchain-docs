@@ -1,18 +1,18 @@
 ---
-title: Embedding Documents using Optimized and Quantized Embedders
+title: 使用优化和量化的嵌入器嵌入文档
 ---
 
-Embedding all documents using Quantized Embedders.
+使用量化嵌入器嵌入所有文档。
 
-The embedders are based on optimized models, created by using [optimum-intel](https://github.com/huggingface/optimum-intel.git) and [IPEX](https://github.com/intel/intel-extension-for-pytorch).
+这些嵌入器基于优化模型，这些模型是使用 [optimum-intel](https://github.com/huggingface/optimum-intel.git) 和 [IPEX](https://github.com/intel/intel-extension-for-pytorch) 创建的。
 
-Example text is based on [SBERT](https://www.sbert.net/docs/pretrained_cross-encoders.html).
+示例文本基于 [SBERT](https://www.sbert.net/docs/pretrained_cross-encoders.html)。
 
 ```python
 from langchain_community.embeddings import QuantizedBiEncoderEmbeddings
 
 model_name = "Intel/bge-small-en-v1.5-rag-int8-static"
-encode_kwargs = {"normalize_embeddings": True}  # set True to compute cosine similarity
+encode_kwargs = {"normalize_embeddings": True}  # 设置为 True 以计算余弦相似度
 
 model = QuantizedBiEncoderEmbeddings(
     model_name=model_name,
@@ -40,9 +40,9 @@ INCConfig {
 Using `INCModel` to load a TorchScript model will be deprecated in v1.15.0, to load your model please use `IPEXModel` instead.
 ```
 
-Let's ask a question, and compare to 2 documents. The first contains the answer to the question, and the second one does not.
+我们来提一个问题，并与 2 个文档进行比较。第一个文档包含问题的答案，而第二个文档不包含。
 
-We can check better suits our query.
+我们可以检查哪个更适合我们的查询。
 
 ```python
 question = "How many people live in Berlin?"
@@ -87,4 +87,4 @@ query_vec_torch @ doc_vecs_torch.T
 tensor([0.7980, 0.6529])
 ```
 
-We can see that indeed the first one ranks higher.
+我们可以看到第一个文档的排名确实更高。

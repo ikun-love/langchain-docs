@@ -1,15 +1,15 @@
 ---
-title: Interrupt concurrent
-sidebarTitle: Interrupt
+title: 中断并发运行
+sidebarTitle: 中断
 ---
 
-This guide assumes knowledge of what double-texting is, which you can learn about in the [double-texting conceptual guide](/langsmith/double-texting).
+本指南假设您已经了解什么是双重应答（double-texting）。您可以在[双重应答概念指南](/langsmith/double-texting)中了解相关信息。
 
-The guide covers the `interrupt` option for double texting, which interrupts the prior run of the graph and starts a new one with the double-text. This option does not delete the first run, but rather keeps it in the database but sets its status to `interrupted`. Below is a quick example of using the `interrupt` option.
+本指南涵盖了双重应答中的 `interrupt` 选项，该选项会中断前一个图的运行，并以双重应答启动一个新的运行。此选项不会删除第一次运行，而是将其状态设置为 `interrupted` 并保留在数据库中。下面是一个使用 `interrupt` 选项的快速示例。
 
-## Setup
+## 设置
 
-First, we will define a quick helper function for printing out JS and CURL model outputs (you can skip this if using Python):
+首先，我们将定义一个快速的辅助函数，用于打印出 JavaScript 和 CURL 模型的输出（如果使用的是 Python，则可以跳过此步骤）：
 
 <Tabs>
     <Tab title="Javascript">
@@ -49,7 +49,7 @@ First, we will define a quick helper function for printing out JS and CURL model
     </Tab>
 </Tabs>
 
-Now, let's import our required packages and instantiate our client, assistant, and thread.
+现在，我们导入所需的包并实例化我们的客户端（client）、助手（assistant）和线程（thread）。
 
 <Tabs>
     <Tab title="Python">
@@ -60,7 +60,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     from langgraph_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
-    # Using the graph deployed with the name "agent"
+    # 使用名为 "agent" 的图（graph）
     assistant_id = "agent"
     thread = await client.threads.create()
     ```
@@ -70,7 +70,7 @@ Now, let's import our required packages and instantiate our client, assistant, a
     import { Client } from "@langchain/langgraph-sdk";
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
-    // Using the graph deployed with the name "agent"
+    // 使用名为 "agent" 的图（graph）
     const assistantId = "agent";
     const thread = await client.threads.create();
     ```
@@ -85,20 +85,20 @@ Now, let's import our required packages and instantiate our client, assistant, a
     </Tab>
 </Tabs>
 
-## Create runs
+## 创建运行（Runs）
 
-Now we can start our two runs and join the second one until it has completed:
+现在我们可以启动两个运行（run），并等待第二个运行完成：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # the first run will be interrupted
+    # 第一次运行将被中断
     interrupted_run = await client.runs.create(
         thread["thread_id"],
         assistant_id,
         input={"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
     )
-    # sleep a bit to get partial outputs from the first run
+    # 等待一小段时间以获取第一次运行的部分输出
     await asyncio.sleep(2)
     run = await client.runs.create(
         thread["thread_id"],
@@ -106,19 +106,19 @@ Now we can start our two runs and join the second one until it has completed:
         input={"messages": [{"role": "user", "content": "what's the weather in nyc?"}]},
         multitask_strategy="interrupt",
     )
-    # wait until the second run completes
+    # 等待直到第二次运行完成
     await client.runs.join(thread["thread_id"], run["run_id"])
     ```
     </Tab>
     <Tab title="Javascript">
     ```js
-    // the first run will be interrupted
+    // 第一次运行将被中断
     let interruptedRun = await client.runs.create(
       thread["thread_id"],
       assistantId,
       { input: { messages: [{ role: "human", content: "what's the weather in sf?" }] } }
     );
-    // sleep a bit to get partial outputs from the first run
+    // 等待一小段时间以获取第一次运行的部分输出
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     let run = await client.runs.create(
@@ -130,7 +130,7 @@ Now we can start our two runs and join the second one until it has completed:
       }
     );
 
-    // wait until the second run completes
+    // 等待直到第二次运行完成
     await client.runs.join(thread["thread_id"], run["run_id"]);
     ```
     </Tab>
@@ -155,9 +155,9 @@ Now we can start our two runs and join the second one until it has completed:
     </Tab>
 </Tabs>
 
-## View run results
+## 查看运行结果
 
-We can see that the thread has partial data from the first run + data from the second run
+我们可以看到，该线程现在包含了第一次运行的部分数据以及第二次运行的完整数据。
 
 <Tabs>
     <Tab title="Python">
@@ -190,7 +190,7 @@ We can see that the thread has partial data from the first run + data from the s
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 ================================ Human Message =================================
@@ -235,7 +235,7 @@ The search results provide weather forecasts and information for New York City. 
 So in summary, the search provides a convenient overview of the expected weather conditions in New York City over the next month to give you an idea of what to prepare for if traveling or making plans there. Let me know if you need any other details!
 ```
 
-Verify that the original, interrupted run was interrupted
+验证原始的、被中断的运行确实被中断了
 
 <Tabs>
     <Tab title="Python">
@@ -250,7 +250,7 @@ Verify that the original, interrupted run was interrupted
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 'interrupted'

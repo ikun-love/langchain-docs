@@ -2,28 +2,28 @@
 title: IBM watsonx.ai
 ---
 
->`WatsonxRerank` is a wrapper for IBM [watsonx.ai](https://www.ibm.com/products/watsonx-ai) foundation models.
+>`WatsonxRerank` 是 IBM [watsonx.ai](https://www.ibm.com/products/watsonx-ai) 基础模型的封装器。
 
-This notebook shows how to use [watsonx's rerank endpoint](https://cloud.ibm.com/apidocs/watsonx-ai#text-rerank) in a retriever.
+本 Notebook 展示了如何在检索器（retriever）中使用 [watsonx 的 rerank 端点](https://cloud.ibm.com/apidocs/watsonx-ai#text-rerank)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | [JS support](https://js.langchain.com/docs/integrations/document_compressors/ibm/) | Downloads | Version |
+| 类 (Class) | 包 (Package) | [JS 支持](https://js.langchain.com/docs/integrations/document_compressors/ibm/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: | :---: |
 | [`WatsonxRerank`](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxRerank/) | [`langchain-ibm`](https://reference.langchain.com/python/integrations/langchain_ibm/) | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-ibm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-ibm?style=flat-square&label=%20) |
 
-## Setup
+## 设置 (Setup)
 
-To access IBM watsonx.ai models you'll need to create an IBM watsonx.ai account, get an API key, and install the `langchain-ibm` integration package.
+要访问 IBM watsonx.ai 模型，您需要创建一个 IBM watsonx.ai 账户，获取一个 API 密钥，并安装 `langchain-ibm` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-The cell below defines the credentials required to work with watsonx Foundation Model inferencing.
+下面的代码单元格定义了使用 watsonx 基础模型推断所需的凭证。
 
-**Action:** Provide the IBM Cloud user API key. For details, see
-[Managing user API keys](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui).
+**操作：** 提供 IBM Cloud 用户 API 密钥。详细信息请参阅
+[管理用户 API 密钥](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)。
 
 ```python
 import os
@@ -33,7 +33,7 @@ watsonx_api_key = getpass()
 os.environ["WATSONX_APIKEY"] = watsonx_api_key
 ```
 
-Additionally you are able to pass additional secrets as an environment variable.
+此外，您还可以通过环境变量传递额外的密钥信息。
 
 ```python
 import os
@@ -45,9 +45,9 @@ os.environ["WATSONX_USERNAME"] = "your username for accessing the CPD cluster"
 os.environ["WATSONX_INSTANCE_ID"] = "your instance_id for accessing the CPD cluster"
 ```
 
-### Installation
+### 安装 (Installation)
 
-The LangChain IBM integration lives in the `langchain-ibm` package:
+LangChain 的 IBM 集成位于 `langchain-ibm` 包中：
 
 ```python
 !pip install -qU langchain-ibm
@@ -55,43 +55,43 @@ The LangChain IBM integration lives in the `langchain-ibm` package:
 !pip install -qU langchain_text_splitters
 ```
 
-For experiment purpose please also install `faiss` or `faiss-cpu` package:
+为了进行实验，请同时安装 `faiss` 或 `faiss-cpu` 包：
 
 ```python
 !pip install -qU  faiss
 
-# OR  (depending on Python version)
+# 或者（取决于 Python 版本）
 
 !pip install -qU  faiss-cpu
 ```
 
-Helper function for printing docs
+用于打印文档的辅助函数
 
 ```python
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-### Set up the base vector store retriever
+### 设置基础向量存储检索器 (Base Vector Store Retriever)
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+我们首先初始化一个简单的向量存储检索器，并存储 2023 年国情咨文 (State of the Union) 的文本（分块后的）。我们可以将检索器设置为检索大量文档（20 个）。
 
-Initialize the `WatsonxEmbeddings`. For more details see [WatsonxEmbeddings](/oss/integrations/text_embedding/ibm_watsonx).
+初始化 `WatsonxEmbeddings`。更多详情请参阅 [WatsonxEmbeddings](/oss/integrations/text_embedding/ibm_watsonx)。
 
-**Note**:
+**注意**：
 
-- To provide context for the API call, you must add `project_id` or `space_id`. For more information see [documentation](https://www.ibm.com/docs/en/watsonx-as-a-service?topic=projects).
-- Depending on the region of your provisioned service instance, use one of the urls described [here](https://ibm.github.io/watsonx-ai-python-sdk/setup_cloud.html#authentication).
+- 为 API 调用提供上下文，您必须添加 `project_id` 或 `space_id`。更多信息请参阅 [文档](https://www.ibm.com/docs/en/watsonx-as-a-service?topic=projects)。
+- 根据您预置服务实例的区域，使用 [此处](https://ibm.github.io/watsonx-ai-python-sdk/setup_cloud.html#authentication) 描述的 URL 之一。
 
-In this example, we’ll use the `project_id` and Dallas url.
+在此示例中，我们将使用 `project_id` 和达拉斯 (Dallas) 的 URL。
 
-You need to specify `model_id` that will be used for embedding. All available models you can find in [documentation](https://ibm.github.io/watsonx-ai-python-sdk/fm_embeddings.html#EmbeddingModels).
+您需要指定用于嵌入 (embedding) 的 `model_id`。所有可用模型都可以在 [文档](https://ibm.github.io/watsonx-ai-python-sdk/fm_embeddings.html#EmbeddingModels) 中找到。
 
 ```python
 from langchain_ibm import WatsonxEmbeddings
@@ -117,17 +117,17 @@ retriever = FAISS.from_documents(texts, wx_embeddings).as_retriever(
 
 query = "What did the president say about Ketanji Brown Jackson"
 docs = retriever.invoke(query)
-pretty_print_docs(docs[:5])  # Printing the first 5 documents
+pretty_print_docs(docs[:5])  # 打印前 5 个文档
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 I spoke with their families and told them that we are forever in debt for their sacrifice, and we will carry on their mission to restore the trust and safety every community deserves.
 
@@ -137,7 +137,7 @@ I know what works: Investing in crime prevention and community police officers w
 
 So let’s not abandon our streets. Or choose between safety and equal justice.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 He met the Ukrainian people.
 
@@ -147,13 +147,13 @@ Groups of citizens blocking tanks with their bodies. Everyone from students to r
 
 In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
 
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ----------------------------------------------------------------------------------------------------
-Document 5:
+文档 5:
 
 To all Americans, I will be honest with you, as I’ve always promised. A Russian dictator, invading a foreign country, has costs around the world.
 
@@ -162,12 +162,12 @@ And I’m taking robust action to make sure the pain of our sanctions  is target
 Tonight, I can announce that the United States has worked with 30 other countries to release 60 Million barrels of oil from reserves around the world.
 ```
 
-## Usage
+## 用法 (Usage)
 
-### Doing reranking with WatsonxRerank
+### 使用 WatsonxRerank 进行重排序 (Reranking)
 
-Now let's wrap our base retriever with a `ContextualCompressionRetriever`. We'll add an `WatsonxRerank`, uses the watsonx rerank endpoint to rerank the returned results.
-Do note that it is mandatory to specify the model name in WatsonxRerank!
+现在让我们用 `ContextualCompressionRetriever` 来包装我们的基础检索器。我们将添加一个 `WatsonxRerank`，它使用 watsonx rerank 端点来对返回的结果进行重排序。
+请注意，在 WatsonxRerank 中指定模型名称是**必需的**！
 
 ```python
 from langchain_ibm import WatsonxRerank
@@ -189,23 +189,23 @@ compression_retriever = ContextualCompressionRetriever(
 compressed_docs = compression_retriever.invoke(
     "What did the president say about Ketanji Jackson Brown"
 )
-pretty_print_docs(compressed_docs[:5])  # Printing the first 5 compressed documents
+pretty_print_docs(compressed_docs[:5])  # 打印前 5 个压缩后的文档
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
 
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 To all Americans, I will be honest with you, as I’ve always promised. A Russian dictator, invading a foreign country, has costs around the world.
 
@@ -213,7 +213,7 @@ And I’m taking robust action to make sure the pain of our sanctions  is target
 
 Tonight, I can announce that the United States has worked with 30 other countries to release 60 Million barrels of oil from reserves around the world.
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 I spoke with their families and told them that we are forever in debt for their sacrifice, and we will carry on their mission to restore the trust and safety every community deserves.
 
@@ -223,7 +223,7 @@ I know what works: Investing in crime prevention and community police officers w
 
 So let’s not abandon our streets. Or choose between safety and equal justice.
 ----------------------------------------------------------------------------------------------------
-Document 5:
+文档 5:
 
 He met the Ukrainian people.
 
@@ -234,11 +234,11 @@ Groups of citizens blocking tanks with their bodies. Everyone from students to r
 In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
 ```
 
-## Use within a chain
+## 在链中使用 (Use within a chain)
 
-You can of course use this retriever within a QA pipeline
+当然，您可以在 QA（问答）管道中直接使用此检索器。
 
-Initialize the `ChatWatsonx`. For more details see [ChatWatsonx](/oss/integrations/chat/ibm_watsonx).
+初始化 `ChatWatsonx`。更多详情请参阅 [ChatWatsonx](/oss/integrations/chat/ibm_watsonx)。
 
 ```python
 from langchain_ibm import ChatWatsonx
@@ -267,6 +267,6 @@ chain.invoke(query)
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all `WatsonxRerank` features and configurations head to the [API reference](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxRerank/).
+有关 `WatsonxRerank` 所有功能和配置的详细文档，请访问 [API 参考](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxRerank/)。

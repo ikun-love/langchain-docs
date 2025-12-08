@@ -1,27 +1,25 @@
 ---
-title: Overview
+title: 概览
 ---
 
-All functionality related to Anthropic models..
+所有与 Anthropic 模型相关的功能。
 
-[Anthropic](https://www.anthropic.com/) is an AI safety and research company, and is the creator of Claude.
-This page covers all integrations between Anthropic models and LangChain.
+[Anthropic](https://www.anthropic.com/) 是一家 AI 安全与研究公司，也是 Claude 模型的创建者。本文档介绍了 Anthropic 模型与 LangChain 之间的所有集成。
 
-## Prompting Best Practices
+## 提示词的最佳实践
 
-Anthropic models have several prompting best practices compared to OpenAI models.
+与 OpenAI 模型相比，Anthropic 模型在提示词（Prompting）方面有一些特定的推荐做法。
 
-**System Messages may only be the first message**
+**系统消息（System Messages）必须是第一条消息**
 
-Anthropic models require any system messages to be the first one in your prompts.
+Anthropic 模型要求系统消息必须出现在您的提示词序列中的第一条消息。
 
 ## `ChatAnthropic`
 
-`ChatAnthropic` is a subclass of LangChain's `ChatModel`, meaning it works best with `ChatPromptTemplate`.
-You can import this wrapper with the following code:
+`ChatAnthropic` 是 LangChain 的 `ChatModel` 的一个子类，这意味着它与 `ChatPromptTemplate` 配合使用效果最佳。您可以使用以下代码导入此封装器：
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -32,8 +30,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 const model = new ChatAnthropic({});
 ```
 
-When working with ChatModels, it is preferred that you design your prompts as `ChatPromptTemplate`s.
-Here is an example below of doing that:
+在使用 ChatModels 时，推荐您将提示词设计为 `ChatPromptTemplate` 的形式。下面是一个这样做的示例：
 
 ```typescript
 import { ChatPromptTemplate } from "@langchain/classic/prompts";
@@ -44,11 +41,11 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 ```
 
-You can then use this in a chain as follows:
+然后，您可以在链（chain）中使用它，如下所示：
 
 ```typescript
 const chain = prompt.pipe(model);
 await chain.invoke({ topic: "bears" });
 ```
 
-See the [chat model integration page](/oss/integrations/chat/anthropic/) for more examples, including multimodal inputs.
+有关更多示例（包括多模态输入），请参阅[聊天模型集成页面](/oss/integrations/chat/anthropic/)。

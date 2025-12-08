@@ -1,41 +1,41 @@
 ---
 title: ChatAnthropic
-description: Get started using Anthropic [chat models](/oss/langchain/models) in LangChain.
+description: 在 LangChain 中开始使用 Anthropic 的 [聊天模型](/oss/langchain/models)。
 ---
 
-You can find information about Anthropic's latest models, their costs, context windows, and supported input types in the [Claude](https://platform.claude.com/docs/en/about-claude/models/overview) docs.
+您可以在 [Claude](https://platform.claude.com/docs/en/about-claude/models/overview) 文档中找到有关 Anthropic 最新模型、成本、上下文窗口和支持的输入类型的相关信息。
 
 <Tip>
-    **API Reference**
+    **API 参考**
 
-    For detailed documentation of all features and configuration options, head to the @[`ChatAnthropic`] API reference.
+    有关所有功能和配置选项的详细文档，请前往 @[`ChatAnthropic`] API 参考。
 </Tip>
 
 <Info>
-    **AWS Bedrock and Google VertexAI**
+    **AWS Bedrock 和 Google VertexAI**
 
-    Note that certain Anthropic models can also be accessed via AWS Bedrock and Google VertexAI. See the [`ChatBedrock`](/oss/integrations/chat/bedrock/) and [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai/) integrations to use Anthropic models via these services.
+    请注意，某些 Anthropic 模型也可以通过 AWS Bedrock 和 Google VertexAI 访问。请参阅 [`ChatBedrock`](/oss/integrations/chat/bedrock/) 和 [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai/) 集成，以通过这些服务使用 Anthropic 模型。
 </Info>
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | <Tooltip tip="Can run on local hardware" cta="Learn more" href="/oss/langchain/models#local-models">Local</Tooltip> | Serializable | JS/TS Support | Downloads | Latest Version |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
-| @[`ChatAnthropic`] | @[`langchain-anthropic`] | ❌ | beta | ✅ [(npm)](https://js.langchain.com/docs/integrations/chat/anthropic) | <a href="https://pypi.org/project/langchain-anthropic/" target="_blank"><img src="https://static.pepy.tech/badge/langchain-anthropic/month" alt="Downloads per month" noZoom height="100" class="rounded" /></a> | <a href="https://pypi.org/project/langchain-anthropic/" target="_blank"><img src="https://img.shields.io/pypi/v/langchain-anthropic?style=flat-square&label=%20&color=orange" alt="PyPI - Latest version" noZoom height="100" class="rounded" /></a> |
+| 类 | 包 | <Tooltip tip="可以在本地硬件上运行" cta="了解更多" href="/oss/langchain/models#local-models">本地</Tooltip> | 可序列化 | JS/TS 支持 | 下载量 | 最新版本 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| @[`ChatAnthropic`] | @[`langchain-anthropic`] | ❌ | beta | ✅ [(npm)](https://js.langchain.com/docs/integrations/chat/anthropic) | <a href="https://pypi.org/project/langchain-anthropic/" target="_blank"><img src="https://static.pepy.tech/badge/langchain-anthropic/month" alt="每月下载量" noZoom height="100" class="rounded" /></a> | <a href="https://pypi.org/project/langchain-anthropic/" target="_blank"><img src="https://img.shields.io/pypi/v/langchain-anthropic?style=flat-square&label=%20&color=orange" alt="PyPI - 最新版本" noZoom height="100" class="rounded" /></a> |
 
-### Model features
+### 模型特性
 
-| [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output) | JSON mode | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | Native async | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming/) | 原生异步 | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
-## Setup
+## 设置
 
-To access Anthropic (Claude) models you'll need to install the `langchain-anthropic` integration package and acquire a [Claude](https://platform.claude.com/docs/en/get-started#prerequisites) API key.
+要访问 Anthropic (Claude) 模型，您需要安装 `langchain-anthropic` 集成包并获取 [Claude](https://platform.claude.com/docs/en/get-started#prerequisites) API 密钥。
 
-### Installation
+### 安装
 
 <CodeGroup>
     ```bash pip
@@ -46,9 +46,9 @@ To access Anthropic (Claude) models you'll need to install the `langchain-anthro
     ```
 </CodeGroup>
 
-### Credentials
+### 凭证
 
-Head to the [Claude console](https://console.anthropic.com) to sign up and generate a Claude API key. Once you've done this set the `ANTHROPIC_API_KEY` environment variable:
+前往 [Claude 控制台](https://console.anthropic.com) 进行注册并生成 Claude API 密钥。获取密钥后，请设置 `ANTHROPIC_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -58,16 +58,16 @@ if "ANTHROPIC_API_KEY" not in os.environ:
     os.environ["ANTHROPIC_API_KEY"] = getpass.getpass("Enter your Anthropic API key: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -82,7 +82,7 @@ model = ChatAnthropic(
 )
 ```
 
-## Invocation
+## 调用
 
 ```python
 messages = [
@@ -108,9 +108,9 @@ print(ai_msg.text)
 J'adore la programmation.
 ```
 
-## Token counting
+## Token 计数
 
-You can count tokens in messages before sending them to the model using the `get_num_tokens_from_messages()` method. This uses Anthropic's official [token counting API](https://platform.claude.com/docs/en/build-with-claude/token-counting).
+您可以使用 `get_num_tokens_from_messages()` 方法在将消息发送给模型之前计算消息中的 token 数量。这使用了 Anthropic 官方的 [Token 计数 API](https://platform.claude.com/docs/en/build-with-claude/token-counting)。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -131,7 +131,7 @@ print(token_count)
 14
 ```
 
-You can also count tokens when using tools:
+在使用工具时，您也可以计算 token 数量：
 
 ```python
 from langchain.tools import tool
@@ -157,9 +157,9 @@ print(token_count)
 586
 ```
 
-## Content blocks
+## 内容块 (Content blocks)
 
-When using tools, [extended thinking](#extended-thinking), and other features, content from a single Anthropic @[`AIMessage`] can either be a single string or a list of Anthropic content blocks. For example, when an Anthropic model invokes a tool, the tool invocation is part of the message content (as well as being exposed in the standardized `AIMessage.tool_calls`):
+在使用工具、[扩展思考](#extended-thinking) 和其他功能时，来自单个 Anthropic @[`AIMessage`] 的内容可以是单个字符串，也可以是 Anthropic 内容块的列表。例如，当 Anthropic 模型调用工具时，工具调用是消息内容的一部分（同时也通过标准化的 `AIMessage.tool_calls` 暴露出来）：
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -193,14 +193,13 @@ response.content
   'type': 'tool_use'}]
 ```
 
-Using `content_blocks` will render the content in LangChain's standard format that is consistent across other model providers. Read more about [content blocks](/oss/langchain/messages#standard-content-blocks).
+使用 `content_blocks` 将会以与其它模型提供商保持一致的 LangChain 标准格式渲染内容。请阅读更多关于 [内容块](/oss/langchain/messages#standard-content-blocks) 的信息。
 
 ```python
 response.content_blocks
 ```
 
-You can also access tool calls specifically in a standard format using the
-`tool_calls` attribute:
+您也可以使用 `tool_calls` 属性以标准格式访问工具调用：
 
 ```python
 ai_msg.tool_calls
@@ -215,17 +214,17 @@ ai_msg.tool_calls
   'id': 'toolu_012kz4qHZQqD4qg8sFPeKqpP'}]
 ```
 
-## Multimodal
+## 多模态 (Multimodal)
 
-Claude supports image and PDF inputs as content blocks, both in Anthropic's native format (see docs for [vision](https://platform.claude.com/docs/en/build-with-claude/vision#base64-encoded-image-example) and [PDF support](https://platform.claude.com/docs/en/build-with-claude/pdf-support) as well as LangChain's [standard format](/oss/langchain/messages#multimodal).
+Claude 支持图像和 PDF 输入作为内容块，既可以使用 Anthropic 的原生格式（请参阅 [Vision](https://platform.claude.com/docs/en/build-with-claude/vision#base64-encoded-image-example) 和 [PDF 支持](https://platform.claude.com/docs/en/build-with-claude/pdf-support) 文档）也可以使用 LangChain 的 [标准格式](/oss/langchain/messages#multimodal)。
 
-### Files API
+### 文件 API (Files API)
 
-In addition to base64 data, Claude supports interactions with files through its managed [Files API](https://platform.claude.com/docs/en/build-with-claude/files).
+除了 base64 数据外，Claude 还支持通过其托管的 [文件 API](https://platform.claude.com/docs/en/build-with-claude/files) 与文件进行交互。
 
-The Files API can be used to upload files to a container for use with Claude's built-in code-execution tools. See the [code execution](#code-execution) section below, for details.
+文件 API 可用于将文件上传到容器中，供 Claude 内置的代码执行工具使用。有关详细信息，请参阅下面的[代码执行](#code-execution)部分。
 
-<Accordion title="Upload images">
+<Accordion title="上传图像">
 
 ```python
 import anthropic
@@ -234,13 +233,13 @@ from langchain_anthropic import ChatAnthropic
 
 client = anthropic.Anthropic()
 file = client.beta.files.upload(
-    # Supports image/jpeg, image/png, image/gif, image/webp
+    # 支持 image/jpeg, image/png, image/gif, image/webp
     file=("image.png", open("/path/to/image.png", "rb"), "image/png"),
 )
 image_file_id = file.id
 
 
-# Run inference
+# 运行推理
 model = ChatAnthropic(
     model="claude-sonnet-4-5-20250929",
     betas=["files-api-2025-04-14"],
@@ -264,7 +263,7 @@ model.invoke([input_message])
 
 </Accordion>
 
-<Accordion title="Upload PDFs">
+<Accordion title="上传 PDFs">
 
 ```python
 import anthropic
@@ -278,7 +277,7 @@ file = client.beta.files.upload(
 pdf_file_id = file.id
 
 
-# Run inference
+# 运行推理
 model = ChatAnthropic(
     model="claude-sonnet-4-5-20250929",
     betas=["files-api-2025-04-14"],
@@ -296,15 +295,15 @@ model.invoke([input_message])
 
 </Accordion>
 
-## Extended thinking
+## 扩展思考 (Extended thinking)
 
-Some Claude models support an [extended thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking) feature, which will output the step-by-step reasoning process that led to its final answer.
+一些 Claude 模型支持[扩展思考](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)功能，它将输出导致最终答案的分步推理过程。
 
-See compatible models in the [Claude documentation](https://platform.claude.com/docs/en/build-with-claude/extended-thinking#supported-models).
+请参阅 [Claude 文档](https://platform.claude.com/docs/en/build-with-claude/extended-thinking#supported-models) 以了解兼容的模型。
 
-To use extended thinking, specify the `thinking` parameter when initializing @[`ChatAnthropic`]. If needed, it can also be passed in as a parameter during invocation.
+要使用扩展思考，请在初始化 @[`ChatAnthropic`] 时指定 `thinking` 参数。如果需要，也可以在调用过程中作为参数传入。
 
-You will need to specify a token budget to use this feature. See usage example below:
+您需要指定一个 token 预算才能使用此功能。请参阅下面的使用示例：
 
 <CodeGroup>
 
@@ -352,13 +351,13 @@ print(json.dumps(response.content_blocks, indent=2))
 ]
 ```
 
-## Prompt caching
+## Prompt 缓存
 
-Anthropic supports [caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) of elements of your prompts, including messages, tool definitions, tool results, images and documents. This allows you to re-use large documents, instructions, [few-shot documents](/langsmith/create-few-shot-evaluators), and other data to reduce latency and costs.
+Anthropic 支持对提示的元素进行[缓存](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)，包括消息、工具定义、工具结果、图像和文档。这允许您重用大型文档、指令、[少样本文档](/langsmith/create-few-shot-evaluators)和其他数据，以减少延迟和成本。
 
-To enable caching on an element of a prompt, mark its associated content block using the `cache_control` key. See examples below:
+要在提示的元素上启用缓存，请使用 `cache_control` 键标记其关联的内容块。请参阅下面的示例：
 
-### Messages
+### 消息 (Messages)
 
 ```python expandable
 import requests
@@ -413,9 +412,9 @@ Second:
 ```
 
 <Tip>
-**Extended caching**
+**扩展缓存**
 
-    The cache lifetime is 5 minutes by default. If this is too short, you can apply one hour caching by enabling the `"extended-cache-ttl-2025-04-11"` beta header and specifying `"cache_control": {"type": "ephemeral", "ttl": "1h"}`:
+    缓存的有效期默认为 5 分钟。如果这太短，您可以通过启用 `"extended-cache-ttl-2025-04-11"` beta 标头并指定 `"cache_control": {"type": "ephemeral", "ttl": "1h"}` 来应用一小时的缓存：
 
     ```python
     model = ChatAnthropic(
@@ -424,7 +423,7 @@ Second:
     )
     ```
 
-    Details of cached token counts will be included on the @[`InputTokenDetails`] of response's @[`usage_metadata`][UsageMetadata]:
+    缓存的 Token 计数详情将包含在响应的 @[`usage_metadata`][UsageMetadata] 的 @[`InputTokenDetails`] 中：
 
     ```python
     response = model.invoke(messages)
@@ -446,7 +445,7 @@ Second:
 
 </Tip>
 
-### Tools
+### 工具 (Tools)
 
 ```python expandable
 from langchain_anthropic import convert_to_anthropic_tool
@@ -492,15 +491,15 @@ Second:
 {'cache_read': 1809, 'cache_creation': 0}
 ```
 
-### Incremental caching in conversational applications
+### 对话应用中的增量缓存 (Incremental caching in conversational applications)
 
-Prompt caching can be used in [multi-turn conversations](https://platform.claude.com/docs/en/build-with-claude/prompt-caching#continuing-a-multi-turn-conversation) to maintain context from earlier messages without redundant processing.
+提示缓存可用于[多轮对话](https://platform.claude.com/docs/en/build-with-claude/prompt-caching#continuing-a-multi-turn-conversation)，以在不重复处理先前消息内容的情况下保持上下文。
 
-We can enable incremental caching by marking the final message with `cache_control`. Claude will automatically use the longest previously-cached prefix for follow-up messages.
+我们可以通过标记最后一条消息的 `cache_control` 来启用增量缓存。Claude 将自动使用最长预缓存的前缀来进行后续消息。
 
-Below, we implement a simple chatbot that incorporates this feature. We follow the LangChain [chatbot tutorial](/oss/langchain/quickstart), but add a custom [reducer](/oss/langgraph/graph-api#reducers) that automatically marks the last content block in each user message with `cache_control`:
+下面，我们实现一个简单的聊天机器人，它结合了此功能。我们遵循 LangChain [聊天机器人教程](/oss/langchain/quickstart)，但添加了一个自定义[归约器](/oss/langgraph/graph-api#reducers)，它会自动标记用户消息中的最后一个内容块 `cache_control`：
 
-<Accordion title="Chatbot with incremental prompt caching">
+<Accordion title="带增量提示缓存的聊天机器人">
     ```python expandable
     import requests
     from langchain_anthropic import ChatAnthropic
@@ -624,22 +623,22 @@ Below, we implement a simple chatbot that incorporates this feature. We follow t
     {'cache_read': 1498, 'cache_creation': 269}
     ```
 
-    In the [LangSmith trace](https://smith.langchain.com/public/4d0584d8-5f9e-4b91-8704-93ba2ccf416a/r), toggling "raw output" will show exactly what messages are sent to the chat model, including `cache_control` keys.
+    在 [LangSmith 跟踪](https://smith.langchain.com/public/4d0584d8-5f9e-4b91-8704-93ba2ccf416a/r)中，切换“原始输出”将显示精确发送到聊天模型的消息，包括 `cache_control` 键。
 </Accordion>
 
-## Strict tool use
+## 严格的工具使用 (Strict tool use)
 
 <Info>
-Strict tool use requires:
-- Claude Sonnet 4.5 or Opus 4.1.
+严格的工具使用要求：
+- Claude Sonnet 4.5 或 Opus 4.1。
 - `langchain-anthropic>=1.1.0`
 </Info>
 
-Anthropic supports opt-in [strict schema adherence to tool calls](https://platform.claude.com/docs/en/build-with-claude/structured-outputs). This guarantees that tool names and arguments are validated and correctly typed.
+Anthropic 支持[工具调用严格的 Schema 遵循](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)的 opt-in 功能。这保证了工具名称和参数经过验证并具有正确的类型。
 
-To enable strict tool use:
-1. Specify the `structured-outputs-2025-11-13` beta header
-2. Specify `strict=True` when calling [bind_tools](/oss/langchain/models#tool-calling).
+要启用严格的工具使用：
+1. 指定 `structured-outputs-2025-11-13` beta 标头
+2. 在调用 [bind_tools](/oss/langchain/models#tool-calling) 时指定 `strict=True`。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -657,13 +656,13 @@ model_with_tools = model.bind_tools([get_weather], strict=True)  # [!code highli
 ```
 
 
-## Token-efficient tool use
+## Token 效率高的工具使用 (Token-efficient tool use)
 
-Anthropic supports a [token-efficient tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/token-efficient-tool-use) feature. It is supported by default on all Claude 4 models.
+Anthropic 支持[Token 效率高的工具使用](https://platform.claude.com/docs/en/agents-and-tools/tool-use/token-efficient-tool-use)功能。它在所有 Claude 4 模型上默认受支持。
 
-To use it with Claude 3.7, specify the `token-efficient-tools-2025-02-19` beta-header when instantiating the model, as shown below:
+要与 Claude 3.7 一起使用它，请在实例化模型时指定 `token-efficient-tools-2025-02-19` beta 标头，如下所示：
 
-<Accordion title="Enabling token-efficient tool use with Claude 3.7">
+<Accordion title="使用 Claude 3.7 启用 Token 效率高的工具使用">
 ```python
 from langchain_anthropic import ChatAnthropic
 from langchain.tools import tool
@@ -693,15 +692,15 @@ Total tokens: 408
 ```
 </Accordion>
 
-## Citations
+## 引用 (Citations)
 
-Anthropic supports a [citations](https://platform.claude.com/docs/en/build-with-claude/citations) feature that lets Claude attach context to its answers based on source documents supplied by the user.
+Anthropic 支持[引用](https://platform.claude.com/docs/en/build-with-claude/citations)功能，该功能允许 Claude 根据用户提供的源文档来附加上下文到其答案。
 
-When [document](https://platform.claude.com/docs/en/build-with-claude/citations#document-types) or `search_result` content blocks with `"citations": {"enabled": True}` are included in a query, Claude may generate citations in its response.
+当查询中包含带有 `"citations": {"enabled": True}` 的[文档](https://platform.claude.com/docs/en/build-with-claude/citations#document-types)或 `search_result` 内容块时，Claude 可能会在其响应中生成引用。
 
-### Simple example
+### 简单示例
 
-In this example we pass a [plain text document](https://platform.claude.com/docs/en/build-with-claude/citations#plain-text-documents). In the background, Claude [automatically chunks](https://platform.claude.com/docs/en/build-with-claude/citations#plain-text-documents) the input text into sentences, which are used when generating citations.
+在此示例中，我们传递了一个[纯文本文档](https://platform.claude.com/docs/en/build-with-claude/citations#plain-text-documents)。在后台，Claude 会自动将输入文本[分块](https://platform.claude.com/docs/en/build-with-claude/citations#plain-text-documents)成句子，这些句子用于生成引用。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -753,11 +752,11 @@ response.content
  {'text': '.', 'type': 'text'}]
 ```
 
-### In tool results (agentic RAG)
+### 工具结果中（代理 RAG）
 
-Claude supports a [search_result](https://platform.claude.com/docs/en/build-with-claude/search-results) content block representing citable results from queries against a knowledge base or other custom source. These content blocks can be passed to claude both top-line (as in the above example) and within a tool result. This allows Claude to cite elements of its response using the result of a tool call.
+Claude 支持 `search_result` 内容块，代表从知识库或其它自定义源查询的可引用结果。这些内容块可以按顶层（如上例所示）或在工具结果内传递给 Claude。这使得 Claude 能够使用工具调用的结果来引用其响应中的元素。
 
-To pass search results in response to tool calls, define a tool that returns a list of `search_result` content blocks in Anthropic's native format. For example:
+要在响应工具调用时传递搜索结果，请定义一个返回 Anthropic 原生格式 `search_result` 内容块列表的工具。例如：
 
 ```python
 def retrieval_tool(query: str) -> list[dict]:
@@ -780,10 +779,10 @@ def retrieval_tool(query: str) -> list[dict]:
     ]
 ```
 
-<Accordion title="End to end example with LangGraph">
+<Accordion title="带 LangGraph 的端到端示例">
 
-Here we demonstrate an end-to-end example in which we populate a LangChain [vector store](/oss/integrations/vectorstores/) with sample documents and equip Claude with a tool that queries those documents.
-The tool here takes a search query and a `category` string literal, but any valid tool signature can be used.
+在此示例中，我们使用 LangChain [向量存储](/oss/integrations/vectorstores/)填充样本文档，并为 Claude 提供一个查询这些文档的工具。
+此处的工具接受一个搜索查询和一个 `category` 字符串字面量，但可以使用任何有效的工具签名。
 
 ```python
 from typing import Literal
@@ -888,9 +887,9 @@ async for step in agent.astream(
 
 </Accordion>
 
-### Using with text splitters
+### 与文本分割器一起使用
 
-Anthropic also lets you specify your own splits using [custom document](https://platform.claude.com/docs/en/build-with-claude/citations#custom-content-documents) types. LangChain [text splitters](/oss/integrations/splitters/) can be used to generate meaningful splits for this purpose. See the below example, where we split the LangChain `README.md` (a markdown document) and pass it to Claude as context:
+Anthropic 还允许您使用[自定义文档](https://platform.claude.com/docs/en/build-with-claude/citations#custom-content-documents)类型来指定自己的分割。LangChain [文本分割器](/oss/integrations/splitters/)可用于生成有意义的分割，以将其作为上下文传递给 Claude。请参阅下面的示例，其中我们分割了 LangChain 的 `README.md`（一个 markdown 文档）并将其作为上下文传递给 Claude：
 
 ```python expandable
 import requests
@@ -936,14 +935,14 @@ model = ChatAnthropic(model="claude-haiku-4-5-20251001")
 response = model.invoke([message])
 ```
 
-## Context management
+## 上下文管理
 
-Anthropic supports a context editing feature that will automatically manage the model's context window (e.g., by clearing tool results).
+Anthropic 支持上下文编辑功能，该功能将自动管理模型的上下文窗口（例如，通过清除工具结果）。
 
-See the [Claude documentation](https://platform.claude.com/docs/en/build-with-claude/context-editing) for details and configuration options.
+有关详细信息和配置选项，请参阅[Claude 文档](https://platform.claude.com/docs/en/build-with-claude/context-editing)。
 
 <Info>
-    **Context management is supported since `langchain-anthropic>=0.3.21`**
+    **上下文管理自 `langchain-anthropic>=0.3.21` 起受支持**
 </Info>
 
 ```python
@@ -959,23 +958,23 @@ model_with_tools = model.bind_tools([{"type": "web_search_20250305", "name": "we
 response = model_with_tools.invoke("Search for recent developments in AI")
 ```
 
-## Structured output
+## 结构化输出 (Structured output)
 
 <Info>
-Structured output requires:
-- Claude Sonnet 4.5 or Opus 4.1.
+结构化输出要求：
+- Claude Sonnet 4.5 或 Opus 4.1。
 - `langchain-anthropic>=1.1.0`
 </Info>
 
-Anthropic supports a native [structured output feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs), which guarantees that its responses adhere to a given schema.
+Anthropic 支持原生的[结构化输出功能](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)，可确保其响应遵循给定的 Schema。
 
-You can access this feature in individual model calls, or by specifying the [response format](/oss/langchain/structured-output) of a LangChain [agent](/oss/langchain/agents). See below for examples.
+您可以在单个模型调用中访问此功能，也可以通过指定 LangChain [代理](/oss/langchain/agents)的[响应格式](/oss/langchain/structured-output)来访问。请参阅下面的示例。
 
-<Accordion title="Individual model calls">
+<Accordion title="单个模型调用">
 
-Use the [`with_structured_output`](/oss/langchain/models#structured-output) method to generate a structured model response. Specify `method="json_schema"` to enable Anthropic's native structured output feature; otherwise the method defaults to using function calling.
+使用 [`with_structured_output`](/oss/langchain/models#structured-output) 方法生成结构化模型响应。指定 `method="json_schema"` 以启用 Anthropic 的原生结构化输出功能；否则该方法默认为使用函数调用。
 
-Note that we set the `structured-outputs-2025-11-13` beta header.
+请注意，我们设置了 `structured-outputs-2025-11-13` beta 标头。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -1000,9 +999,9 @@ print(response)  # Movie(title="Inception", year=2010, director="Christopher Nol
 
 </Accordion>
 
-<Accordion title="Agent response format">
+<Accordion title="代理响应格式">
 
-Specify `response_format` with [`ProviderStrategy`](/oss/langchain/agents#providerstrategy) to engage Anthropic's structured output feature when generating its final response.
+指定 `response_format` 和 [`ProviderStrategy`](/oss/langchain/agents#providerstrategy) 可在生成最终响应时激活 Anthropic 的结构化输出功能。
 
 ```python
 from langchain.agents import create_agent
@@ -1033,16 +1032,16 @@ print(result["structured_response"])
 
 </Accordion>
 
-## Built-in tools
+## 内置工具 (Built-in tools)
 
-Anthropic supports a variety of [built-in tools](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool), which can be bound to the model in the [usual way](/oss/langchain/tools/). Claude will generate tool calls adhering to its internal schema for the tool.
+Anthropic 支持各种[内置工具](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool)，可以通过[常规方式](/oss/langchain/tools/)绑定到模型。Claude 将生成遵循其内部工具 Schema 的工具调用。
 
-### Web search
+### 网络搜索 (Web search)
 
-Claude can use a [web search tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool) to run searches and ground its responses with citations.
+Claude 可以使用[网络搜索工具](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)来运行搜索并用引用来支撑其响应。
 
 <Info>
-    **Web search tool is supported since `langchain-anthropic>=0.3.13`**
+    **Web search 工具自 `langchain-anthropic>=0.3.13` 起受支持**
 </Info>
 
 ```python
@@ -1056,9 +1055,9 @@ model_with_tools = model.bind_tools([tool])
 response = model_with_tools.invoke("How do I update a web app to TypeScript 5.5?")
 ```
 
-### Web fetching
+### 网络抓取 (Web fetching)
 
-Claude can use a [web fetching tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool) to run searches and ground its responses with citations.
+Claude 可以使用[网络抓取工具](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool)来运行搜索并用引用来支撑其响应。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -1077,21 +1076,21 @@ response = model_with_tools.invoke(
 ```
 
 <Warning>
-    You must add the `'web-fetch-2025-09-10'` beta header to use web fetching.
+    您必须添加 `'web-fetch-2025-09-10'` beta 标头才能使用网络抓取。
 </Warning>
 
-### Code execution
+### 代码执行 (Code execution)
 
-Claude can use a [code execution tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool) to execute code in a sandboxed environment.
+Claude 可以使用[代码执行工具](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool)在沙盒环境中执行代码。
 
 <Info>
-    Anthropic's 2025-08-25 code execution tools are supported since `langchain-anthropic>=1.0.3`.
+    Anthropic 的 2025-08-25 代码执行工具自 `langchain-anthropic>=1.0.3` 起受支持。
 
-    The legacy [2025-05-22](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#upgrade-to-latest-tool-version) tool is supported since `langchain-anthropic>=0.3.14`.
+    旧版 [2025-05-22](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#upgrade-to-latest-tool-version) 工具自 `langchain-anthropic>=0.3.14` 起受支持。
 </Info>
 
 <Note>
-    The code sandbox does not have internet access, thus you may only use packages that are pre-installed in the environment. See the [Claude docs](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#networking-and-security) for more info.
+    代码沙箱没有互联网访问权限，因此您只能使用预装在环境中的软件包。请参阅[Claude 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#networking-and-security)了解更多信息。
 </Note>
 
 ```python
@@ -1110,9 +1109,9 @@ response = model_with_tools.invoke(
 )
 ```
 
-<Accordion title="Use with Files API">
+<Accordion title="与文件 API 一起使用">
 
-Using the Files API, Claude can write code to access files for data analysis and other purposes. See example below:
+使用文件 API，Claude 可以编写代码来访问文件以进行数据分析和其它目的。请参阅以下示例：
 
 ```python
 import anthropic
@@ -1151,7 +1150,7 @@ input_message = {
 response = model_with_tools.invoke([input_message])
 ```
 
-Note that Claude may generate files as part of its code execution. You can access these files using the Files API:
+注意 Claude 可能会生成文件作为其代码执行的一部分。您可以使用文件 API 访问这些文件：
 
 ```python
 # Take all file outputs for demonstration purposes
@@ -1171,12 +1170,12 @@ for i, file_id in enumerate(file_ids):
 
 </Accordion>
 
-### Memory tool
+### 内存工具 (Memory tool)
 
-Claude supports a memory tool for client-side storage and retrieval of context across conversational threads. See docs [here](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool) for details.
+Claude 支持内存工具，用于在整个对话线程中进行客户端侧的上下文存储和检索。有关详细信息，请参阅[文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)。
 
 <Info>
-    **Anthropic's built-in memory tool is supported since `langchain-anthropic>=0.3.21`**
+    **Anthropic 的内置内存工具自 `langchain-anthropic>=0.3.21` 起受支持**
 </Info>
 
 ```python
@@ -1191,12 +1190,12 @@ model_with_tools = model.bind_tools([{"type": "memory_20250818", "name": "memory
 response = model_with_tools.invoke("What are my interests?")
 ```
 
-### Remote MCP
+### 远程 MCP
 
-Claude can use a [MCP connector tool](https://platform.claude.com/docs/en/agents-and-tools/mcp-connector) for model-generated calls to remote MCP servers.
+Claude 可以使用[MCP 连接器工具](https://platform.claude.com/docs/en/agents-and-tools/mcp-connector)，以生成对远程 MCP 服务器的调用。
 
 <Info>
-    **Remote MCP is supported since `langchain-anthropic>=0.3.14`**
+    **远程 MCP 自 `langchain-anthropic>=0.3.14` 起受支持**
 </Info>
 
 ```python
@@ -1227,9 +1226,9 @@ response = model.invoke(
 )
 ```
 
-### Text editor
+### 文本编辑器 (Text editor)
 
-The text editor tool can be used to view and modify text files. See docs [here](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool) for details.
+文本编辑器工具可用于查看和修改文本文件。有关详细信息，请参阅[此处](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool)的文档。
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -1259,6 +1258,6 @@ I'd be happy to help you fix the syntax error in your primes.py file. First, let
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all features and configuration options, head to the @[`ChatAnthropic`] API reference.
+有关所有功能和配置选项的详细文档，请前往 @[`ChatAnthropic`] API 参考。

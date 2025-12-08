@@ -2,17 +2,17 @@
 title: DeepInfra
 ---
 
-[DeepInfra](https://deepinfra.com/?utm_source=langchain) is a serverless inference as a service that provides access to a [variety of LLMs](https://deepinfra.com/models?utm_source=langchain) and [embeddings models](https://deepinfra.com/models?type=embeddings&utm_source=langchain). This notebook goes over how to use LangChain with DeepInfra for chat models.
+[DeepInfra](https://deepinfra.com/?utm_source=langchain) 是一个即用型（serverless）推理即服务平台，它提供了对各种 [LLM 模型](https://deepinfra.com/models?utm_source=langchain) 和 [嵌入模型](https://deepinfra.com/models?type=embeddings&utm_source=langchain) 的访问。本示例将介绍如何将 LangChain 与 DeepInfra 结合用于聊天模型。
 
-## Set the Environment API Key
+## 设置环境变量 API 密钥
 
-Make sure to get your API key from DeepInfra. You have to [Login](https://deepinfra.com/login?from=%2Fdash) and get a new token.
+请确保您已从 DeepInfra 获取 API 密钥。您需要 [登录](https://deepinfra.com/login?from=%2Fdash) 才能获取新的令牌。
 
-You are given a 1 hour free of serverless GPU compute to test different models. (see [here](https://github.com/deepinfra/deepctl#deepctl))
-You can print your token with `deepctl auth token`
+平台会为您提供 1 小时的免费服务器 GPU 计算时间，用于测试不同的模型（参见 [这里](https://github.com/deepinfra/deepctl#deepctl)）。
+您可以使用 `deepctl auth token` 命令打印您的令牌。
 
 ```python
-# get a new token: https://deepinfra.com/login?from=%2Fdash
+# 获取新令牌的链接: https://deepinfra.com/login?from=%2Fdash
 
 import os
 from getpass import getpass
@@ -22,7 +22,7 @@ from langchain.messages import HumanMessage
 
 DEEPINFRA_API_TOKEN = getpass()
 
-# or pass deepinfra_api_token parameter to the ChatDeepInfra constructor
+# 或者将 deepinfra_api_token 参数传递给 ChatDeepInfra 构造函数
 os.environ["DEEPINFRA_API_TOKEN"] = DEEPINFRA_API_TOKEN
 
 chat = ChatDeepInfra(model="meta-llama/Llama-2-7b-chat-hf")
@@ -35,7 +35,7 @@ messages = [
 chat.invoke(messages)
 ```
 
-## `ChatDeepInfra` also supports async and streaming functionality
+## `ChatDeepInfra` 也支持异步和流式传输功能
 
 ```python
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
@@ -54,11 +54,11 @@ chat = ChatDeepInfra(
 chat.invoke(messages)
 ```
 
-# Tool Calling
+# 工具调用（Tool Calling）
 
-DeepInfra currently supports only invoke and async invoke tool calling.
+DeepInfra 目前仅支持 `invoke` 和 `ainvoke` 方式的工具调用。
 
-For a complete list of models that support tool calling, please refer to our [tool calling documentation](https://deepinfra.com/docs/advanced/function_calling).
+有关支持工具调用的模型的完整列表，请参阅我们的 [工具调用文档](https://deepinfra.com/docs/advanced/function_calling)。
 
 ```python
 import asyncio
@@ -74,19 +74,19 @@ model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
 _ = load_dotenv(find_dotenv())
 
 
-# LangChain tool
+# LangChain 工具
 @tool
 def foo(something):
     """
-    Called when foo
+    当调用 foo 时执行
     """
     pass
 
 
-# Pydantic class
+# Pydantic 类（用作工具）
 class Bar(BaseModel):
     """
-    Called when Bar
+    当调用 Bar 时执行
     """
 
     pass
@@ -109,7 +109,7 @@ async def call_ainvoke():
     print(result.tool_calls)
 
 
-# Async call
+# 异步调用
 asyncio.run(call_ainvoke())
 # [{'name': 'foo', 'args': {'something': None}, 'id': 'call_ZH7FetmgSot4LHcMU6CEb8tI'}, {'name': 'Bar', 'args': {}, 'id': 'call_2MQhDifAJVoijZEvH8PeFSVB'}]
 ```

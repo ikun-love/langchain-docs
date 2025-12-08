@@ -1,17 +1,17 @@
 ---
-title: Cohere Rerank
+title: Cohere 重排序 (Rerank)
 ---
 
-Reranking documents can greatly improve any RAG application and document retrieval system.
+对文档进行重排序 (Reranking) 可以极大地改进任何 RAG 应用和文档检索系统。
 
-At a high level, a rerank API is a language model which analyzes documents and reorders them based on their relevance to a given query.
+从宏观角度看，重排序 API 是一个语言模型，它分析文档，并根据文档与给定查询的相关性对它们重新排序。
 
-Cohere offers an API for reranking documents. In this example we'll show you how to use it.
+Cohere 提供了一个用于文档重排序的 API。在这个示例中，我们将向您展示如何使用它。
 
-## Setup
+## 设置 (Setup)
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+请参阅 [此部分](/oss/langchain/install) 获取安装 LangChain 包的通用说明。
 </Tip>
 
 ```bash npm
@@ -22,32 +22,32 @@ npm install @langchain/cohere @langchain/core
 import { CohereRerank } from "@langchain/cohere";
 import { Document } from "@langchain/core/documents";
 
-const query = "What is the capital of the United States?";
+const query = "What is the capital of the United States?"; // “美国的（首都在哪里）？”
 const docs = [
   new Document({
     pageContent:
-      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.",
+      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.", // 卡森城是美国内华达州的首府。根据 2010 年美国人口普查，卡森城的人口为 55,274。
   }),
   new Document({
     pageContent:
-      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.",
+      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.", // 北马里亚纳群岛联邦是太平洋中的一群岛屿，是美国控制的政治实体。其首都是塞班岛。
   }),
   new Document({
     pageContent:
-      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.",
+      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.", // 夏洛特阿马利亚是美属维尔京群岛的首府和最大城市。它大约有 20,000 人。该城市位于圣托马斯岛上。
   }),
   new Document({
     pageContent:
-      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.",
+      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.", // 华盛顿哥伦比亚特区（通常简称为华盛顿或 D.C.，官方名称为哥伦比亚特区）是美国的首都。它是一个联邦直辖区。美国总统和许多主要的国家政府机构都在该地区。这使其成为美利坚合众国的政治中心。
   }),
   new Document({
     pageContent:
-      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.",
+      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.", // 死刑（终身监禁）在美国建国前就已存在。截至 2017 年，死刑在美国 50 个州中的 30 个州是合法的。联邦政府（包括美国军方）也使用死刑。
   }),
 ];
 
 const cohereRerank = new CohereRerank({
-  apiKey: process.env.COHERE_API_KEY, // Default
+  apiKey: process.env.COHERE_API_KEY, // 默认值
   model: "rerank-english-v2.0",
 });
 
@@ -67,41 +67,41 @@ console.log(rerankedDocuments);
  */
 ```
 
-Here, we can see the `.rerank()` method returns just the index of the documents (matching the indexes of the input documents) and their relevancy scores.
+在这里，我们可以看到 `.rerank()` 方法只返回文档的索引（与输入文档的索引相匹配）及其相关性分数。
 
-If we'd like to have the documents returned from the method itself, we can use the `.compressDocuments()` method.
+如果我们希望从该方法本身返回排序后的文档，我们可以使用 `.compressDocuments()` 方法。
 
 ```typescript
 import { CohereRerank } from "@langchain/cohere";
 import { Document } from "@langchain/core/documents";
 
-const query = "What is the capital of the United States?";
+const query = "What is the capital of the United States?"; // “美国的（首都在哪里）？”
 const docs = [
   new Document({
     pageContent:
-      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.",
+      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.", // 卡森城是美国内华达州的首府。根据 2010 年美国人口普查，卡森城的人口为 55,274。
   }),
   new Document({
     pageContent:
-      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.",
+      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.", // 北马里亚纳群岛联邦是太平洋中的一群岛屿，是美国控制的政治实体。其首都是塞班岛。
   }),
   new Document({
     pageContent:
-      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.",
+      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.", // 夏洛特阿马利亚是美属维尔京群岛的首府和最大城市。它大约有 20,000 人。该城市位于圣托马斯岛上。
   }),
   new Document({
     pageContent:
-      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.",
+      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.", // 华盛顿哥伦比亚特区（通常简称为华盛顿或 D.C.，官方名称为哥伦比亚特区）是美国的首都。它是一个联邦直辖区。美国总统和许多主要的国家政府机构都在该地区。这使其成为美利坚合众国的政治中心。
   }),
   new Document({
     pageContent:
-      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.",
+      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.", // 死刑（终身监禁）在美国建国前就已存在。截至 2017 年，死刑在美国 50 个州中的 30 个州是合法的。联邦政府（包括美国军方）也使用死刑。
   }),
 ];
 
 const cohereRerank = new CohereRerank({
-  apiKey: process.env.COHERE_API_KEY, // Default
-  topN: 3, // Default
+  apiKey: process.env.COHERE_API_KEY, // 默认值
+  topN: 3, // 默认值
   model: "rerank-english-v2.0",
 });
 
@@ -126,51 +126,51 @@ console.log(rerankedDocuments);
  */
 ```
 
-From the results, we can see it returned the top 3 documents, and assigned a `relevanceScore` to each.
+从结果中，我们可以看到它返回了排名前 3 的文档，并为每个文档分配了一个 `relevanceScore`（相关性分数）。
 
-As expected, the document with the highest `relevanceScore` is the one that references Washington, D.C., with a score of `98.7%`!
+正如预期的那样，相关性分数最高的文档是引用了华盛顿特区的文档，得分为 `98.7%`！
 
-### Usage with `CohereClient`
+### 与 `CohereClient` 的用法
 
-If you are using Cohere on Azure, AWS Bedrock or a standalone instance you can use the `CohereClient` to create a `CohereRerank` instance with your endpoint.
+如果您在 Azure、AWS Bedrock 或独立实例上使用 Cohere，您可以使用 `CohereClient` 来创建一个带有您的端点（endpoint）的 `CohereRerank` 实例。
 
 ```typescript
 import { CohereRerank } from "@langchain/cohere";
 import { CohereClient } from "cohere-ai";
 import { Document } from "@langchain/core/documents";
 
-const query = "What is the capital of the United States?";
+const query = "What is the capital of the United States?"; // “美国的（首都在哪里）？”
 const docs = [
   new Document({
     pageContent:
-      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.",
+      "Carson City is the capital city of the American state of Nevada. At the 2010 United States Census, Carson City had a population of 55,274.", // 卡森城是美国内华达州的首府。根据 2010 年美国人口普查，卡森城的人口为 55,274。
   }),
   new Document({
     pageContent:
-      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.",
+      "The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.", // 北马里亚纳群岛联邦是太平洋中的一群岛屿，是美国控制的政治实体。其首都是塞班岛。
   }),
   new Document({
     pageContent:
-      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.",
+      "Charlotte Amalie is the capital and largest city of the United States Virgin Islands. It has about 20,000 people. The city is on the island of Saint Thomas.", // 夏洛特阿马利亚是美属维尔京群岛的首府和最大城市。它大约有 20,000 人。该城市位于圣托马斯岛上。
   }),
   new Document({
     pageContent:
-      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.",
+      "Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.", // 华盛顿哥伦比亚特区（通常简称为华盛顿或 D.C.，官方名称为哥伦比亚特区）是美国的首都。它是一个联邦直辖区。美国总统和许多主要的国家政府机构都在该地区。这使其成为美利坚合众国的政治中心。
   }),
   new Document({
     pageContent:
-      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.",
+      "Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.", // 死刑（终身监禁）在美国建国前就已存在。截至 2017 年，死刑在美国 50 个州中的 30 个州是合法的。联邦政府（包括美国军方）也使用死刑。
   }),
 ];
 
 const client = new CohereClient({
   token: process.env.COHERE_API_KEY,
-  environment: "<your-cohere-deployment-url>", // optional
+  environment: "<your-cohere-deployment-url>", // 可选
   // other params
 });
 
 const cohereRerank = new CohereRerank({
-  client, // apiKey will be ignored even if provided
+  client, // 如果提供了 client，则会忽略 apiKey
   model: "rerank-english-v2.0",
 });
 

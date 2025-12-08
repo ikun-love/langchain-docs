@@ -1,47 +1,46 @@
 ---
-title: How to define an LLM-as-a-judge evaluator
-sidebarTitle: LLM-as-a-judge evaluator
+title: 如何定义一个 LLM-as-a-judge 评估器
+sidebarTitle: LLM-as-a-judge 评估器
 ---
 
 <Info>
-* [LLM-as-a-judge evaluator](/langsmith/evaluation-concepts#llm-as-judge)
+* [LLM-as-a-judge 评估器](/langsmith/evaluation-concepts#llm-as-judge)
 </Info>
 
-LLM applications can be challenging to evaluate since they often generate conversational text with no single correct answer.
+LLM 应用的评估可能具有挑战性，因为它们通常生成的是对话式文本，不存在唯一的正确答案。
 
-This guide shows you how to define an LLM-as-a-judge evaluator for [offline evaluation](/langsmith/evaluation-concepts#offline-evaluation) using either the LangSmith SDK or the UI. Note: To run evaluations in real-time on your production traces, refer to [setting up online evaluations](/langsmith/online-evaluations#configure-llm-as-judge-evaluators).
+本指南将向您展示如何使用 LangSmith SDK 或 UI 为[离线评估](/langsmith/evaluation-concepts#offline-evaluation)定义一个 LLM-as-a-judge 评估器。注意：要在生产跟踪中实时运行评估，请参阅[设置在线评估](/langsmith/online-evaluations#configure-llm-as-judge-evaluators)。
 
 ## SDK
 
-### Pre-built evaluators
+### 预构建的评估器
 
-Pre-built evaluators are a useful starting point for setting up evaluations. Refer to [pre-built evaluators](/langsmith/prebuilt-evaluators) for how to use pre-built evaluators with LangSmith.
+预构建的评估器是设置评估的有用起点。有关如何将预构建评估器与 LangSmith 结合使用的信息，请参阅[预构建评估器](/langsmith/prebuilt-evaluators)。
 
-### Create your own LLM-as-a-judge evaluator
+### 创建您自己的 LLM-as-a-judge 评估器
 
-For complete control of evaluator logic, create your own LLM-as-a-judge evaluator and run it using the LangSmith SDK ([Python](https://docs.smith.langchain.com/reference/python/reference) / [TypeScript](https://docs.smith.langchain.com/reference/js)).
+为了完全控制评估器的逻辑，请创建您自己的 LLM-as-a-judge 评估器，并使用 LangSmith SDK（[Python](https://docs.smith.langchain.com/reference/python/reference) / [TypeScript](https://docs.smith.langchain.com/reference/js)）运行它。
 
-Requires `langsmith>=0.2.0`
+需要 `langsmith>=0.2.0`
 
 ```python
 from langsmith import evaluate, traceable, wrappers, Client
 from openai import OpenAI
-# Assumes you've installed pydantic
+# 假设您已经安装了 pydantic
 from pydantic import BaseModel
 
-# Optionally wrap the OpenAI client to trace all model calls.
+# 可选：包装 OpenAI 客户端以跟踪所有模型调用。
 oai_client = wrappers.wrap_openai(OpenAI())
 
 def valid_reasoning(inputs: dict, outputs: dict) -> bool:
-    """Use an LLM to judge if the reasoning and the answer are consistent."""
+    """使用 LLM 判断推理和答案是否一致。"""
     instructions = """
-Given the following question, answer, and reasoning, determine if the reasoning
-for the answer is logically valid and consistent with the question and the answer."""
+根据以下问题、答案和推理，判断答案的推理是否在逻辑上有效，并且与问题和答案保持一致。"""
 
     class Response(BaseModel):
         reasoning_is_valid: bool
 
-    msg = f"Question: {inputs['question']}\nAnswer: {outputs['answer']}\nReasoning: {outputs['reasoning']}"
+    msg = f"问题: {inputs['question']}\n答案: {outputs['answer']}\n推理: {outputs['reasoning']}"
     response = oai_client.beta.chat.completions.parse(
         model="gpt-4o",
         messages=[{"role": "system", "content": instructions,}, {"role": "user", "content": msg}],
@@ -49,16 +48,16 @@ for the answer is logically valid and consistent with the question and the answe
     )
     return response.choices[0].message.parsed.reasoning_is_valid
 
-# Optionally add the 'traceable' decorator to trace the inputs/outputs of this function.
+# 可选：添加 'traceable' 装饰器以跟踪此函数的输入/输出。
 @traceable
 def dummy_app(inputs: dict) -> dict:
-    return {"answer": "hmm i'm not sure", "reasoning": "i didn't understand the question"}
+    return {"answer": "嗯，我不确定", "reasoning": "我没有理解这个问题"}
 
 ls_client = Client()
 dataset = ls_client.create_dataset("big questions")
 examples = [
-    {"inputs": {"question": "how will the universe end"}},
-    {"inputs": {"question": "are we alone"}},
+    {"inputs": {"question": "宇宙将如何终结"}},
+    {"inputs": {"question": "我们是孤独的吗"}},
 ]
 ls_client.create_examples(dataset_id=dataset.id, examples=examples)
 
@@ -69,86 +68,86 @@ results = evaluate(
 )
 ```
 
-See [here](/langsmith/code-evaluator) for more on how to write a custom evaluator.
+有关如何编写自定义评估器的更多信息，请参阅[此处](/langsmith/code-evaluator)。
 
 ## UI
 
-### Pre-built evaluators
+### 预构建的评估器
 
-Pre-built evaluators are a useful starting point when setting up evaluations. The LangSmith UI supports the following pre-built evaluators:
+预构建的评估器是设置评估时的有用起点。LangSmith UI 支持以下预构建评估器：
 
-* **Hallucination**: Detect factually incorrect outputs. Requires a reference output.
-* **Correctness**: Check semantic similarity to a reference.
-* **Conciseness**: Evaluate whether an answer is a concise response to a question.
-* **Code checker**: Verify correctness of code answers.
+* **幻觉 (Hallucination)**：检测在事实层面上不正确的输出。需要一个参考输出。
+* **正确性 (Correctness)**：检查与参考的语义相似性。
+* **简洁性 (Conciseness)**：评估答案是否是对问题的简洁回应。
+* **代码检查器 (Code checker)**：验证代码答案的正确性。
 
-You can configure these evaluators::
+您可以在以下情况下配置这些评估器：
 
-* When running an evaluation using the [playground](/langsmith/observability-concepts#prompt-playground)
-* As part of a dataset to [automatically run evaluations on experiments](/langsmith/bind-evaluator-to-dataset)
-* When running an [online evaluation](/langsmith/online-evaluations#configure-llm-as-judge-evaluators)
+* 使用[ Playground](/langsmith/observability-concepts#prompt-playground) 运行评估时
+* 作为数据集的一部分，以便[自动对实验运行评估](/langsmith/bind-evaluator-to-dataset)
+* 运行[在线评估](/langsmith/online-evaluations#configure-llm-as-judge-evaluators)时
 
-## Customize your LLM-as-a-judge evaluator
+## 自定义您的 LLM-as-a-judge 评估器
 
-Add specific instructions for your LLM-as-a-judge evalutor prompt and configure which parts of the input/output/reference output should be passed to the evaluator.
+为您的 LLM-as-a-judge 评估器的提示添加特定指令，并配置应将输入/输出/参考输出的哪些部分传递给评估器。
 
 {/* ![playground-evaluator.gif](/langsmith/images/playground-evaluator.gif) */}
 
-### Select/create the evaluator
+### 选择/创建评估器
 
-* In the playground or from a dataset: Select the **+Evaluator** button
-* From a tracing project: Select **Add rules**, configure your rule and select **Apply evaluator**
+* 在 Playground 或数据集中：选择 **+Evaluator** 按钮
+* 在跟踪项目中：选择 **Add rules**，配置您的规则，然后选择 **Apply evaluator**
 
-Select the **Create your own evaluator option**. Alternatively, you may start by selecting a pre-built evaluator and editing it.
+选择 **Create your own evaluator** 选项。或者，您可以从选择一个预构建的评估器并对其进行编辑开始。
 
-### Configure the evaluator
+### 配置评估器
 
-#### Prompt
+#### Prompt（提示）
 
-Create a new prompt, or choose an existing prompt from the [prompt hub](/langsmith/prompt-engineering-quickstart).
+创建一个新提示，或从[提示中心](/langsmith/prompt-engineering-quickstart)选择一个现有提示。
 
-* **Create your own prompt**: Create a custom prompt inline.
+* **创建您自己的提示**：在内联创建自定义提示。
 
-* **Pull a prompt from the prompt hub**: Use the **Select a prompt** dropdown to select from an existing prompt. You can't edit these prompts directly within the prompt editor, but you can view the prompt and the schema it uses. To make changes, edit the prompt in the playground and commit the version, and then pull in your new prompt in the evaluator.
+* **从提示中心拉取提示**：使用 **Select a prompt** 下拉菜单从现有提示中进行选择。您不能直接在提示编辑器中编辑这些提示，但可以查看提示及其使用的 Schema。要进行更改，请在 Playground 中编辑提示并提交版本，然后将您的新提示引入评估器中。
 
-#### Model
+#### Model（模型）
 
-Select the desired model from the provided options.
+从提供的选项中选择所需的模型。
 
-#### Mapping variables
+#### Mapping variables（变量映射）
 
-Use variable mapping to indicate the variables that are passed into your evaluator prompt from your run or example. To aid with variable mapping, an example (or run) is provided for reference. Click on the the variables in your prompt and use the dropdown to map them to the relevant parts of the input, output, or reference output.
+使用变量映射来指示要从当前运行或示例传递到评估器提示中的变量。为了辅助变量映射，会提供一个示例（或运行）供您参考。单击提示中的变量，并使用下拉菜单将它们映射到输入、输出或参考输出的相关部分。
 
-To add prompt variables type the variable with double curly brackets `{{prompt_var}}` if using mustache formatting (the default) or single curly brackets `{prompt_var}` if using f-string formatting.
+要添加提示变量，如果使用 Mustache 格式（默认），则键入带有双花括号 `{{prompt_var}}` 的变量；如果使用 f-string 格式，则键入带有单花括号 `{prompt_var}` 的变量。
 
-You may remove variables as needed. For example if you are evaluating a metric such as conciseness, you typically don't need a reference output so you may remove that variable.
+您可以根据需要删除变量。例如，如果您正在评估简洁性等指标，通常不需要参考输出，因此可以删除该变量。
 
-#### Preview
+#### Preview（预览）
 
-Previewing the prompt will show you of what the formatted prompt will look like using the reference run and dataset example shown on the right.
+预览提示将显示使用右侧显示的参考运行和数据集示例格式化后的提示外观。
 
-#### Improve your evaluator with few-shot examples
+#### 通过少样本示例改进您的评估器
 
-To better align the LLM-as-a-judge evaluator to human preferences, LangSmith allows you to collect [human corrections](/langsmith/create-few-shot-evaluators#make-corrections) on evaluator scores. With this selection enabled, corrections are then inserted automatically as few-shot examples into your prompt.
+为了更好地使 LLM-as-a-judge 评估器与人类偏好保持一致，LangSmith 允许您收集[人类修正](/langsmith/create-few-shot-evaluators#make-corrections)来获取评估分数。启用此选择后，修正内容会自动作为少样本示例插入到您的提示中。
 
-Learn [how to set up few-shot examples and make corrections](/langsmith/create-few-shot-evaluators).
+了解[如何设置少样本示例和进行修正](/langsmith/create-few-shot-evaluators)。
 
-#### Feedback configuration
+#### Feedback configuration（反馈配置）
 
-Feedback configuration is the scoring criteria that your LLM-as-a-judge evaluator will use. Think of this as the rubric that your evaluator will grade based on. Scores will be added as [feedback](/langsmith/observability-concepts#feedback) to a run or example. Defining feedback for your evaluator:
+反馈配置是您的 LLM-as-a-judge 评估器将用于评分的标准。可以将其视为评估器将依据的评分细则。分数将作为[反馈](/langsmith/observability-concepts#feedback)添加到运行或示例中。定义评估器的反馈：
 
-1. **Name the feedback key**: This is the name that will appear when viewing evaluation results. Names should be unique across experiments.
+1. **命名反馈键 (Name the feedback key)**：这是在查看评估结果时将显示的名称。名称在不同实验中应是唯一的。
 
-2. **Add a description**: Describe what the feedback represents.
+2. **添加描述 (Add a description)**：描述反馈代表的内容。
 
-3. **Choose a feedback type**:
+3. **选择反馈类型 (Choose a feedback type)**：
 
-* **Boolean**: True/false feedback.
-* **Categorical**: Select from predefined categories.
-* **Continuous**: Numerical scoring within a specified range.
+* **布尔值 (Boolean)**：True/false 反馈。
+* **分类 (Categorical)**：从预定义的类别中进行选择。
+* **连续 (Continuous)**：在指定范围内进行数值评分。
 
-Behind the scenes, feedback configuration is added as [structured output](https://python.langchain.com/docs/concepts/structured_outputs/) to the LLM-as-a-judge prompt. If you're using an existing prompt from the hub, you must add an output schema to the prompt before configuring an evaluator to use it. Each top-level key in the output schema will be treated as a separate piece of feedback.
+在幕后，反馈配置会作为[结构化输出](https://python.langchain.com/docs/concepts/structured_outputs/)添加到 LLM-as-a-judge 提示中。如果您使用的是提示中心中的现有提示，则必须在配置评估器使用它**之前**向该提示添加输出 Schema。输出 Schema 中的每个顶级键都将被视为一个单独的反馈部分。
 
-### Save the evaluator
+### 保存评估器
 
-Once your are finished configuring, save your changes.
+完成配置后，保存您的更改。

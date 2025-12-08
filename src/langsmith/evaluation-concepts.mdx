@@ -1,299 +1,300 @@
 ---
-title: Evaluation concepts
-sidebarTitle: Concepts
+title: 评估概念
+sidebarTitle: 概念
 ---
 
-LLM outputs are non-deterministic, which makes response quality hard to assess. Evaluations (evals) are a way to breakdown what "good" looks like and measure it. LangSmith Evaluation provides a framework for measuring quality throughout the application lifecycle, from pre-deployment testing to production monitoring.
+LLM 的输出是非确定性的，这使得响应质量难以评估。评估（Evals）是一种分解“什么是好的”并衡量它的方法。LangSmith 评估提供了一个框架，用于在整个应用程序生命周期中衡量质量，从部署前测试到生产监控。
 
-## What to evaluate
+## 评估什么
 
-Before building evaluations, identify what matters for your application. Break down your system into its critical components—LLM calls, retrieval steps, tool invocations, output formatting—and determine quality criteria for each.
+在构建评估之前，请确定对您的应用程序什么最重要。将系统分解为关键组件——LLM 调用、检索步骤、工具调用、输出格式化——并为每个组件确定质量标准。
 
-**Start with manually curated examples.** Create 5-10 examples of what "good" looks like for each critical component. These examples serve as your ground truth and inform which evaluation approaches to use. For instance:
-- **RAG system**: Examples of good retrievals (relevant documents) and good answers (accurate, complete).
-- **Agent**: Examples of correct tool selection and proper argument formatting or trajectory that the agent took.
-- **Chatbot**: Examples of helpful, on-brand responses that address user intent.
+**从手动策划的示例开始。** 为每个关键组件创建 5-10 个“好”的示例。这些示例作为您的“黄金标准”（ground truth），并指导您使用哪种评估方法。例如：
+- **RAG 系统**：良好检索（相关文档）和良好答案（准确、完整）的示例。
+- **Agent（代理）**：正确工具选择、正确参数格式化或 Agent 所采取的轨迹的示例。
+- **Chatbot（聊天机器人）**：有帮助的、符合品牌调性的并能解决用户意图的响应示例。
 
-Once you've defined "good" through examples, you can measure how often your system produces similar quality outputs.
+一旦您通过示例定义了“好”的标准，您就可以衡量系统产生相似质量输出的频率。
 
-## Offline and online evaluations
+## 离线评估与在线评估
 
-LangSmith supports two types of evaluations that serve different purposes in your development workflow:
+LangSmith 支持两种类型的评估，它们在开发工作流程中服务于不同的目的：
 
-### Offline evaluations
+### 离线评估（Offline evaluations）
 
-<Icon icon="flask" iconType="solid" /> Use offline evaluations for **pre-deployment testing**:
-- **Benchmarking**: Compare multiple versions to find the best performer.
-- **Regression testing**: Ensure new versions don't degrade quality.
-- **Unit testing**: Verify correctness of individual components.
-- **Backtesting**: Test new versions against historical data.
+<Icon icon="flask" iconType="solid" /> 将离线评估用于**部署前测试**：
+- **基准测试（Benchmarking）**：比较多个版本以找到性能最佳者。
+- **回归测试（Regression testing）**：确保新版本不会导致质量下降。
+- **单元测试（Unit testing）**：验证单个组件的正确性。
+- **回溯测试（Backtesting）**：使用历史数据测试新版本。
 
-Offline evaluations target [_examples_](#examples) from [_datasets_](#datasets)—curated test cases with reference outputs that define what "good" looks like.
+离线评估针对的是来自 [_数据集_](#datasets) 的 [_示例_](#examples)—这些是经过策划的测试用例，包含定义“好”的标准参考输出。
 
-### Online evaluations
+### 在线评估（Online evaluations）
 
-<Icon icon="radar" iconType="solid" /> Use online evaluations for **production monitoring**:
-- **Real-time monitoring**: Track quality continuously on live traffic.
-- **Anomaly detection**: Flag unusual patterns or edge cases.
-- **Production feedback**: Identify issues to add to offline datasets.
+<Icon icon="radar" iconType="solid" /> 将在线评估用于**生产监控**：
+- **实时监控（Real-time monitoring）**：在实时流量上持续跟踪质量。
+- **异常检测（Anomaly detection）**：标记不寻常的模式或边缘情况。
+- **生产反馈（Production feedback）**：识别需要添加到离线数据集中的问题。
 
-Online evaluations target [_runs_](#runs) and [_threads_](#threads) from [tracing](/langsmith/observability-quickstart)—real production traces without reference outputs.
+在线评估针对的是来自 [Tracing](/langsmith/observability-quickstart)（没有参考输出的实际生产跟踪）的 [_运行_](#runs) 和 [_线程_](#threads)。
 
-This difference in targets determines what you can evaluate: offline evaluations can check correctness against expected answers, while online evaluations focus on quality patterns, safety, and real-world behavior.
+目标上的这种差异决定了您可以评估的内容：离线评估可以根据预期答案检查正确性，而在线评估则侧重于质量模式、安全性和真实世界的行为。
 
-## Evaluation lifecycle
+## 评估生命周期
 
-As you develop and [deploy your application](/langsmith/deployments), your evaluation strategy evolves from pre-deployment testing to production monitoring. During development and testing, offline evaluations validate functionality against curated datasets. After deployment, online evaluations monitor production behavior on live traffic. As applications mature, both evaluation types work together in an iterative feedback loop to improve quality continuously.
+随着您开发和 [部署应用程序](/langsmith/deployments)，您的评估策略会从部署前测试演变为生产监控。在开发和测试期间，离线评估根据策划的数据集验证功能。部署后，在线评估会监控生产流量上的行为。随着应用程序的成熟，这两种评估类型会在迭代反馈循环中协同工作，以持续提高质量。
 
 ```mermaid
 graph LR
-    A[Development] --> B[Testing]
-    B --> C[Deployment]
-    C --> D[Monitoring]
-    D --> E[Iteration]
+    A[开发] --> B[测试]
+    B --> C[部署]
+    C --> D[监控]
+    D --> E[迭代]
 
-    A -.-> F[Offline]
+    A -.-> F[离线]
     B -.-> F
-    C -.-> G[Online]
+    C -.-> G[在线]
     D -.-> G
-    E -.-> H[Both]
+    E -.-> H[两者都用]
 
     style F fill:#8b5cf6,stroke:#7c3aed,color:#fff
     style G fill:#8b5cf6,stroke:#7c3aed,color:#fff
     style H fill:#8b5cf6,stroke:#7c3aed,color:#fff
 ```
 
-### 1. Development with offline evaluation
+### 1. 使用离线评估进行开发
 
-Before production deployment, use offline evaluations to validate functionality, benchmark different approaches, and build confidence.
+在生产部署之前，使用离线评估来验证功能、对不同方法进行基准测试并建立信心。
 
-Follow the [quickstart](/langsmith/evaluation-quickstart) to run your first offline evaluation.
+按照 [快速入门](/langsmith/evaluation-quickstart) 来运行您的第一次离线评估。
 
-### 2. Initial deployment with online evaluation
+### 2. 使用在线评估进行初始部署
 
-After deployment, use online evaluations to monitor production quality, detect unexpected issues, and collect real-world data.
+部署后，使用在线评估来监控生产质量、检测意外问题并收集真实世界数据。
 
-Learn how to [configure online evaluations](/langsmith/online-evaluations) for production monitoring.
+了解如何 [为生产监控配置在线评估](/langsmith/online-evaluations)。
 
-### 3. Continuous improvement
+### 3. 持续改进
 
-Use both evaluation types together in an iterative feedback loop. Online evaluations surface issues that become offline test cases, offline evaluations validate fixes, and online evaluations confirm production improvements.
+在迭代反馈循环中使用这两种评估类型。在线评估发现的问题会成为离线测试用例，离线评估验证修复情况，在线评估确认生产中的改进。
 
-## Core evaluation targets
+## 核心评估目标
 
-Evaluations run on different targets depending on whether they are offline or online.
+评估运行在不同的目标上，这取决于它们是离线评估还是在线评估。
 
-### Targets for offline evaluation
+### 离线评估的目标
 
-Offline evaluations run on datasets and examples. The presence of reference outputs enables comparison between expected and actual results.
+离线评估在数据集和示例上运行。参考输出的存在使得可以比较预期结果和实际结果。
 
-#### Datasets
+#### 数据集（Datasets）
 
-A dataset is a _collection of examples_ used for evaluating an application. An example is a test input, reference output pair.
+数据集是用于评估应用程序的**示例集合**。一个示例是一个测试输入与参考输出对。
 
 ![Dataset](/langsmith/images/dataset-concept.png)
 
-#### Examples
+#### 示例（Examples）
 
-Each example consists of:
+每个示例包括：
 
-- **Inputs**: a dictionary of input variables to pass to your application.
-- **Reference outputs** (optional): a dictionary of reference outputs. These do not get passed to your application, they are only used in evaluators.
-- **Metadata** (optional): a dictionary of additional information that can be used to create filtered views of a dataset.
+- **Inputs（输入）**：一个字典，包含要传递给应用程序的输入变量。
+- **Reference outputs（参考输出）**（可选）：一个字典，包含参考输出。这些不会传递给您的应用程序，仅供评估器使用。
+- **Metadata（元数据）**（可选）：一个字典，包含可用于创建数据集过滤视图的附加信息。
 
 ![Example](/langsmith/images/example-concept.png)
 
-Learn more about [managing datasets](/langsmith/manage-datasets).
+了解更多关于 [管理数据集](/langsmith/manage-datasets) 的信息。
 
-#### Experiment
+#### 实验（Experiment）
 
-An _experiment_ represents the results of evaluating a specific application version on a dataset. Each experiment captures outputs, evaluator scores, and execution traces for every example in the dataset.
+一个**实验**代表在特定数据集上评估特定应用程序版本的[^1]结果。每个实验捕获数据集中每个示例的输出、评估器分数和执行跟踪。
 
 ![Experiment view](/langsmith/images/experiment-view.png)
 
-Multiple experiments typically run on a given dataset to test different application configurations (e.g., different prompts or LLMs). LangSmith displays all experiments associated with a dataset and supports [comparing multiple experiments](/langsmith/compare-experiment-results) side-by-side.
+通常会在给定数据集上运行多个实验，以测试不同的应用程序配置（例如，不同的提示或 LLM）。LangSmith 会显示与数据集相关的所有实验，并支持将 [多个实验并排比较](/langsmith/compare-experiment-results)。
 
 ![Comparison view](/langsmith/images/comparison-view.png)
 
-Learn [how to analyze experiment results](/langsmith/analyze-an-experiment).
+了解 [如何分析实验结果](/langsmith/analyze-an-experiment)。
 
-### Targets for online evaluation
+### 在线评估的目标
 
-Online evaluations run on runs and threads from production traffic. Without reference outputs, evaluators focus on detecting issues, anomalies, and quality degradation in real-time.
+在线评估在来自生产流量的运行和线程上运行。由于没有参考输出，评估器专注于实时检测问题、异常和质量下降。
 
-#### Runs
+#### 运行（Runs）
 
-A _run_ is a single execution trace from your [deployed application](/langsmith/deployments). Each run contains:
-- **Inputs**: The actual user inputs your application received.
-- **Outputs**: What your application actually returned.
-- **Intermediate steps**: All the child runs (tool calls, LLM calls, and so on).
-- **Metadata**: Tags, user feedback, latency metrics, etc.
+**运行**是来自您 [部署的应用程序](/langsmith/deployments) 的单个执行跟踪。每个运行包含：
+- **Inputs（输入）**：应用程序收到的实际用户输入。
+- **Outputs（输出）**：应用程序实际返回的内容。
+- **Intermediate steps（中间步骤）**：所有子运行（工具调用、LLM 调用等）。
+- **Metadata（元数据）**：标签、用户反馈、延迟指标等。
 
-Unlike examples in datasets, runs do not include reference outputs. Online evaluators must assess quality without knowing what the "correct" answer should be, relying instead on quality heuristics, safety checks, and reference-free evaluation techniques.
+与数据集中的示例不同，运行不包含参考输出。在线评估器必须在不知道“正确”答案是什么的情况下评估质量，而是依赖于质量启发式方法、安全检查和无参考评估技术。
 
-Learn more about [runs and traces in the Observability concepts](/langsmith/observability-concepts#runs).
+了解更多关于 [可观察性概念中的运行和跟踪](/langsmith/observability-concepts#runs)。
 
-#### Threads
+#### 线程（Threads）
 
-_Threads_ are collections of related runs representing multi-turn conversations. Online evaluators can run at the thread level to evaluate entire conversations rather than individual turns. This enables assessment of conversation-level properties like coherence across turns, topic maintenance, and user satisfaction throughout an interaction.
+**线程**是代表多轮对话的相关运行的集合。在线评估器可以在线程级别运行，以评估整个对话，而不是单个回合。这使得可以评估对话级别的属性，例如跨回合的一致性、主题维护以及用户在整个交互过程中的满意度。
 
-## Evaluators
+## 评估器（Evaluators）
 
-_Evaluators_ are functions that score application performance. They provide the measurement layer for both offline and online evaluation, adapting their inputs based on what data is available.
+**评估器**是为应用程序性能打分的函数。它们为离线和在线评估提供衡量层，并根据可用数据调整其输入。
 
-Run evaluators using the LangSmith SDK ([Python](https://docs.smith.langchain.com/reference/python/reference) and [TypeScript](https://docs.smith.langchain.com/reference/js)), via the [Prompt Playground](/langsmith/observability-concepts#prompt-playground), or by configuring [rules](/langsmith/rules) to run them automatically on tracing projects or datasets.
+您可以使用 LangSmith SDK（[Python](https://docs.smith.langchain.com/reference/python/reference) 和 [TypeScript](https://docs.smith.langchain.com/reference/js)）、通过 [提示游乐场](/langsmith/observability-concepts#prompt-playground) 或配置 [规则](/langsmith/rules) 来在跟踪项目或数据集上自动运行评估器。
 
-### Evaluator inputs
+### 评估器输入
 
-Evaluator inputs differ based on evaluation type:
+评估器的输入根据评估类型而有所不同：
 
-**Offline evaluators** receive:
-- [Example](#examples): The example from your [dataset](#datasets), containing inputs, reference outputs, and metadata.
-- [Run](/langsmith/observability-concepts#runs): The actual outputs and intermediate steps from running the application on the example inputs.
+**离线评估器**接收：
+- [示例 (Example)](#examples)：来自您 [数据集](#datasets) 的示例，包含输入、参考输出和元数据。
+- [运行 (Run)](#runs)：通过使用示例输入运行应用程序获得的实际输出和中间步骤。
 
-**Online evaluators** receive:
-- [Run](/langsmith/observability-concepts#runs): The production trace containing inputs, outputs, and intermediate steps (no reference outputs available).
+**在线评估器**接收：
+- [运行 (Run)](#runs)：生产跟踪，包含输入、输出和中间步骤（没有可用的参考输出）。
 
-### Evaluator outputs
+### 评估器输出
 
-Evaluators return **feedback**, which is the scores from evaluation. Feedback is a dictionary or list of dictionaries. Each dictionary contains:
+评估器返回**反馈（feedback）**，即评估得分。反馈是字典或字典列表。每个字典包含：
 
-- `key`: The metric name.
-- `score` | `value`: The metric value (`score` for numerical metrics, `value` for categorical metrics).
-- `comment` (optional): Additional reasoning or explanation for the score.
+- `key`：指标名称。
+- `score` | `value`：指标值（数值指标使用 `score`，分类指标使用 `value`）。
+- `comment`（可选）：分数的附加理由或解释。
 
-### Evaluation techniques
+### 评估技术
 
-LangSmith supports several evaluation approaches:
+LangSmith 支持多种评估方法：
 
-- [Human](#human)
-- [Code](#code)
-- [LLM-as-judge](#llm-as-judge)
-- [Pairwise](#pairwise)
+- [人工](#human)
+- [代码](#code)
+- [LLM 充当裁判](#llm-as-judge)
+- [成对比较](#pairwise)
 
-#### Human
+#### 人工（Human）
 
-_Human evaluation_ involves manual review of application outputs and execution traces. This approach is [often an effective starting point for evaluation](https://hamel.dev/blog/posts/evals/#looking-at-your-traces). LangSmith provides tools to review application outputs and traces (all intermediate steps).
+**人工评估**涉及手动审查应用程序输出和执行跟踪。这种方法 [通常是评估的有效起点](https://hamel.dev/blog/posts/evals/#looking-at-your-traces)。LangSmith 提供工具来审查应用程序输出和跟踪（所有中间步骤）。
 
-[Annotation queues](#annotation-queues) streamline the process of collecting human feedback on application outputs.
+[注释队列](#annotation-queues) 简化了收集关于应用程序输出的人工反馈的过程。
 
-#### Code
+#### 代码（Code）
 
-_Code evaluators_ are deterministic, rule-based functions. They work well for checks such as verifying the structure of a chatbot's response is not empty, that generated code compiles, or that a classification matches exactly.
+**代码评估器**是确定性的、基于规则的函数。它们非常适用于检查，例如确认聊天机器人响应的结构不为空、生成的代码可以编译，或者分类与期望的匹配。
 
-#### LLM-as-judge
+#### LLM 充当裁判（LLM-as-judge）
 
-_LLM-as-judge evaluators_ use LLMs to score application outputs. The grading rules and criteria are typically encoded in the LLM prompt. These evaluators can be:
+**LLM 充当裁判评估器**使用 LLM 对应用程序输出进行评分。评分规则和标准通常编码在 LLM 的提示中。这些评估器可以是：
 
-- **Reference-free**: Check if output contains offensive content or adheres to specific criteria.
-- **Reference-based**: Compare output to a reference (e.g., check factual accuracy relative to the reference).
+- **无参考（Reference-free）**：检查输出是否包含冒犯性内容或是否遵守特定标准。
+- **有参考（Reference-based）**：将输出与参考（例如，检查相对于参考的事实准确性）进行比较。
 
-LLM-as-judge evaluators require careful review of scores and prompt tuning. Few-shot evaluators, which include examples of inputs, outputs, and expected grades in the grader prompt, often improve performance.
+LLM 充当裁判评估器需要仔细审查分数和进行提示调优。少样本评估器（在评分提示中包含输入、输出和预期等级示例的评估器）通常能提高性能。
 
-Learn about [how to define an LLM-as-a-judge evaluator](/langsmith/llm-as-judge).
+了解 [如何定义 LLM 充当裁判评估器](/langsmith/llm-as-judge)。
 
-#### Pairwise
+#### 成对比较（Pairwise）
 
-_Pairwise evaluators_ compare outputs from two application versions using heuristics (e.g., which response is longer), LLMs (with pairwise prompts), or human reviewers.
+**成对比较评估器**使用启发式方法（例如，哪个响应更长）、LLM（使用成对提示）或人工审核员来比较两个应用程序版本的输出。
 
-Pairwise evaluation works well when directly scoring an output is difficult but comparing two outputs is straightforward. For example, in summarization tasks, choosing the more informative of two summaries is often easier than assigning an absolute score to a single summary.
+当直接对单个输出评分很困难，但比较两个输出很容易时，成对比较评估非常有用。例如，在摘要任务中，选择两个摘要中信息量更大的一个通常比给单个摘要分配绝对分数更容易。
 
-Learn [how run pairwise evaluations](/langsmith/evaluate-pairwise).
+了解 [如何运行成对比较评估](/langsmith/evaluate-pairwise)。
 
-### Reference-free vs reference-based evaluators
+### 无参考评估 vs. 有参考评估
 
-Understanding whether an evaluator requires reference outputs is essential for determining when it can be used.
+了解评估器是否需要参考输出来确定何时可以使用它们至关重要。
 
-**Reference-free evaluators** assess quality without comparing to expected outputs. These work for both offline and online evaluation:
-- **Safety checks**: Toxicity detection, PII detection, content policy violations
-- **Format validation**: JSON structure, required fields, schema compliance
-- **Quality heuristics**: Response length, latency, specific keywords
-- **Reference-free LLM-as-judge**: Clarity, coherence, helpfulness, tone
+**无参考评估器**在不与预期输出进行比较的情况下评估质量。这些评估器可用于离线和在线评估：
+- **安全检查**：毒性检测、PII 检测、内容政策违规
+- **格式验证**：JSON 结构、必需字段、Schema 合规性
+- **质量启发式**：响应长度、延迟、特定关键字
+- **无参考 LLM 充当裁判**：清晰度、一致性、帮助性、语气
 
-**Reference-based evaluators** require reference outputs and only work for offline evaluation:
-- **Correctness**: Semantic similarity to reference answer
-- **Factual accuracy**: Fact-checking against ground truth
-- **Exact match**: Classification tasks with known labels
-- **Reference-based LLM-as-judge**: Comparing output quality to a reference
+**有参考评估器**需要参考输出，并且仅适用于离线评估：
+- **正确性**：与参考答案的语义相似性
+- **事实准确性**：与黄金标准的事实核查
+- **精确匹配**：具有已知标签的分类任务
+- **有参考 LLM 充当裁判**：将输出质量与参考进行比较
 
-When designing an evaluation strategy, reference-free evaluators provide consistency across both offline testing and online monitoring, while reference-based evaluators enable more precise correctness checks during development.
+在设计评估策略时，无参考评估器在离线测试和在线监控之间提供一致性，而有参考评估器则能够在开发过程中实现更精确的正确性检查。
 
-## Evaluation types
+## 评估类型
 
-LangSmith supports various evaluation approaches for different stages of development and deployment. Understanding when to use each type helps build a comprehensive evaluation strategy.
+LangSmith 支持多种评估方法，适用于开发和部署的不同阶段。了解何时使用每种类型有助于构建全面的评估策略。
 
-Offline and online evaluations serve different purposes:
-- **Offline evaluation types** test pre-deployment on curated datasets with reference outputs
-- **Online evaluation types** monitor production behavior on live traffic without reference outputs
+离线和在线评估服务于不同的目的：
+- **离线评估类型**：使用带有参考输出的策划数据集进行部署前测试。
+- **在线评估类型**：在没有参考输出的情况下，监控生产流量上的行为。
 
-Learn more about [evaluation types and when to use each](/langsmith/evaluation-types).
+了解更多关于 [评估类型以及何时使用每种类型](/langsmith/evaluation-types)。
 
-## Best practices
+## 最佳实践
 
-### Building datasets
+### 构建数据集
 
-There are various strategies for building datasets:
+有各种策略可以构建数据集：
 
-**Manually curated examples**
+**手动策划的示例**
 
-This is the recommended starting point. Create 10–20 high-quality examples covering common scenarios and edge cases. These examples define what "good" looks like for your application.
+这是推荐的起点。创建 10-20 个高质量示例，涵盖常见场景和边缘情况。这些示例定义了应用程序的“好”的标准。
 
-**Historical traces**
+**历史跟踪**
 
-Once in production, convert real traces into examples. For high-traffic applications:
-- **User feedback**: Add runs that received negative feedback to test against.
-- **Heuristics**: Identify interesting runs (e.g., long latency, errors).
-- **LLM feedback**: Use LLMs to detect noteworthy conversations.
+进入生产环境后，将真实跟踪转换为示例。对于高流量应用程序：
+- **用户反馈**：添加收到负面反馈的运行进行测试。
+- **启发式方法**：识别有趣的运行（例如，延迟长、错误）。
+- **LLM 反馈**：使用 LLM 检测值得注意的对话。
 
-**Synthetic data**
+**合成数据**
 
-Generate additional examples from existing ones. Works best when starting with several high-quality, hand-crafted examples as templates.
+从现有示例中生成更多示例。当从几个高质量的手工制作示例作为模板开始时，效果最佳。
 
-### Dataset organization
+### 数据集组织
 
-**Splits**
+**拆分（Splits）**
 
-Partition datasets into subsets for targeted evaluation. Use splits for performance optimization (smaller splits for rapid iteration) and interpretability (evaluate different input types separately).
+将数据集划分为子集以进行有针对性的评估。使用拆分进行性能优化（较小的拆分用于快速迭代）和可解释性（单独评估不同类型的输入）。
 
-Learn how to [create and manage dataset splits](/langsmith/manage-datasets-in-application#create-and-manage-dataset-splits).
+了解如何 [创建和管理数据集拆分](/langsmith/manage-datasets-in-application#create-and-manage-dataset-splits)。
 
-**Versions**
+**版本（Versions）**
 
-LangSmith automatically creates dataset [versions](/langsmith/manage-datasets#version-a-dataset) when examples change. [Tag versions](/langsmith/manage-datasets#tag-a-version) to mark important milestones. Target specific versions in CI pipelines to ensure dataset updates don't break workflows.
+当示例发生变化时，LangSmith 会自动创建数据集[版本](/langsmith/manage-datasets#version-a-dataset)。[标记版本](/langsmith/manage-datasets#tag-a-version) 以标记重要里程碑。在 CI 流水线中定位特定版本，以确保数据集更新不会破坏工作流程。
 
-### Human feedback collection
+### 人工反馈收集
 
-Human feedback often provides the most valuable assessment, particularly for subjective quality dimensions.
+人工反馈通常提供最有价值的评估，特别是在主观质量维度上。
 
-**Annotation queues**
+**注释队列（Annotation queues）**
 
-[Annotation queues](/langsmith/annotation-queues) enable structured collection of human feedback. Flag specific runs for review, collect annotations in a streamlined interface, and transfer annotated runs to datasets for future evaluations.
+[注释队列](/langsmith/annotation-queues) 实现了结构化收集人工反馈。标记特定运行以供审查，在简化的界面中收集注释，并将已注释的运行转移到数据集中以供将来评估。
 
-Annotation queues complement [inline annotation](/langsmith/annotate-traces-inline) by offering additional capabilities: grouping runs, specifying criteria, and configuring reviewer permissions.
+注释队列补充了 [内联注释](/langsmith/annotate-traces-inline)，提供了额外的功能：分组运行、指定标准和配置审阅者权限。
 
-### Evaluations vs testing
+### 评估 vs. 测试
 
-Testing and evaluation are similar but distinct concepts.
+测试和评估是相似但不同的概念。
 
-**Evaluation measures performance according to metrics.** Metrics can be fuzzy or subjective, and prove more useful in relative terms. They typically compare systems against each other.
+**评估衡量符合指标的性能。** 指标可能是模糊或主观的，在相对术语中更有用。它们通常将系统彼此进行比较。
 
-**Testing asserts correctness.** A system can only be deployed if it passes all tests.
+**测试断言正确性。** 只有通过所有测试，系统才能部署。
 
-Evaluation metrics can be converted into tests. For example, regression tests can assert that new versions must outperform baseline versions on relevant metrics. Run tests and evaluations together for efficiency when systems are expensive to run.
+评估指标可以转换为测试。例如，回归测试可以断言新版本在相关指标上的表现必须优于基线版本。在系统运行成本高昂时，将运行测试和评估结合起来以提高效率。
 
-Evaluations can be written using standard testing tools like [pytest](/langsmith/pytest) or [Vitest/Jest](/langsmith/vitest-jest).
+可以使用标准的测试工具（如 [pytest](/langsmith/pytest) 或 [Vitest/Jest](/langsmith/vitest-jest)）来编写评估。
 
-## Quick reference: Offline vs online evaluation
+## 快速参考：离线评估 vs. 在线评估
 
-The following table summarizes the key differences between offline and online evaluations:
+下表总结了离线评估和在线评估之间的关键区别：
 
-| | **Offline Evaluation** | **Online Evaluation** |
+| | **离线评估** | **在线评估** |
 |---|---|---|
-| **Runs on** | Dataset (Examples) | Tracing Project (Runs/Threads) |
-| **Data access** | Inputs, Outputs, Reference Outputs | Inputs, Outputs only |
-| **When to use** | Pre-deployment, during development | Production, post-deployment |
-| **Primary use cases** | Benchmarking, unit testing, regression testing, backtesting | Real-time monitoring, production feedback, anomaly detection |
-| **Evaluation timing** | Batch processing on curated test sets | Real-time or near real-time on live traffic |
-| **Setup location** | Evaluation tab (SDK, UI, Prompt Playground) | [Observability tab](/langsmith/online-evaluations) (automated rules) |
-| **Data requirements** | Requires dataset curation | No dataset needed, evaluates live traces |
+| **运行对象** | 数据集（示例） | 跟踪项目（运行/线程） |
+| **数据访问** | 输入、输出、参考输出 | 仅输入、输出 |
+| **使用时间** | 部署前，开发期间 | 生产中，部署后 |
+| **主要用例** | 基准测试、单元测试、回归测试、回溯测试 | 实时监控、生产反馈、异常检测 |
+| **评估时机** | 在策划的测试集上进行批处理 | 在实时流量上进行实时或近实时处理 |
+| **设置位置** | 评估标签页（SDK、UI、提示游乐场） | [可观察性标签页](/langsmith/online-evaluations)（自动化规则） |
+| **数据要求** | 需要策划数据集 | 不需要数据集，评估实时跟踪 |
 
+[^1]: 请注意：原文的“version”在上下文中有时指应用程序版本，有时指数据集版本。此处保持直译。

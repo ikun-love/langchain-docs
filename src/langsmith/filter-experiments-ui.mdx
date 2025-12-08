@@ -1,16 +1,15 @@
 ---
-title: How to filter experiments in the UI
-sidebarTitle: Filter experiments in the UI
+title: 如何在用户界面中筛选实验
+sidebarTitle: 在用户界面中筛选实验
 ---
 
-LangSmith lets you filter your previous experiments by feedback scores and metadata to make it easy to find only the experiments you care about.
+LangSmith 允许您根据**反馈分数**和**元数据**来筛选您过去的实验，从而轻松找到您真正关心的那些实验。
 
+## 背景知识：向实验添加元数据
 
-## Background: add metadata to your experiments
+当您在 SDK 中运行实验时，您可以附加元数据，以便将来在用户界面（UI）中更容易地进行筛选。如果您在运行实验时已经知道想要深入分析的维度（axes），这将非常有用。
 
-When you run an experiment in the SDK, you can attach metadata to make it easier to filter in UI. This is helpful if you know what axes you want to drill down into when running experiments.
-
-In our example, we are going to attach metadata to our experiment around the model used, the model provider, and a known ID of the prompt:
+在我们的示例中，我们将围绕所使用的模型、模型提供商以及提示（prompt）的已知 ID 来为实验附加元数据：
 
 ```python
 models = {
@@ -53,7 +52,7 @@ for model_type, model in models.items():
             predict,
             data=dataset_name,
             evaluators=[answer_evaluator],
-            # ADD IN METADATA HERE!!
+            # 在此处添加元数据！！
             metadata={
                 "model_provider": model_provider,
                 "model_name": model_name,
@@ -62,22 +61,20 @@ for model_type, model in models.items():
         )
 ```
 
-## Filter experiments in the UI
+## 在用户界面中筛选实验
 
-In the UI, we see all experiments that have been run by default.
+在用户界面中，默认情况下我们会看到所有已运行的实验。
 
 ![](/langsmith/images/filter-all-experiments.png)
 
-If we, say, have a preference for openai models, we can easily filter down and see scores within just openai models first:
+如果我们例如偏好使用 openai 模型，我们可以轻松地进行筛选，首先只查看 openai 模型内部的分数：
 
 ![](/langsmith/images/filter-openai.png)
 
-We can stack filters, allowing us to filter out low scores on correctness to make sure we only compare relevant experiments:
+我们可以堆叠（stack）多个筛选条件，允许我们过滤掉正确性（correctness）得分较低的实验，以确保我们只比较相关的那些实验：
 
 ![](/langsmith/images/filter-feedback.png)
 
-Finally, we can clear and reset filters. For example, if we see there is clear there's a winner with the `singleminded` prompt, we can change filtering settings to see if any other model providers' models work as well with it:
+最后，我们可以清除并重置筛选条件。例如，如果我们发现使用 `singleminded` 提示的实验中有一个明显的获胜者，我们可以更改筛选设置，看看是否有来自其他模型提供商的模型也能与之配合得很好：
 
 ![](/langsmith/images/filter-singleminded.png)
-
-

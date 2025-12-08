@@ -2,19 +2,19 @@
 title: JSONFormer
 ---
 
-[JSONFormer](https://github.com/1rgs/jsonformer) is a library that wraps local Hugging Face pipeline models for structured decoding of a subset of the JSON Schema.
+[JSONFormer](https://github.com/1rgs/jsonformer) 是一个库，它包装了本地的 Hugging Face pipeline 模型，用于对 JSON Schema 的子集进行结构化解码。
 
-It works by filling in the structure tokens and then sampling the content tokens from the model.
+其工作原理是先填充结构化 token，然后从模型中采样内容 token。
 
-**Warning - this module is still experimental**
+**警告 - 此模块仍处于实验阶段**
 
 ```python
 pip install -qU  jsonformer > /dev/null
 ```
 
-### Hugging Face Baseline
+### Hugging Face 基线
 
-First, let's establish a qualitative baseline by checking the output of the model without structured decoding.
+首先，让我们通过检查没有结构化解码的模型输出，来建立一个定性的基线。
 
 ```python
 import logging
@@ -34,7 +34,7 @@ HF_TOKEN = os.environ.get("HUGGINGFACE_API_KEY")
 
 @tool
 def ask_star_coder(query: str, temperature: float = 1.0, max_new_tokens: float = 250):
-    """Query the BigCode StarCoder model about coding questions."""
+    """关于编码问题询问 BigCode StarCoder 模型。"""
     url = "https://api-inference.huggingface.co/models/bigcode/starcoder"
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",
@@ -51,35 +51,35 @@ def ask_star_coder(query: str, temperature: float = 1.0, max_new_tokens: float =
 ```
 
 ```python
-prompt = """You must respond using JSON format, with a single action and single action input.
-You may 'ask_star_coder' for help on coding problems.
+prompt = """你必须使用 JSON 格式进行响应，包含一个 action（动作）和一个 action_input（动作输入）。
+你可以向 'ask_star_coder' 寻求编码问题的帮助。
 
 {arg_schema}
 
-EXAMPLES
+示例
 ----
-Human: "So what's all this about a GIL?"
+Human: "那么关于 GIL 都是怎么回事？"
 AI Assistant:{{
   "action": "ask_star_coder",
-  "action_input": {{"query": "What is a GIL?", "temperature": 0.0, "max_new_tokens": 100}}"
+  "action_input": {{"query": "什么是 GIL?", "temperature": 0.0, "max_new_tokens": 100}}"
 }}
-Observation: "The GIL is python's Global Interpreter Lock"
-Human: "Could you please write a calculator program in LISP?"
+Observation: "GIL 是 Python 的全局解释器锁"
+Human: "你能用 LISP 写一个计算器程序吗？"
 AI Assistant:{{
   "action": "ask_star_coder",
-  "action_input": {{"query": "Write a calculator program in LISP", "temperature": 0.0, "max_new_tokens": 250}}
+  "action_input": {{"query": "用 LISP 编写一个计算器程序", "temperature": 0.0, "max_new_tokens": 250}}
 }}
 Observation: "(defun add (x y) (+ x y))\n(defun sub (x y) (- x y ))"
-Human: "What's the difference between an SVM and an LLM?"
+Human: "SVM 和 LLM 有什么区别？"
 AI Assistant:{{
   "action": "ask_star_coder",
-  "action_input": {{"query": "What's the difference between SGD and an SVM?", "temperature": 1.0, "max_new_tokens": 250}}
+  "action_input": {{"query": "SGD 和 SVM 有什么区别?", "temperature": 1.0, "max_new_tokens": 250}}
 }}
-Observation: "SGD stands for stochastic gradient descent, while an SVM is a Support Vector Machine."
+Observation: "SGD 代表随机梯度下降，而 SVM 是支持向量机。"
 
-BEGIN! Answer the Human's question as best as you are able.
+开始！ 尽你所能回答人类的问题。
 ------
-Human: 'What's the difference between an iterator and an iterable?'
+Human: '迭代器（iterator）和可迭代对象（iterable）有什么区别？'
 AI Assistant:""".format(arg_schema=ask_star_coder.args)
 ```
 
@@ -104,15 +104,15 @@ Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
  'What's the difference between an iterator and an iterable?'
 ```
 
-***That's not so impressive, is it? It didn't follow the JSON format at all! Let's try with the structured decoder.***
+***这不怎么令人印象深刻，对吧？它完全没有遵循 JSON 格式！让我们使用结构化解码再试一次。***
 
-## JSONFormer LLM Wrapper
+## JSONFormer LLM 包装器
 
-Let's try that again, now providing a the Action input's JSON Schema to the model.
+我们再试一次，这次向模型提供 Action 输入的 JSON Schema。
 
 ```python
 decoder_schema = {
-    "title": "Decoding Schema",
+    "title": "解码 Schema",
     "type": "object",
     "properties": {
         "action": {"type": "string", "default": ask_star_coder.name},
@@ -139,7 +139,7 @@ print(results)
 {"action": "ask_star_coder", "action_input": {"query": "What's the difference between an iterator and an iter", "temperature": 0.0, "max_new_tokens": 50.0}}
 ```
 
-**Voila! Free of parsing errors.**
+**瞧！没有解析错误。**
 
 ```python
 

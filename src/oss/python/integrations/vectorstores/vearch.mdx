@@ -1,24 +1,25 @@
+```markdown
 ---
 title: Vearch
 ---
 
->[Vearch](https://vearch.readthedocs.io) is the vector search infrastructure for deeping learning and AI applications.
+>[Vearch](https://vearch.readthedocs.io) 是用于深度学习和 AI 应用的向量搜索基础设施。
 
-## Setting up
+## 设置 (Setting up)
 
-Follow [instructions](https://vearch.readthedocs.io/en/latest/quick-start-guide.html#).
+请遵循[这些说明](https://vearch.readthedocs.io/en/latest/quick-start-guide.html#)。
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+你需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
 
 ```python
 pip install -qU  vearch
 
-# OR
+# 或者
 
 pip install -qU  vearch_cluster
 ```
 
-## Example
+## 示例 (Example)
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -27,7 +28,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from transformers import AutoModel, AutoTokenizer
 
-# repalce to your local model path
+# 替换为你的本地模型路径
 model_path = "/data/zhx/zhx/langchain-ChatGLM_new/chatglm2-6b"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
@@ -56,16 +57,16 @@ ChatGLM:凌波微步是一种步伐，最早出自《倚天屠龙记》。在电
 ```
 
 ```python
-# Add your local knowledge files
-file_path = "/data/zhx/zhx/langchain-ChatGLM_new/knowledge_base/天龙八部/lingboweibu.txt"  # Your local file path"
+# 添加你的本地知识文件
+file_path = "/data/zhx/zhx/langchain-ChatGLM_new/knowledge_base/天龙八部/lingboweibu.txt"  # 你的本地文件路径"
 loader = TextLoader(file_path, encoding="utf-8")
 documents = loader.load()
 
-# split text into sentences and embedding the sentences
+# 将文本分割成句子并进行嵌入 (embedding)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 texts = text_splitter.split_documents(documents)
 
-# replace to your model path
+# 替换为你的模型路径
 embedding_path = "/data/zhx/zhx/langchain-ChatGLM_new/text2vec/text2vec-large-chinese"
 embeddings = HuggingFaceEmbeddings(model_name=embedding_path)
 ```
@@ -75,7 +76,7 @@ No sentence-transformers model found with name /data/zhx/zhx/langchain-ChatGLM_n
 ```
 
 ```python
-# first add your document into vearch vectorstore
+# 首先将你的文档添加到 vearch 向量存储中
 vearch_standalone = Vearch.from_documents(
     texts,
     embeddings,
@@ -95,7 +96,7 @@ vearch_cluster = Vearch.from_documents(
     flag=1,
 )
 
-# The vector data is usually already initialized, so we don’t need the document parameter and can directly create the object.
+# 向量数据通常已经初始化，因此我们不需要 document 参数可以直接创建对象。
 vearch_cluster_b = Vearch(
     embeddings,
     path_or_url="http://test-vearch-langchain-router.vectorbase.svc.ht1.n.jd.local",
@@ -113,12 +114,12 @@ docids ['1841638988191686991', '-4519586577642625749', '5028230008472292907']
 
 ```python
 query = "你知道凌波微步吗，你知道都有谁会凌波微步?"
-# The second parameter is the top-n to retrieve, and its default value is 4.
+# 第二个参数是检索的数量 (top-n)，默认值为 4。
 vearch_standalone_res = vearch_standalone.similarity_search(query, 3)
 for idx, tmp in enumerate(vearch_standalone_res):
     print(f"{'#' * 20}第{idx + 1}段相关文档{'#' * 20}\n\n{tmp.page_content}\n")
 
-# combine your local knowleadge and query
+# 组合你的本地知识和查询内容
 context = "".join([tmp.page_content for tmp in vearch_standalone_res])
 new_query = f"基于以下信息，尽可能准确的来回答用户的问题。背景信息:\n {context} \n 回答用户这个问题:{query}\n\n"
 response, history = model.chat(tokenizer, new_query, history=[])
@@ -131,12 +132,12 @@ cluster_res = vearch_cluster.similarity_search(query_c, 3)
 for idx, tmp in enumerate(cluster_res):
     print(f"{'#' * 20}第{idx + 1}段相关文档{'#' * 20}\n\n{tmp.page_content}\n")
 
-# In practical applications, we usually limit the boundary value of similarity. The following method can set this value.
+# 在实际应用中，我们通常会限制相似度的阈值。以下方法可以设置此阈值。
 cluster_res_with_bound = vearch_cluster.similarity_search_with_score(
     query=query_c, k=3, min_score=0.5
 )
 
-# combine your local knowleadge and query
+# 组合你的本地知识和查询内容
 context_c = "".join([tmp.page_content for tmp in cluster_res])
 new_query_c = f"基于以下信息，尽可能准确的来回答用户的问题。背景信息:\n {context_c} \n 回答用户这个问题:{query_c}\n\n"
 response_c, history_c = model.chat(tokenizer, new_query_c, history=[])
@@ -313,9 +314,9 @@ vearch 是基于C语言,go语言开发的，并提供python接口，可以直接
 ***************ChatGLM:是的，Varch是一个向量数据库，旨在存储和快速搜索模型embedding后的向量。它支持OpenAI，ChatGLM等模型，并可用于基于个人知识库的大模型应用。Varch基于C语言和Go语言开发，并提供Python接口，可以通过pip安装。
 ```
 
-```python
-##delete and get function need to maintain  docids
-##your docid
+```markdown
+## 删除和获取文档 (delete and get function need to maintain docids)
+## 你的 docid
 
 res_d = vearch_standalone.delete(
     [
@@ -393,12 +394,11 @@ get existed docid {'1841638988191686991': Document(page_content='《天龙八部
 ```
 
 ```python
+
 ```
+
 
 ```python
 
 ```
-
-```python
-
 ```

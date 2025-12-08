@@ -1,82 +1,82 @@
 ---
-title: Delete traces
-sidebarTitle: Delete traces
+title: 删除痕迹
+sidebarTitle: 删除痕迹
 ---
 
-The LangSmith UI does not currently support the deletion of an individual trace. This, however, can be accomplished by directly removing the trace from all materialized views in ClickHouse (except the runs_history views) and the runs and feedback table themselves.
+LangSmith UI 目前不支持删除**单个**的 trace（追踪记录）。但是，可以通过直接从 ClickHouse 中的所有物化视图（Run History 视图除外）以及 `runs` 和 `feedback` 表本身中删除该 trace 来实现此操作。
 
-This command can either be run using a trace ID as an argument or using a file that is a list of trace IDs.
+此命令可以通过将 trace ID 作为参数运行，或者使用包含 trace ID 列表的文件来运行。
 
-### Prerequisites
+### 先决条件
 
-Ensure you have the following tools/items ready.
+确保您已准备好以下工具/项目。
 
 1. kubectl
 
    * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
 
-2. Clickhouse database credentials
+2. Clickhouse 数据库凭据
 
-   * Host
-   * Port
-   * Username
-     * If using the bundled version, this is `default`
-   * Password
-     * If using the bundled version, this is `password`
-   * Database name
-     * If using the bundled version, this is `default`
+   * Host (主机地址)
+   * Port (端口)
+   * Username (用户名)
+     * 如果使用的是捆绑版本，则为 `default`
+   * Password (密码)
+     * 如果使用的是捆绑版本，则为 `password`
+   * Database name (数据库名称)
+     * 如果使用的是捆绑版本，则为 `default`
 
-3. Connectivity to the Clickhouse database from the machine you will be running the `delete_trace_by_id` script on.
+3. 从运行 `delete_trace_by_id` 脚本的机器到 ClickHouse 数据库的网络连通性。
 
-   * If you are using the bundled version, you may need to port forward the clickhouse service to your local machine.
-   * Run `kubectl port-forward svc/langsmith-clickhouse 8123:8123` to port forward the clickhouse service to your local machine.
+   * 如果您使用的是捆绑版本，则可能需要将 ClickHouse 服务端口转发到本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-clickhouse 8123:8123` 将 ClickHouse 服务端口转发到您的本地机器。
 
-4. The script to delete a trace
+4. 用于删除 trace 的脚本
 
-   * You can download the script from [here](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/delete_trace_by_id.sh)
+   * 您可以从 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/delete_trace_by_id.sh) 下载该脚本
 
-### Running the deletion script for a single trace
+### 运行脚本以删除单个 trace
 
-Run the following command to run the trace deletion script using a single trace ID:
+运行以下命令，使用单个 trace ID 来运行 trace 删除脚本：
 
 ```bash
 sh delete_trace_by_id.sh <clickhouse_url> --trace_id <trace_id>
 ```
 
-For example, if you are using the bundled version with port-forwarding, the command would look like:
+例如，如果您使用的是开启了端口转发的捆绑版本，该命令将如下所示：
 
 ```bash
 sh delete_trace_by_id.sh "clickhouse://default:password@localhost:8123/default" --trace_id 4ec70ec7-0808-416a-b836-7100aeec934b
 ```
 
-If you visit the LangSmith UI, you should now see specified trace ID is no longer present nor reflected in stats.
+如果您访问 LangSmith UI，现在应该会发现指定的 trace ID 不再出现，并且统计数据中也不再反映该 trace。
 
-### Running the deletion script for a multiple traces from a file with one trace ID per line
+### 运行脚本以从文件中删除多个 trace (每行一个 trace ID)
 
-Run the following command to run the trace deletion script using a list of trace IDs:
+运行以下命令，使用 trace ID 列表来运行 trace 删除脚本：
 
 ```bash
 sh delete_trace_by_id.sh <clickhouse_url> --file <path/to/foo.txt>
 ```
 
-For example, if you are using the bundled version with port-forwarding, the command would look like:
+例如，如果您使用的是开启了端口转发的捆绑版本，该命令将如下所示：
 
 ```bash
 sh delete_trace_by_id.sh "clickhouse://default:password@localhost:8123/default" --file path/to/traces.txt
 ```
 
-If you visit the LangSmith UI, you should now see all the specified traces have been removed.
+如果您访问 LangSmith UI，现在应该会看到所有指定的 trace 都已被移除。
 
-## Troubleshooting
+## 故障排除
 
-### "Could not find trace IDs" error
+### "Could not find trace IDs" 错误
 
-If you receive an error message stating that trace IDs could not be found, add the `--ssl` flag to your command. Without this flag, the script may not be able to properly connect to ClickHouse, resulting in false "trace ID not found" errors.
+如果您收到一条错误消息指出找不到 trace ID，请向您的命令中添加 `--ssl` 标志。如果没有此标志，脚本可能无法正确连接到 ClickHouse，从而导致错误的“未找到 trace ID”错误。
 
-Example with SSL flag:
+包含 SSL 标志的示例：
 
 ```bash
 sh delete_trace_by_id.sh "clickhouse://default:password@localhost:8123/default" --file path/to/traces.txt --ssl
 ```
 
-You can also verify that traces exist by connecting to ClickHouse directly using `clickhouse-cli` and querying for the trace IDs before running the deletion script.
+您也可以通过使用 `clickhouse-cli` 直接连接到 ClickHouse 并查询 trace ID 来验证 trace 是否存在，然后再运行删除脚本。

@@ -2,33 +2,31 @@
 title: mozilla/readability
 ---
 
-When ingesting HTML documents for later retrieval, we are often interested only in the actual content of the webpage rather than semantics.
-Stripping HTML tags from documents with the MozillaReadabilityTransformer can result in more content-rich chunks, making retrieval more effective.
+在摄取 HTML 文档以供后续检索时，我们通常只关注网页的实际内容，而非其语义结构。使用 `MozillaReadabilityTransformer` 从文档中移除 HTML 标签可以产生内容更丰富的块（chunks），从而使检索更有效。
 
-## Setup
+## 安装设置 (Setup)
 
-You'll need to install the [`@mozilla/readability`](https://www.npmjs.com/package/@mozilla/readability) and the [`jsdom`](https://www.npmjs.com/package/jsdom) npm package:
+您需要安装 [`@mozilla/readability`](https://www.npmjs.com/package/@mozilla/readability) 和 [`jsdom`](https://www.npmjs.com/package/jsdom) npm 包：
 
 ```bash npm
 npm install @mozilla/readability jsdom
 ```
-Though not required for the transformer by itself, the below usage examples require [`cheerio`](https://www.npmjs.com/package/cheerio) for scraping:
+下面的使用示例需要 [`cheerio`](https://www.npmjs.com/package/cheerio) 进行抓取，但它本身并不是 transformer 所必需的：
 
 ```bash npm
 npm install cheerio
 ```
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的常规说明，请参阅[本章节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
 
-## Usage
+## 使用方法 (Usage)
 
-The below example scrapes a Hacker News thread, splits it based on HTML tags to group chunks based on the semantic information from the tags,
-then extracts content from the individual chunks:
+下面的示例抓取了一个 Hacker News 帖子，根据 HTML 标签对其进行分割，以便根据标签中的语义信息对块进行分组，然后从各个块中提取内容：
 
 ```typescript
 import { HTMLWebBaseLoader } from "@langchain/community/document_loaders/web/html";
@@ -123,6 +121,6 @@ console.log(newDocuments);
 */
 ```
 
-## Customization
+## 自定义 (Customization)
 
-You can pass the transformer any [arguments accepted by the `@mozilla/readability` package](https://www.npmjs.com/package/@mozilla/readability) to customize how it works.
+您可以向 transformer 传递任何[`@mozilla/readability` 包接受的参数](https://www.npmjs.com/package/@mozilla/readability)，以自定义其工作方式。

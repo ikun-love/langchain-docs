@@ -1,31 +1,31 @@
 ---
-title: Alerts in LangSmith
-sidebarTitle: Alerts
+title: LangSmith 中的告警
+sidebarTitle: 告警
 ---
 
 <Note>
-**Self-hosted Version Requirement**
+**自托管版本要求**
 
-Access to alerts requires Helm chart version **0.10.3** or later.
+访问告警功能需要 Helm chart 版本 **0.10.3** 或更高版本。
 </Note>
 
-## Overview
+## 概览
 
-Effective observability in LLM applications requires proactive detection of failures, performance degradations, and regressions. LangSmith's alerts feature helps identify critical issues such as:
+LLM 应用中有效的可观测性 (Observability) 需要主动检测故障、性能下降和回归问题。LangSmith 的告警功能有助于识别关键问题，例如：
 
-- API rate limit violations from model providers
-- Latency increases for your application
-- Application changes that affect feedback scores reflecting end-user experience
+- 模型提供商的 API 速率限制违规
+- 应用延迟的增加
+- 影响反映最终用户体验的反馈得分的应用变更
 
-Alerts in LangSmith are project-scoped, requiring separate configuration for each monitored project.
+LangSmith 中的告警是按项目范围划分的，要求对每个被监控的项目单独进行配置。
 
-## Configuring an alert
+## 配置告警
 
-### Step 1: Navigate To Create Alert
+### 步骤 1: 导航到创建告警
 
-First navigate to the Tracing project that you would like to configure alerts for. Click the Alerts icon on the top right hand corner of the page to view existing alerts for that project and set up a new alert.
+首先，导航到您希望配置告警的 Tracing 项目。点击页面右上角的 "Alerts" (告警) 图标，以查看该项目的现有告警并设置新的告警。
 
-### Step 2: Select Metric Type
+### 步骤 2: 选择指标类型
 
 <br />
 <div style={{ textAlign: 'center' }}>
@@ -34,15 +34,15 @@ First navigate to the Tracing project that you would like to configure alerts fo
 
 </div>
 
-LangSmith offers threshold-based alerting on three core metrics:
+LangSmith 在三个核心指标上提供基于阈值的告警：
 
-| Metric Type        | Description                         | Use Case                                                                                                                                                                                 |
-| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Errored Runs**   | Track runs with an error status     | Monitors for failures in an application.                                                                                                                                                 |
-| **Feedback Score** | Measures the average feedback score | Track [feedback from end users](/langsmith/attach-user-feedback) or [online evaluation results](/langsmith/online-evaluations) to alert on regressions. |
-| **Latency**        | Measures average run execution time | Tracks the latency of your application to alert on spikes and performance bottlenecks.                                                                                                   |
+| 指标类型 | 描述 | 使用场景 |
+| :--- | :--- | :--- |
+| **出错的运行 (Errored Runs)** | 跟踪具有错误状态的运行 | 监控应用中的失败情况。 |
+| **反馈得分 (Feedback Score)** | 衡量平均反馈得分 | 跟踪[最终用户的反馈](/langsmith/attach-user-feedback) 或[在线评估结果](/langsmith/online-evaluations) 以便在出现回归时发出告警。 |
+| **延迟 (Latency)** | 衡量平均运行执行时间 | 跟踪应用的延迟情况，以便在出现峰值和性能瓶颈时发出告警。 |
 
-Additionally, for **Errored Runs** and **Run Latency**, you can define filters to narrow down the runs that trigger alerts. For example, you might create an error alert filter for all `llm` runs tagged with `support_agent` that encounter a `RateLimitExceeded` error.
+此外，对于 **Errored Runs** (出错的运行) 和 **Run Latency** (运行延迟)，您可以定义过滤器来缩小触发告警的运行范围。例如，您可以创建一个错误告警过滤器，专门针对所有标记了 `support_agent` 并遇到 `RateLimitExceeded` 错误的 `llm` 运行。
 
 <div style={{ textAlign: 'center' }}>
 
@@ -50,15 +50,15 @@ Additionally, for **Errored Runs** and **Run Latency**, you can define filters t
 
 </div>
 
-### Step 2: Define Alert Conditions
+### 步骤 2: 定义告警条件
 
-Alert conditions consist of several components:
+告警条件由几个组件构成：
 
-- **Aggregation Method**: Average, Percentage, or Count
-- **Comparison Operator**: `>=`, `<=`, or exceeds threshold
-- **Threshold Value**: Numerical value triggering the alert
-- **Aggregation Window**: Time period for metric calculation (currently choose between 5 or 15 minutes)
-- **Feedback Key** (Feedback Score alerts only): Specific feedback metric to monitor
+- **聚合方法 (Aggregation Method)**: 平均值 (Average)、百分比 (Percentage) 或计数 (Count)
+- **比较运算符 (Comparison Operator)**: `>=`, `<=`，或超过阈值 (exceeds threshold)
+- **阈值 (Threshold Value)**: 触发告警的数值
+- **聚合窗口 (Aggregation Window)**: 用于指标计算的时间周期（当前可在 5 分钟或 15 分钟之间选择）
+- **反馈键 (Feedback Key)** (仅限反馈得分告警): 需要监控的具体反馈指标
 
 <br />
 <div style={{ textAlign: 'center' }}>
@@ -67,9 +67,9 @@ Alert conditions consist of several components:
 
 </div>
 
-**Example:** The configuration shown above would generate an alert when more than 5% of runs within the past 5 minutes result in errors.
+**示例：** 上图中所示的配置将在过去 5 分钟内超过 5% 的运行导致错误时生成告警。
 
-You can preview alert behavior over a historical time window to understand how many datapoints—and which ones—would have triggered an alert at a chosen threshold (indicated in red). For example, setting an average latency threshold of 60 seconds for a project lets you visualize potential alerts, as shown in the image below.
+您可以预览告警在历史时间窗口内的行为，以了解在所选阈值下，有多少数据点（以及哪些数据点）会触发告警（如下图中红色标记所示）。例如，为项目设置 60 秒的平均延迟阈值，您可以直观地看到潜在的告警情况，如下面的图像所示。
 
 <div style={{ textAlign: 'center' }}>
 
@@ -77,17 +77,17 @@ You can preview alert behavior over a historical time window to understand how m
 
 </div>
 
-### Step 3: Configure Notification Channel
+### 步骤 3: 配置通知渠道
 
-LangSmith supports the following notification channels:
+LangSmith 支持以下通知渠道：
 
-1. [PagerDuty Integration](/langsmith/alerts-pagerduty)
-2. [Webhook Notifications](/langsmith/alerts-webhook)
+1. [PagerDuty 集成](/langsmith/alerts-pagerduty)
+2. [Webhook 通知](/langsmith/alerts-webhook)
 
-Select the appropriate channel to ensure notifications reach the responsible team members.
+选择适当的渠道，以确保通知能够送达负责团队的成员。
 
-## Best Practices
+## 最佳实践
 
-- Adjust sensitivity based on application criticality
-- Start with broader thresholds and refine based on observed patterns
-- Ensure alert routing reaches appropriate on-call personnel
+- 根据应用的临界程度调整告警的灵敏度
+- 从更宽泛的阈值开始，然后根据观察到的模式进行精细调整
+- 确保告警路由能够送达合适的待命人员 (on-call personnel)

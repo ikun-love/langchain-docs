@@ -1,25 +1,25 @@
+```markdown
 ---
 title: Trubrics
 ---
 
->[Trubrics](https://trubrics.com) is an LLM user analytics platform that lets you collect, analyse and manage user
-prompts & feedback on AI models.
+>[Trubrics](https://trubrics.com) 是一个 LLM（大型语言模型）用户分析平台，它允许您收集、分析和管理用户针对 AI 模型的提示词（Prompts）和反馈。
 >
->Check out [Trubrics repo](https://github.com/trubrics/trubrics-sdk) for more information on `Trubrics`.
+>有关 `Trubrics` 的更多信息，请查看 [Trubrics 仓库](https://github.com/trubrics/trubrics-sdk)。
 
-In this guide, we will go over how to set up the `TrubricsCallbackHandler`.
+在本指南中，我们将介绍如何设置 `TrubricsCallbackHandler`。
 
-## Installation and Setup
+## 安装与设置
 
 ```python
 pip install -qU  trubrics langchain langchain-community
 ```
 
-### Getting Trubrics Credentials
+### 获取 Trubrics 凭证
 
-If you do not have a Trubrics account, create one on [here](https://trubrics.streamlit.app/). In this tutorial, we will use the `default` project that is built upon account creation.
+如果您还没有 Trubrics 账户，请在此 [链接](https://trubrics.streamlit.app/) 创建一个。在本教程中，我们将使用账户创建时自带的 `default` 项目。
 
-Now set your credentials as environment variables:
+现在将您的凭证设置为环境变量：
 
 ```python
 import os
@@ -32,33 +32,33 @@ os.environ["TRUBRICS_PASSWORD"] = "***"
 from langchain_community.callbacks.trubrics_callback import TrubricsCallbackHandler
 ```
 
-### Usage
+### 用法
 
-The `TrubricsCallbackHandler` can receive various optional arguments. See [here](https://trubrics.github.io/trubrics-sdk/platform/user_prompts/#saving-prompts-to-trubrics) for kwargs that can be passed to Trubrics prompts.
+`TrubricsCallbackHandler` 可以接收各种可选参数。有关可以传递给 Trubrics 提示词的 kwargs（关键字参数），请参阅 [此处](https://trubrics.github.io/trubrics-sdk/platform/user_prompts/#saving-prompts-to-trubrics)。
 
 ```python
 class TrubricsCallbackHandler(BaseCallbackHandler):
 
     """
-    Callback handler for Trubrics.
+    Trubrics 的回调处理器（Callback handler）。
 
     Args:
-        project: a trubrics project, default project is "default"
-        email: a trubrics account email, can equally be set in env variables
-        password: a trubrics account password, can equally be set in env variables
-        **kwargs: all other kwargs are parsed and set to trubrics prompt variables, or added to the `metadata` dict
+        project: 一个 trubrics 项目，默认为 "default"
+        email: trubrics 账户邮箱，也可以在环境变量中设置
+        password: trubrics 账户密码，也可以在环境变量中设置
+        **kwargs: 所有其他 kwargs 都将被解析并设置为 trubrics 提示词变量，或者添加到 `metadata` 字典中
     """
 ```
 
-## Examples
+## 示例
 
-Here are two examples of how to use the `TrubricsCallbackHandler` with LangChain [LLMs](/oss/langchain/models) or [Chat Models](/oss/langchain/models). We will use OpenAI models, so set your `OPENAI_API_KEY` key here:
+以下是如何将 `TrubricsCallbackHandler` 与 LangChain 的 [LLM](/oss/langchain/models) 或 [Chat Models](/oss/langchain/models) 结合使用的两个示例。我们将使用 OpenAI 模型，因此请在此处设置您的 `OPENAI_API_KEY`：
 
 ```python
 os.environ["OPENAI_API_KEY"] = "sk-***"
 ```
 
-### 1. With an LLM
+### 1. 与 LLM 结合使用
 
 ```python
 from langchain_openai import OpenAI
@@ -69,61 +69,61 @@ llm = OpenAI(callbacks=[TrubricsCallbackHandler()])
 ```
 
 ```output
-2023-09-26 11:30:02.149 | INFO     | trubrics.platform.auth:get_trubrics_auth_token:61 - User jeff.kayne@trubrics.com has been authenticated.
+2023-09-26 11:30:02.149 | INFO     | trubrics.platform.auth:get_trubrics_auth_token:61 - 用户 jeff.kayne@trubrics.com 已通过身份验证。
 ```
 
 ```python
-res = llm.generate(["Tell me a joke", "Write me a poem"])
+res = llm.generate(["讲个笑话", "给我写首诗"])
 ```
 
 ```output
-2023-09-26 11:30:07.760 | INFO     | trubrics.platform:log_prompt:102 - User prompt saved to Trubrics.
-2023-09-26 11:30:08.042 | INFO     | trubrics.platform:log_prompt:102 - User prompt saved to Trubrics.
+2023-09-26 11:30:07.760 | INFO     | trubrics.platform:log_prompt:102 - 用户提示词已保存到 Trubrics。
+2023-09-26 11:30:08.042 | INFO     | trubrics.platform:log_prompt:102 - 用户提示词已保存到 Trubrics。
 ```
 
 ```python
-print("--> GPT's joke: ", res.generations[0][0].text)
+print("--> GPT 的笑话: ", res.generations[0][0].text)
 print()
-print("--> GPT's poem: ", res.generations[1][0].text)
+print("--> GPT 的诗: ", res.generations[1][0].text)
 ```
 
 ```output
---> GPT's joke:
+--> GPT 的笑话:
 
-Q: What did the fish say when it hit the wall?
-A: Dam!
+Q: 鱼撞到墙上说了什么？
+A: 坝（Dam）！ (注：Dam 在英文中意为“水坝”，与 “Damn” [该死] 发音相近，此处是双关笑话)
 
---> GPT's poem:
+--> GPT 的诗:
 
-A Poem of Reflection
+反思之诗
 
-I stand here in the night,
-The stars above me filling my sight.
-I feel such a deep connection,
-To the world and all its perfection.
+我今夜站立，
+头顶是繁星点点。
+我感受到深刻的联系，
+与世界及其完美。
 
-A moment of clarity,
-The calmness in the air so serene.
-My mind is filled with peace,
-And I am released.
+内心的清晰，
+空气如此宁静。
+我的思绪充满了平静，
+我得以解脱。
 
-The past and the present,
-My thoughts create a pleasant sentiment.
-My heart is full of joy,
-My soul soars like a toy.
+过去与现在，
+我的想法构造出愉悦的情感。
+我的心充满了喜悦，
+我的灵魂像玩具般飞翔。
 
-I reflect on my life,
-And the choices I have made.
-My struggles and my strife,
-The lessons I have paid.
+我反思我的生活，
+以及我所做的选择。
+我的挣扎与艰辛，
+我所学到的教训。
 
-The future is a mystery,
-But I am ready to take the leap.
-I am ready to take the lead,
-And to create my own destiny.
+未来是迷，
+但我准备好迎接飞跃。
+我准备好引领，
+创造我自己的命运。
 ```
 
-### 2. With a chat model
+### 2. 与聊天模型（Chat Model）结合使用
 
 ```python
 from langchain.messages import HumanMessage, SystemMessage
@@ -146,14 +146,14 @@ chat_llm = ChatOpenAI(
 ```python
 chat_res = chat_llm.invoke(
     [
-        SystemMessage(content="Every answer of yours must be about OpenAI."),
-        HumanMessage(content="Tell me a joke"),
+        SystemMessage(content="你的所有回答必须是关于 OpenAI 的。"),
+        HumanMessage(content="讲个笑话"),
     ]
 )
 ```
 
 ```output
-2023-09-26 11:30:10.550 | INFO     | trubrics.platform:log_prompt:102 - User prompt saved to Trubrics.
+2023-09-26 11:30:10.550 | INFO     | trubrics.platform:log_prompt:102 - 用户提示词已保存到 Trubrics。
 ```
 
 ```python
@@ -161,11 +161,11 @@ print(chat_res.content)
 ```
 
 ```output
-Why did the OpenAI computer go to the party?
+OpenAI 电脑为什么要去参加派对？
 
-Because it wanted to meet its AI friends and have a byte of fun!
+因为它想见见它的 AI 朋友，并“字节”(byte) 找点乐子！ (注：byte 与 bite [咬/吃] 同音)
 ```
 
-```python
+```
 
 ```

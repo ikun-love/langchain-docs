@@ -2,24 +2,24 @@
 title: AWS SageMakerEndpoint
 ---
 
-LangChain.js supports integration with AWS SageMaker-hosted endpoints. Check [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) for a list of available models, and how to deploy your own.
+LangChain.js 支持与托管在 AWS SageMaker 上的端点集成。您可以查看 [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) 以获取可用模型列表，并了解如何部署您自己的模型。
 
-## Setup
+## 设置
 
-You'll need to install the official SageMaker SDK as a peer dependency:
+您需要将官方 SageMaker SDK 作为对等依赖项安装：
 
 ```bash npm
 npm install @aws-sdk/client-sagemaker-runtime
 ```
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅 [本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
 
-## Usage
+## 用法
 
 ```typescript
 import {
@@ -33,7 +33,7 @@ interface ResponseJsonInterface {
   };
 }
 
-// Custom for whatever model you'll be using
+// 自定义内容处理程序，以适应您将使用的具体模型
 class LLama213BHandler implements SageMakerLLMContentHandler {
   contentType = "application/json";
 
@@ -76,10 +76,10 @@ const model = new SageMakerEndpoint({
   },
   contentHandler,
   clientOptions: {
-    region: "YOUR AWS ENDPOINT REGION",
+    region: "YOUR AWS ENDPOINT REGION", // 您的 AWS 端点区域
     credentials: {
-      accessKeyId: "YOUR AWS ACCESS ID",
-      secretAccessKey: "YOUR AWS SECRET ACCESS KEY",
+      accessKeyId: "YOUR AWS ACCESS ID", // 您的 AWS 访问 ID
+      secretAccessKey: "YOUR AWS SECRET ACCESS KEY", // 您的 AWS 密钥
     },
   },
 });
@@ -101,7 +101,6 @@ console.log(res);
  */
 ```
 
-## Related
+## 相关内容
 
-
-- [Models guide](/oss/langchain/models)
+- [模型指南](/oss/langchain/models)

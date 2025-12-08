@@ -1,38 +1,38 @@
 ---
-title: Scalability & resilience
-sidebarTitle: Scalability & resilience
+title: 可伸缩性与弹性设计
+sidebarTitle: 可伸缩性与弹性设计
 ---
 
-LangSmith is designed to scale horizontally with your workload. Each instance of the service is stateless, and keeps no resources in memory. The service is designed to gracefully handle new instances being added or removed, including hard shutdown cases.
+LangSmith 的设计目标是能够根据您的工作负载进行水平扩展。服务的每个实例都是**无状态的**，并且不将任何资源保留在内存中。服务被设计为能够优雅地处理新实例的增加或移除，即使在发生硬关机（Hard Shutdown）的情况下也是如此。
 
-## Server scalability
+## 服务器可伸缩性
 
-As you add more instances to a service, they will share the HTTP load as long as an appropriate load balancer mechanism is placed in front of them. In most deployment modalities we configure a load balancer for the service automatically. In the “self-hosted without control plane” modality it’s your responsibility to add a load balancer. Since the instances are stateless any load balancing strategy will work, no session stickiness is needed, or recommended. Any instance of the server can communicate with any queue instance (through Redis PubSub), meaning that requests to cancel or stream an in-progress run can be handled by any arbitrary instance.
+当您向服务中添加更多实例时，只要在它们前面放置了适当的负载均衡机制，这些实例就会分担 HTTP 负载。在大多数部署模式中，我们会自动为服务配置负载均衡器。在“无控制平面自托管”（self-hosted without control plane）模式下，添加负载均衡器是您的责任。由于实例是无状态的，任何负载均衡策略都有效，**不需要**会话粘性（session stickiness），也不推荐使用。服务器的任何实例都可以与任何队列实例进行通信（通过 Redis PubSub），这意味着取消或流式传输进行中运行的请求可以由任何任意（随机）实例来处理。
 
-## Queue scalability
+## 队列可伸缩性
 
-As you add more instances to a service, they will increase run throughput linearly, as each instance is configured to handle a set number of concurrent runs (by default 10). Each attempt for each run will be handled by a single instance, with exactly-once semantics enforced through Postgres’s MVCC model (refer to section below for crash resilience details). Attempts that fail due to transient database errors are retried up to 3 times. We do not make use of long-lived transactions or locks, this enables us to make more efficient use of Postgres resources.
+当您向服务中添加更多实例时，它们将线性地增加运行吞吐量，因为每个实例都配置为处理固定数量的并发运行（默认为 10 个）。每个运行的每次尝试（Attempt）都将由单个实例处理，并且通过 Postgres 的 MVCC 模型强制执行**精确一次语义**（Exactly-Once Semantics）（有关崩溃恢复的详细信息，请参阅下面的相关部分）。由于瞬态数据库错误而失败的尝试最多会重试 3 次。我们不使用长期运行的事务或锁，这使我们能够更有效地利用 Postgres 资源。
 
-## Resilience
+## 弹性（Resilience）
 
-While a run is being handled by a queue instance, a periodic heartbeat timestamp will be recorded in Redis by that queue worker.
+当一个运行（Run）正在被某个队列实例处理时，该队列工作进程会定期在 Redis 中记录一个**心跳时间戳**（Heartbeat Timestamp）。
 
-When a graceful shutdown request is received (SIGINT) an instance enters shutdown mode, which
+当收到一个**优雅关机**（Graceful Shutdown）请求（SIGINT）时，实例会进入关机模式，该模式会执行以下操作：
 
-* stops accepting new HTTP requests
-* gives any in-progress runs a limited number of seconds to finish (if not finished it will be put back in the queue)
-* stops the instance from picking up more runs from the queue
+*   停止接受新的 HTTP 请求。
+*   给予任何进行中的运行有限的秒数来完成任务（如果未完成，它将被放回队列）。
+*   阻止实例从队列中拾取更多的运行任务。
 
-If a hard shutdown occurs due to a server crash or an infrastructure failure, any runs that were in progress will be picked up by an internal sweeper task that looks for in-progress runs that have breached their heartbeat window. The sweeper runs every 2 minutes and will put the runs back in the queue for another instance to pick them up.
+如果由于服务器崩溃或基础设施故障导致发生**硬关机**（Hard Shutdown），任何正在进行中的运行都将被一个内部**清理任务**（Sweeper Task）拾取。该任务会查找那些心跳时间窗（Heartbeat Window）已超期的进行中运行。清理任务每 2 分钟运行一次，并将这些运行放回队列，以便另一个实例可以拾取它们。
 
-## Postgres resilience
+## Postgres 弹性
 
-For deployment modalities where we manage the Postgres database, we have periodic backups and continuously replicated standby replicas for automatic failover. This Postgres configuration is available in the [Cloud deployment option](/langsmith/cloud) for [`Production` deployment types](/langsmith/control-plane#deployment-types) only.
+对于我们管理 Postgres 数据库的部署模式，我们提供周期性备份和持续复制的**备用副本**（Standby Replicas）以实现自动故障转移。这种 Postgres 配置仅在 [云部署选项](/langsmith/cloud) 的 [`生产` 部署类型](/langsmith/control-plane#deployment-types)中可用。
 
-All communication with Postgres implements retries for retry-able errors. If Postgres is momentarily unavailable, such as during a database restart, most/all traffic should continue to succeed. Prolonged failure of Postgres will render the Agent Server unavailable.
+所有与 Postgres 的通信都实现了对**可重试错误**（Retry-able Errors）的重试机制。如果 Postgres 暂时不可用，例如在数据库重启期间，大多数/所有流量应能继续成功。Postgres 的持续故障将导致 Agent Server 不可用。
 
-## Redis resilience
+## Redis 弹性
 
-All data that requires durable storage is stored in Postgres, not Redis. Redis is used only for ephemeral metadata, and communication between instances. Therefore we place no durability requirements on Redis.
+所有需要持久化存储的数据都存储在 Postgres 中，而不是 Redis 中。Redis 仅用于**临时元数据**以及实例之间的通信。因此，我们不对 Redis 施加持久性要求。
 
-All communication with Redis implements retries for retry-able errors. If Redis is momentarily unavailable, such as during a database restart, most/all traffic should continue to succeed. Prolonged failure of Redis will render the Agent Server unavailable.
+所有与 Redis 的通信都实现了对可重试错误的重试机制。如果 Redis 暂时不可用，例如在数据库重启期间，大多数/所有流量应能继续成功。Redis 的持续故障将导致 Agent Server 不可用。

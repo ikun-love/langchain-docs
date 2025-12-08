@@ -1,27 +1,27 @@
 ---
-title: How to evaluate an LLM application
-sidebarTitle: With the SDK
+title: 如何评估 LLM 应用
+sidebarTitle: 使用 SDK
 ---
 
-This guide shows you how to run an evaluation on an LLM application using the LangSmith SDK.
+本指南将向您展示如何使用 LangSmith SDK 对 LLM (大型语言模型) 应用运行评估。
 
 <Info>
-[Evaluations](/langsmith/evaluation-concepts#applying-evaluations) | [Evaluators](/langsmith/evaluation-concepts#evaluators) | [Datasets](/langsmith/evaluation-concepts#datasets)
+[评估概念](/langsmith/evaluation-concepts#applying-evaluations) | [评估器](/langsmith/evaluation-concepts#evaluators) | [数据集](/langsmith/evaluation-concepts#datasets)
 </Info>
 
-In this guide we'll go over how to evaluate an application using the [evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate) method in the LangSmith SDK.
+在本指南中，我们将介绍如何使用 LangSmith SDK 中的 `[evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate)` 方法来评估应用程序。
 
 <Check>
-For larger evaluation jobs in Python we recommend using [aevaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._arunner.aevaluate), the asynchronous version of [evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate). It is still worthwhile to read this guide first, as the two have identical interfaces, before reading the how-to guide on [running an evaluation asynchronously](/langsmith/evaluation-async).
+对于在 Python 中执行的大规模评估任务，我们推荐使用 `[aevaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._arunner.aevaluate)`，它是 `[evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate)` 的异步版本。即便如此，建议您先阅读本指南，因为这两个方法的接口是完全相同的，然后再阅读关于[异步运行评估](/langsmith/evaluation-async)的操作指南。
 
-In JS/TS evaluate() is already asynchronous so no separate method is needed.
+在 JavaScript/TypeScript 中，`evaluate()` 已经是异步的，因此不需要单独的方法。
 
-It is also important to configure the `max_concurrency`/`maxConcurrency` arg when running large jobs. This parallelizes evaluation by effectively splitting the dataset across threads.
+运行大型任务时，配置 `max_concurrency`/`maxConcurrency` 参数也十分重要。这会通过有效地将数据集拆分到不同的线程中来实现评估的并行化。
 </Check>
 
-## Define an application
+## 定义一个应用程序
 
-First we need an application to evaluate. Let's create a simple toxicity classifier for this example.
+首先，我们需要一个要评估的应用程序。在此示例中，我们将创建一个简单的毒性分类器。
 
 <CodeGroup>
 
@@ -29,16 +29,14 @@ First we need an application to evaluate. Let's create a simple toxicity classif
 from langsmith import traceable, wrappers
 from openai import OpenAI
 
-# Optionally wrap the OpenAI client to trace all model calls.
+# 可选：包装 OpenAI 客户端以追踪所有模型调用。
 oai_client = wrappers.wrap_openai(OpenAI())
 
-# Optionally add the 'traceable' decorator to trace the inputs/outputs of this function.
+# 可选：添加 'traceable' 装饰器以追踪此函数的输入/输出。
 @traceable
 def toxicity_classifier(inputs: dict) -> dict:
     instructions = (
-      "Please review the user query below and determine if it contains any form of toxic behavior, "
-      "such as insults, threats, or highly negative comments. Respond with 'Toxic' if it does "
-      "and 'Not toxic' if it doesn't."
+      "请审阅下方的用户查询，判断其中是否包含任何形式的有害行为（例如侮辱、威胁或高度负面评论）。如果包含，回复 'Toxic' (有害)；如果不包含，回复 'Not toxic' (无害)。"
     )
     messages = [
         {"role": "system", "content": instructions},
@@ -55,10 +53,10 @@ import { OpenAI } from "openai";
 import { wrapOpenAI } from "langsmith/wrappers";
 import { traceable } from "langsmith/traceable";
 
-// Optionally wrap the OpenAI client to trace all model calls.
+// 可选：包装 OpenAI 客户端以追踪所有模型调用。
 const oaiClient = wrapOpenAI(new OpenAI());
 
-// Optionally add the 'traceable' wrapper to trace the inputs/outputs of this function.
+// 可选：添加 'traceable' 包装器以追踪此函数的输入/输出。
 const toxicityClassifier = traceable(
   async (text: string) => {
     const result = await oaiClient.chat.completions.create({
@@ -81,14 +79,13 @@ const toxicityClassifier = traceable(
 
 </CodeGroup>
 
-We've optionally enabled tracing to capture the inputs and outputs of each step in the pipeline. To understand how to annotate your code for tracing, please refer to [this guide](/langsmith/annotate-code).
+我们可选地启用了追踪功能，用于捕获管道中每一步的输入和输出。要了解如何为代码添加追踪注解，请参阅[本指南](/langsmith/annotate-code)。
 
-## Create or select a dataset
+## 创建或选择一个数据集
 
-We need a [Dataset](/langsmith/evaluation-concepts#datasets) to evaluate our application on. Our dataset will contain labeled [examples](/langsmith/evaluation-concepts#examples) of toxic and non-toxic text.
+我们需要一个 [Dataset](/langsmith/evaluation-concepts#datasets) 来评估我们的应用程序。我们的数据集将包含带有标签的有害和无害文本的 [examples](/langsmith/evaluation-concepts#examples)。
 
-
-Requires `langsmith>=0.3.13`
+需要 `langsmith>=0.3.13`
 
 <CodeGroup>
 
@@ -135,7 +132,7 @@ import { Client } from "langsmith";
 
 const langsmith = new Client();
 
-// create a dataset
+// 创建一个数据集
 const labeledTexts = [
   ["Shut up, idiot", "Toxic"],
   ["You're a wonderful person", "Not toxic"],
@@ -162,18 +159,18 @@ await langsmith.createExamples({ inputs, outputs, datasetId: toxicDataset.id });
 
 </CodeGroup>
 
-For more details on datasets, refer to the [Manage datasets](/langsmith/manage-datasets) page.
+有关数据集的更多详细信息，请参阅[管理数据集](/langsmith/manage-datasets)页面。
 
-## Define an evaluator
+## 定义一个评估器
 
 <Check>
-You can also check out LangChain's open source evaluation package [openevals](https://github.com/langchain-ai/openevals) for common pre-built evaluators.
+您也可以查看 LangChain 的开源评估包 [openevals](https://github.com/langchain-ai/openevals) 以获取常见的预构建评估器。
 </Check>
 
-[Evaluators](/langsmith/evaluation-concepts#evaluators) are functions for scoring your application's outputs. They take in the example inputs, actual outputs, and, when present, the reference outputs. Since we have labels for this task, our evaluator can directly check if the actual outputs match the reference outputs.
+[Evaluators (评估器)](/langsmith/evaluation-concepts#evaluators) 是用于对应用程序输**出进行评分的函数。它们接收示例输入、实际输出，以及（如果存在时）参考输**出。由于我们为这项任务准备了标签，我们的评估器可以直接检查实际输出是否与参考输出相匹配。
 
-- Python: Requires `langsmith>=0.3.13`
-- TypeScript: Requires `langsmith>=0.2.9`
+- Python: 需要 `langsmith>=0.3.13`
+- TypeScript: 需要 `langsmith>=0.2.9`
 
 <CodeGroup>
 
@@ -199,31 +196,31 @@ function correct({
 
 </CodeGroup>
 
-## Run the evaluation
+## 运行评估
 
-We'll use the [evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate) / [aevaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._arunner.aevaluate) methods to run the evaluation.
+我们将使用 `[evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate)` / `[aevaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._arunner.aevaluate)` 方法来运行评估。
 
-The key arguments are:
+关键参数包括：
 
-* a target function that takes an input dictionary and returns an output dictionary. The `example.inputs` field of each [Example](/langsmith/example-data-format) is what gets passed to the target function. In this case our `toxicity_classifier` is already set up to take in example inputs so we can use it directly.
-* `data` - the name OR UUID of the LangSmith dataset to evaluate on, or an iterator of examples
-* `evaluators` - a list of evaluators to score the outputs of the function
+*   一个接收输入字典并返回输出字典的目标函数。每个 [Example](/langsmith/example-data-format) 的 `example.inputs` 字段就是传递给目标函数的内**容。在我们的例子中，`toxicity_classifier` 已经被设置为接收示例输入，因此我们可以直接使用它。
+*   `data` - 要评估的 LangSmith 数据集的名称或 UUID，或者是一个示例的迭代器 (iterator)。
+*   `evaluators` - 一组用于为函数输**出评分的评估器列表。
 
 
-Python: Requires `langsmith>=0.3.13`
+Python: 需要 `langsmith>=0.3.13`
 
 <CodeGroup>
 
 ```python Python
-# Can equivalently use the 'evaluate' function directly:
+# 也可以直接使用 'evaluate' 函数：
 # from langsmith import evaluate; evaluate(...)
 results = ls_client.evaluate(
     toxicity_classifier,
     data=dataset.name,
     evaluators=[correct],
-    experiment_prefix="gpt-4o-mini, baseline",  # optional, experiment name prefix
-    description="Testing the baseline system.",  # optional, experiment description
-    max_concurrency=4, # optional, add concurrency
+    experiment_prefix="gpt-4o-mini, baseline",  # 可选，实验名称前缀
+    description="Testing the baseline system.",  # 可选，实验描述
+    max_concurrency=4, # 可选，添加并发性
 )
 ```
 
@@ -233,31 +230,31 @@ import { evaluate } from "langsmith/evaluation";
 await evaluate((inputs) => toxicityClassifier(inputs["input"]), {
   data: datasetName,
   evaluators: [correct],
-  experimentPrefix: "gpt-4o-mini, baseline",  // optional, experiment name prefix
-  maxConcurrency: 4, // optional, add concurrency
+  experimentPrefix: "gpt-4o-mini, baseline",  // 可选，实验名称前缀
+  maxConcurrency: 4, // 可选，添加并发性
 });
 ```
 
 </CodeGroup>
 
-## Explore the results[​](#explore-the-results "Direct link to Explore the results")
+## 探索结果[​](#explore-the-results "Direct link to Explore the results")
 
-Each invocation of `evaluate()` creates an [Experiment](/langsmith/evaluation-concepts#experiments) which can be viewed in the LangSmith UI or queried via the SDK. Evaluation scores are stored against each actual output as feedback.
+每次调用 `evaluate()` 都会创建一个 [Experiment](/langsmith/evaluation-concepts#experiments)，可以在 LangSmith UI 中查看，或通过 SDK 查询。评估分数作为反馈存储在每个实际输出旁边。
 
-*If you've annotated your code for tracing, you can open the trace of each row in a side panel view.*
+*如果您已为代码添加了追踪注解，您可以在侧边栏视图中打开每一行的追踪记录。*
 
 ![](/langsmith/images/view-experiment.gif)
 
-## Reference code[​](#reference-code "Direct link to Reference code")
+## 参考代码[​](#reference-code "Direct link to Reference code")
 
-<Accordion title="Click to see a consolidated code snippet">
+<Accordion title="点击查看整合的代码片段">
     <CodeGroup>
 
 ```python Python
 from langsmith import Client, traceable, wrappers
 from openai import OpenAI
 
-# Step 1. Define an application
+# 步骤 1. 定义一个应用程序
 oai_client = wrappers.wrap_openai(OpenAI())
 
 @traceable
@@ -276,7 +273,7 @@ def toxicity_classifier(inputs: dict) -> str:
     )
     return result.choices[0].message.content
 
-# Step 2. Create a dataset
+# 步骤 2. 创建一个数据集
 ls_client = Client()
 dataset = ls_client.create_dataset(dataset_name="Toxic Queries")
 examples = [
@@ -310,19 +307,19 @@ ls_client.create_examples(
   examples=examples,
 )
 
-# Step 3. Define an evaluator
+# 步骤 3. 定义一个评估器
 def correct(inputs: dict, outputs: dict, reference_outputs: dict) -> bool:
     return outputs["output"] == reference_outputs["label"]
 
-# Step 4. Run the evaluation
-# Client.evaluate() and evaluate() behave the same.
+# 步骤 4. 运行评估
+# Client.evaluate() 和 evaluate() 的行为相同。
 results = ls_client.evaluate(
     toxicity_classifier,
     data=dataset.name,
     evaluators=[correct],
-    experiment_prefix="gpt-4o-mini, simple",  # optional, experiment name prefix
-    description="Testing the baseline system.",  # optional, experiment description
-    max_concurrency=4,  # optional, add concurrency
+    experiment_prefix="gpt-4o-mini, simple",  # 可选，实验名称前缀
+    description="Testing the baseline system.",  # 可选，实验描述
+    max_concurrency=4,  # 可选，添加并发性
 )
 ```
 
@@ -356,7 +353,7 @@ const toxicityClassifier = traceable(
 
 const langsmith = new Client();
 
-// create a dataset
+// 创建一个数据集
 const labeledTexts = [
   ["Shut up, idiot", "Toxic"],
   ["You're a wonderful person", "Not toxic"],
@@ -380,7 +377,7 @@ const datasetName = "Toxic Queries";
 const toxicDataset = await langsmith.createDataset(datasetName);
 await langsmith.createExamples({ inputs, outputs, datasetId: toxicDataset.id });
 
-// Row-level evaluator
+// 行级别的评估器
 function correct({
   outputs,
   referenceOutputs,
@@ -395,16 +392,16 @@ function correct({
 await evaluate((inputs) => toxicityClassifier(inputs["input"]), {
   data: datasetName,
   evaluators: [correct],
-  experimentPrefix: "gpt-4o-mini, simple",  // optional, experiment name prefix
-  maxConcurrency: 4, // optional, add concurrency
+  experimentPrefix: "gpt-4o-mini, simple",  // 可选，实验名称前缀
+  maxConcurrency: 4, // 可选，添加并发性
 });
 ```
 
 </CodeGroup>
 </Accordion>
 
-## Related[​](#related "Direct link to Related")
+## 相关[​](#related "Direct link to Related")
 
-* [Run an evaluation asynchronously](/langsmith/evaluation-async)
-* [Run an evaluation via the REST API](/langsmith/run-evals-api-only)
-* [Run an evaluation from the prompt playground](/langsmith/run-evaluation-from-prompt-playground)
+* [异步运行评估](/langsmith/evaluation-async)
+* [通过 REST API 运行评估](/langsmith/run-evals-api-only)
+* [从 Prompt Playground 运行评估](/langsmith/run-evaluation-from-prompt-playground)

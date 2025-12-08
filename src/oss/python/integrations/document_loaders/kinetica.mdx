@@ -2,7 +2,7 @@
 title: Kinetica
 ---
 
-This notebooks goes over how to load documents from Kinetica
+本 Notebook 将介绍如何从 Kinetica 加载文档。
 
 ```python
 pip install gpudb==7.2.0.9
@@ -13,7 +13,7 @@ from langchain_community.document_loaders.kinetica_loader import KineticaLoader
 ```
 
 ```python
-## Loading environment variables
+## 加载环境变量
 import os
 
 from dotenv import load_dotenv
@@ -25,8 +25,8 @@ load_dotenv()
 ```
 
 ```python
-# Kinetica needs the connection to the database.
-# This is how to set it up.
+# Kinetica 需要连接到数据库。
+# 以下是设置连接配置的方法。
 HOST = os.getenv("KINETICA_HOST", "http://127.0.0.1:9191")
 USERNAME = os.getenv("KINETICA_USERNAME", "")
 PASSWORD = os.getenv("KINETICA_PASSWORD", "")
@@ -39,9 +39,8 @@ def create_config() -> KineticaSettings:
 ```python
 from langchain_community.document_loaders.kinetica_loader import KineticaLoader
 
-# The following `QUERY` is an example which will not run; this
-# needs to be substituted with a valid `QUERY` that will return
-# data and the `SCHEMA.TABLE` combination must exist in Kinetica.
+# 下面的 `QUERY` 是一个示例，它不会实际运行；您需要将其替换为可以返回
+# 数据的有效 `QUERY`，并且 `SCHEMA.TABLE` 组合必须存在于 Kinetica 中。
 
 QUERY = "select text, survey_id from SCHEMA.TABLE limit 10"
 kinetica_loader = KineticaLoader(
@@ -57,9 +56,8 @@ print(kinetica_documents)
 ```python
 from langchain_community.document_loaders.kinetica_loader import KineticaLoader
 
-# The following `QUERY` is an example which will not run; this
-# needs to be substituted with a valid `QUERY` that will return
-# data and the `SCHEMA.TABLE` combination must exist in Kinetica.
+# 下面的 `QUERY` 是一个示例，它不会实际运行；您需要将其替换为可以返回
+# 数据的有效 `QUERY`，并且 `SCHEMA.TABLE` 组合必须存在于 Kinetica 中。
 
 QUERY = "select text, survey_id as source from SCHEMA.TABLE limit 10"
 kl = KineticaLoader(

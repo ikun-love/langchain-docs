@@ -1,12 +1,12 @@
 ---
-title: Searxng Search tool
+title: Searxng 搜索工具
 ---
 
-The `SearxngSearch` tool connects your agents and chains to the internet.
+`SearxngSearch` 工具将您的智能体（Agents）和链（Chains）连接到互联网。
 
-A wrapper around the SearxNG API, this tool is useful for performing meta-search engine queries using the SearxNG API. It is particularly helpful in answering questions about current events.
+作为 SearxNG API 的一个封装器（Wrapper），此工具非常适合使用 SearxNG API 执行元搜索引擎（Meta-search engine）查询。它在回答有关**当前事件**的问题时尤其有用。
 
-## Usage
+## 用法
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
@@ -22,25 +22,25 @@ const model = new ChatOpenAI({
   model: "gpt-4",
 });
 
-// `apiBase` will be automatically parsed from .env file, set "SEARXNG_API_BASE" in .env,
+// `apiBase` 将自动从 .env 文件中解析，请在 .env 中设置 "SEARXNG_API_BASE"
 const tools = [
   new SearxngSearch({
     params: {
-      format: "json", // Do not change this, format other than "json" is will throw error
+      format: "json", // 请勿更改此项，"json" 以外的格式将引发错误
       engines: "google",
     },
-    // Custom Headers to support rapidAPI authentication Or any instance that requires custom headers
+    // 自定义 Headers，用于支持 rapidAPI 认证或任何需要自定义请求头的实例
     headers: {},
   }),
 ];
 const prefix = ChatPromptTemplate.fromMessages([
   [
     "ai",
-    "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format.",
+    "请尽力回答以下问题。在您的最终答案中，请使用项目符号列表（bulleted list）的 Markdown 格式。",
   ],
   ["human", "{input}"],
 ]);
-// Replace this with your actual output parser.
+// 请用您实际的输出解析器替换此处的占位符。
 const customOutputParser = (
   input: BaseMessageChunk
 ): AgentAction | AgentFinish => ({
@@ -49,23 +49,23 @@ const customOutputParser = (
     output: input,
   },
 });
-// Replace this placeholder agent with your actual implementation.
+// 请用您实际的智能体实现替换此处的占位符。
 const agent = RunnableSequence.from([prefix, model, customOutputParser]);
 const executor = AgentExecutor.fromAgentAndTools({
   agent,
   tools,
 });
-console.log("Loaded agent.");
-const input = `What is LangChain? Describe in 50 words`;
-console.log(`Executing with input "${input}"...`);
+console.log("Agent 已加载。");
+const input = `什么是 LangChain？请用 50 个词进行描述`;
+console.log(`正在使用输入 "${input}" 执行...`);
 const result = await executor.invoke({ input });
 console.log(result);
 /**
- * LangChain is a framework for developing applications powered by language models, such as chatbots, Generative Question-Answering, summarization, and more. It provides a standard interface, integrations with other tools, and end-to-end chains for common applications. LangChain enables data-aware and powerful applications.
+ * LangChain 是一个用于开发由语言模型驱动的应用程序的框架，例如聊天机器人、生成式问答、文本摘要等。它提供了一个标准接口、与其他工具的集成以及针对常见应用的端到端链。LangChain 使得构建数据感知和强大的应用程序成为可能。
  */
 ```
 
-## Related
+## 相关
 
-- Tool [conceptual guide](/oss/langchain/tools)
-- Tool [how-to guides](/oss/langchain/tools)
+- 工具 [概念指南](/oss/langchain/tools)
+- 工具 [操作指南](/oss/langchain/tools)

@@ -2,26 +2,26 @@
 title: PipelineAI
 ---
 
->[PipelineAI](https://pipeline.ai) allows you to run your ML models at scale in the cloud. It also provides API access to [several LLM models](https://pipeline.ai).
+>[PipelineAI](https://pipeline.ai) 允许您在云端大规模运行您的机器学习（ML）模型。它还提供了对 [多个大型语言模型 (LLM)](https://pipeline.ai) 的 API 访问。
 
-This notebook goes over how to use LangChain with [PipelineAI](https://docs.pipeline.ai/docs).
+本 Jupyter Notebook 将指导您如何将 LangChain 与 [PipelineAI](https://docs.pipeline.ai/docs) 结合使用。
 
-## PipelineAI example
+## PipelineAI 示例
 
-[This example shows how PipelineAI integrated with LangChain](https://docs.pipeline.ai/docs/langchain) and it is created by PipelineAI.
+[此示例展示了 PipelineAI 如何与 LangChain 集成](https://docs.pipeline.ai/docs/langchain)，该示例由 PipelineAI 创建。
 
-## Setup
+## 设置
 
-The `pipeline-ai` library is required to use the `PipelineAI` API, AKA `Pipeline Cloud`. Install `pipeline-ai` using `pip install pipeline-ai`.
+要使用 `PipelineAI` API（也称为 `Pipeline Cloud`），需要安装 `pipeline-ai` 库。请使用以下命令通过 `pip` 安装 `pipeline-ai`：
 
 ```python
 # Install the package
 pip install -qU  pipeline-ai
 ```
 
-## Example
+## 示例
 
-### Imports
+### 导入
 
 ```python
 import os
@@ -31,25 +31,25 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 ```
 
-### Set the Environment API Key
+### 设置环境变量 API 密钥
 
-Make sure to get your API key from PipelineAI. Check out the [cloud quickstart guide](https://docs.pipeline.ai/docs/cloud-quickstart). You'll be given a 30 day free trial with 10 hours of serverless GPU compute to test different models.
+请确保您已从 PipelineAI 获取您的 API 密钥。请查阅 [云快速入门指南](https://docs.pipeline.ai/docs/cloud-quickstart)。您将获得一个 30 天的免费试用期，包含 10 小时的无服务器 GPU 计算资源，可用于测试不同的模型。
 
 ```python
 os.environ["PIPELINE_API_KEY"] = "YOUR_API_KEY_HERE"
 ```
 
-## Create the PipelineAI instance
+## 创建 PipelineAI 实例
 
-When instantiating PipelineAI, you need to specify the id or tag of the pipeline you want to use, e.g. `pipeline_key = "public/gpt-j:base"`. You then have the option of passing additional pipeline-specific keyword arguments:
+在实例化 `PipelineAI` 时，您需要指定要使用的 Pipeline 的 ID 或标签（tag），例如 `pipeline_key = "public/gpt-j:base"`。然后，您可以选择传递额外的特定于 Pipeline 的关键字参数：
 
 ```python
 llm = PipelineAI(pipeline_key="YOUR_PIPELINE_KEY", pipeline_kwargs={...})
 ```
 
-### Create a Prompt Template
+### 创建一个提示模板
 
-We will create a prompt template for Question and Answer.
+我们将创建一个用于问答（Question and Answer）的提示模板。
 
 ```python
 template = """Question: {question}
@@ -59,15 +59,15 @@ Answer: Let's think step by step."""
 prompt = PromptTemplate.from_template(template)
 ```
 
-### Initiate the LLMChain
+### 初始化 LLMChain
 
 ```python
 llm_chain = prompt | llm | StrOutputParser()
 ```
 
-### Run the LLMChain
+### 运行 LLMChain
 
-Provide a question and run the LLMChain.
+提供一个问题并运行 LLMChain。
 
 ```python
 question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"

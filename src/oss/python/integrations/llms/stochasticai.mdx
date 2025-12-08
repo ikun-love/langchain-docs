@@ -2,16 +2,16 @@
 title: StochasticAI
 ---
 
->[Stochastic Acceleration Platform](https://docs.stochastic.ai/docs/introduction/) aims to simplify the life cycle of a Deep Learning model. From uploading and versioning the model, through training, compression and acceleration to putting it into production.
+>[Stochastic Acceleration Platform](https://docs.stochastic.ai/docs/introduction/) 旨在简化深度学习模型的生命周期。它涵盖了从模型的上传和版本控制，到训练、压缩和加速，再到最终投入生产（部署）的整个过程。
 
-This example goes over how to use LangChain to interact with `StochasticAI` models.
+本示例将介绍如何使用 LangChain 与 `StochasticAI` 模型进行交互。
 
-You have to get the API_KEY and the API_URL [here](https://app.stochastic.ai/workspace/profile/settings?tab=profile).
+您需要 [在此处](https://app.stochastic.ai/workspace/profile/settings?tab=profile) 获取 API_KEY 和 API_URL。
 
 ```python
 from getpass import getpass
 
-STOCHASTICAI_API_KEY = getpass()
+STOCHAICAI_API_KEY = getpass()
 ```
 
 ```output
@@ -21,7 +21,7 @@ STOCHASTICAI_API_KEY = getpass()
 ```python
 import os
 
-os.environ["STOCHASTICAI_API_KEY"] = STOCHASTICAI_API_KEY
+os.environ["STOCHAICAI_API_KEY"] = STOCHASTICAI_API_KEY
 ```
 
 ```python
@@ -39,9 +39,9 @@ from langchain_core.prompts import PromptTemplate
 ```
 
 ```python
-template = """Question: {question}
+template = """问题: {question}
 
-Answer: Let's think step by step."""
+答案: 让我们一步一步思考。"""
 
 prompt = PromptTemplate.from_template(template)
 ```
@@ -55,13 +55,13 @@ llm_chain = LLMChain(prompt=prompt, llm=llm)
 ```
 
 ```python
-question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"
+question = "在贾斯汀·比伯出生那年，哪支 NFL 球队赢得了超级碗？"
 
 llm_chain.run(question)
 ```
 
 ```output
-"\n\nStep 1: In 1999, the St. Louis Rams won the Super Bowl.\n\nStep 2: In 1999, Beiber was born.\n\nStep 3: The Rams were in Los Angeles at the time.\n\nStep 4: So they didn't play in the Super Bowl that year.\n"
+"\n\n第 1 步: 1999 年，圣路易斯公羊队赢得了超级碗。\n\n第 2 步: 比伯出生于 1999 年。\n\n第 3 步: 当时公羊队在洛杉矶。\n\n第 4 步: 所以他们那年没有参加超级碗。\n"
 ```
 
 ```python

@@ -1,34 +1,31 @@
 ---
-title: Kuzu
+title: Kuzu 数据库集成
 ---
 
-> [Kùzu](https://kuzudb.com/) is an embeddable, scalable, extremely fast graph database.
-> It is permissively licensed with an MIT license, and you can see its source code [here](https://github.com/kuzudb/kuzu).
+> [Kùzu](https://kuzudb.com/) 是一个可嵌入的、可扩展的、极其快速的图数据库。
+> 它采用 MIT 许可证进行宽松授权，您可以在[这里](https://github.com/kuzudb/kuzu)查看其源代码。
 
-> Key characteristics of Kùzu:
+> Kùzu 的关键特性：
 >
->- Performance and scalability: Implements modern, state-of-the-art join algorithms for graphs.
->- Usability: Very easy to set up and get started with, as there are no servers (embedded architecture).
->- Interoperability: Can conveniently scan and copy data from external columnar formats, CSV, JSON and relational databases.
->- Structured property graph model: Implements the property graph model, with added structure.
->- Cypher support: Allows convenient querying of the graph in Cypher, a declarative query language.
+>- 性能与可扩展性：为图数据实现了现代化的、最先进的连接（Join）算法。
+>- 易用性：由于其无服务器（嵌入式架构），设置和上手极其简单。
+>- 互操作性：可以方便地从外部列式格式、CSV、JSON 和关系型数据库中扫描和复制数据。
+>- 结构化属性图模型：实现了属性图模型，并增加了结构化特性。
+>- Cypher 支持：允许使用声明性查询语言 Cypher 方便地查询图数据。
 
-> Get started with Kùzu by visiting their [documentation](https://docs.kuzudb.com/).
+> 要开始使用 Kùzu，请访问其[文档](https://docs.kuzudb.com/)。
 
-## Setting up
+## 设置 (Setting up)
 
-Kùzu is an embedded database (it runs in-process), so there are no servers to manage. Install the
-following dependencies to get started:
+Kùzu 是一个嵌入式数据库（它在进程内运行），因此无需管理任何服务器。请安装以下依赖项以开始使用：
 
 ```bash
 pip install -U langchain-kuzu langchain-openai langchain-experimental
 ```
 
-This installs Kùzu along with the LangChain integration for it, as well as the OpenAI Python package
-so that we can use OpenAI's LLMs. If you want to use other LLM providers, you can install their
-respective Python packages that come with LangChain.
+这会安装 Kuzu 以及 LangChain 用于它的集成，还会安装 OpenAI Python 包，以便我们可以使用 OpenAI 的 LLM（大型语言模型）。如果您想使用其他 LLM 提供商，可以安装它们各自附带 LangChain 的 Python 包。
 
-Here's how you would first create a Kùzu database on your local machine and connect to it:
+下面是如何在本地机器上首次创建 Kuzu 数据库并连接到它的方法：
 
 ```python
 import kuzu
@@ -37,10 +34,9 @@ db = kuzu.Database("test_db")
 conn = kuzu.Connection(db)
 ```
 
-## Create `KuzuGraph`
+## 创建 `KuzuGraph`
 
-Kùzu's integration with LangChain makes it convenient to create and update graphs from unstructured text, and also to query graphs via a Text2Cypher pipeline that utilizes the
-power of LangChain's LLM chains. To begin, we create a `KuzuGraph` object that uses the database object we created above in combination with the `KuzuGraph` constructor.
+Kuzu 与 LangChain 的集成使得从非结构化文本创建和更新图变得非常方便。它还允许通过利用 LangChain LLM Chain 能力的 Text2Cypher 管道来查询图。首先，我们创建一个 `KuzuGraph` 对象，它将结合上面创建的数据库对象和 `KuzuGraph` 构造函数。
 
 ```python
 from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
@@ -48,18 +44,16 @@ from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
 graph = KuzuGraph(db, allow_dangerous_requests=True)
 ```
 
-Say we want to transform the following text into a graph:
+假设我们想要将以下文本转换为图：
 
 ```python
 text = "Tim Cook is the CEO of Apple. Apple has its headquarters in California."
 ```
 
-We will make use of `LLMGraphTransformer` to use an LLM to extract nodes and relationships from the text.
-To make the graph more useful, we will define the following schema, such that the LLM will only
-extract nodes and relationships that match the schema.
+我们将使用 `LLMGraphTransformer` 来利用 LLM 从文本中提取节点和关系。为了使图更有用，我们将定义以下 Schema（模式），这样 LLM 只会提取与 Schema 匹配的节点和关系。
 
 ```python
-# Define schema
+# 定义 Schema
 allowed_nodes = ["Person", "Company", "Location"]
 allowed_relationships = [
     ("Person", "IS_CEO_OF", "Company"),
@@ -67,14 +61,14 @@ allowed_relationships = [
 ]
 ```
 
-The `LLMGraphTransformer` class provides a convenient way to convert the text into a list of graph documents.
+`LLMGraphTransformer` 类提供了一种方便的方法将文本转换为图文档列表。
 
 ```python
 from langchain_core.documents import Document
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
 
-# Define the LLMGraphTransformer
+# 定义 LLMGraphTransformer
 llm_transformer = LLMGraphTransformer(
     llm=ChatOpenAI(model="gpt-4o-mini", temperature=0, api_key=OPENAI_API_KEY),
     allowed_nodes=allowed_nodes,
@@ -93,25 +87,24 @@ graph_documents[:2]
 [GraphDocument(nodes=[Node(id='Tim Cook', type='Person', properties={}), Node(id='Apple', type='Company', properties={}), Node(id='California', type='Location', properties={})], relationships=[Relationship(source=Node(id='Tim Cook', type='Person', properties={}), target=Node(id='Apple', type='Company', properties={}), type='IS_CEO_OF', properties={}), Relationship(source=Node(id='Apple', type='Company', properties={}), target=Node(id='California', type='Location', properties={}), type='HAS_HEADQUARTERS_IN', properties={})], source=Document(metadata={}, page_content='Tim Cook is the CEO of Apple. Apple has its headquarters in California.'))]
 ```
 
-We can then call the above defined `KuzuGraph` object's `add_graph_documents` method to ingest the graph documents into the Kùzu database.
-The `include_source` argument is set to `True` so that we also create relationships between each entity node and the source document that it came from.
+然后，我们可以调用上面定义的 `KuzuGraph` 对象的 `add_graph_documents` 方法，将图文档摄取（ingest）到 Kuzu 数据库中。我们将 `include_source` 参数设置为 `True`，这样我们也会在每个实体节点和它来源的源文档之间创建关系。
 
 ```python
-# Add the graph document to the graph
+# 将图文档添加到图中
 graph.add_graph_documents(
     graph_documents,
     include_source=True,
 )
 ```
 
-## Creating `KuzuQAChain`
+## 创建 `KuzuQAChain`
 
-To query the graph via a Text2Cypher pipeline, we can define a `KuzuQAChain` object. Then, we can invoke the chain with a query by connecting to the existing database that's stored in the `test_db` directory defined above.
+要通过 Text2Cypher 管道查询图，我们可以定义一个 `KuzuQAChain` 对象。然后，我们可以通过连接到上面定义的存储在 `test_db` 目录中的现有数据库来调用这个 Chain 处理查询。
 
 ```python
 from langchain_kuzu.chains.graph_qa.kuzu import KuzuQAChain
 
-# Create the KuzuQAChain with verbosity enabled to see the generated Cypher queries
+# 创建 KuzuQAChain 并启用详细输出（verbosity）以便查看生成的 Cypher 查询
 chain = KuzuQAChain.from_llm(
     llm=ChatOpenAI(model="gpt-4o-mini", temperature=0.3, api_key=OPENAI_API_KEY),
     graph=graph,
@@ -120,9 +113,9 @@ chain = KuzuQAChain.from_llm(
 )
 ```
 
-Note that we set a temperature that's slightly higher than zero to avoid the LLM being overly concise in its response.
+请注意，我们将 temperature 设置得略高于零，以避免 LLM 在响应中过于简洁。
 
-Let's ask some questions using the QA chain.
+让我们使用 QA Chain 提出一些问题。
 
 ```python
 chain.invoke("Who is the CEO of Apple?")
@@ -162,10 +155,10 @@ Full Context:
  'result': 'Apple is headquartered in California.'}
 ```
 
-## Refresh graph schema
+## 刷新图 Schema
 
-If you mutate or update the graph, you can inspect the refreshed schema information that's used by the Text2Cypher chain to generate Cypher statements.
-You don't need to manually call `refresh_schema()` each time as it's called automatically when you invoke the chain.
+如果您修改或更新了图，您可以检查 Text2Cypher Chain 用于生成 Cypher 语句所依据的刷新后的 Schema 信息。
+您不需要每次都手动调用 `refresh_schema()`，因为它在您调用 Chain 时会自动调用。
 
 ```python
 graph.refresh_schema()
@@ -179,9 +172,9 @@ Relationships properties: [{'properties': [], 'label': 'HAS_HEADQUARTERS_IN'}, {
 Relationships: ['(:Company)-[:HAS_HEADQUARTERS_IN]->(:Location)', '(:Chunk)-[:MENTIONS_Chunk_Person]->(:Person)', '(:Chunk)-[:MENTIONS_Chunk_Location]->(:Location)', '(:Person)-[:IS_CEO_OF]->(:Company)', '(:Chunk)-[:MENTIONS_Chunk_Company]->(:Company)']
 ```
 
-## Use separate LLMs for Cypher and answer generation
+## 为 Cypher 和答案生成使用独立的 LLM
 
-You can specify `cypher_llm` and `qa_llm` separately to use different LLMs for Cypher generation and answer generation.
+您可以分别指定 `cypher_llm` 和 `qa_llm` 来使用不同的 LLM 进行 Cypher 生成和答案生成。
 
 ```python
 chain = KuzuQAChain.from_llm(

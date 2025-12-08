@@ -1,151 +1,152 @@
+```markdown
 ---
-title: Prompt engineering concepts
-sidebarTitle: Concepts
+title: 提示工程概念
+sidebarTitle: 概念
 ---
 
 
-While traditional software applications are built by writing code, AI applications often derive their logic from prompts.
+传统的软件应用是通过编写代码构建的，而 AI 应用的逻辑往往来源于提示（Prompts）。
 
-This guide will walk through the key concepts of prompt engineering in LangSmith.
+本指南将带您了解 LangSmith 中提示工程的关键概念。
 
-## Why prompt engineering?
+## 为什么需要提示工程？
 
-A prompt sets the stage for the model, like an audience member at an improv show directing the actor's next performance - it guides the model's behavior without changing its underlying capabilities. Just as telling an actor to "be a pirate" determines how they act, a prompt provides instructions, examples, and context that shape how the model responds.
+提示为模型设定了一个场景，就像即兴表演秀中的观众指导演员接下来的表演一样——它指导了模型行为，但并未改变其底层能力。正如告诉演员“扮演一个海盗”会决定他们的表演方式一样，提示提供了指令、示例和上下文，从而塑造模型的响应方式。
 
-Prompt engineering is important because it allows you to change the way the model behaves. While there are other ways to change the model's behavior (like fine-tuning), prompt engineering is usually the simplest to get started with and often provides the highest ROI.
+提示工程很重要，因为它让您能够改变模型的行为方式。虽然还有其他改变模型行为的方法（例如微调 Fine-tuning），但提示工程通常是最简单的入门方式，并且往往能带来最高的投资回报率（ROI）。
 
-We often see that prompt engineering is multi-disciplinary. Sometimes the best prompt engineer is not the software engineer who is building the application, but rather the product manager or another domain expert. It is important to have the proper tooling and infrastructure to support this cross-disciplinary building.
+我们通常发现提示工程是多学科交叉的。有时，最棒的提示工程师不是构建应用的软件工程师，而是产品经理或其他领域专家。因此，拥有支持这种跨学科构建的适当工具和基础设施非常重要。
 
-## Prompts vs. prompt templates
+## 提示 vs. 提示模板
 
-Although we often use these terms interchangably, it is important to understand the difference between "prompts" and "prompt templates".
+尽管我们经常互换使用这些术语，但理解“提示 (Prompts)”和“提示模板 (Prompt Templates)”之间的区别很重要。
 
-Prompts refer to the messages that are passed into the language model.
+**提示**指的是传入语言模型的那些消息（Messages）。
 
-Prompt Templates refer to a way of formatting information to get that prompt to hold the information that you want. Prompt templates can include variables for few shot examples, outside context, or any other external data that is needed in your prompt.
+**提示模板**指的是格式化信息的一种方式，目的是让该提示能够容纳您想要的信息。提示模板可以包含用于少样本示例（few shot examples）、外部上下文或提示中所需的任何其他外部数据的变量。
 
 ![](/langsmith/images/prompt-vs-prompt-template.png)
 
-## Prompts in LangSmith
+## LangSmith 中的提示
 
-You can store and version prompts templates in LangSmith. There are few key aspects of a prompt template to understand.
+您可以在 LangSmith 中存储和版本化提示模板。要理解提示模板，需要了解几个关键方面。
 
-### Chat vs Completion
+### 聊天 vs. 补全（Chat vs. Completion）
 
-There are two different types of prompts: `chat` style prompts and `completion` style prompts.
+有两种不同类型的提示：`chat` 风格提示和 `completion` 风格提示。
 
-Chat style prompts are a **list of messages**. This is the prompting style supported by most model APIs these days, and so this should generally be preferred.
+`Chat` 风格提示是**一系列消息（a list of messages）**。这是当今大多数模型 API 支持的提示风格，因此通常应该优先使用它。
 
-Completion style prompts are just a string. This is an older style of prompting, and so mostly exists for legacy reasons.
+`Completion` 风格提示**仅是一个字符串**。这是一种较旧的提示风格，所以它主要出于遗留原因而存在。
 
-### F-string vs. mustache
+### F-string vs. Mustache
 
-You can format your prompt with input variables using either [f-string](https://realpython.com/python-f-strings/) or [mustache](https://mustache.github.io/mustache.5.html) format. Here is an example prompt with f-string format:
+您可以使用 [f-string](https://realpython.com/python-f-strings/) 或 [Mustache](https://mustache.github.io/mustache.5.html) 格式，利用输入变量格式化您的提示。以下是一个使用 f-string 格式的示例提示：
 
 ```python
 Hello, {name}!
 ```
 
-And here is one with mustache:
+以下是一个使用 Mustache 的示例：
 
 ```python
 Hello, {{name}}!
 ```
 
-To add a conditional mustache prompt:
+要添加一个条件性的 Mustache 提示：
 
 ```python
 {{#is_logged_in}}  Welcome back, {{name}}!{{else}}  Please log in.{{/is_logged_in}}
 ```
 
-* The playground UI will pick up `is_logged_in` variable, but any nested variables you'll need to specify yourself. Paste the following into inputs to ensure the above conditional prompt works:
+* Playground UI 会识别出 `is_logged_in` 变量，但任何嵌套的变量都需要您自己指定。请在输入（inputs）中粘贴以下内容，以确保上述条件提示能够正常工作：
 
 ```json
 {  "name": "Alice"}
 ```
 
 <Check>
-The LangSmith Playground uses `f-string` as the default template format, but you can switch to `mustache` format in the prompt settings/template format section. `mustache` gives you more flexibility around conditional variables, loops, and nested keys. For conditional variables, you'll need to manually add json variables in the 'inputs' section. Read [the documentation](https://mustache.github.io/mustache.5.html)
+LangSmith Playground 默认使用 `f-string` 作为模板格式，但您可以在提示设置/模板格式部分切换到 `mustache` 格式。`Mustache` 在处理条件变量、循环和嵌套键方面为您提供了更大的灵活性。对于条件变量，您需要在“输入 (inputs)”部分手动添加 JSON 变量。请阅读 [文档](https://mustache.github.io/mustache.5.html)
 </Check>
 
-### Tools
+### 工具（Tools）
 
-Tools are interfaces the LLM can use to interact with the outside world. Tools consist of a name, description, and JSON schema of arguments used to call the tool.
+工具是 LLM 可以用来与外部世界交互的接口。工具由名称、描述以及用于调用该工具的参数的 JSON 模式（JSON schema）组成。
 
-### Structured output
+### 结构化输出（Structured output）
 
-Structured output is a feature of most state of the art LLMs, wherein instead of producing raw text as output they stick to a specified schema. This may or may not use [Tools](#tools) under the hood.
+结构化输出是大多数最先进 LLM 的一个特性，即它们不会产生纯文本（raw text）作为输出，而是遵循指定的模式（schema）。这可能涉及底层使用 [工具](#tools)，也可能不涉及。
 
 <Check>
-Structured output is similar to tools, but different in a few key ways. With tools, the LLM choose which tool to call (or may choose not to call any); with structured output, the LLM **always** responds in this format. With tools, the LLM may select **multiple** tools; with structured output, only one response is generate.
+结构化输出与工具类似，但在几个关键方面有所不同。在使用工具时，LLM 选择调用哪个工具（或者可能选择不调用任何工具）；而在使用结构化输出时，LLM **总是**以这种格式响应。使用工具时，LLM 可能会选择**多个**工具；而结构化输出只生成一个响应。
 </Check>
 
-### Model
+### 模型（Model）
 
-Optionally, you can store a model configuration alongside a prompt template. This includes the name of the model and any other parameters (temperature, etc).
+您可以选择将模型配置与提示模板一起存储。这包括模型名称以及任何其他参数（如 temperature 调温器等）。
 
-## Prompt versioning
+## 提示版本控制（Prompt versioning）
 
-Verisioning is a key part of iterating and collaborating on your different prompts.
+版本控制是迭代和协作处理不同提示的关键部分。
 
-### Commits
+### 提交（Commits）
 
-Every saved update to a prompt creates a new commit with a unique commit hash. This allows you to:
+保存提示的每一次更新都会创建一个带有唯一提交哈希（commit hash）的新提交。这使您能够：
 
-- View the full history of changes to a prompt.
-- Review earlier versions.
-- Revert to a previous state if needed.
-- Reference specific versions in your code using the commit hash (e.g., `client.pull_prompt("prompt_name:commit_hash")`).
+- 查看提示更改的完整历史记录。
+- 审查早期版本。
+- 如果需要，恢复到先前状态。
+- 在代码中引用特定版本，使用提交哈希（例如：`client.pull_prompt("prompt_name:commit_hash")`）。
 
-In the UI, you can compare a commit with its previous version by toggling **Show diff** in the top-right corner of the **Commits** tab.
+在 UI 中，您可以在 **Commits** 标签页的右上角切换 **Show diff**（显示差异），将一次提交与其前一个版本进行比较。
 
 ![The commit hashes list for a prompt with the diff of one commit.](/langsmith/images/commit-diff.png)
 
-### Tags
+### 标签（Tags）
 
-Commit tags are human-readable labels that point to specific commits in your prompt's history. Unlike commit hashes, tags can be moved to point to different commits, allowing you to update which version your code references without changing the code itself.
+提交标签（Commit tags）是指向您提示历史中特定提交的人类可读的标签。与提交哈希不同，标签可以移动到指向不同的提交，从而允许您在不更改代码的情况下更新代码所引用的版本。
 
-Use cases for commit tags can include:
+提交标签的用例包括：
 
-- **Environment-specific tags**: Mark commits for `production` or `staging` environments, which allows you to switch between different versions without changing your code.
-- **Version control**: Mark stable versions of your prompts, for example, `v1`, `v2`, which lets you reference specific versions in your code and track changes over time.
-- **Collaboration**: Mark versions ready for review, which enables you to share specific versions with collaborators and get feedback.
+- **环境特定的标签**：为 `production` 或 `staging` 环境标记提交，这允许您在不更改代码的情况下切换不同版本。
+- **版本控制**：标记稳定的提示版本，例如 `v1`、`v2`，这使您能够在代码中引用特定版本并跟踪随时间的变化。
+- **协作**：标记准备好审查的版本，这使您能够与协作者共享特定版本并获取反馈。
 
 <Note>
-**Not to be confused with resource tags**: Commit tags reference specific prompt versions. [Resource tags](/langsmith/set-up-resource-tags) are key-value pairs used to organize workspace resources.
+**不要与资源标签混淆**：提交标签引用特定的提示版本。[资源标签](/langsmith/set-up-resource-tags) 是用于组织工作区资源的键值对。
 </Note>
 
-For detailed information on creating and managing commit tags, see [Manage prompts](/langsmith/manage-prompts#commit-tags).
+有关创建和管理提交标签的详细信息，请参阅 [管理提示](/langsmith/manage-prompts#commit-tags)。
 
-## Prompt playground
+## 提示 Playground
 
-The prompt playground makes the process of iterating and testing your prompts seamless. You can enter the playground from the sidebar or directly from a saved prompt.
+提示 Playground 使迭代和测试提示的过程变得无缝。您可以从侧边栏或直接从保存的提示进入 Playground。
 
-In the playground you can:
+在 Playground 中，您可以：
 
-* Change the model being used
-* Change prompt template being used
-* Change the output schema
-* Change the tools available
-* Enter the input variables to run through the prompt template
-* Run the prompt through the model
-* Observe the outputs
+* 更改正在使用的模型
+* 更改正在使用的提示模板
+* 更改输出模式（schema）
+* 更改可用的工具
+* 输入输入变量以通过提示模板运行
+* 通过模型运行提示
+* 观察输出结果
 
-## Testing multiple prompts
+## 测试多个提示
 
-You can add more prompts to your playground to easily compare outputs and decide which version is better:
+您可以向 Playground 添加更多提示，以便轻松比较输出并决定哪个版本更好：
 
 ![](/langsmith/images/add-prompt-to-playground.gif)
 
-## Testing over a dataset
+## 基于数据集进行测试
 
-To test over a dataset, you simply select the dataset from the top right and press Start. You can modify whether the results are streamed back as well as how many repitions there are in the test.
+要基于数据集进行测试，只需在右上角选择数据集并按下 **Start**（开始）。您可以修改结果是否被流式传输（streamed back）以及测试的重复次数。
 
 ![](/langsmith/images/test-over-dataset-in-playground.gif)
 
-You can click on the "View Experiment" button to dive deeper into the results of the test.
+您可以点击 “View Experiment”（查看实验）按钮，深入了解测试结果。
 
-## Video guide
+## 视频指南
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/h4f6bIWGkog?si=IVJFfhldC7M3HL4G"
@@ -154,3 +155,4 @@ You can click on the "View Experiment" button to dive deeper into the results of
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
+```

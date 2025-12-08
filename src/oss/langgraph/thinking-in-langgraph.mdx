@@ -1,209 +1,209 @@
 ---
-title: Thinking in LangGraph
-description: Learn how to think about building agents with LangGraph
+title: 以 LangGraph 的思维方式构建
+description: 学习如何思考使用 LangGraph 来构建智能体
 ---
 
-When you build an agent with LangGraph, you will first break it apart into discrete steps called **nodes**. Then, you will describe the different decisions and transitions from each of your nodes. Finally, you connect nodes together through a shared **state** that each node can read from and write to.
+当你使用 LangGraph 构建智能体时，你首先需要将其分解为称为**节点 (nodes)** 的离散步骤。然后，你需要描述每个节点之间的不同决策和**转换 (transitions)**。最后，你通过一个共享的**状态 (state)** 将这些节点连接起来，状态是每个节点都可以读取和写入的。
 
-In this walkthrough, we'll guide you through the thought process of building a customer support email agent with LangGraph.
+在本指南中，我们将引导你构建一个客户支持邮件智能体的思路过程。
 
-## Start with the process you want to automate
+## 从你要自动化的流程开始
 
-Imagine that you need to build an AI agent that handles customer support emails. Your product team has given you these requirements:
+想象一下，你需要构建一个处理客户支持邮件的人工智能智能体。你的产品团队为你设定了以下要求：
 
 ```txt
-The agent should:
+该智能体应该：
 
-- Read incoming customer emails
-- Classify them by urgency and topic
-- Search relevant documentation to answer questions
-- Draft appropriate responses
-- Escalate complex issues to human agents
-- Schedule follow-ups when needed
+- 读取传入的客户邮件
+- 根据紧急程度和主题对邮件进行分类
+- 搜索相关文档以回答问题
+- 起草适当的回复
+- 将复杂问题升级给人工坐席
+- 适时安排后续跟进
 
-Example scenarios to handle:
+需要处理的示例场景：
 
-1. Simple product question: "How do I reset my password?"
-2. Bug report: "The export feature crashes when I select PDF format"
-3. Urgent billing issue: "I was charged twice for my subscription!"
-4. Feature request: "Can you add dark mode to the mobile app?"
-5. Complex technical issue: "Our API integration fails intermittently with 504 errors"
+1. 简单的产品问题：“我如何重置我的密码？”
+2. Bug 报告：“当我选择 PDF 格式时，导出功能崩溃了”
+3. 紧急的账单问题：“我的订阅被重复收费了！”
+4. 功能请求：“可以在移动应用中添加深色模式吗？”
+5. 复杂的技朮问题：“我们的 API 集成间歇性地出现 504 错误”
 ```
 
-To implement an agent in LangGraph, you will usually follow the same five steps.
+要使用 LangGraph 实现一个智能体，你通常会遵循相同的五个步骤。
 
-## Step 1: Map out your workflow as discrete steps
+## 步骤 1：将工作流程映射为离散步骤
 
-Start by identifying the distinct steps in your process. Each step will become a **node** (a function that does one specific thing). Then, sketch how these steps connect to each other.
+首先确定流程中的独立步骤。每个步骤将成为一个**节点**（一个执行特定任务的函数）。然后，勾勒出这些步骤如何相互连接。
 
 ```mermaid
 flowchart TD
-    A[START] --> B[Read Email]
-    B --> C[Classify Intent]
+    A[开始] --> B[读取邮件]
+    B --> C[分类意图]
 
-    C -.-> D[Doc Search]
-    C -.-> E[Bug Track]
-    C -.-> F[Human Review]
+    C -.-> D[文档搜索]
+    C -.-> E[Bug 跟踪]
+    C -.-> F[人工审核]
 
-    D --> G[Draft Reply]
+    D --> G[起草回复]
     E --> G
     F --> G
 
-    G -.-> H[Human Review]
-    G -.-> I[Send Reply]
+    G -.-> H[人工审核]
+    G -.-> I[发送回复]
 
-    H --> J[END]
-    I --> J[END]
+    H --> J[结束]
+    I --> J[结束]
 ```
 
-The arrows in this diagram show possible paths, but the actual decision of which path to take happens inside each node.
+这个图中的箭头显示了**可能的路径**，但实际沿着哪条路径前进的决策发生在每个节点**内部**。
 
-Now that we've identified the components in our workflow, let's understand what each node needs to do:
+现在我们已经确定了工作流程中的组件，让我们了解每个节点需要做什么：
 
-- `Read Email`: Extract and parse the email content
-- `Classify Intent`: Use an LLM to categorize urgency and topic, then route to appropriate action
-- `Doc Search`: Query your knowledge base for relevant information
-- `Bug Track`: Create or update issue in tracking system
-- `Draft Reply`: Generate an appropriate response
-- `Human Review`: Escalate to human agent for approval or handling
-- `Send Reply`: Dispatch the email response
+- `读取邮件 (Read Email)`：提取和解析邮件内容
+- `分类意图 (Classify Intent)`：使用 LLM (大语言模型) 对紧急程度和主题进行分类，然后路由到适当的操作
+- `文档搜索 (Doc Search)`：查询你的知识库以获取相关信息
+- `Bug 跟踪 (Bug Track)`：在跟踪系统中创建或更新问题
+- `起草回复 (Draft Reply)`：生成适当的回复
+- `人工审核 (Human Review)`：升级给人工坐席进行批准或处理
+- `发送回复 (Send Reply)`：分发邮件回复
 
 <Tip>
-Notice that some nodes make decisions about where to go next (`Classify Intent`, `Draft Reply`, `Human Review`), while others always proceed to the same next step (`Read Email` always goes to `Classify Intent`, `Doc Search` always goes to `Draft Reply`).
+注意，有些节点会做出关于下一步去向的决定（例如 `Classify Intent`, `Draft Reply`, `Human Review`），而有些节点总是按顺序进行到下一步（例如 `Read Email` 总是导向 `Classify Intent`，`Doc Search` 总是导向 `Draft Reply`）。
 </Tip>
 
-## Step 2: Identify what each step needs to do
+## 步骤 2：确定每一步需要做什么
 
-For each node in your graph, determine what type of operation it represents and what context it needs to work properly.
+对于图中的每个节点，确定它代表哪种类型的操作，以及它需要什么上下文才能正常工作。
 
 <CardGroup cols={2}>
-    <Card title="LLM steps" icon="brain" href="#llm-steps">
-        Use when you need to understand, analyze, generate text, or make reasoning decisions
+    <Card title="LLM 步骤" icon="brain" href="#llm-steps">
+        当需要理解、分析、生成文本或做出推理决策时使用。
     </Card>
-    <Card title="Data steps" icon="database" href="#data-steps">
-        Use when you need to retrieve information from external sources
+    <Card title="数据步骤" icon="database" href="#data-steps">
+        当需要从外部源检索信息时使用。
     </Card>
-    <Card title="Action steps" icon="bolt" href="#action-steps">
-        Use when you need to perform external actions
+    <Card title="动作步骤" icon="bolt" href="#action-steps">
+        当需要执行外部操作时使用。
     </Card>
-    <Card title="User input steps" icon="user" href="#user-input-steps">
-        Use when you need human intervention
+    <Card title="用户输入步骤" icon="user" href="#user-input-steps">
+        当需要人工干预时使用。
     </Card>
 </CardGroup>
 
-### LLM steps
+### LLM 步骤
 
-When a step needs to understand, analyze, generate text, or make reasoning decisions:
+当某个步骤需要理解、分析、生成文本或做出推理决策时：
 
 <AccordionGroup>
-    <Accordion title="Classify intent">
-        - Static context (prompt): Classification categories, urgency definitions, response format
-        - Dynamic context (from state): Email content, sender information
-        - Desired outcome: Structured classification that determines routing
+    <Accordion title="意图分类">
+        - 静态上下文（提示词）：分类类别、紧急程度定义、响应格式
+        - 动态上下文（来自状态）：邮件内容、发件人信息
+        - 期望结果：决定路由的结构化分类
     </Accordion>
 
-    <Accordion title="Draft reply">
-        - Static context (prompt): Tone guidelines, company policies, response templates
-        - Dynamic context (from state): Classification results, search results, customer history
-        - Desired outcome: Professional email response ready for review
+    <Accordion title="起草回复">
+        - 静态上下文（提示词）：语气指南、公司政策、响应模板
+        - 动态上下文（来自状态）：分类结果、搜索结果、客户历史记录
+        - 期望结果：准备好供审核的专业邮件回复
     </Accordion>
 </AccordionGroup>
 
-### Data steps
+### 数据步骤
 
-When a step needs to retrieve information from external sources:
+当某个步骤需要从外部源检索信息时：
 
 <AccordionGroup>
-    <Accordion title="Document search">
-        - Parameters: Query built from intent and topic
-        - Retry strategy: Yes, with exponential backoff for transient failures
-        - Caching: Could cache common queries to reduce API calls
+    <Accordion title="文档搜索">
+        - 参数：根据意图和主题构建的查询
+        - 重试策略：是，使用指数退避 (exponential backoff) 来处理瞬时故障
+        - 缓存：可能会缓存常见查询以减少 API 调用
     </Accordion>
 
-    <Accordion title="Customer history lookup">
-        - Parameters: Customer email or ID from state
-        - Retry strategy: Yes, but with fallback to basic info if unavailable
-        - Caching: Yes, with time-to-live to balance freshness and performance
+    <Accordion title="客户历史记录查找">
+        - 参数：来自状态的客户电子邮件或 ID
+        - 重试策略：是，但如果信息不可用则回退到基本信息
+        - 缓存：是，设置生存时间 (time-to-live) 以平衡新鲜度和性能
     </Accordion>
 </AccordionGroup>
 
-### Action steps
+### 动作步骤
 
-When a step needs to perform an external action:
+当某个步骤需要执行外部操作时：
 
 <AccordionGroup>
-    <Accordion title="Send reply">
-        - When to execute node: After approval (human or automated)
-        - Retry strategy: Yes, with exponential backoff for network issues
-        - Should not cache: Each send is a unique action
+    <Accordion title="发送回复">
+        - 何时执行节点：批准后（人工或自动）
+        - 重试策略：是，使用指数退避来处理网络问题
+        - 不应缓存：每次发送都是一个唯一动作
     </Accordion>
 
-    <Accordion title="Bug track">
-        - When to execute node: Always when intent is "bug"
-        - Retry strategy: Yes, critical to not lose bug reports
-        - Returns: Ticket ID to include in response
+    <Accordion title="Bug 跟踪">
+        - 何时执行节点：当意图为“bug”时始终执行
+        - 重试策略：是，不丢失 Bug 报告至关重要
+        - 返回值：要包含在回复中的 Ticket ID
     </Accordion>
 </AccordionGroup>
 
-### User input steps
+### 用户输入步骤
 
-When a step needs human intervention:
+当某个步骤需要人工干预时：
 
 <AccordionGroup>
-    <Accordion title="Human review node">
-        - Context for decision: Original email, draft response, urgency, classification
-        - Expected input format: Approval boolean plus optional edited response
-        - When triggered: High urgency, complex issues, or quality concerns
+    <Accordion title="人工审核节点">
+        - 决策上下文：原始邮件、起草的回复、紧急程度、分类
+        - 期望的输入格式：批准布尔值以及可选的编辑后的回复
+        - 何时触发：高紧急程度、复杂问题或质量担忧
     </Accordion>
 </AccordionGroup>
 
-## Step 3: Design your state
+## 步骤 3：设计你的状态
 
-State is the shared [memory](/oss/concepts/memory) accessible to all nodes in your agent. Think of it as the notebook your agent uses to keep track of everything it learns and decides as it works through the process.
+状态是智能体所有节点共享的**内存**，可以访问。把它想象成智能体在处理流程时用来跟踪它所学到和决定的所有内容的笔记本。
 
-### What belongs in state?
+### 哪些数据应该放入状态？
 
-Ask yourself these questions about each piece of data:
+针对每块数据，问自己这些问题：
 
 <CardGroup cols={2}>
-    <Card title="Include in state" icon="check">
-        Does it need to persist across steps? If yes, it goes in state.
+    <Card title="包含在状态中" icon="check">
+        它需要在步骤间保持持久吗？如果是，则放入状态中。
     </Card>
 
-    <Card title="Don't store" icon="code">
-        Can you derive it from other data? If yes, compute it when needed instead of storing it in state.
+    <Card title="不存储" icon="code">
+        可以从其他数据推导出来吗？如果是，则在需要时计算它，而不是存储在状态中。
     </Card>
 </CardGroup>
 
-For our email agent, we need to track:
+对于我们的邮件智能体，我们需要跟踪：
 
-- The original email and sender info (can't reconstruct these later)
-- Classification results (needed by multiple later/downstream nodes)
-- Search results and customer data (expensive to re-fetch)
-- The draft response (needs to persist through review)
-- Execution metadata (for debugging and recovery)
+- 原始邮件和发件人信息（以后无法重建）
+- 分类结果（后续多个节点需要）
+- 搜索结果和客户数据（重新获取成本高）
+- 起草的回复（需要通过审核环节）
+- 执行元数据（用于调试和恢复）
 
-### Keep state raw, format prompts on-demand
+### 保持状态原始，按需格式化提示词
 
 <Tip>
-    A key principle: your state should store raw data, not formatted text. Format prompts inside nodes when you need them.
+    一个关键原则：你的状态应存储**原始数据**，而不是格式化的文本。在节点中需要时才格式化提示词。
 </Tip>
 
-This separation means:
+这种分离意味着：
 
-- Different nodes can format the same data differently for their needs
-- You can change prompt templates without modifying your state schema
-- Debugging is clearer – you see exactly what data each node received
-- Your agent can evolve without breaking existing state
+- 不同的节点可以以不同的方式格式化相同的数据以满足其需求
+- 可以在不修改状态架构的情况下更改提示词模板
+- 调试更清晰——你可以确切地看到每个节点接收到了什么数据
+- 你的智能体可以在不破坏现有状态的情况下演进
 
-Let's define our state:
+让我们定义我们的状态：
 
 :::python
 
 ```python
 from typing import TypedDict, Literal
 
-# Define the structure for email classification
+# 定义邮件分类的结构
 class EmailClassification(TypedDict):
     intent: Literal["question", "bug", "billing", "feature", "complex"]
     urgency: Literal["low", "medium", "high", "critical"]
@@ -211,19 +211,19 @@ class EmailClassification(TypedDict):
     summary: str
 
 class EmailAgentState(TypedDict):
-    # Raw email data
+    # 原始邮件数据
     email_content: str
     sender_email: str
     email_id: str
 
-    # Classification result
+    # 分类结果
     classification: EmailClassification | None
 
-    # Raw search/API results
-    search_results: list[str] | None  # List of raw document chunks
-    customer_history: dict | None  # Raw customer data from CRM
+    # 原始搜索/API 结果
+    search_results: list[str] | None  # 原始文档块列表
+    customer_history: dict | None  # 来自 CRM 的原始客户数据
 
-    # Generated content
+    # 生成的内容
     draft_response: str | None
     messages: list[str] | None
 ```
@@ -235,7 +235,7 @@ class EmailAgentState(TypedDict):
 ```typescript
 import * as z from "zod";
 
-// Define the structure for email classification
+// 定义邮件分类的结构
 const EmailClassificationSchema = z.object({
   intent: z.enum(["question", "bug", "billing", "feature", "complex"]),
   urgency: z.enum(["low", "medium", "high", "critical"]),
@@ -244,19 +244,19 @@ const EmailClassificationSchema = z.object({
 });
 
 const EmailAgentState = z.object({
-  // Raw email data
+  // 原始邮件数据
   emailContent: z.string(),
   senderEmail: z.string(),
   emailId: z.string(),
 
-  // Classification result
+  // 分类结果
   classification: EmailClassificationSchema.optional(),
 
-  // Raw search/API results
-  searchResults: z.array(z.string()).optional(),  // List of raw document chunks
-  customerHistory: z.record(z.any()).optional(),  // Raw customer data from CRM
+  // 原始搜索/API 结果
+  searchResults: z.array(z.string()).optional(),  // 原始文档块列表
+  customerHistory: z.record(z.any()).optional(),  // 来自 CRM 的原始客户数据
 
-  // Generated content
+  // 生成的内容
   responseText: z.string().optional(),
 });
 
@@ -266,36 +266,36 @@ type EmailClassificationType = z.infer<typeof EmailClassificationSchema>;
 
 :::
 
-Notice that the state contains only raw data – no prompt templates, no formatted strings, no instructions. The classification output is stored as a single dictionary, straight from the LLM.
+请注意，状态只包含原始数据——没有提示词模板，没有格式化的字符串，没有指令。分类输出作为单个字典存储，直接来自 LLM。
 
-## Step 4: Build your nodes
+## 步骤 4：构建你的节点
 
 :::python
 
-Now we implement each step as a function. A node in LangGraph is just a Python function that takes the current state and returns updates to it.
+现在我们将每个步骤实现为一个函数。LangGraph 中的一个节点就是一个 Python 函数，它接收当前状态并返回对它的更新。
 
 :::
 
 :::js
 
-Now we implement each step as a function. A node in LangGraph is just a JavaScript function that takes the current state and returns updates to it.
+现在我们将每个步骤实现为一个函数。LangGraph 中的一个节点就是一个 JavaScript 函数，它接收当前状态并返回对它的更新。
 
 :::
 
-### Handle errors appropriately
+### 适当地处理错误
 
-Different errors need different handling strategies:
+不同的错误需要不同的处理策略：
 
-| Error Type | Who Fixes It | Strategy | When to Use |
+| 错误类型 | 由谁修复 | 策略 | 何时使用 |
 |------------|--------------|----------|-------------|
-| Transient errors (network issues, rate limits) | System (automatic) | Retry policy | Temporary failures that usually resolve on retry |
-| LLM-recoverable errors (tool failures, parsing issues) | LLM | Store error in state and loop back | LLM can see the error and adjust its approach |
-| User-fixable errors (missing information, unclear instructions) | Human | Pause with `interrupt()` | Need user input to proceed |
-| Unexpected errors | Developer | Let them bubble up | Unknown issues that need debugging |
+| 瞬时错误（网络问题、速率限制） | 系统（自动） | 重试策略 | 通常在重试后解决的临时故障 |
+| LLM 可恢复错误（工具失败、解析问题） | LLM | 存储错误于状态并循环回去 | LLM 可以看到错误并调整其方法 |
+| 用户可修复错误（缺少信息、指令不明确） | 人工 | 使用 `interrupt()` 暂停 | 需要用户输入才能继续 |
+| 意外错误 | 开发者 | 允许它们冒泡 | 需要调试的未知问题 |
 
 <Tabs>
-    <Tab title="Transient errors" icon="rotate">
-        Add a retry policy to automatically retry network issues and rate limits:
+    <Tab title="瞬时错误" icon="rotate">
+        为自动重试网络问题和速率限制添加重试策略：
 
     :::python
 
@@ -329,8 +329,8 @@ Different errors need different handling strategies:
 
     </Tab>
 
-    <Tab title="LLM-recoverable" icon="brain">
-        Store the error in state and loop back so the LLM can see what went wrong and try again:
+    <Tab title="LLM 可恢复错误" icon="brain">
+        将错误存储在状态中并循环回去，以便 LLM 可以看到哪里出了问题并重试：
 
     :::python
 
@@ -343,7 +343,7 @@ Different errors need different handling strategies:
             result = run_tool(state['tool_call'])
             return Command(update={"tool_result": result}, goto="agent")
         except ToolError as e:
-            # Let the LLM see what went wrong and try again
+            # 让 LLM 看到哪里出了问题并重试
             return Command(
                 update={"tool_result": f"Tool error: {str(e)}"},
                 goto="agent"
@@ -365,7 +365,7 @@ Different errors need different handling strategies:
         goto: "agent",
         });
     } catch (error) {
-        // Let the LLM see what went wrong and try again
+        // 让 LLM 看到哪里出了问题并重试
         return new Command({
         update: { toolResult: `Tool error: ${error}` },
         goto: "agent"
@@ -378,8 +378,8 @@ Different errors need different handling strategies:
 
     </Tab>
 
-    <Tab title="User-fixable" icon="user">
-        Pause and collect information from the user when needed (like account IDs, order numbers, or clarifications):
+    <Tab title="用户可修复错误" icon="user">
+        在需要时暂停并收集用户信息（如帐户 ID、订单号或澄清信息）：
 
     :::python
 
@@ -390,14 +390,14 @@ Different errors need different handling strategies:
     def lookup_customer_history(state: State) -> Command[Literal["draft_response"]]:
         if not state.get('customer_id'):
             user_input = interrupt({
-                "message": "Customer ID needed",
-                "request": "Please provide the customer's account ID to look up their subscription history"
+                "message": "需要客户 ID",
+                "request": "请提供客户的账户 ID 以查找其订阅历史记录"
             })
             return Command(
                 update={"customer_id": user_input['customer_id']},
                 goto="lookup_customer_history"
             )
-        # Now proceed with the lookup
+        # 现在继续查找
         customer_data = fetch_customer_history(state['customer_id'])
         return Command(update={"customer_history": customer_data}, goto="draft_response")
     ```
@@ -412,15 +412,15 @@ Different errors need different handling strategies:
     async function lookupCustomerHistory(state: State) {
     if (!state.customerId) {
         const userInput = interrupt({
-        message: "Customer ID needed",
-        request: "Please provide the customer's account ID to look up their subscription history",
+        message: "需要客户 ID",
+        request: "请提供客户的账户 ID 以查找其订阅历史记录",
         });
         return new Command({
         update: { customerId: userInput.customerId },
         goto: "lookupCustomerHistory",
         });
     }
-    // Now proceed with the lookup
+    // 现在继续查找
     const customerData = await fetchCustomerHistory(state.customerId);
     return new Command({
         update: { customerHistory: customerData },
@@ -433,8 +433,8 @@ Different errors need different handling strategies:
 
     </Tab>
 
-    <Tab title="Unexpected" icon="triangle-exclamation">
-        Let them bubble up for debugging. Don't catch what you can't handle:
+    <Tab title="意外错误" icon="triangle-exclamation">
+        允许它们冒泡以进行调试。不要捕获你无法处理的错误：
 
     :::python
 
@@ -443,7 +443,7 @@ Different errors need different handling strategies:
         try:
             email_service.send(state["draft_response"])
         except Exception:
-            raise  # Surface unexpected errors
+            raise  # 显式抛出意外错误
     ```
 
     :::
@@ -455,7 +455,7 @@ Different errors need different handling strategies:
     try {
         await emailService.send(state.responseText);
     } catch (error) {
-        throw error;  // Surface unexpected errors
+        throw error;  // 显式抛出意外错误
     }
     }
     ```
@@ -466,12 +466,12 @@ Different errors need different handling strategies:
 </Tabs>
 
 
-### Implementing our email agent nodes
+### 实现我们的邮件智能体节点
 
-We'll implement each node as a simple function. Remember: nodes take state, do work, and return updates.
+我们将每个节点实现为一个简单的函数。请记住：节点接收状态，执行工作，并返回更新。
 
 <AccordionGroup>
-    <Accordion title="Read and classify nodes" icon="brain">
+    <Accordion title="读取和分类节点" icon="brain">
 
     :::python
 
@@ -485,32 +485,32 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
     llm = ChatOpenAI(model="gpt-4")
 
     def read_email(state: EmailAgentState) -> dict:
-        """Extract and parse email content"""
-        # In production, this would connect to your email service
+        """提取和解析邮件内容"""
+        # 在生产环境中，这会连接到你的邮件服务
         return {
-            "messages": [HumanMessage(content=f"Processing email: {state['email_content']}")]
+            "messages": [HumanMessage(content=f"正在处理邮件: {state['email_content']}")]
         }
 
     def classify_intent(state: EmailAgentState) -> Command[Literal["search_documentation", "human_review", "draft_response", "bug_tracking"]]:
-        """Use LLM to classify email intent and urgency, then route accordingly"""
+        """使用 LLM 对邮件意图和紧急程度进行分类，然后相应地路由"""
 
-        # Create structured LLM that returns EmailClassification dict
+        # 创建返回 EmailClassification 字典的结构化 LLM
         structured_llm = llm.with_structured_output(EmailClassification)
 
-        # Format the prompt on-demand, not stored in state
+        # 按需格式化提示词，不存储在状态中
         classification_prompt = f"""
-        Analyze this customer email and classify it:
+        分析这封客户邮件并进行分类：
 
-        Email: {state['email_content']}
-        From: {state['sender_email']}
+        邮件: {state['email_content']}
+        发件人: {state['sender_email']}
 
-        Provide classification including intent, urgency, topic, and summary.
+        提供包括意图、紧急程度、主题和摘要的分类信息。
         """
 
-        # Get structured response directly as dict
+        # 直接获取结构化响应（字典格式）
         classification = structured_llm.invoke(classification_prompt)
 
-        # Determine next node based on classification
+        # 根据分类确定下一个节点
         if classification['intent'] == 'billing' or classification['urgency'] == 'critical':
             goto = "human_review"
         elif classification['intent'] in ['question', 'feature']:
@@ -520,7 +520,7 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
         else:
             goto = "draft_response"
 
-        # Store classification as a single dict in state
+        # 将分类作为一个字典存储在状态中
         return Command(
             update={"classification": classification},
             goto=goto
@@ -536,35 +536,35 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
     import { HumanMessage } from "@langchain/core/messages";
     import { ChatAnthropic } from "@langchain/anthropic";
 
-    const llm = new ChatAnthropic({ model: "claude-sonnet-4-5-20250929" });
+    const llm = new ChatAnthropic({ model: "claude-sonnet-5-20250929" });
 
     async function readEmail(state: EmailAgentStateType) {
-    // Extract and parse email content
-    // In production, this would connect to your email service
-    console.log(`Processing email: ${state.emailContent}`);
+    // 提取和解析邮件内容
+    // 在生产环境中，这会连接到你的邮件服务
+    console.log(`正在处理邮件: ${state.emailContent}`);
     return {};
     }
 
     async function classifyIntent(state: EmailAgentStateType) {
-    // Use LLM to classify email intent and urgency, then route accordingly
+    // 使用 LLM 对邮件意图和紧急程度进行分类，然后相应地路由
 
-    // Create structured LLM that returns EmailClassification object
+    // 创建返回 EmailClassification 对象的结构化 LLM
     const structuredLlm = llm.withStructuredOutput(EmailClassificationSchema);
 
-    // Format the prompt on-demand, not stored in state
+    // 按需格式化提示词，不存储在状态中
     const classificationPrompt = `
     Analyze this customer email and classify it:
 
-    Email: ${state.emailContent}
-    From: ${state.senderEmail}
+    邮件: ${state.emailContent}
+    发件人: ${state.senderEmail}
 
-    Provide classification including intent, urgency, topic, and summary.
+    提供包括意图、紧急程度、主题和摘要的分类信息。
     `;
 
-    // Get structured response directly as object
+    // 直接获取结构化响应（对象格式）
     const classification = await structuredLlm.invoke(classificationPrompt);
 
-    // Determine next node based on classification
+    // 根据分类确定下一个节点
     let nextNode: "searchDocumentation" | "humanReview" | "draftResponse" | "bugTracking";
 
     if (classification.intent === "billing" || classification.urgency === "critical") {
@@ -577,7 +577,7 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
         nextNode = "draftResponse";
     }
 
-    // Store classification as a single object in state
+    // 将分类作为一个对象存储在状态中
     return new Command({
         update: { classification },
         goto: nextNode,
@@ -589,44 +589,44 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
 
     </Accordion>
 
-    <Accordion title="Search and tracking nodes" icon="database">
+    <Accordion title="搜索和跟踪节点" icon="database">
 
     :::python
 
     ```python
     def search_documentation(state: EmailAgentState) -> Command[Literal["draft_response"]]:
-        """Search knowledge base for relevant information"""
+        """搜索知识库以获取相关信息"""
 
-        # Build search query from classification
+        # 从分类构建搜索查询
         classification = state.get('classification', {})
         query = f"{classification.get('intent', '')} {classification.get('topic', '')}"
 
         try:
-            # Implement your search logic here
-            # Store raw search results, not formatted text
+            # 在此处实现你的搜索逻辑
+            # 存储原始搜索结果，而不是格式化文本
             search_results = [
-                "Reset password via Settings > Security > Change Password",
-                "Password must be at least 12 characters",
-                "Include uppercase, lowercase, numbers, and symbols"
+                "通过“设置 > 安全 > 更改密码”重置密码",
+                "密码必须至少包含 12 个字符",
+                "包含大写字母、小写字母、数字和符号"
             ]
         except SearchAPIError as e:
-            # For recoverable search errors, store error and continue
-            search_results = [f"Search temporarily unavailable: {str(e)}"]
+            # 对于可恢复的搜索错误，存储错误并继续
+            search_results = [f"搜索暂时不可用: {str(e)}"]
 
         return Command(
-            update={"search_results": search_results},  # Store raw results or error
+            update={"search_results": search_results},  # 存储原始结果或错误
             goto="draft_response"
         )
 
     def bug_tracking(state: EmailAgentState) -> Command[Literal["draft_response"]]:
-        """Create or update bug tracking ticket"""
+        """在 Bug 跟踪系统中创建或更新工单"""
 
-        # Create ticket in your bug tracking system
-        ticket_id = "BUG-12345"  # Would be created via API
+        # 在你的 Bug 跟踪系统中创建工单
+        ticket_id = "BUG-12345"  # 将通过 API 创建
 
         return Command(
             update={
-                "search_results": [f"Bug ticket {ticket_id} created"],
+                "search_results": [f"已创建 Bug 工单 {ticket_id}"],
                 "current_step": "bug_tracked"
             },
             goto="draft_response"
@@ -639,41 +639,41 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
 
     ```typescript
     async function searchDocumentation(state: EmailAgentStateType) {
-    // Search knowledge base for relevant information
+    // 搜索知识库以获取相关信息
 
-    // Build search query from classification
+    // 从分类构建搜索查询
     const classification = state.classification!;
     const query = `${classification.intent} ${classification.topic}`;
 
     let searchResults: string[];
 
     try {
-        // Implement your search logic here
-        // Store raw search results, not formatted text
+        // 在此处实现你的搜索逻辑
+        // 存储原始搜索结果，而不是格式化文本
         searchResults = [
-        "Reset password via Settings > Security > Change Password",
-        "Password must be at least 12 characters",
-        "Include uppercase, lowercase, numbers, and symbols",
+        "通过“设置 > 安全 > 更改密码”重置密码",
+        "密码必须至少包含 12 个字符",
+        "包含大写字母、小写字母、数字和符号",
         ];
     } catch (error) {
-        // For recoverable search errors, store error and continue
-        searchResults = [`Search temporarily unavailable: ${error}`];
+        // 对于可恢复的搜索错误，存储错误并继续
+        searchResults = [`搜索暂时不可用: ${error}`];
     }
 
     return new Command({
-        update: { searchResults },  // Store raw results or error
+        update: { searchResults },  // 存储原始结果或错误
         goto: "draftResponse",
     });
     }
 
     async function bugTracking(state: EmailAgentStateType) {
-    // Create or update bug tracking ticket
+    // 在 Bug 跟踪系统中创建或更新工单
 
-    // Create ticket in your bug tracking system
-    const ticketId = "BUG-12345";  // Would be created via API
+    // 在你的 Bug 跟踪系统中创建工单
+    const ticketId = "BUG-12345";  // 将通过 API 创建
 
     return new Command({
-        update: { searchResults: [`Bug ticket ${ticketId} created`] },
+        update: { searchResults: [`已创建 Bug 工单 ${ticketId}`] },
         goto: "draftResponse",
     });
     }
@@ -683,89 +683,89 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
 
     </Accordion>
 
-    <Accordion title="Response nodes" icon="pen-to-square">
+    <Accordion title="响应节点" icon="pen-to-square">
 
     :::python
 
     ```python
     def draft_response(state: EmailAgentState) -> Command[Literal["human_review", "send_reply"]]:
-        """Generate response using context and route based on quality"""
+        """使用上下文生成回复并根据质量路由"""
 
         classification = state.get('classification', {})
 
-        # Format context from raw state data on-demand
+        # 按需从原始状态数据格式化上下文
         context_sections = []
 
         if state.get('search_results'):
-            # Format search results for the prompt
+            # 格式化搜索结果以供提示词使用
             formatted_docs = "\n".join([f"- {doc}" for doc in state['search_results']])
-            context_sections.append(f"Relevant documentation:\n{formatted_docs}")
+            context_sections.append(f"相关文档:\n{formatted_docs}")
 
         if state.get('customer_history'):
-            # Format customer data for the prompt
-            context_sections.append(f"Customer tier: {state['customer_history'].get('tier', 'standard')}")
+            # 格式化客户数据以供提示词使用
+            context_sections.append(f"客户等级: {state['customer_history'].get('tier', 'standard')}")
 
-        # Build the prompt with formatted context
+        # 构建包含格式化上下文的提示词
         draft_prompt = f"""
-        Draft a response to this customer email:
+        起草对该客户邮件的回复：
         {state['email_content']}
 
-        Email intent: {classification.get('intent', 'unknown')}
-        Urgency level: {classification.get('urgency', 'medium')}
+        邮件意图: {classification.get('intent', 'unknown')}
+        紧急程度: {classification.get('urgency', 'medium')}
 
         {chr(10).join(context_sections)}
 
-        Guidelines:
-        - Be professional and helpful
-        - Address their specific concern
-        - Use the provided documentation when relevant
+        指南：
+        - 保持专业和乐于助人
+        - 解决他们的具体疑虑
+        - 在相关时使用提供的文档
         """
 
         response = llm.invoke(draft_prompt)
 
-        # Determine if human review needed based on urgency and intent
+        # 根据紧急程度和意图确定是否需要人工审核
         needs_review = (
             classification.get('urgency') in ['high', 'critical'] or
             classification.get('intent') == 'complex'
         )
 
-        # Route to appropriate next node
+        # 路由到适当的下一个节点
         goto = "human_review" if needs_review else "send_reply"
 
         return Command(
-            update={"draft_response": response.content},  # Store only the raw response
+            update={"draft_response": response.content},  # 只存储原始回复
             goto=goto
         )
 
     def human_review(state: EmailAgentState) -> Command[Literal["send_reply", END]]:
-        """Pause for human review using interrupt and route based on decision"""
+        """使用 interrupt() 暂停以供人工审核，并根据决策路由"""
 
         classification = state.get('classification', {})
 
-        # interrupt() must come first - any code before it will re-run on resume
+        # interrupt() 必须放在第一位——它之前的任何代码在恢复时都会重新运行
         human_decision = interrupt({
             "email_id": state.get('email_id',''),
             "original_email": state.get('email_content',''),
             "draft_response": state.get('draft_response',''),
             "urgency": classification.get('urgency'),
             "intent": classification.get('intent'),
-            "action": "Please review and approve/edit this response"
+            "action": "请审核并批准/编辑此回复"
         })
 
-        # Now process the human's decision
+        # 现在处理人工决策
         if human_decision.get("approved"):
             return Command(
                 update={"draft_response": human_decision.get("edited_response", state.get('draft_response',''))},
                 goto="send_reply"
             )
         else:
-            # Rejection means human will handle directly
+            # 拒绝意味着人工将直接处理
             return Command(update={}, goto=END)
 
     def send_reply(state: EmailAgentState) -> dict:
-        """Send the email response"""
-        # Integrate with email service
-        print(f"Sending reply: {state['draft_response'][:100]}...")
+        """发送邮件回复"""
+        # 与邮件服务集成
+        print(f"正在发送回复: {state['draft_response'][:100]}...")
         return {}
     ```
 
@@ -777,88 +777,88 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
     import { Command, interrupt } from "@langchain/langgraph";
 
     async function draftResponse(state: EmailAgentStateType) {
-    // Generate response using context and route based on quality
+    // 使用上下文生成回复并根据质量路由
 
     const classification = state.classification!;
 
-    // Format context from raw state data on-demand
+    // 按需从原始状态数据格式化上下文
     const contextSections: string[] = [];
 
     if (state.searchResults) {
-        // Format search results for the prompt
+        // 格式化搜索结果以供提示词使用
         const formattedDocs = state.searchResults.map(doc => `- ${doc}`).join("\n");
-        contextSections.push(`Relevant documentation:\n${formattedDocs}`);
+        contextSections.push(`相关文档:\n${formattedDocs}`);
     }
 
     if (state.customerHistory) {
-        // Format customer data for the prompt
-        contextSections.push(`Customer tier: ${state.customerHistory.tier ?? "standard"}`);
+        // 格式化客户数据以供提示词使用
+        contextSections.push(`客户等级: ${state.customerHistory.tier ?? "standard"}`);
     }
 
-    // Build the prompt with formatted context
+    // 构建包含格式化上下文的提示词
     const draftPrompt = `
     Draft a response to this customer email:
     ${state.emailContent}
 
-    Email intent: ${classification.intent}
-    Urgency level: ${classification.urgency}
+    邮件意图: ${classification.intent}
+    紧急程度: ${classification.urgency}
 
     ${contextSections.join("\n\n")}
 
-    Guidelines:
-    - Be professional and helpful
-    - Address their specific concern
-    - Use the provided documentation when relevant
+    指南：
+    - 保持专业和乐于助人
+    - 解决他们的具体疑虑
+    - 在相关时使用提供的文档
     `;
 
     const response = await llm.invoke([new HumanMessage(draftPrompt)]);
 
-    // Determine if human review needed based on urgency and intent
+    // 根据紧急程度和意图判断是否需要人工审核
     const needsReview = (
         classification.urgency === "high" ||
         classification.urgency === "critical" ||
         classification.intent === "complex"
     );
 
-    // Route to appropriate next node
+    // 路由到适当的下一个节点
     const nextNode = needsReview ? "humanReview" : "sendReply";
 
     return new Command({
-        update: { responseText: response.content.toString() },  // Store only the raw response
+        update: { responseText: response.content.toString() },  // 只存储原始回复
         goto: nextNode,
     });
     }
 
     async function humanReview(state: EmailAgentStateType) {
-    // Pause for human review using interrupt and route based on decision
+    // 使用 interrupt() 暂停以供人工审核，并根据决策路由
     const classification = state.classification!;
 
-    // interrupt() must come first - any code before it will re-run on resume
+    // interrupt() 必须放在第一位——它之前的任何代码在恢复时都会重新运行
     const humanDecision = interrupt({
         emailId: state.emailId,
         originalEmail: state.emailContent,
         draftResponse: state.responseText,
         urgency: classification.urgency,
         intent: classification.intent,
-        action: "Please review and approve/edit this response",
+        action: "请审核并批准/编辑此回复",
     });
 
-    // Now process the human's decision
+    // 现在处理人工决策
     if (humanDecision.approved) {
         return new Command({
         update: { responseText: humanDecision.editedResponse || state.responseText },
         goto: "sendReply",
         });
     } else {
-        // Rejection means human will handle directly
+        // 拒绝意味着人工将直接处理
         return new Command({ update: {}, goto: END });
     }
     }
 
     async function sendReply(state: EmailAgentStateType): Promise<{}> {
-    // Send the email response
-    // Integrate with email service
-    console.log(`Sending reply: ${state.responseText!.substring(0, 100)}...`);
+    // 发送邮件回复
+    // 与邮件服务集成
+    console.log(`正在发送回复: ${state.responseText!.substring(0, 100)}...`);
     return {};
     }
     ```
@@ -868,13 +868,13 @@ We'll implement each node as a simple function. Remember: nodes take state, do w
     </Accordion>
 </AccordionGroup>
 
-## Step 5: Wire it together
+## 步骤 5：将它们连接起来
 
-Now we connect our nodes into a working graph. Since our nodes handle their own routing decisions, we only need a few essential edges.
+现在我们将节点连接成一个工作的图。由于我们的节点处理自己的路由决策，我们只需要很少的必要边（连接）。
 
-To enable [human-in-the-loop](/oss/langgraph/interrupts) with `interrupt()`, we need to compile with a [checkpointer](/oss/langgraph/persistence) to save state between runs:
+为了使用 `interrupt()` 实现[人工干预](/oss/langgraph/interrupts)，我们需要使用[检查点 (checkpointer)](/oss/langgraph/persistence) 来编译，以便在运行过程中保存状态：
 
-<Accordion title="Graph compilation code" icon="diagram-project" defaultOpen={true}>
+<Accordion title="图编译代码" icon="diagram-project" defaultOpen={true}>
 
 :::python
 
@@ -882,14 +882,14 @@ To enable [human-in-the-loop](/oss/langgraph/interrupts) with `interrupt()`, we 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import RetryPolicy
 
-# Create the graph
+# 创建图
 workflow = StateGraph(EmailAgentState)
 
-# Add nodes with appropriate error handling
+# 添加节点并进行适当的错误处理
 workflow.add_node("read_email", read_email)
 workflow.add_node("classify_intent", classify_intent)
 
-# Add retry policy for nodes that might have transient failures
+# 为可能出现瞬时故障的节点添加重试策略
 workflow.add_node(
     "search_documentation",
     search_documentation,
@@ -900,12 +900,12 @@ workflow.add_node("draft_response", draft_response)
 workflow.add_node("human_review", human_review)
 workflow.add_node("send_reply", send_reply)
 
-# Add only the essential edges
+# 只添加必要的边
 workflow.add_edge(START, "read_email")
 workflow.add_edge("read_email", "classify_intent")
 workflow.add_edge("send_reply", END)
 
-# Compile with checkpointer for persistence, in case run graph with Local_Server --> Please compile without checkpointer
+# 使用检查点进行编译以实现持久性，如果使用 Local_Server --> 请在不使用检查点的情况下编译它
 memory = MemorySaver()
 app = workflow.compile(checkpointer=memory)
 ```
@@ -917,12 +917,12 @@ app = workflow.compile(checkpointer=memory)
 ```typescript
 import { MemorySaver, RetryPolicy } from "@langchain/langgraph";
 
-// Create the graph
+// 创建图
 const workflow = new StateGraph(EmailAgentState)
-  // Add nodes with appropriate error handling
+  // 为节点添加适当的错误处理
   .addNode("readEmail", readEmail)
   .addNode("classifyIntent", classifyIntent)
-  // Add retry policy for nodes that might have transient failures
+  // 为可能出现瞬时故障的节点添加重试策略
   .addNode(
     "searchDocumentation",
     searchDocumentation,
@@ -932,12 +932,12 @@ const workflow = new StateGraph(EmailAgentState)
   .addNode("draftResponse", draftResponse)
   .addNode("humanReview", humanReview)
   .addNode("sendReply", sendReply)
-  // Add only the essential edges
+  // 只添加必要的边
   .addEdge(START, "readEmail")
   .addEdge("readEmail", "classifyIntent")
   .addEdge("sendReply", END);
 
-// Compile with checkpointer for persistence
+// 使用检查点进行编译以实现持久性
 const memory = new MemorySaver();
 const app = workflow.compile({ checkpointer: memory });
 ```
@@ -946,23 +946,23 @@ const app = workflow.compile({ checkpointer: memory });
 </Accordion>
 
 :::python
-The graph structure is minimal because routing happens inside nodes through @[`Command`] objects. Each node declares where it can go using type hints like `Command[Literal["node1", "node2"]]`, making the flow explicit and traceable.
+图结构是最小化的，因为路由发生在节点内部，通过 @[`Command`] 对象。每个节点使用“node1”、“node2”之类的类型提示来声明它可以去往哪里，使流程明确且可追溯。
 :::
 
 :::js
-The graph structure is minimal because routing happens inside nodes through `Command` objects. Each node declares where it can go, making the flow explicit and traceable.
+图结构是最小化的，因为路由发生在节点内部，通过 `Command` 对象。每个节点声明它可以去往哪里，使流程明确且可追溯。
 :::
 
-### Try out your agent
+### 试运行你的智能体
 
-Let's run our agent with an urgent billing issue that needs human review:
+让我们用一个需要**人工审核**的紧急账单问题来运行我们的智能体：
 
-<Accordion title="Testing the agent" icon="flask">
+<Accordion title="测试智能体" icon="flask">
 
 :::python
 
 ```python
-# Test with an urgent billing issue
+# 用一个紧急的账单问题进行测试
 initial_state = {
     "email_content": "I was charged twice for my subscription! This is urgent!",
     "sender_email": "customer@example.com",
@@ -970,25 +970,25 @@ initial_state = {
     "messages": []
 }
 
-# Run with a thread_id for persistence
+# 使用 thread_id 运行以实现持久性
 config = {"configurable": {"thread_id": "customer_123"}}
 result = app.invoke(initial_state, config)
-# The graph will pause at human_review
-print(f"Draft ready for review: {result['draft_response'][:100]}...")
+# 图将在 human_review 处暂停
+print(f"准备审核的草稿: {result['draft_response'][:100]}...")
 
-# When ready, provide human input to resume
+# 准备好后，提供人工输入以恢复
 from langgraph.types import Command
 
 human_response = Command(
     resume={
         "approved": True,
-        "edited_response": "We sincerely apologize for the double charge. I've initiated an immediate refund..."
+        "edited_response": "我们对重复收费深表歉意。我已立即启动退款..."
     }
 )
 
-# Resume execution
+# 恢复执行
 final_result = app.invoke(human_response, config)
-print(f"Email sent successfully!")
+print(f"邮件发送成功!")
 ```
 
 :::
@@ -996,130 +996,130 @@ print(f"Email sent successfully!")
 :::js
 
 ```typescript
-// Test with an urgent billing issue
+// 用一个紧急的账单问题进行测试
 const initialState: EmailAgentStateType = {
   emailContent: "I was charged twice for my subscription! This is urgent!",
   senderEmail: "customer@example.com",
   emailId: "email_123"
 };
 
-// Run with a thread_id for persistence
+// 使用 thread_id 运行以实现持久性
 const config = { configurable: { thread_id: "customer_123" } };
 const result = await app.invoke(initialState, config);
-// The graph will pause at human_review
-console.log(`Draft ready for review: ${result.responseText?.substring(0, 100)}...`);
+// 图将在 humanReview 处暂停
+console.log(`准备审核的草稿: ${result.responseText?.substring(0, 100)}...`);
 
-// When ready, provide human input to resume
+// 准备好后，提供人工输入以恢复
 import { Command } from "@langchain/langgraph";
 
 const humanResponse = new Command({
   resume: {
     approved: true,
-    editedResponse: "We sincerely apologize for the double charge. I've initiated an immediate refund...",
+    editedResponse: "我们对重复收费深表歉意。我已立即启动退款...",
   }
 });
 
-// Resume execution
+// 恢复执行
 const finalResult = await app.invoke(humanResponse, config);
-console.log("Email sent successfully!");
+console.log("邮件发送成功!");
 ```
 
 :::
 
 </Accordion>
 
-The graph pauses when it hits `interrupt()`, saves everything to the checkpointer, and waits. It can resume days later, picking up exactly where it left off. The `thread_id` ensures all state for this conversation is preserved together.
+当它遇到 `interrupt()` 时，图会暂停，将所有内容保存到检查点，然后等待。它可以在几天后恢复，从上次暂停的确切位置继续执行。`thread_id` 确保了该对话的所有状态都一起被保留。
 
-## Summary and next steps
+## 总结和后续步骤
 
-### Key Insights
+### 关键洞察
 
-Building this email agent has shown us the LangGraph way of thinking:
+构建这个邮件智能体向我们展示了 LangGraph 的思维方式：
 
 <CardGroup cols={2}>
-    <Card title="Break into discrete steps" icon="sitemap" href="#step-1-map-out-your-workflow-as-discrete-steps">
-        Each node does one thing well. This decomposition enables streaming progress updates, durable execution that can pause and resume, and clear debugging since you can inspect state between steps.
+    <Card title="分解为离散步骤" icon="sitemap" href="#step-1-map-out-your-workflow-as-discrete-steps">
+        每个节点都做好一件事。这种分解使得能够流式传输进度更新、进行持久化执行（可以暂停和恢复）以及清晰调试（因为你可以在步骤之间检查状态）。
     </Card>
 
-    <Card title="State is shared memory" icon="database" href="#step-3-design-your-state">
-        Store raw data, not formatted text. This lets different nodes use the same information in different ways.
+    <Card title="状态是共享内存" icon="database" href="#step-3-design-your-state">
+        存储原始数据，而不是格式化文本。这使得不同的节点可以用不同的方式使用相同的信息。
     </Card>
 
-    <Card title="Nodes are functions" icon="code" href="#step-4-build-your-nodes">
-        They take state, do work, and return updates. When they need to make routing decisions, they specify both the state updates and the next destination.
+    <Card title="节点是函数" icon="code" href="#step-4-build-your-nodes">
+        它们接收状态，执行工作，并返回更新。当它们需要做出路由决策时，它们会指定状态更新和下一个目的地。
     </Card>
 
-    <Card title="Errors are part of the flow" icon="triangle-exclamation" href="#handle-errors-appropriately">
-        Transient failures get retries, LLM-recoverable errors loop back with context, user-fixable problems pause for input, and unexpected errors bubble up for debugging.
+    <Card title="错误是流程的一部分" icon="triangle-exclamation" href="#handle-errors-appropriately">
+        瞬时故障可以重试，LLM 可恢复错误会带上上下文循环回去，用户可修复的问题会暂停以等待输入，而意外错误则会冒泡出来供调试。
     </Card>
 
-    <Card title="Human input is first-class" icon="user" href="/oss/langgraph/interrupts">
-        The `interrupt()` function pauses execution indefinitely, saves all state, and resumes exactly where it left off when you provide input. When combined with other operations in a node, it must come first.
+    <Card title="人工输入是首要公民" icon="user" href="/oss/langgraph/interrupts">
+        `interrupt()` 函数可以无限期地暂停执行，保存所有状态，并在提供输入时从中断的确切位置恢复。当与其他操作组合在一个节点中时，它必须放在首先。
     </Card>
 
-    <Card title="Graph structure emerges naturally" icon="diagram-project" href="#step-5-wire-it-together">
-        You define the essential connections, and your nodes handle their own routing logic. This keeps control flow explicit and traceable - you can always understand what your agent will do next by looking at the current node.
+    <Card title="图结构自然涌现" icon="diagram-project" href="#step-5-wire-it-together">
+        你定义了必要的连接，而你的节点处理自己的路由逻辑。这使得控制流明确且可追溯——你总是可以通过查看当前节点来理解你的智能体下一步将做什么。
     </Card>
 </CardGroup>
 
-### Advanced considerations
+### 高级考虑
 
-<Accordion title="Node granularity trade-offs" icon="sliders">
+<Accordion title="节点粒度权衡" icon="sliders">
 <Info>
-This section explores the trade-offs in node granularity design. Most applications can skip this and use the patterns shown above.
+本节探讨了节点粒度设计中的权衡。大多数应用可以跳过此部分，并使用上述模式。
 </Info>
 
-You might wonder: why not combine `Read Email` and `Classify Intent` into one node?
+你可能会想：为什么不把 `Read Email` 和 `Classify Intent` 合并到一个节点中呢？
 
-Or why separate Doc Search from Draft Reply?
+或者为什么要将文档搜索与起草回复分开？
 
-The answer involves trade-offs between resilience and observability.
+答案涉及**弹性**和**可观察性**之间的权衡。
 
-**The resilience consideration:** LangGraph's [durable execution](/oss/langgraph/durable-execution) creates checkpoints at node boundaries. When a workflow resumes after an interruption or failure, it starts from the beginning of the node where execution stopped. Smaller nodes mean more frequent checkpoints, which means less work to repeat if something goes wrong. If you combine multiple operations into one large node, a failure near the end means re-executing everything from the start of that node.
+**弹性考虑：** LangGraph 的[持久化执行](/oss/langgraph/durable-execution)在节点边界创建检查点。当工作流从中断或故障中恢复时，它会从停止执行的节点的开头开始。更小的节点意味着更频繁的检查点，这意味着如果出现问题，需要重复的工作更少。如果你将多个操作合并到一个大型节点中，接近末尾的故障将意味着需要重新执行该节点的所有内容。
 
-Why we chose this breakdown for the email agent:
+我们为邮件智能体选择这种分解的原因：
 
-- **Isolation of external services:** Doc Search and Bug Track are separate nodes because they call external APIs. If the search service is slow or fails, we want to isolate that from the LLM calls. We can add retry policies to these specific nodes without affecting others.
+- **外部服务隔离：** `Doc Search` 和 `Bug Track` 是独立的节点，因为它们调用外部 API。如果搜索服务变慢或失败，我们希望将该问题与其他操作隔离。我们可以向这些特定节点添加重试策略，而不影响其他节点。
 
-- **Intermediate visibility:** Having `Classify Intent` as its own node lets us inspect what the LLM decided before taking action. This is valuable for debugging and monitoring—you can see exactly when and why the agent routes to human review.
+- **中间可见性：** 将 `Classify Intent` 作为一个单独的节点，可以让我们在采取行动之前检查 LLM 的决定。这对于调试和监控非常有价值——你可以确切地看到智能体何时以及为何路由到人工审核。
 
-- **Different failure modes:** LLM calls, database lookups, and email sending have different retry strategies. Separate nodes let you configure these independently.
+- **不同的故障模式：** LLM 调用、数据库查找和电子邮件发送都有不同的重试策略。单独的节点允许你独立配置这些策略。
 
-- **Reusability and testing:** Smaller nodes are easier to test in isolation and reuse in other workflows.
+- **可重用性和测试：** 更小的节点更容易单独测试，并在其他工作流中重复使用。
 
-A different valid approach: You could combine `Read Email` and `Classify Intent` into a single node. You'd lose the ability to inspect the raw email before classification and would repeat both operations on any failure in that node. For most applications, the observability and debugging benefits of separate nodes are worth the trade-off.
+另一种有效的方法是：你可以将 `Read Email` 和 `Classify Intent` 合并为一个节点。你将失去在分类前检查原始邮件的能力，并且在改节点的任何故障时都需要重新执行这两项操作。对于大多数应用来说，单独节点的**可观察性**和**调试**优势使得这种权衡是值得的。
 
-Application-level concerns: The caching discussion in Step 2 (whether to cache search results) is an application-level decision, not a LangGraph framework feature. You implement caching within your node functions based on your specific requirements—LangGraph doesn't prescribe this.
+应用级考量：关于步骤 2 中缓存的讨论（是否缓存搜索结果）是应用级的决策，而不是 LangGraph 框架的特性。你根据自己的具体要求在节点函数内部实现缓存——LangGraph 不对此做出规定。
 
-Performance considerations: More nodes doesn't mean slower execution. LangGraph writes checkpoints in the background by default ([async durability mode](/oss/langgraph/durable-execution#durability-modes)), so your graph continues running without waiting for checkpoints to complete. This means you get frequent checkpoints with minimal performance impact. You can adjust this behavior if needed—use `"exit"` mode to checkpoint only at completion, or `"sync"` mode to block execution until each checkpoint is written.
+性能考量：更多的节点并不意味着执行更慢。LangGraph 默认在后台写入检查点（[异步持久化模式](/oss/langgraph/durable-execution#durability-modes)），因此你的图在等待检查点完成时不会停止运行。这意味着你可以获得频繁的检查点，而对性能影响极小。如果你需要，可以调整此行为——使用 `“exit”` 模式仅在完成后进行检查点，或使用 `“sync”` 模式阻止执行直到每个检查点被写入。
 </Accordion>
 
-### Where to go from here
+### 从哪里继续
 
-This was an introduction to thinking about building agents with LangGraph. You can extend this foundation with:
+以上是关于如何使用 LangGraph 思考构建智能体的介绍。你可以从以下方面扩展此基础知识：
 
 <CardGroup cols={2}>
-    <Card title="Human-in-the-loop patterns" icon="user-check" href="/oss/langgraph/interrupts">
-        Learn how to add tool approval before execution, batch approval, and other patterns
+    <Card title="人工干预模式" icon="user-check" href="/oss/langgraph/interrupts">
+        了解如何在执行前添加工具批准、批量批准和其他模式
     </Card>
 
-    <Card title="Subgraphs" icon="diagram-nested" href="/oss/langgraph/use-subgraphs">
-        Create subgraphs for complex multi-step operations
+    <Card title="子图" icon="diagram-nested" href="/oss/langgraph/use-subgraphs">
+        为复杂的、多步骤的操作创建子图
     </Card>
 
-    <Card title="Streaming" icon="tower-broadcast" href="/oss/langgraph/streaming">
-        Add streaming to show real-time progress to users
+    <Card title="流式传输" icon="tower-broadcast" href="/oss/langgraph/streaming">
+        添加流式传输以向用户显示实时进度
     </Card>
 
-    <Card title="Observability" icon="chart-line" href="/oss/langgraph/observability">
-        Add observability with LangSmith for debugging and monitoring
+    <Card title="可观测性" icon="chart-line" href="/oss/langgraph/observability">
+        使用 LangSmith 添加可观测性以进行调试和监控
     </Card>
 
-    <Card title="Tool Integration" icon="wrench" href="/oss/langchain/tools">
-        Integrate more tools for web search, database queries, and API calls
+    <Card title="工具集成" icon="wrench" href="/oss/langchain/tools">
+        集成更多工具用于网页搜索、数据库查询和 API 调用
     </Card>
 
-    <Card title="Retry Logic" icon="rotate" href="/oss/langgraph/use-graph-api#add-retry-policies">
-        Implement retry logic with exponential backoff for failed operations
+    <Card title="重试逻辑" icon="rotate" href="/oss/langgraph/use-graph-api#add-retry-policies">
+        为失败的操作实现带指数退避的重试逻辑
     </Card>
 </CardGroup>

@@ -1,44 +1,46 @@
+```markdown
 ---
 title: LocalFileStore
 ---
 
-This will help you get started with local filesystem [key-value stores](/oss/integrations/stores). For detailed documentation of all LocalFileStore features and configurations head to the [API reference](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html).
+这将帮助你开始使用本地文件系统 [key-value 存储](/oss/integrations/stores)。有关 `LocalFileStore` 所有特性和配置的详细文档，请前往 [API 参考](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html)。
 
-## Overview
+## 概述
 
-The `LocalFileStore` is a persistent implementation of `ByteStore` that stores everything in a folder of your choosing. It's useful if you're using a single machine and are tolerant of files being added or deleted.
+`LocalFileStore` 是 `ByteStore` 的一个持久化实现，它将所有内容存储在你选择的文件夹中。如果你正在使用单机环境，并且不介意文件被添加或删除，那么这个实现非常有用。
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | [JS support](https://js.langchain.com/docs/integrations/stores/file_system) | Downloads | Version |
+| 类 (Class) | 包 (Package) | 本地 (Local) | [JS 支持](https://js.langchain.com/docs/integrations/stores/file_system) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [LocalFileStore](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html) | [langchain](https://python.langchain.com/api_reference/langchain/index.html) | ✅ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain?style=flat-square&label=%20) |
 
-### Installation
+### 安装
 
-The LangChain `LocalFileStore` integration lives in the `langchain` package:
+LangChain 的 `LocalFileStore` 集成位于 `langchain` 包中：
 
 ```python
 pip install -qU langchain-classic
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our byte store:
+现在我们可以实例化我们的字节存储（byte store）：
 
 ```python
 from pathlib import Path
 
 from langchain_classic.storage import LocalFileStore
 
-root_path = Path.cwd() / "data"  # can also be a path set by a string
+# 可以是字符串设定的路径，也可以是 Path 对象
+root_path = Path.cwd() / "data"
 
 kv_store = LocalFileStore(root_path)
 ```
 
-## Usage
+## 用法
 
-You can set data under keys like this using the `mset` method:
+你可以使用 `mset` 方法像这样设置（存储）键值对：
 
 ```python
 kv_store.mset(
@@ -60,7 +62,7 @@ kv_store.mget(
 [b'value1', b'value2']
 ```
 
-You can see the created files in your `data` folder:
+你可以在 `data` 文件夹中看到创建的文件：
 
 ```python
 !ls {root_path}
@@ -70,7 +72,7 @@ You can see the created files in your `data` folder:
 key1 key2
 ```
 
-And you can delete data using the `mdelete` method:
+你可以使用 `mdelete` 方法删除数据：
 
 ```python
 kv_store.mdelete(
@@ -94,6 +96,7 @@ kv_store.mget(
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `LocalFileStore` features and configurations, head to the API reference: [python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html)
+有关 `LocalFileStore` 所有特性和配置的详细文档，请前往 API 参考：[python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html)
+```

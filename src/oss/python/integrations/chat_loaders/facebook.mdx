@@ -2,27 +2,27 @@
 title: Facebook Messenger
 ---
 
-This notebook shows how to load data from Facebook into a format you can fine-tune on. The overall steps are:
+本教程展示了如何从 Facebook 加载数据，并将其转换为可用于微调（fine-tune）的格式。具体步骤如下：
 
-1. Download your messenger data to disk.
-2. Create the Chat Loader and call `loader.load()` (or `loader.lazy_load()`) to perform the conversion.
-3. Optionally use `merge_chat_runs` to combine message from the same sender in sequence, and/or `map_ai_messages` to convert messages from the specified sender to the "AIMessage" class. Once you've done this, call `convert_messages_for_finetuning` to prepare your data for fine-tuning.
+1. 将你的 Messenger 数据下载到本地磁盘。
+2. 创建 `Chat Loader` 并调用 `loader.load()`（或 `loader.lazy_load()`）来执行数据转换。
+3. 可选地使用 `merge_chat_runs` 来合并来自同一发送者的连续消息，以及/或者使用 `map_ai_messages` 将指定发送者的消息转换为 "AIMessage" 类。完成这些操作后，调用 `convert_messages_for_finetuning` 来为微调准备数据。
 
-Once this has been done, you can fine-tune your model. To do so you would complete the following steps:
+完成上述步骤后，你就可以对模型进行微调了。为此，你需要执行以下步骤：
 
-4. Upload your messages to OpenAI and run a fine-tuning job.
-6. Use the resulting model in your LangChain app!
+4. 将消息上传到 OpenAI 并运行微调作业。
+6. 在你的 LangChain 应用中使用生成的模型！
 
-Let's begin.
+让我们开始吧。
 
-## 1. Download Data
+## 1. 下载数据
 
-To download your own messenger data, follow the instructions [here](https://www.zapptales.com/en/download-facebook-messenger-chat-history-how-to/). IMPORTANT - make sure to download them in JSON format (not HTML).
+要下载你自己的 Messenger 数据，请遵循[此处](https://www.zapptales.com/en/download-facebook-messenger-chat-history-how-to/)的说明。重要提示：请确保将其下载为 JSON 格式（而不是 HTML）。
 
-We are hosting an example dump at [this google drive link](https://drive.google.com/file/d/1rh1s1o2i7B-Sk1v9o8KNgivLVGwJ-osV/view?usp=sharing) that we will use in this walkthrough.
+我们将使用托管在[此 Google Drive 链接](https://drive.google.com/file/d/1rh1s1o2i7B-Sk1v9o8KNgivLVGwJ-osV/view?usp=sharing)上的示例数据来进行本次演练。
 
 ```python
-# This uses some example data
+# 使用一些示例数据
 import zipfile
 
 import requests
@@ -46,12 +46,12 @@ def download_and_unzip(url: str, output_path: str = "file.zip") -> None:
         print(f"File {output_path} has been unzipped.")
 
 
-# URL of the file to download
+# 要下载的文件 URL
 url = (
     "https://drive.google.com/file/d/1rh1s1o2i7B-Sk1v9o8KNgivLVGwJ-osV/view?usp=sharing"
 )
 
-# Download and unzip
+# 下载并解压
 download_and_unzip(url)
 ```
 
@@ -60,9 +60,9 @@ File file.zip downloaded.
 File file.zip has been unzipped.
 ```
 
-## 2. Create Chat Loader
+## 2. 创建聊天加载器
 
-We have 2 different `FacebookMessengerChatLoader` classes, one for an entire directory of chats, and one to load individual files. We
+我们提供了 2 个不同的 `FacebookMessengerChatLoader` 类：一个用于处理整个聊天目录，另一个用于加载单个文件。我们
 
 ```python
 directory_path = "./hogwarts"
@@ -107,11 +107,11 @@ len(chat_sessions)
 9
 ```
 
-## 3. Prepare for fine-tuning
+## 3. 准备微调
 
-Calling `load()` returns all the chat messages we could extract as human messages. When conversing with chat bots, conversations typically follow a more strict alternating dialogue pattern relative to real conversations.
+调用 `load()` 会返回所有可提取的聊天消息，类型为 `human` 消息。在与聊天机器人对话时，对话通常遵循比真实对话更严格的交替模式。
 
-You can choose to merge message "runs" (consecutive messages from the same sender) and select a sender to represent the "AI". The fine-tuned LLM will learn to generate these AI messages.
+你可以选择合并消息“组”（即同一发送者的连续消息），并选择一个发送者来代表“AI”。微调后的 LLM 将学会生成这些 AI 消息。
 
 ```python
 from langchain_community.chat_loaders.utils import (
@@ -126,8 +126,8 @@ alternating_sessions = list(map_ai_messages(merged_sessions, "Harry Potter"))
 ```
 
 ```python
-# Now all of Harry Potter's messages will take the AIMessage class
-# which maps to the 'assistant' role in OpenAI's training format
+# 现在所有 Harry Potter 的消息都将采用 AIMessage 类
+# 这在 OpenAI 的训练格式中映射到 'assistant' 角色
 alternating_sessions[0]["messages"][:3]
 ```
 
@@ -137,7 +137,7 @@ alternating_sessions[0]["messages"][:3]
  AIMessage(content="I apologize for the interruption, sir. I'll be brief. I've noticed some strange activity around the school grounds at night. I saw a cloaked figure lurking near the Forbidden Forest last night. I'm worried someone may be plotting something sinister.", additional_kwargs={'sender': 'Harry Potter'})]
 ```
 
-#### Now we can convert to OpenAI format dictionaries
+#### 现在我们可以转换为 OpenAI 格式的字典
 
 ```python
 from langchain_community.adapters.openai import convert_messages_for_finetuning
@@ -165,14 +165,13 @@ training_data[0][:3]
   'content': "I apologize for the interruption, sir. I'll be brief. I've noticed some strange activity around the school grounds at night. I saw a cloaked figure lurking near the Forbidden Forest last night. I'm worried someone may be plotting something sinister."}]
 ```
 
-OpenAI currently requires at least 10 training examples for a fine-tuning job, though they recommend between 50-100 for most tasks. Since we only have 9 chat sessions, we can subdivide them (optionally with some overlap) so that each training example is comprised of a portion of a whole conversation.
+OpenAI 目前要求微调作业至少有 10 个训练样本，但对于大多数任务，他们建议使用 50-100 个。由于我们只有 9 个聊天会话，我们可以将它们细分（可选地带有一些重叠），使得每个训练样本由整个对话的一部分组成。
 
-Facebook chat sessions (1 per person) often span multiple days and conversations,
-so the long-range dependencies may not be that important to model anyhow.
+Facebook 聊天会话（每人 1 个）通常跨越多个日期和对话，因此建模长期依赖性可能并不重要。
 
 ```python
-# Our chat is alternating, we will make each datapoint a group of 8 messages,
-# with 2 messages overlapping
+# 我们的聊天是交替的，我们将使每个数据点成为一组 8 条消息，
+# 消息之间有 2 条重叠
 chunk_size = 8
 overlap = 2
 
@@ -189,10 +188,9 @@ len(training_examples)
 100
 ```
 
-## 4. Fine-tune the model
+## 4. 微调模型
 
-It's time to fine-tune the model. Make sure you have `openai` installed
-and have set your `OPENAI_API_KEY` appropriately
+现在是微调模型的时候了。请确保已安装 `openai` 并且已正确设置 `OPENAI_API_KEY`。
 
 ```python
 pip install -qU  langchain-openai
@@ -205,7 +203,7 @@ from io import BytesIO
 
 import openai
 
-# We will write the jsonl file in memory
+# 我们将在内存中写入 jsonl 文件
 my_file = BytesIO()
 for m in training_examples:
     my_file.write((json.dumps({"messages": m}) + "\n").encode("utf-8"))
@@ -213,8 +211,8 @@ for m in training_examples:
 my_file.seek(0)
 training_file = openai.files.create(file=my_file, purpose="fine-tune")
 
-# OpenAI audits each training file for compliance reasons.
-# This make take a few minutes
+# OpenAI 出于合规原因会对每个训练文件进行审计。
+# 这可能需要几分钟时间
 status = openai.files.retrieve(training_file.id).status
 start_time = time.time()
 while status != "processed":
@@ -228,7 +226,7 @@ print(f"File {training_file.id} ready after {time.time() - start_time:.2f} secon
 File file-ULumAXLEFw3vB6bb9uy6DNVC ready after 0.00 seconds.
 ```
 
-With the file ready, it's time to kick off a training job.
+文件准备就绪后，就可以启动训练作业了。
 
 ```python
 job = openai.fine_tuning.jobs.create(
@@ -237,7 +235,7 @@ job = openai.fine_tuning.jobs.create(
 )
 ```
 
-Grab a cup of tea while your model is being prepared. This may take some time!
+泡杯茶，等待模型准备就绪。这可能需要一段时间！
 
 ```python
 status = openai.fine_tuning.jobs.retrieve(job.id).status
@@ -261,9 +259,9 @@ print(job.fine_tuned_model)
 ft:gpt-3.5-turbo-0613:personal::8QnAzWMr
 ```
 
-## 5. Use in LangChain
+## 5. 在 LangChain 中使用
 
-You can use the resulting model ID directly the @[`ChatOpenAI`] model class.
+你可以直接在 @[`ChatOpenAI`] 模型类中使用生成的模型 ID。
 
 ```python
 from langchain_openai import ChatOpenAI

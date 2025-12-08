@@ -1,31 +1,31 @@
 ---
-title: Log user feedback using the SDK
-sidebarTitle: Log user feedback using the SDK
+title: 使用 SDK 记录用户反馈
+sidebarTitle: 使用 SDK 记录用户反馈
 ---
 
 <Tip>
-**Key concepts**
-- [Conceptual guide on tracing and feedback](/langsmith/observability-concepts)
-- [Reference guide on feedback data format](/langsmith/feedback-data-format)
+**核心概念**
+- [关于追踪和反馈的概念指南](/langsmith/observability-concepts)
+- [关于反馈数据格式的参考指南](/langsmith/feedback-data-format)
 </Tip>
 
-LangSmith makes it easy to attach feedback to traces.
-This feedback can come from users, annotators, automated evaluators, etc., and is crucial for monitoring and evaluating applications.
+LangSmith 可以轻松地将反馈附加到追踪（traces）上。
+这种反馈可以来自用户、注释员、自动化评估器等，对于监控和评估应用程序至关重要。
 
-## Use [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback) / [createFeedback()](https://docs.smith.langchain.com/reference/js/classes/client.Client#createfeedback)
+## 使用 [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback) / [createFeedback()](https://docs.smith.langchain.com/reference/js/classes/client.Client#createfeedback)
 
-Here we'll walk through how to log feedback using the SDK.
+在这里，我们将介绍如何使用 SDK 记录反馈。
 
 <Info>
-**Child runs**
-You can attach user feedback to ANY child run of a trace, not just the trace (root run) itself.
-This is useful for critiquing specific steps of the LLM application, such as the retrieval step or generation step of a RAG pipeline.
+**子运行 (Child runs)**
+您可以将用户反馈附加到追踪中的**任何子运行**，而不仅仅是追踪本身（根运行/root run）。
+这对于评论 LLM 应用程序的具体步骤非常有用，例如 RAG 管道中的检索步骤或生成步骤。
 </Info>
 
 <Tip>
-**Non-blocking creation (Python only)**
-The Python client will automatically background feedback creation if you pass `trace_id=` to [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback).
-This is essential for low-latency environments, where you want to make sure your application isn't blocked on feedback creation.
+**非阻塞创建 (仅限 Python)**
+如果向 [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback) 传递了 `trace_id=`，Python 客户端将自动在后台创建反馈。
+这对于低延迟环境至关重要，在这些环境中，您需要确保应用程序不会因为等待反馈创建而被阻塞。
 </Tip>
 
 <CodeGroup>
@@ -51,7 +51,7 @@ from langsmith import trace, traceable, Client
         trace_id = root_run.id
         child_runs = root_run.child_runs
 
-    # Provide feedback for a trace (a.k.a. a root run)
+    # 为追踪（即根运行）提供反馈
     client.create_feedback(
         key="user_feedback",
         score=1,
@@ -59,13 +59,13 @@ from langsmith import trace, traceable, Client
         comment="the user said that ..."
     )
 
-# Provide feedback for a child run
+# 为子运行提供反馈
 foo_run_id = [run for run in child_runs if run.name == "foo"][0].id
 client.create_feedback(
     key="correctness",
     score=0,
     run_id=foo_run_id,
-    # trace_id= is optional but recommended to enable batched and backgrounded
+    # trace_id= 是可选的，但建议提供，以支持批量和后台反馈摄取。
     # feedback ingestion.
     trace_id=trace_id,
 )
@@ -75,8 +75,8 @@ client.create_feedback(
 import { Client } from "langsmith";
 const client = new Client();
 
-    // ... Run your application and get the run_id...
-    // This information can be the result of a user-facing feedback form
+    // ... 运行您的应用程序并获取 run_id...
+    // 此信息可以来自面向用户的反馈表单
 
 await client.createFeedback(
     runId,
@@ -90,6 +90,6 @@ await client.createFeedback(
 
 </CodeGroup>
 
-You can even log feedback for in-progress runs using `create_feedback() / createFeedback()`. See [this guide](/langsmith/access-current-span) for how to get the run ID of an in-progress run.
+您甚至可以使用 `create_feedback()` / `createFeedback()` 为**正在进行中**的运行记录反馈。请参阅[本指南](/langsmith/access-current-span)，了解如何获取正在进行中的运行的 ID。
 
-To learn more about how to filter traces based on various attributes, including user feedback, see [this guide](/langsmith/filter-traces-in-application).
+要了解如何根据各种属性（包括用户反馈）过滤追踪，请参阅[本指南](/langsmith/filter-traces-in-application)。

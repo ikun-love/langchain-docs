@@ -2,9 +2,9 @@
 title: SceneXplain
 ---
 
-[SceneXplain](https://scenex.jina.ai/) is an ImageCaptioning service accessible through the SceneXplain Tool.
+[SceneXplain](https://scenex.jina.ai/) 是一个可通过 SceneXplain 工具访问的图像描述（Image Captioning）服务。
 
-To use this tool, you'll need to make an account and fetch your API Token [from the website](https://scenex.jina.ai/api). Then you can instantiate the tool.
+要使用此工具，您需要在其网站上创建一个账户并获取您的 API 令牌 [从网站获取](https://scenex.jina.ai/api)。然后您就可以实例化该工具。
 
 ```python
 import os
@@ -18,7 +18,7 @@ from langchain.agents import load_tools
 tools = load_tools(["sceneXplain"])
 ```
 
-Or directly instantiate the tool.
+或者直接实例化该工具。
 
 ```python
 from langchain_community.tools import SceneXplainTool
@@ -26,9 +26,9 @@ from langchain_community.tools import SceneXplainTool
 tool = SceneXplainTool()
 ```
 
-## Usage in an Agent
+## 在 Agent 中的使用
 
-The tool can be used in any LangChain agent as follows:
+该工具可以在任何 LangChain Agent 中按如下方式使用：
 
 ```python
 from langchain.agents import initialize_agent
@@ -42,8 +42,8 @@ agent = initialize_agent(
 )
 output = agent.run(
     input=(
-        "What is in this image https://storage.googleapis.com/causal-diffusion.appspot.com/imagePrompts%2F0rw369i5h9t%2Foriginal.png. "
-        "Is it movie or a game? If it is a movie, what is the name of the movie?"
+        "这张图片 https://storage.googleapis.com/causal-diffusion.appspot.com/imagePrompts%2F0rw369i5h9t%2Foriginal.png 中有什么？"
+        "它是一个电影还是一个游戏？如果它是一部电影，电影叫什么名字？"
     )
 )
 
@@ -51,19 +51,19 @@ print(output)
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 进入 AgentExecutor 链...
 
-Thought: Do I need to use a tool? Yes
+Thought: 我需要使用工具吗？ 是的
 Action: Image Explainer
 Action Input: https://storage.googleapis.com/causal-diffusion.appspot.com/imagePrompts%2F0rw369i5h9t%2Foriginal.png
-Observation: In a charmingly whimsical scene, a young girl is seen braving the rain alongside her furry companion, the lovable Totoro. The two are depicted standing on a bustling street corner, where they are sheltered from the rain by a bright yellow umbrella. The girl, dressed in a cheerful yellow frock, holds onto the umbrella with both hands while gazing up at Totoro with an expression of wonder and delight.
+Observation: 在一个迷人而奇特的场景中，一个小女孩正和她毛茸茸的伙伴——深受喜爱的龙猫——一起冒雨前行。两人站在一个熙熙攘攘的街角，用一把亮黄色的雨伞为他们遮挡风雨。小女孩身穿一件活泼的黄色连衣裙，双手握着雨伞，带着惊奇和喜悦的表情仰望着龙猫。
 
-Totoro, meanwhile, stands tall and proud beside his young friend, holding his own umbrella aloft to protect them both from the downpour. His furry body is rendered in rich shades of grey and white, while his large ears and wide eyes lend him an endearing charm.
+与此同时，龙猫自豪地挺立在年轻朋友身边，举着自己的雨伞来保护他们俩免受倾盆大雨的侵袭。它毛茸茸的身体呈现出丰富的灰色和白色调，它的大耳朵和睁大的眼睛赋予了它一种惹人喜爱的魅力。
 
-In the background of the scene, a street sign can be seen jutting out from the pavement amidst a flurry of raindrops. A sign with Chinese characters adorns its surface, adding to the sense of cultural diversity and intrigue. Despite the dreary weather, there is an undeniable sense of joy and camaraderie in this heartwarming image.
-Thought: Do I need to use a tool? No
-AI: This image appears to be a still from the 1988 Japanese animated fantasy film My Neighbor Totoro. The film follows two young girls, Satsuki and Mei, as they explore the countryside and befriend the magical forest spirits, including the titular character Totoro.
+在场景的背景中，可以看到一个街道标志从人行道上伸出，周围是飞溅的雨滴。标志的表面装饰着中文字符，增添了一种文化多样性和神秘感。尽管天气阴沉，这幅温馨的图像中仍然洋溢着一种不可否认的喜悦和友爱之情。
+Thought: 我需要使用工具吗？ 不需要
+AI: 这张图片似乎是 1988 年日本动画奇幻电影《龙猫》（My Neighbor Totoro）中的一个剧照。这部电影讲述了两个小女孩，小月（Satsuki）和梅（Mei），探索乡村并与神奇的森林精灵（包括同名角色龙猫）交朋友的故事。
 
-> Finished chain.
-This image appears to be a still from the 1988 Japanese animated fantasy film My Neighbor Totoro. The film follows two young girls, Satsuki and Mei, as they explore the countryside and befriend the magical forest spirits, including the titular character Totoro.
+> 链结束。
+这张图片似乎是 1988 年日本动画奇幻电影《龙猫》（My Neighbor Totoro）中的一个剧照。这部电影讲述了两个小女孩，小月（Satsuki）和梅（Mei），探索乡村并与神奇的森林精灵（包括同名角色龙猫）交朋友的故事。
 ```

@@ -1,12 +1,12 @@
 ---
-title: Natural Language API Toolkits
+title: 自然语言 API 工具包
 ---
 
-`Natural Language API` Toolkits (`NLAToolkits`) permit LangChain Agents to efficiently plan and combine calls across endpoints.
+`自然语言 API` 工具包 (`NLAToolkit`) 允许 LangChain 智能体（Agents）高效地规划和组合对各个端点的调用。
 
-This notebook demonstrates a sample composition of the `Speak`, `Klarna`, and `Spoonacluar` APIs.
+本 Notebook 演示了 `Speak`、`Klarna` 和 `Spoonacular` API 的一个组合示例。
 
-### First, import dependencies and load the LLM
+### 首先，导入依赖项并加载 LLM
 
 ```python
 from langchain.agents import AgentType, initialize_agent
@@ -16,13 +16,13 @@ from langchain_openai import OpenAI
 ```
 
 ```python
-# Select the LLM to use. Here, we use gpt-3.5-turbo-instruct
+# 选择要使用的 LLM。这里我们使用 gpt-3.5-turbo-instruct
 llm = OpenAI(
     temperature=0, max_tokens=700, model_name="gpt-3.5-turbo-instruct"
-)  # You can swap between different core LLM's here.
+)  # 您可以在此处切换不同的核心 LLM。
 ```
 
-### Next, load the Natural Language API Toolkits
+### 接下来，加载自然语言 API 工具包
 
 ```python
 speak_toolkit = NLAToolkit.from_llm_and_url(llm, "https://api.speak.com/openapi.yaml")
@@ -37,22 +37,22 @@ Attempting to load an OpenAPI 3.0.1 spec.  This may result in degraded performan
 Attempting to load an OpenAPI 3.0.1 spec.  This may result in degraded performance. Convert your OpenAPI spec to 3.1.* spec for better support.
 ```
 
-### Create the Agent
+### 创建智能体 (Agent)
 
 ```python
-# Slightly tweak the instructions from the default agent
-openapi_format_instructions = """Use the following format:
+# 对默认智能体的指令进行微调
+openapi_format_instructions = """使用以下格式：
 
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: what to instruct the AI Action representative.
-Observation: The Agent's response
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer. User can't see any of my observations, API responses, links, or tools.
-Final Answer: the final answer to the original input question with the right amount of detail
+Question: 您必须回答的输入问题
+Thought: 您应该始终思考要做什么
+Action: 要执行的操作，应为 [{tool_names}] 中的一项
+Action Input: 要指示 AI 操作代表的操作的内容。
+Observation: 智能体的响应
+... (此 Thought/Action/Action Input/Observation 可以重复 N 次)
+Thought: 我现在知道最终答案了。用户看不到我的任何观察结果、API 响应、链接或工具。
+Final Answer: 对原始输入问题的最终答案，包含足够详细的信息
 
-When responding with your Final Answer, remember that the person you are responding to CANNOT see any of your Thought/Action/Action Input/Observations, so if there is any relevant information there you need to include it explicitly in your response."""
+当您用 Final Answer 进行回复时，请记住，您回复的人**看不到**您的任何 Thought/Action/Action Input/Observations，因此如果其中有任何相关信息，您需要明确地将其包含在您的回复中。"""
 ```
 
 ```python
@@ -74,12 +74,12 @@ mrkl.run(
 
 ```output
 > Entering new AgentExecutor chain...
- I need to find out what kind of Italian clothes are available
+ 我需要找出有什么意大利服装可供选择
 Action: Open_AI_Klarna_product_Api.productsUsingGET
 Action Input: Italian clothes
-Observation: The API response contains two products from the Alé brand in Italian Blue. The first is the Alé Colour Block Short Sleeve Jersey Men - Italian Blue, which costs $86.49, and the second is the Alé Dolid Flash Jersey Men - Italian Blue, which costs $40.00.
-Thought: I now know what kind of Italian clothes are available and how much they cost.
-Final Answer: You can buy two products from the Alé brand in Italian Blue for your end of year party. The Alé Colour Block Short Sleeve Jersey Men - Italian Blue costs $86.49, and the Alé Dolid Flash Jersey Men - Italian Blue costs $40.00.
+Observation: API 响应包含来自 Alé 品牌的两款意大利蓝色产品。第一款是 Alé Colour Block Short Sleeve Jersey Men - Italian Blue，价格为 86.49 美元；第二款是 Alé Dolid Flash Jersey Men - Italian Blue，价格为 40.00 美元。
+Thought: 我现在知道有什么意大利服装可供选择以及它们的价格。
+Final Answer: 您可以为您的年末派对购买 Alé 品牌的两款意大利蓝色产品。Alé Colour Block Short Sleeve Jersey Men - Italian Blue 售价 86.49 美元，Alé Dolid Flash Jersey Men - Italian Blue 售价 40.00 美元。
 
 > Finished chain.
 ```
@@ -88,19 +88,19 @@ Final Answer: You can buy two products from the Alé brand in Italian Blue for y
 'You can buy two products from the Alé brand in Italian Blue for your end of year party. The Alé Colour Block Short Sleeve Jersey Men - Italian Blue costs $86.49, and the Alé Dolid Flash Jersey Men - Italian Blue costs $40.00.'
 ```
 
-### Use Auth and add more Endpoints
+### 使用身份验证 (Auth) 并添加更多端点
 
-Some endpoints may require user authentication via things like access tokens. Here we show how to pass in the authentication information via the `Requests` wrapper object.
+某些端点可能需要通过访问令牌等方式进行用户身份验证。这里我们展示如何通过 `Requests` 包装器对象传入身份验证信息。
 
-Since each NLATool exposes a concisee natural language interface to its wrapped API, the top level conversational agent has an easier job incorporating each endpoint to satisfy a user's request.
+由于每个 NLATool 为其包装的 API 提供简洁的自然语言接口，顶层的对话智能体在整合每个端点以满足用户请求时会更加轻松。
 
-**Adding the Spoonacular endpoints.**
+**添加 Spoonacular 端点。**
 
-1. Go to the [Spoonacular API Console](https://spoonacular.com/food-api/console#Profile) and make a free account.
-2. Click on `Profile` and copy your API key below.
+1. 前往 [Spoonacular API Console](https://spoonacular.com/food-api/console#Profile) 并免费注册一个账户。
+2. 点击 `Profile` 并将在下面复制您的 API 密钥。
 
 ```python
-spoonacular_api_key = ""  # Copy from the API Console
+spoonacular_api_key = ""  # 从 API 控制台复制
 ```
 
 ```python
@@ -109,7 +109,7 @@ spoonacular_toolkit = NLAToolkit.from_llm_and_url(
     llm,
     "https://spoonacular.com/application/frontend/downloads/spoonacular-openapi-3.json",
     requests=requests,
-    max_text_length=1800,  # If you want to truncate the response text
+    max_text_length=1800,  # 如果您想截断响应文本
 )
 ```
 
@@ -149,7 +149,7 @@ print(f"{len(natural_language_api_tools)} tools loaded.")
 ```
 
 ```python
-# Create an agent with the new tools
+# 使用新工具创建智能体
 mrkl = initialize_agent(
     natural_language_api_tools,
     llm,
@@ -160,7 +160,7 @@ mrkl = initialize_agent(
 ```
 
 ```python
-# Make the query more complex!
+# 使查询更复杂！
 user_input = (
     "I'm learning Italian, and my language class is having an end of year party... "
     " Could you help me find an Italian outfit to wear and"
@@ -174,16 +174,16 @@ mrkl.run(user_input)
 
 ```output
 > Entering new AgentExecutor chain...
- I need to find a recipe and an outfit that is Italian-themed.
+ 我需要找到一个意大利主题的食谱和一套服装。
 Action: spoonacular_API.searchRecipes
 Action Input: Italian
-Observation: The API response contains 10 Italian recipes, including Turkey Tomato Cheese Pizza, Broccolini Quinoa Pilaf, Bruschetta Style Pork & Pasta, Salmon Quinoa Risotto, Italian Tuna Pasta, Roasted Brussels Sprouts With Garlic, Asparagus Lemon Risotto, Italian Steamed Artichokes, Crispy Italian Cauliflower Poppers Appetizer, and Pappa Al Pomodoro.
-Thought: I need to find an Italian-themed outfit.
+Observation: API 响应包含 10 个意大利食谱，包括 Turkey Tomato Cheese Pizza (火鸡番茄芝士披萨), Broccolini Quinoa Pilaf (西兰花藜麦抓饭), Bruschetta Style Pork & Pasta (意式烤面包风格猪肉和意大利面), Salmon Quinoa Risotto (三文鱼藜麦烩饭), Italian Tuna Pasta (意式金枪鱼意大利面), Roasted Brussels Sprouts With Garlic (大蒜烤抱子甘蓝), Asparagus Lemon Risotto (芦笋柠檬烩饭), Italian Steamed Artichokes (意大利式蒸朝鲜蓟), Crispy Italian Cauliflower Poppers Appetizer (香脆意大利花椰菜开胃小吃), 和 Pappa Al Pomodoro (意大利番茄面包汤)。
+Thought: 我需要找一套意大利主题的服装。
 Action: Open_AI_Klarna_product_Api.productsUsingGET
 Action Input: Italian
-Observation: I found 10 products related to 'Italian' in the API response. These products include Italian Gold Sparkle Perfectina Necklace - Gold, Italian Design Miami Cuban Link Chain Necklace - Gold, Italian Gold Miami Cuban Link Chain Necklace - Gold, Italian Gold Herringbone Necklace - Gold, Italian Gold Claddagh Ring - Gold, Italian Gold Herringbone Chain Necklace - Gold, Garmin QuickFit 22mm Italian Vacchetta Leather Band, Macy's Italian Horn Charm - Gold, Dolce & Gabbana Light Blue Italian Love Pour Homme EdT 1.7 fl oz.
-Thought: I now know the final answer.
-Final Answer: To present for your Italian language class, you could wear an Italian Gold Sparkle Perfectina Necklace - Gold, an Italian Design Miami Cuban Link Chain Necklace - Gold, or an Italian Gold Miami Cuban Link Chain Necklace - Gold. For a recipe, you could make Turkey Tomato Cheese Pizza, Broccolini Quinoa Pilaf, Bruschetta Style Pork & Pasta, Salmon Quinoa Risotto, Italian Tuna Pasta, Roasted Brussels Sprouts With Garlic, Asparagus Lemon Risotto, Italian Steamed Artichokes, Crispy Italian Cauliflower Poppers Appetizer, or Pappa Al Pomodoro.
+Observation: 我在 API 响应中找到了 10 个与“Italian”相关的产品。这些产品包括 Italian Gold Sparkle Perfectina Necklace - Gold (意大利金色闪耀 Perfectina 项链 - 金色), Italian Design Miami Cuban Link Chain Necklace - Gold (意大利设计迈阿密古巴链项链 - 金色), Italian Gold Miami Cuban Link Chain Necklace - Gold (意大利金色迈阿密古巴链项链 - 金色), Italian Gold Herringbone Necklace - Gold (意大利金色人字形项链 - 金色), Italian Gold Claddagh Ring - Gold (意大利金色 Claddagh 戒指 - 金色), Italian Gold Herringbone Chain Necklace - Gold (意大利金色人字形链条项链 - 金色), Garmin QuickFit 22mm Italian Vacchetta Leather Band (Garmin QuickFit 22mm 意大利牛皮表带), Macy's Italian Horn Charm - Gold (Macy's 意大利号角吊饰 - 金色), Dolce & Gabbana Light Blue Italian Love Pour Homme EdT 1.7 fl oz (杜嘉班纳浅蓝“意大利之恋”男士淡香水 1.7 液量盎司)。
+Thought: 我现在知道了最终答案。
+Final Answer: 为了在您的意大利语课上进行展示，您可以选择佩戴 Italian Gold Sparkle Perfectina Necklace - Gold、Italian Design Miami Cuban Link Chain Necklace - Gold 或 Italian Gold Miami Cuban Link Chain Necklace - Gold。对于食谱，您可以制作 Turkey Tomato Cheese Pizza、Broccolini Quinoa Pilaf、Bruschetta Style Pork & Pasta、Salmon Quinoa Risotto、Italian Tuna Pasta、Roasted Brussels Sprouts With Garlic、Asparagus Lemon Risotto、Italian Steamed Artichokes、Crispy Italian Cauliflower Poppers Appetizer 或 Pappa Al Pomodoro。
 
 > Finished chain.
 ```
@@ -192,7 +192,7 @@ Final Answer: To present for your Italian language class, you could wear an Ital
 'To present for your Italian language class, you could wear an Italian Gold Sparkle Perfectina Necklace - Gold, an Italian Design Miami Cuban Link Chain Necklace - Gold, or an Italian Gold Miami Cuban Link Chain Necklace - Gold. For a recipe, you could make Turkey Tomato Cheese Pizza, Broccolini Quinoa Pilaf, Bruschetta Style Pork & Pasta, Salmon Quinoa Risotto, Italian Tuna Pasta, Roasted Brussels Sprouts With Garlic, Asparagus Lemon Risotto, Italian Steamed Artichokes, Crispy Italian Cauliflower Poppers Appetizer, or Pappa Al Pomodoro.'
 ```
 
-## Thank you
+## 谢谢
 
 ```python
 natural_language_api_tools[1].run(

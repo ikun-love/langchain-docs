@@ -1,33 +1,34 @@
+```markdown
 ---
-title: ZHIPU AI
+title: 智谱 AI
 ---
 
-This notebook shows how to use [ZHIPU AI API](https://open.bigmodel.cn/dev/api) in LangChain with the langchain.chat_models.ChatZhipuAI.
+本 Notebook 展示了如何在 LangChain 中使用 `langchain.chat_models.ChatZhipuAI` 来调用[智谱 AI API](https://open.bigmodel.cn/dev/api)。
 
->[*GLM-4*](https://open.bigmodel.cn/) is a multi-lingual large language model aligned with human intent, featuring capabilities in Q&A, multi-turn dialogue, and code generation. The overall performance of the new generation base model GLM-4 has been significantly improved compared to the previous generation, supporting longer contexts; Stronger multimodality; Support faster inference speed, more concurrency, greatly reducing inference costs; Meanwhile, GLM-4 enhances the capabilities of intelligent agents.
+> [*GLM-4*](https://open.bigmodel.cn/) 是一款对齐人类意图的多语言大语言模型，具备问答、多轮对话和代码生成能力。新一代基座模型 GLM-4 相比上一代在综合性能上有了显著提升，支持更长的上下文；更强的多模态能力；支持更快的推理速度和更高的并发量，大幅降低了推理成本；同时，GLM-4 也增强了智能体的能力。
 
-## Getting started
+## 入门指南
 
-### Installation
+### 安装
 
-First, ensure the zhipuai package is installed in your Python environment. Run the following command:
+首先，请确保您的 Python 环境已安装 `zhipuai` 包。运行以下命令：
 
 ```python
 #!pip install -U httpx httpx-sse PyJWT
 ```
 
-### Importing the Required Modules
+### 导入所需模块
 
-After installation, import the necessary modules to your Python script:
+安装完成后，将必要的模块导入到您的 Python 脚本中：
 
 ```python
 from langchain_community.chat_models import ChatZhipuAI
 from langchain.messages import AIMessage, HumanMessage, SystemMessage
 ```
 
-### Setting Up Your API Key
+### 设置您的 API 密钥
 
-Sign in to [ZHIPU AI](https://open.bigmodel.cn/login?redirect=%2Fusercenter%2Fapikeys) for an API Key to access our models.
+请登录 [智谱 AI](https://open.bigmodel.cn/login?redirect=%2Fusercenter%2Fapikeys) 获取 API 密钥以访问我们的模型。
 
 ```python
 import os
@@ -35,9 +36,9 @@ import os
 os.environ["ZHIPUAI_API_KEY"] = "zhipuai_api_key"
 ```
 
-### Initialize the ZHIPU AI Chat Model
+### 初始化 ZHIPU AI 聊天模型
 
-Here's how to initialize the chat model:
+以下是初始化聊天模型的示例：
 
 ```python
 chat = ChatZhipuAI(
@@ -46,28 +47,28 @@ chat = ChatZhipuAI(
 )
 ```
 
-### Basic Usage
+### 基本用法
 
-Invoke the model with system and human messages like this:
+像下面这样，传入系统消息（SystemMessage）和用户消息（HumanMessage）来调用模型：
 
 ```python
 messages = [
     AIMessage(content="Hi."),
-    SystemMessage(content="Your role is a poet."),
-    HumanMessage(content="Write a short poem about AI in four lines."),
+    SystemMessage(content="你的角色是一位诗人。"),
+    HumanMessage(content="写一首关于 AI 的四行短诗。"),
 ]
 ```
 
 ```python
 response = chat.invoke(messages)
-print(response.content)  # Displays the AI-generated poem
+print(response.content)  # 显示 AI 生成的诗歌
 ```
 
-## Advanced Features
+## 高级特性
 
-### Streaming Support
+### 流式输出支持 (Streaming Support)
 
-For continuous interaction, use the streaming feature:
+如需实现持续交互，可以使用流式输出功能：
 
 ```python
 from langchain_core.callbacks.manager import CallbackManager
@@ -87,9 +88,9 @@ streaming_chat = ChatZhipuAI(
 streaming_chat(messages)
 ```
 
-### Asynchronous Calls
+### 异步调用 (Asynchronous Calls)
 
-For non-blocking calls, use the asynchronous approach:
+对于非阻塞调用，请使用异步方法：
 
 ```python
 async_chat = ChatZhipuAI(
@@ -103,9 +104,9 @@ response = await async_chat.agenerate([messages])
 print(response)
 ```
 
-### Using With Functions Call
+### 与函数调用结合使用 (Using With Functions Call)
 
-GLM-4 model can be used with the function call as well, use the following code to run a simple LangChain json_chat_agent.
+GLM-4 模型也可以用于函数调用。使用以下代码运行一个简单的 LangChain json_chat_agent：
 
 ```python
 os.environ["TAVILY_API_KEY"] = "tavily_api_key"
@@ -127,5 +128,6 @@ agent_executor = AgentExecutor(
 ```
 
 ```python
-agent_executor.invoke({"input": "what is LangChain?"})
+agent_executor.invoke({"input": "什么是 LangChain？"})
+```
 ```

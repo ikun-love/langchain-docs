@@ -2,13 +2,13 @@
 title: Microsoft Word
 ---
 
->[Microsoft Word](https://www.microsoft.com/en-us/microsoft-365/word) is a word processor developed by Microsoft.
+>[Microsoft Word](https://www.microsoft.com/en-us/microsoft-365/word) 是由微软开发的一款文字处理软件。
 
-This covers how to load `Word` documents into a document format that we can use downstream.
+本指南介绍如何将 `Word` 文档加载到可供下游使用的文档格式中。
 
-## Using Docx2txt
+## 使用 Docx2txt
 
-Load .docx using `Docx2txt` into a document.
+使用 `Docx2txt` 将 .docx 文件加载到文档对象中。
 
 ```python
 pip install -qU  docx2txt
@@ -28,9 +28,9 @@ data
 [Document(page_content='Lorem ipsum dolor sit amet.', metadata={'source': './example_data/fake.docx'})]
 ```
 
-## Using Unstructured
+## 使用 Unstructured
 
-Please see [this guide](/oss/integrations/providers/unstructured/) for more instructions on setting up Unstructured locally, including setting up required system dependencies.
+有关在本地设置 Unstructured 的更多说明，包括设置所需的系统依赖项，请参阅[此指南](/oss/integrations/providers/unstructured/)。
 
 ```python
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
@@ -46,9 +46,9 @@ data
 [Document(page_content='Lorem ipsum dolor sit amet.', metadata={'source': 'example_data/fake.docx'})]
 ```
 
-### Retain Elements
+### 保留元素
 
-Under the hood, Unstructured creates different "elements" for different chunks of text. By default we combine those together, but you can easily keep that separation by specifying `mode="elements"`.
+在底层，Unstructured 会为不同文本块创建不同的“元素”（Elements）。默认情况下，我们会将这些元素合并在一起，但您可以通过指定 `mode="elements"` 来轻松地保持这种分离。
 
 ```python
 loader = UnstructuredWordDocumentLoader("./example_data/fake.docx", mode="elements")
@@ -62,19 +62,17 @@ data[0]
 Document(page_content='Lorem ipsum dolor sit amet.', metadata={'source': './example_data/fake.docx', 'category_depth': 0, 'file_directory': './example_data', 'filename': 'fake.docx', 'last_modified': '2023-12-19T13:42:18', 'languages': ['por', 'cat'], 'filetype': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'category': 'Title'})
 ```
 
-## Using Azure AI Document Intelligence
+## 使用 Azure AI Document Intelligence
 
->[Azure AI Document Intelligence](https://aka.ms/doc-intelligence) (formerly known as `Azure Form Recognizer`) is machine-learning
->based service that extracts texts (including handwriting), tables, document structures (e.g., titles, section headings, etc.) and key-value-pairs from
->digital or scanned PDFs, images, Office and HTML files.
+>[Azure AI Document Intelligence](https://aka.ms/doc-intelligence)（以前称为 `Azure Form Recognizer`）是一项基于机器学习的服务，它能从数字或扫描的 PDF、图像、Office 和 HTML 文件中提取文本（包括手写内容）、表格、文档结构（例如标题、章节标题等）以及键值对。
 >
->Document Intelligence supports `PDF`, `JPEG/JPG`, `PNG`, `BMP`, `TIFF`, `HEIF`, `DOCX`, `XLSX`, `PPTX` and `HTML`.
+>Document Intelligence 支持 `PDF`、`JPEG/JPG`、`PNG`、`BMP`、`TIFF`、`HEIF`、`DOCX`、`XLSX`、`PPTX` 和 `HTML` 格式。
 
-This current implementation of a loader using `Document Intelligence` can incorporate content page-wise and turn it into LangChain documents. The default output format is markdown, which can be easily chained with `MarkdownHeaderTextSplitter` for semantic document chunking. You can also use `mode="single"` or `mode="page"` to return pure texts in a single page or document split by page.
+当前使用 `Document Intelligence` 的加载器实现可以将内容按页整合，并将其转换为 LangChain 文档。默认输出格式是 Markdown，这可以轻松地与 `MarkdownHeaderTextSplitter` 链接起来，用于语义化的文档分块。您也可以使用 `mode="single"` 或 `mode="page"` 以返回纯文本（在单页中或按页拆分文档后）。
 
-## Prerequisite
+## 先决条件
 
-An Azure AI Document Intelligence resource in one of the 3 preview regions: **East US**, **West US2**, **West Europe** - follow [this document](https://learn.microsoft.com/azure/ai-services/document-intelligence/create-document-intelligence-resource?view=doc-intel-4.0.0) to create one if you don't have. You will be passing `<endpoint>` and `<key>` as parameters to the loader.
+需要在以下 3 个预览区域之一拥有一个 Azure AI Document Intelligence 资源：**美国东部 (East US)**、**美国西部 2 (West US2)**、**西欧 (West Europe)** —— 如果您还没有，请遵循[此文档](https://learn.microsoft.com/azure/ai-services/document-intelligence/create-document-intelligence-resource?view=doc-intel-4.0.0)来创建一个。您将把 `<endpoint>` 和 `<key>` 作为参数传递给加载器。
 
 pip install -qU  langchain langchain-community azure-ai-documentintelligence
 

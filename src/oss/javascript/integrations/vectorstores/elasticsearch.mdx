@@ -3,29 +3,28 @@ title: Elasticsearch
 ---
 
 <Tip>
-**Compatibility**: Only available on Node.js.
+**兼容性**: 仅在 Node.js 上可用。
 </Tip>
 
-[Elasticsearch](https://github.com/elastic/elasticsearch) is a distributed, RESTful search engine optimized for speed and relevance on production-scale workloads. It supports also vector search using the [k-nearest neighbor](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) (kNN) algorithm and also [custom models for Natural Language Processing](https://www.elastic.co/blog/how-to-deploy-nlp-text-embeddings-and-vector-search) (NLP).
-You can read more about the support of vector search in Elasticsearch [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html).
+[Elasticsearch](https://github.com/elastic/elasticsearch) 是一个分布式、RESTful 的搜索引擎，它针对生产规模的工作负载进行了速度和相关性优化。它还支持使用 [k-最近邻](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) (kNN) 算法的向量搜索，以及 [用于自然语言处理 (NLP) 的自定义模型](https://www.elastic.co/blog/how-to-deploy-nlp-text-embeddings-and-vector-search)。您可以在[此处](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)阅读更多关于 Elasticsearch 中向量搜索支持的信息。
 
-This guide provides a quick overview for getting started with Elasticsearch [vector stores](/oss/integrations/vectorstores). For detailed documentation of all `ElasticVectorSearch` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_elasticsearch.ElasticVectorSearch.html).
+本指南快速概述了如何开始使用 Elasticsearch [向量存储](/oss/integrations/vectorstores)。有关 `ElasticVectorSearch` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_elasticsearch.ElasticVectorSearch.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | [PY support](https://python.langchain.com/docs/integrations/vectorstores/elasticsearch/) |  Version |
+| 类名 | 包名 | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/elasticsearch/) | 版本 |
 | :--- | :--- | :---: | :---: |
 | [`ElasticVectorSearch`](https://api.js.langchain.com/classes/langchain_community_vectorstores_elasticsearch.ElasticVectorSearch.html) | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) | ✅ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-To use Elasticsearch vector stores, you'll need to install the `@langchain/community` integration package.
+要使用 Elasticsearch 向量存储，您需要安装 `@langchain/community` 集成包。
 
-LangChain.js accepts [`@elastic/elasticsearch`](https://github.com/elastic/elasticsearch-js) as the client for Elasticsearch vectorstore. You'll need to install it as a peer dependency.
+LangChain.js 接受 [`@elastic/elasticsearch`](https://github.com/elastic/elasticsearch-js) 作为 Elasticsearch 向量存储的客户端。您需要将其作为对等依赖项安装。
 
-This guide will also use [OpenAI embeddings](/oss/integrations/text_embedding/openai), which require you to install the `@langchain/openai` integration package. You can also use [other supported embeddings models](/oss/integrations/text_embedding) if you wish.
+本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果您愿意，也可以使用[其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -39,30 +38,30 @@ pnpm add @langchain/community @elastic/elasticsearch @langchain/openai @langchai
 ```
 </CodeGroup>
 
-### Credentials
+### 凭证
 
-To use Elasticsearch vector stores, you'll need to have an Elasticsearch instance running.
+要使用 Elasticsearch 向量存储，您需要有一个正在运行的 Elasticsearch 实例。
 
-You can use the [official Docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html) to get started, or you can use [Elastic Cloud](https://www.elastic.co/cloud/), Elastic's official cloud service.
+您可以使用[官方 Docker 镜像](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)开始，或者使用 Elastic 的官方云服务 [Elastic Cloud](https://www.elastic.co/cloud/)。
 
-For connecting to Elastic Cloud you can read the documentation reported [here](https://www.elastic.co/guide/en/kibana/current/api-keys.html) for obtaining an API key.
+有关连接到 Elastic Cloud，您可以阅读[此处](https://www.elastic.co/guide/en/kibana/current/api-keys.html)的文档以获取 API 密钥。
 
-If you are using OpenAI embeddings for this guide, you'll need to set your OpenAI key as well:
+如果本指南中使用 OpenAI embeddings，您还需要设置您的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您希望对模型的调用进行自动跟踪，您还可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
 // process.env.LANGSMITH_API_KEY="your-api-key"
 ```
 
-## Instantiation
+## 实例化
 
-Instatiating Elasticsearch will vary depending on where your instance is hosted.
+Elasticsearch 的实例化取决于您的实例托管的位置。
 
 ```typescript
 import {
@@ -93,7 +92,7 @@ if (process.env.ELASTIC_API_KEY) {
     password: process.env.ELASTIC_PASSWORD,
   };
 }
-// Local Docker deploys require a TLS certificate
+// 本地 Docker 部署需要 TLS 证书
 if (process.env.ELASTIC_CERT_PATH) {
   config.tls = {
     ca: fs.readFileSync(process.env.ELASTIC_CERT_PATH),
@@ -108,9 +107,9 @@ const clientArgs: ElasticClientArgs = {
 const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
 ```
 
-## Manage vector store
+## 管理向量存储
 
-### Add items to vector store
+### 向向量存储添加条目
 
 ```typescript
 import type { Document } from "@langchain/core/documents";
@@ -144,21 +143,21 @@ await vectorStore.addDocuments(documents, { ids: ["1", "2", "3", "4"] });
 [ '1', '2', '3', '4' ]
 ```
 
-### Delete items from vector store
+### 从向量存储中删除条目
 
-You can delete values from the store by passing the same id you passed in:
+您可以传入与添加时相同的 ID 来删除存储中的值：
 
 ```typescript
 await vectorStore.delete({ ids: ["4"] });
 ```
 
-## Query vector store
+## 查询向量存储
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+一旦创建了向量存储并将相关文档添加进去，您很可能希望在链或代理运行时查询它。
 
-### Query directly
+### 直接查询
 
-Performing a simple similarity search can be done as follows:
+执行简单的相似度搜索可以按如下方式完成：
 
 ```typescript
 const filter = [{
@@ -179,9 +178,9 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-The vector store supports [Elasticsearch filter syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html) operators.
+向量存储支持 [Elasticsearch 过滤语法](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html)运算符。
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似度搜索并接收相应的分数，可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -196,13 +195,13 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.370] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### Query by turning into retriever
+### 通过转换为检索器进行查询
 
-You can also transform the vector store into a [retriever](/oss/langchain/retrieval) for easier usage in your chains.
+您还可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
-  // Optional filter
+  // 可选的过滤器
   filter: filter,
   k: 2,
 });
@@ -224,16 +223,16 @@ await retriever.invoke("biology");
 ]
 ```
 
-### Usage for retrieval-augmented generation
+### 用于检索增强生成 (RAG) 的用法
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag).
-- [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
+- [代理式 RAG](/oss/langgraph/agentic-rag)
+- [检索文档](/oss/langchain/retrieval)
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `ElasticVectorSearch` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_elasticsearch.ElasticVectorSearch.html).
+有关 `ElasticVectorSearch` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_elasticsearch.ElasticVectorSearch.html)。

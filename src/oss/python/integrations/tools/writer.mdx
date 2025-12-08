@@ -1,60 +1,61 @@
+```markdown
 ---
-title: WRITER Tools
+title: WRITER 工具
 ---
 
-This guide provides an overview for getting started with WRITER [tools](/oss/langchain/tools). For detailed documentation of all WRITER features and configurations, head to the [WRITER docs](https://dev.writer.com/home).
+本指南概述了如何开始使用 WRITER [工具](/oss/langchain/tools)。有关所有 WRITER 功能和配置的详细文档，请访问 [WRITER 文档](https://dev.writer.com/home)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class                                                                                                      | Package          | Local | Serializable | JS support |                                        Downloads                                         |                                        Version                                         |
+| 类                                                                                                      | 包          | 本地 | 可序列化 | JS 支持 |                                        下载量                                         |                                        版本                                         |
 |:-----------------------------------------------------------------------------------------------------------|:-----------------| :---: | :---: |:----------:|:------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:|
 | [GraphTool](https://github.com/writer/langchain-writer/blob/main/langchain_writer/tools.py#L9) | [langchain-writer](https://pypi.org/project/langchain-writer/) |      ❌       |                                       ❌                                       | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-writer?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-writer?style=flat-square&label=%20) |
 | [TranslationTool](https://github.com/writer/langchain-writer/blob/main/langchain_writer/tools.py) | [langchain-writer](https://pypi.org/project/langchain-writer/) |      ❌       |                                       ❌                                       | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-writer?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-writer?style=flat-square&label=%20) |
 | [WebSearchTool](https://github.com/writer/langchain-writer/blob/main/langchain_writer/tools.py) | [langchain-writer](https://pypi.org/project/langchain-writer/) |      ❌       |                                       ❌                                       | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-writer?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-writer?style=flat-square&label=%20) |
 
-### Features
+### 功能特性
 
-`ChatWriter` supports several tool types: `function`, `graph`, `translation`, and `web_search`.
+`ChatWriter` 支持多种工具类型：`function`（函数），`graph`（知识图谱），`translation`（翻译）和 `web_search`（网络搜索）。
 
-> **Important limitation**: You can only use one WRITER tool (translation, graph, web_search, llm, image, vision) at a time. While you can't combine multiple WRITER tools, you can use one WRITER tool alongside multiple custom function tools.
+> **重要限制**: 您一次只能使用一个 WRITER 工具（翻译、知识图谱、网络搜索、LLM、图像、视觉）。虽然不能组合多个 WRITER 工具，但您可以将一个 WRITER 工具与多个自定义函数工具一起使用。
 
-#### Function
+#### 函数 (Function)
 
-Functions are the most common type of tool, which allows the LLM to call external APIs, fetch data from databases, and generally perform any external action you want to do. Visit WRITER's [tool calling docs](https://dev.writer.com/home/tool-calling) for additional information.
+函数是工具中最常见的一种类型，它允许 LLM 调用外部 API、从数据库中获取数据，以及执行您希望执行的任何外部操作。请访问 WRITER 的 [工具调用文档](https://dev.writer.com/home/tool-calling) 以获取更多信息。
 
-#### Graph
+#### 知识图谱 (Graph)
 
-The `Graph` tool uses WRITER's Knowledge Graph, which is a graph-based retrieval-augmented generation (RAG) system. When using this tool, developers provide a graph ID that references their specific Knowledge Graph. The model then uses this graph to find relevant information and generate accurate answers to questions in the prompt. This allows the model to access and utilize custom knowledge bases during conversations. For more details, see WRITER's [Knowledge Graph API docs](https://dev.writer.com/home/knowledge-graph).
+`Graph` 工具使用 WRITER 的知识图谱（Knowledge Graph），这是一个基于图的检索增强生成 (RAG) 系统。当使用此工具时，开发者提供一个图 ID，该 ID 引用其特定的知识图谱。然后，模型使用该图来查找相关信息，并针对提示中的问题生成准确的答案。这使得模型能够在对话中访问和利用自定义知识库。如需了解更多详情，请参阅 WRITER 的 [知识图谱 API 文档](https://dev.writer.com/home/knowledge-graph)。
 
-#### Translation
+#### 翻译 (Translation)
 
-The translation tool allows you to translate text during a conversation with a Palmyra model. While Palmyra X models can perform translation tasks, they are not optimized for these tasks and may not perform well without correct prompting. See WRITER's [translation API docs](https://dev.writer.com/home/translation-tool#translate-text-in-a-chat) for more information.
+翻译工具允许您在与 Palmyra 模型对话期间翻译文本。虽然 Palmyra X 模型可以执行翻译任务，但它们并非为此类任务进行优化，在没有正确提示的情况下性能可能不佳。有关更多信息，请参阅 WRITER 的 [翻译 API 文档](https://dev.writer.com/home/translation-tool#translate-text-in-a-chat)。
 
-#### Web Search
+#### 网络搜索 (Web Search)
 
-The web search tool allows you to search the web for current information during a conversation with a Palmyra model. While Palmyra models have extensive knowledge, they may not have access to the most current information or real-time data. The web search tool enables your AI assistant to find up-to-date information, news, and facts from the web. See WRITER's [web search API docs](https://dev.writer.com/home/web-search-tool#web-search-in-a-chat) for more information.
+网络搜索工具允许您在与 Palmyra 模型对话期间搜索网页以获取最新信息。虽然 Palmyra 模型拥有广泛的知识，但它们可能无法访问最新的信息或实时数据。网络搜索工具使您的 AI 助手能够从网络上查找最新的信息、新闻和事实。有关更多信息，请参阅 WRITER 的 [网络搜索 API 文档](https://dev.writer.com/home/web-search-tool#web-search-in-a-chat)。
 
-## Setup
+## 设置
 
-Sign up for [WRITER AI Studio](https://app.writer.com/aistudio/signup?utm_campaign=devrel) to generate an API key (you can follow this [Quickstart](https://dev.writer.com/home/quickstart)). Then, set the `WRITER_API_KEY` environment variable:
+注册 [WRITER AI Studio](https://app.writer.com/aistudio/signup?utm_campaign=devrel) 以生成 API 密钥（您可以遵循此 [快速入门指南](https://dev.writer.com/home/quickstart)）。然后，设置 `WRITER_API_KEY` 环境变量：
 
 ```python
 import getpass
 import os
 
 if not os.getenv("WRITER_API_KEY"):
-    os.environ["WRITER_API_KEY"] = getpass.getpass("Enter your WRITER API key: ")
+    os.environ["WRITER_API_KEY"] = getpass.getpass("输入您的 WRITER API 密钥: ")
 ```
 
-## Usage
+## 用法
 
-You can bind graph or function tools to `ChatWriter`.
+您可以将知识图谱或函数工具绑定到 `ChatWriter`。
 
-### Graph Tools
+### 知识图谱工具 (Graph Tools)
 
-To bind graph tools, first create and initialize a `GraphTool` instance with the `graph_ids` you want to use as sources:
+要绑定知识图谱工具，首先使用您想用作数据源的 `graph_ids` 来创建并初始化 `GraphTool` 实例：
 
 ```python
 from langchain_writer.chat_models import ChatWriter
@@ -62,40 +63,40 @@ from langchain_writer.tools import GraphTool
 
 chat = ChatWriter()
 
-graph_id = getpass.getpass("Enter WRITER Knowledge Graph ID: ")
+graph_id = getpass.getpass("输入 WRITER 知识图谱 ID: ")
 graph_tool = GraphTool(graph_ids=[graph_id])
 ```
 
-### Translation Tools
+### 翻译工具 (Translation Tools)
 
-The translation tool allows you to translate text during a conversation with a Palmyra model. While Palmyra X models can perform translation tasks, they are not optimized for these tasks and may not perform well without correct prompting.
+翻译工具允许您在与 Palmyra 模型对话期间翻译文本。虽然 Palmyra X 模型可以执行翻译任务，但它们并非为此类任务进行优化，在没有正确提示的情况下性能可能不佳。
 
-To use the translation tool, import and initialize the built-in `TranslationTool`:
+要使用翻译工具，请导入并初始化内置的 `TranslationTool`：
 
 ```python
 from langchain_writer.tools import TranslationTool
 
-# Initialize the translation tool
+# 初始化翻译工具
 translation_tool = TranslationTool()
 ```
 
-### Web Search Tools
+### 网络搜索工具 (Web Search Tools)
 
-The web search tool allows you to search the web for current information during a conversation with a Palmyra model. While Palmyra models have extensive knowledge, they may not have access to the most current information or real-time data. The web search tool enables your AI assistant to find up-to-date information, news, and facts from the web.
+网络搜索工具允许您在与 Palmyra 模型对话期间搜索网页以获取最新信息。虽然 Palmyra 模型拥有广泛的知识，但它们可能无法访问最新的信息或实时数据。网络搜索工具使您的 AI 助手能够从网络上查找最新的信息、新闻和事实。
 
-To use the web search tool, import and initialize the built-in `WebSearchTool`:
+要使用网络搜索工具，请导入并初始化内置的 `WebSearchTool`：
 
 ```python
 from langchain_writer.tools import WebSearchTool
 
-# Initialize the web search tool with optional configuration
+# 使用可选配置初始化网络搜索工具
 web_search_tool = WebSearchTool(
     include_domains=["wikipedia.org", "github.com", "techcrunch.com"],
     exclude_domains=["quora.com"]
 )
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
 ```python
 from langchain.tools import tool
@@ -104,13 +105,13 @@ from pydantic import BaseModel, Field
 
 @tool
 def get_supercopa_trophies_count(club_name: str) -> int | None:
-    """Returns information about supercopa trophies count.
+    """返回有关超级杯奖杯数量的信息。
 
     Args:
-        club_name: Club you want to investigate info of supercopa trophies about
+        club_name: 您想要查询超级杯奖杯数量的俱乐部名称
 
     Returns:
-        Number of supercopa trophies or None if there is no info about requested club
+        超级杯奖杯数量，如果找不到所请求俱乐部的相关信息则返回 None
     """
 
     if club_name == "Barcelona":
@@ -124,22 +125,22 @@ def get_supercopa_trophies_count(club_name: str) -> int | None:
 
 
 class GetWeather(BaseModel):
-    """Get the current weather in a given location"""
+    """获取指定地点的当前天气"""
 
-    location: str = Field(..., description="The city and state, e.g. San Francisco, CA")
+    location: str = Field(..., description="城市和州，例如 San Francisco, CA")
 
 
 get_product_info = {
     "type": "function",
     "function": {
         "name": "get_product_info",
-        "description": "Get information about a product by its id",
+        "description": "通过 ID 获取产品信息",
         "parameters": {
             "type": "object",
             "properties": {
                 "product_id": {
                     "type": "number",
-                    "description": "The unique identifier of the product to retrieve information for",
+                    "description": "要检索信息的产品的唯一标识符",
                 }
             },
             "required": ["product_id"],
@@ -148,45 +149,45 @@ get_product_info = {
 }
 ```
 
-### Binding tools
+### 绑定工具 (Binding tools)
 
-**Important note**: WRITER only allows a single WRITER tool (translation, graph, web_search, llm, image, vision) to be bound at a time. You cannot bind multiple WRITER tools simultaneously. However, you can bind multiple custom function tools along with one WRITER tool.
+**重要提示**: WRITER 一次只允许绑定一个 WRITER 工具（翻译、知识图谱、网络搜索、LLM、图像、视觉）。您不能同时绑定多个 WRITER 工具。但是，您可以将多个自定义函数工具与一个 WRITER 工具一起绑定。
 
 ```python
-# ✅ Correct: One WRITER tool + multiple function tools
+# ✅ 正确：一个 WRITER 工具 + 多个函数工具
 llm_with_tools = chat.bind_tools(
     [graph_tool, get_supercopa_trophies_count, GetWeather, get_product_info]
 )
 
-# ✅ Correct: Different WRITER tool + function tools
+# ✅ 正确：不同的 WRITER 工具 + 函数工具
 llm_with_tools = chat.bind_tools(
     [translation_tool, get_supercopa_trophies_count, GetWeather]
 )
 
-# ❌ Incorrect: Multiple WRITER tools (will cause BadRequestError)
+# ❌ 错误：多个 WRITER 工具（将导致 BadRequestError）
 llm_with_tools = chat.bind_tools(
-    [graph_tool, translation_tool, web_search_tool]  # This will fail
+    [graph_tool, translation_tool, web_search_tool]  # 这将失败
 )
 ```
 
-If you need to use different WRITER tools, you have several options:
+如果您需要使用不同的 WRITER 工具，您可以选择以下几种方案：
 
-**Option 1: Rebind tools for each conversation**:
+**方案 1：为每次对话重新绑定工具**：
 
 ```python
-# Use graph tool for one conversation
+# 用于一次对话，使用知识图谱工具
 llm_with_tools = chat.bind_tools([graph_tool, get_supercopa_trophies_count])
-response1 = llm_with_tools.invoke([HumanMessage("Use the knowledge graph to answer...")])
+response1 = llm_with_tools.invoke([HumanMessage("使用知识图谱工具回答...")])
 
-# Switch to translation tool for another conversation
+# 切换到翻译工具进行另一次对话
 llm_with_tools = chat.bind_tools([translation_tool, get_supercopa_trophies_count])
-response2 = llm_with_tools.invoke([HumanMessage("Translate this text...")])
+response2 = llm_with_tools.invoke([HumanMessage("翻译这段文本...")])
 ```
 
-**Option 2: Use separate ChatWriter instances**:
+**方案 2：使用独立的 ChatWriter 实例**：
 
 ```python
-# Create separate ChatWriter instances for different tools
+# 为不同的工具创建独立的 ChatWriter 实例
 chat_with_graph = ChatWriter()
 llm_with_graph_tool = chat_with_graph.bind_tools([graph_tool])
 
@@ -194,50 +195,50 @@ chat_with_translation = ChatWriter()
 llm_with_translation_tool = chat_with_translation.bind_tools([translation_tool])
 ```
 
-## Invocation
+## 调用 (Invocation)
 
-The model will automatically choose the tool during invocation with all modes (streaming/non-streaming, sync/async).
+在调用（调用）时，模型将自动选择工具（支持流式/非流式、同步/异步所有模式）。
 
 ```python
 from langchain.messages import HumanMessage
 
-# Example with graph tool and function tools
+# 使用知识图谱工具和函数工具的示例
 llm_with_tools = chat.bind_tools([graph_tool, get_supercopa_trophies_count])
 messages = [
     HumanMessage(
-        "Use knowledge graph tool to compose this answer. Tell me what the first line of documents stored in your KG. Also I want to know: how many SuperCopa trophies have Barcelona won?"
+        "使用知识图谱工具来撰写此答案。告诉我知识图谱中存储的文档的第一行是什么。另外，我想知道：巴塞罗那赢得了多少次超级杯奖杯？"
     )
 ]
 
 response = llm_with_tools.invoke(messages)
 messages.append(response)
 
-# Example with translation tool
+# 使用翻译工具的示例
 llm_with_translation = chat.bind_tools([translation_tool])
 translation_messages = [
-    HumanMessage("Translate 'Hello, world!' to Spanish")
+    HumanMessage("将 'Hello, world!' 翻译成西班牙语")
 ]
 
 translation_response = llm_with_translation.invoke(translation_messages)
-print(translation_response.content)  # Output: "¡Hola, mundo!"
+print(translation_response.content)  # 输出: "¡Hola, mundo!"
 
-# Example with web search tool
+# 使用网络搜索工具的示例
 llm_with_search = chat.bind_tools([web_search_tool])
 search_messages = [
-    HumanMessage("What are the latest developments in AI technology? Please search the web for current information.")
+    HumanMessage("AI 技术有哪些最新进展？请搜索网络以获取当前信息。")
 ]
 
 search_response = llm_with_search.invoke(search_messages)
-print(search_response.content)  # Output: Current AI developments based on web search
+print(search_response.content)  # 输出: 基于网络搜索的当前 AI 进展
 ```
 
-In the case of function tools, you will receive an assistant message with the tool call request.
+在函数工具的情况下，您将收到一个包含工具调用请求的助手消息。
 
 ```python
 print(response.tool_calls)
 ```
 
-Then you can manually handle tool call request, send to model and receive final response:
+然后您可以手动处理工具调用请求，发送给模型并接收最终响应：
 
 ```python
 for tool_call in response.tool_calls:
@@ -251,24 +252,25 @@ response = llm_with_tools.invoke(messages)
 print(response.content)
 ```
 
-With a `GraphTool`, the model will call it remotely and return usage info in the `additional_kwargs` under the `graph_data` key:
+对于 `GraphTool`，模型将远程调用它，并在 `additional_kwargs` 中 `graph_data` 键下返回使用信息：
 
 ```python
 print(response.additional_kwargs["graph_data"])
 ```
 
-The `content` attribute contains the final response:
+`content` 属性包含最终响应：
 
 ```python
 print(response.content)
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-The WRITER Graph tool works differently from other tools; when used, the WRITER server automatically handles calling the Knowledge Graph and generating responses using RAG. Because of this automated server-side handling, you cannot invoke the `GraphTool` independently or use it as part of a LangChain chain. You must use the `GraphTool` directly with a `ChatWriter` instance as shown in the examples above.
+WRITER 知识图谱工具与其他工具的工作方式不同；当使用它时，WRITER 服务器会自动处理调用知识图谱并使用 RAG 生成响应。由于这种自动化的服务器端处理，您不能单独调用 `GraphTool` 或将其用作 LangChain 链的一部分。您必须如上例所示，直接将 `GraphTool` 与 `ChatWriter` 实例一起使用。
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `GraphTool` features and configurations, head to the [API reference](https://python.langchain.com/api_reference/writer/tools/langchain_writer.tools.GraphTool.html#langchain_writer.tools.GraphTool).
+有关所有 `GraphTool` 功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/writer/tools/langchain_writer.tools.GraphTool.html#langchain_writer.tools.GraphTool)。
+```

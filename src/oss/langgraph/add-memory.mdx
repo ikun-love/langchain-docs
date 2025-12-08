@@ -1,17 +1,15 @@
 ---
-title: Memory
+title: 内存
 ---
 
+AI 应用为了在多次交互中共享上下文，需要**内存**（[Memory](/oss/concepts/memory)）。在 LangGraph 中，您可以添加两种类型的内存：
 
+* 将**短期记忆**（Short-term memory）作为代理[状态](/oss/langgraph/graph-api#state)的一部分，以启用多轮对话。
+* 添加**长期记忆**（Long-term memory）以跨会话存储特定于用户或特定于应用程序的数据。
 
-AI applications need [memory](/oss/concepts/memory) to share context across multiple interactions. In LangGraph, you can add two types of memory:
+## 添加短期记忆
 
-* [Add short-term memory](#add-short-term-memory) as a part of your agent's [state](/oss/langgraph/graph-api#state) to enable multi-turn conversations.
-* [Add long-term memory](#add-long-term-memory) to store user-specific or application-level data across sessions.
-
-## Add short-term memory
-
-**Short-term** memory (thread-level [persistence](/oss/langgraph/persistence)) enables agents to track multi-turn conversations. To add short-term memory:
+**短期**记忆（线程级[持久化](/oss/langgraph/persistence)）使代理能够跟踪多轮对话。要添加短期记忆：
 
 :::python
 ```python
@@ -46,9 +44,9 @@ await graph.invoke(
 ```
 :::
 
-### Use in production
+### 生产环境中使用
 
-In production, use a checkpointer backed by a database:
+在生产环境中，请使用由数据库支持的 checkpointer：
 
 :::python
 ```python
@@ -73,14 +71,14 @@ const graph = builder.compile({ checkpointer });
 ```
 :::
 
-<Accordion title="Example: using Postgres checkpointer">
+<Accordion title="示例：使用 Postgres checkpointer">
   :::python
   ```
   pip install -U "psycopg[binary,pool]" langgraph langgraph-checkpoint-postgres
   ```
 
     <Tip>
-    You need to call `checkpointer.setup()` the first time you're using Postgres checkpointer
+    首次使用 Postgres checkpointer 时，您需要调用 `checkpointer.setup()`
     </Tip>
 
     <Tabs>
@@ -179,7 +177,7 @@ const graph = builder.compile({ checkpointer });
   ```
 
     <Tip>
-    You need to call `checkpointer.setup()` the first time you're using Postgres checkpointer
+    首次使用 Postgres checkpointer 时，您需要调用 `checkpointer.setup()`
     </Tip>
 
   ```typescript
@@ -235,14 +233,14 @@ const graph = builder.compile({ checkpointer });
 </Accordion>
 
 :::python
-<Accordion title="Example: using [MongoDB](https://pypi.org/project/langgraph-checkpoint-mongodb/) checkpointer">
+<Accordion title="示例：使用 MongoDB checkpointer">
   ```
   pip install -U pymongo langgraph langgraph-checkpoint-mongodb
   ```
 
     <Note>
-    **Setup**
-    To use the MongoDB checkpointer, you will need a MongoDB cluster. Follow [this guide](https://www.mongodb.com/docs/guides/atlas/cluster/) to create a cluster if you don't already have one.
+    **设置**
+    要使用 MongoDB checkpointer，您需要一个 MongoDB 集群。如果您还没有集群，请遵循[此指南](https://www.mongodb.com/docs/guides/atlas/cluster/)创建集群。
     </Note>
 
     <Tabs>
@@ -333,13 +331,13 @@ const graph = builder.compile({ checkpointer });
     </Tabs>
 </Accordion>
 
-<Accordion title="Example: using Redis checkpointer">
+<Accordion title="示例：使用 Redis checkpointer">
   ```
   pip install -U langgraph langgraph-checkpoint-redis
   ```
 
     <Tip>
-    You need to call `checkpointer.setup()` the first time you're using Redis checkpointer.
+    首次使用 Redis checkpointer 时，您需要调用 `checkpointer.setup()`。
     </Tip>
 
     <Tabs>
@@ -433,9 +431,9 @@ const graph = builder.compile({ checkpointer });
 </Accordion>
 :::
 
-### Use in subgraphs
+### 在子图中用作
 
-If your graph contains [subgraphs](/oss/langgraph/use-subgraphs), you only need to provide the checkpointer when compiling the parent graph. LangGraph will automatically propagate the checkpointer to the child subgraphs.
+如果您的图包含[子图](/oss/langgraph/use-subgraphs)，则只需在编译父图时提供 checkpointer 即可。LangGraph 会自动将 checkpointer 传播给子图。
 
 :::python
 ```python
@@ -446,7 +444,7 @@ from typing import TypedDict
 class State(TypedDict):
     foo: str
 
-# Subgraph
+# 子图
 
 def subgraph_node_1(state: State):
     return {"foo": state["foo"] + "bar"}
@@ -456,7 +454,7 @@ subgraph_builder.add_node(subgraph_node_1)
 subgraph_builder.add_edge(START, "subgraph_node_1")
 subgraph = subgraph_builder.compile()  # [!code highlight]
 
-# Parent graph
+# 父图
 
 builder = StateGraph(State)
 builder.add_node("node_1", subgraph)  # [!code highlight]
@@ -490,7 +488,7 @@ const graph = builder.compile({ checkpointer });
 ```
 :::
 
-If you want the subgraph to have its own memory, you can compile it with the appropriate checkpointer option. This is useful in [multi-agent](/oss/langchain/multi-agent) systems, if you want agents to keep track of their internal message histories.
+如果您希望子图拥有自己的内存，可以为它编译时提供适当的 checkpointer 选项。这在[多代理](/oss/langchain/multi-agent)系统中很有用，如果您希望代理跟踪其内部消息历史记录，这一点就尤为重要。
 
 :::python
 ```python
@@ -506,9 +504,9 @@ const subgraph = subgraphBuilder.compile({ checkpointer: true });  // [!code hig
 ```
 :::
 
-## Add long-term memory
+## 添加长期记忆
 
-Use long-term memory to store user-specific or application-specific data across conversations.
+使用长期记忆来存储特定于用户或特定于应用程序的数据，使其在不同的对话中保持持久。
 
 :::python
 ```python
@@ -533,9 +531,9 @@ const graph = builder.compile({ store });
 ```
 :::
 
-### Use in production
+### 生产环境中使用
 
-In production, use a store backed by a database:
+在生产环境中，请使用由数据库支持的 store：
 
 :::python
 ```python
@@ -560,14 +558,14 @@ const graph = builder.compile({ store });
 ```
 :::
 
-<Accordion title="Example: using Postgres store">
+<Accordion title="示例：使用 Postgres 存储">
   :::python
   ```
   pip install -U "psycopg[binary,pool]" langgraph langgraph-checkpoint-postgres
   ```
 
     <Tip>
-    You need to call `store.setup()` the first time you're using Postgres store
+    首次使用 Postgres 存储时，您需要调用 `store.setup()`
     </Tip>
 
     <Tabs>
@@ -740,7 +738,7 @@ const graph = builder.compile({ store });
   ```
 
     <Tip>
-    You need to call `store.setup()` the first time you're using Postgres store
+    首次使用 Postgres 存储时，您需要调用 `store.setup()`
     </Tip>
 
   ```typescript
@@ -823,7 +821,7 @@ const graph = builder.compile({ store });
   };
 
   for await (const chunk of await graph.stream(
-    { messages: [{ role: "user", content: "what is my name?" }] },
+    { messages: [{ role: "user", content: "what's my name?" }] },
     { ...config2, streamMode: "values" }
   )) {
     console.log(chunk.messages.at(-1)?.content);
@@ -833,14 +831,14 @@ const graph = builder.compile({ store });
 </Accordion>
 
 :::python
-<Accordion title="Example: using Redis store">
+<Accordion title="示例：使用 Redis 存储">
 
   ```
   pip install -U langgraph langgraph-checkpoint-redis
   ```
 
     <Tip>
-    You need to call `store.setup()` the first time you're using [Redis store](https://pypi.org/project/langgraph-checkpoint-redis/).
+    首次使用[Redis 存储](https://pypi.org/project/langgraph-checkpoint-redis/)时，您需要调用 `store.setup()`。
     </Tip>
 
     <Tabs>
@@ -1008,16 +1006,16 @@ const graph = builder.compile({ store });
 </Accordion>
 :::
 
-### Use semantic search
+### 使用语义搜索
 
-Enable semantic search in your graph's memory store to let graph agents search for items in the store by semantic similarity.
+在图的内存存储中启用语义搜索，让图代理可以通过语义相似性搜索存储中的项目。
 
 :::python
 ```python
 from langchain.embeddings import init_embeddings
 from langgraph.store.memory import InMemoryStore
 
-# Create store with semantic search enabled
+# 创建启用了语义搜索的存储
 embeddings = init_embeddings("openai:text-embedding-3-small")
 store = InMemoryStore(
     index={
@@ -1059,7 +1057,7 @@ const items = await store.search(["user_123", "memories"], {
 ```
 :::
 
-<Accordion title="Long-term memory with semantic search">
+<Accordion title="使用语义搜索的长期记忆">
     :::python
 
     ```python
@@ -1176,29 +1174,29 @@ const items = await store.search(["user_123", "memories"], {
     :::
 </Accordion>
 
-## Manage short-term memory
+## 管理短期记忆
 
-With [short-term memory](#add-short-term-memory) enabled, long conversations can exceed the LLM's context window. Common solutions are:
+启用[短期记忆](#add-short-term-memory)后，长时间的对话可能会超出 LLM 的上下文窗口。常见解决方案包括：
 
-* [Trim messages](#trim-messages): Remove first or last N messages (before calling LLM)
-* [Delete messages](#delete-messages) from LangGraph state permanently
-* [Summarize messages](#summarize-messages): Summarize earlier messages in the history and replace them with a summary
-* [Manage checkpoints](#manage-checkpoints) to store and retrieve message history
-* Custom strategies (e.g., message filtering, etc.)
+* [修剪消息](#trim-messages)：在调用 LLM 之前移除前 N 条或后 N 条消息。
+* 从 LangGraph 状态中永久[删除消息](#delete-messages)。
+* [总结消息](#summarize-messages)：使用聊天模型总结历史消息，并用摘要替换它们。
+* 使用[管理检查点](#manage-checkpoints)来存储和检索消息历史记录。
+* 自定义策略（例如消息过滤等）。
 
-This allows the agent to keep track of the conversation without exceeding the LLM's context window.
+这使得代理能够在不超出 LLM 上下文窗口的情况下跟踪对话。
 
-### Trim messages
+### 修剪消息 (Trim messages)
 
 :::python
-Most LLMs have a maximum supported context window (denominated in tokens). One way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `max_tokens`) to use for handling the boundary.
+大多数 LLM 都有一个最大支持的上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果您使用的是 LangChain，您可以使用 `trim_messages` 工具，指定要从列表中保留的 token 数量，以及用于处理边界的 `strategy`（例如，保留最后 N 个 `max_tokens`）。
 :::
 :::js
-Most LLMs have a maximum supported context window (denominated in tokens). One way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `maxTokens`) to use for handling the boundary.
+大多数 LLM 都有一个最大支持的上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果您使用的是 LangChain，您可以使用 `trimMessages` 工具，指定要从列表中保留的 token 数量，以及用于处理边界的 `strategy`（例如，保留最后 N 个 `maxTokens`）。
 :::
 
 :::python
-To trim message history, use the [`trim_messages`](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.trim_messages.html) function:
+要修剪消息历史记录，请使用 [`trim_messages`](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.trim_messages.html) 函数：
 
 ```python
 from langchain_core.messages.utils import (  # [!code highlight]
@@ -1225,7 +1223,7 @@ builder.add_node(call_model)
 :::
 
 :::js
-To trim message history, use the [`trimMessages`](https://js.langchain.com/docs/how_to/trim_messages/) function:
+要修剪消息历史记录，请使用 [`trimMessages`](https://js.langchain.com/docs/how_to/trim_messages/) 函数：
 
 ```typescript
 import { trimMessages } from "@langchain/core/messages";
@@ -1247,7 +1245,7 @@ const builder = new StateGraph(MessagesZodState)
 ```
 :::
 
-<Accordion title="Full example: trim messages">
+<Accordion title="完整示例：修剪消息">
   :::python
   ```python
   from langchain_core.messages.utils import (
@@ -1343,14 +1341,14 @@ const builder = new StateGraph(MessagesZodState)
   :::
 </Accordion>
 
-### Delete messages
+### 删除消息
 
-You can delete messages from the graph state to manage the message history. This is useful when you want to remove specific messages or clear the entire message history.
+您可以从图状态中删除消息以管理消息历史记录。当您想移除特定消息或清除整个消息历史记录时，这很有用。
 
 :::python
-To delete messages from the graph state, you can use the `RemoveMessage`. For `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers), like [`MessagesState`](/oss/langgraph/graph-api#messagesstate).
+要从图状态中删除消息，可以使用 `RemoveMessage`。要使 `RemoveMessage` 工作，您需要使用带有 @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 [`MessagesState`](/oss/langgraph/graph-api#messagesstate)。
 
-To remove specific messages:
+要移除特定消息：
 
 ```python
 from langchain.messages import RemoveMessage  # [!code highlight]
@@ -1362,7 +1360,7 @@ def delete_messages(state):
         return {"messages": [RemoveMessage(id=m.id) for m in messages[:2]]}  # [!code highlight]
 ```
 
-To remove **all** messages:
+要移除**所有**消息：
 
 ```python
 from langgraph.graph.message import REMOVE_ALL_MESSAGES  # [!code highlight]
@@ -1373,9 +1371,9 @@ def delete_messages(state):
 :::
 
 :::js
-To delete messages from the graph state, you can use the `RemoveMessage`. For `RemoveMessage` to work, you need to use a state key with @[`messagesStateReducer`][messagesStateReducer] [reducer](/oss/langgraph/graph-api#reducers), like `MessagesZodState`.
+要从图状态中删除消息，您可以使用 `RemoveMessage`。要使 `RemoveMessage` 工作，您需要使用带有 @[`messagesStateReducer`][messagesStateReducer] [reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 `MessagesZodState`。
 
-To remove specific messages:
+要移除特定消息：
 
 ```typescript
 import { RemoveMessage } from "@langchain/core/messages";
@@ -1395,13 +1393,13 @@ const deleteMessages = (state) => {
 :::
 
 <Warning>
-When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:
+删除消息时，请**确保**由此产生的消息历史记录是有效的。检查您使用的 LLM 提供的商的限制。例如：
 
-* Some providers expect message history to start with a `user` message
-* Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.
+* 有些提供商期望消息历史记录以 `user` 消息开头
+* 大多数提供商要求带有工具调用的 `assistant` 消息后跟相应的 `tool` 结果消息。
 </Warning>
 
-<Accordion title="Full example: delete messages">
+<Accordion title="完整示例：删除消息">
   :::python
   ```python
   from langchain.messages import RemoveMessage  # [!code highlight]
@@ -1513,15 +1511,15 @@ When deleting messages, **make sure** that the resulting message history is vali
   :::
 </Accordion>
 
-### Summarize messages
+### 总结消息 (Summarize messages)
 
-The problem with trimming or removing messages, as shown above, is that you may lose information from culling of the message queue. Because of this, some applications benefit from a more sophisticated approach of summarizing the message history using a chat model.
+修剪或删除消息（如上所示）的问题在于，您可能会丢失在剔除消息队列时被丢弃的信息。因此，有些应用程序受益于使用聊天模型对消息历史进行更复杂的总结方法。
 
 ![](/oss/images/summary.png)
 
 
 :::python
-Prompting and orchestration logic can be used to summarize the message history. For example, in LangGraph you can extend the [`MessagesState`](/oss/langgraph/graph-api#working-with-messages-in-graph-state) to include a `summary` key:
+可以使用提示词和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，您可以扩展 [`MessagesState`](/oss/langgraph/graph-api#working-with-messages-in-graph-state) 以包含 `summary` 键：
 
 ```python
 from langgraph.graph import MessagesState
@@ -1529,18 +1527,18 @@ class State(MessagesState):
     summary: str
 ```
 
-Then, you can generate a summary of the chat history, using any existing summary as context for the next summary. This `summarize_conversation` node can be called after some number of messages have accumulated in the `messages` state key.
+然后，您可以使用任何现有摘要作为上下文来生成聊天历史记录的摘要。当 `messages` 状态键中积累了特定数量的消息后，可以调用此 `summarize_conversation` 节点。
 
 ```python
 def summarize_conversation(state: State):
 
-    # First, we get any existing summary
+    # 首先，我们获取任何现有的摘要
     summary = state.get("summary", "")
 
-    # Create our summarization prompt
+    # 创建我们的总结提示
     if summary:
 
-        # A summary already exists
+        # 已经存在一个摘要
         summary_message = (
             f"This is a summary of the conversation to date: {summary}\n\n"
             "Extend the summary by taking into account the new messages above:"
@@ -1549,18 +1547,18 @@ def summarize_conversation(state: State):
     else:
         summary_message = "Create a summary of the conversation above:"
 
-    # Add prompt to our history
+    # 将提示添加到我们的历史记录中
     messages = state["messages"] + [HumanMessage(content=summary_message)]
     response = model.invoke(messages)
 
-    # Delete all but the 2 most recent messages
+    # 删除除最后 2 条消息之外的所有消息
     delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][:-2]]
     return {"summary": response.content, "messages": delete_messages}
 ```
 :::
 
 :::js
-Prompting and orchestration logic can be used to summarize the message history. For example, in LangGraph you can include a `summary` key in the state alongside the `messages` key:
+可以使用提示词和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，您可以在状态中包含一个 `summary` 键以及 `messages` 键：
 
 ```typescript
 import { BaseMessage } from "@langchain/core/messages";
@@ -1576,7 +1574,7 @@ const State = z.object({
 });
 ```
 
-Then, you can generate a summary of the chat history, using any existing summary as context for the next summary. This `summarizeConversation` node can be called after some number of messages have accumulated in the `messages` state key.
+然后，您可以生成聊天历史记录的摘要，使用任何现有摘要作为下一个摘要的上下文。当在 `messages` 状态键中积累了 N 条消息后，可以调用此 `summarizeConversation` 节点。
 
 ```typescript
 import { RemoveMessage, HumanMessage } from "@langchain/core/messages";
@@ -1616,7 +1614,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 ```
 :::
 
-<Accordion title="Full example: summarize messages">
+<Accordion title="完整示例：总结消息">
   :::python
   ```python
   from typing import Any, TypedDict
@@ -1669,15 +1667,11 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
   print("\nSummary:", final_response["context"]["running_summary"].summary)
 ```
 
-  1. We will keep track of our running summary in the `context` field
+  1. 我们将在 `context` 字段中跟踪我们的运行摘要（`SummarizationNode` 期望）。
 
-  (expected by the `SummarizationNode`).
+  2. 定义仅用于过滤 `call_model` 节点输入的私有状态。
 
-  1. Define private state that will be used only for filtering
-
-  the inputs to `call_model` node.
-
-  1. We're passing a private input state here to isolate the messages returned by the summarization node
+  3. 我们在这里传递一个私有输入状态，以隔离由摘要节点返回的消息。
 
   ```
   ================================== Ai Message ==================================
@@ -1711,8 +1705,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 
   const memory = new MemorySaver();
 
-  // We will add a `summary` attribute (in addition to `messages` key,
-  // which MessagesZodState already has)
+  // 我们将在状态中添加一个 `summary` 属性（以及 `messages` 键，由 MessagesZodState 已经拥有）
   const GraphState = z.object({
     messages: z
       .array(z.custom<BaseMessage>())
@@ -1720,12 +1713,12 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     summary: z.string().default(""),
   });
 
-  // We will use this model for both the conversation and the summarization
+  // 我们将使用此模型进行对话和摘要
   const model = new ChatAnthropic({ model: "claude-haiku-4-5-20251001" });
 
-  // Define the logic to call the model
+  // 定义调用模型的逻辑
   const callModel = async (state: z.infer<typeof GraphState>) => {
-    // If a summary exists, we add this in as a system message
+    // 如果存在摘要，我们将其作为系统消息添加
     const { summary } = state;
     let { messages } = state;
     if (summary) {
@@ -1736,28 +1729,28 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
       messages = [systemMessage, ...messages];
     }
     const response = await model.invoke(messages);
-    // We return an object, because this will get added to the existing state
+    // 我们返回一个对象，因为它将被添加到现有状态中
     return { messages: [response] };
   };
 
-  // We now define the logic for determining whether to end or summarize the conversation
+  // 我们现在定义确定是结束还是总结对话的逻辑
   const shouldContinue = (state: z.infer<typeof GraphState>) => {
     const messages = state.messages;
-    // If there are more than six messages, then we summarize the conversation
+    // 如果消息超过六条，则总结对话
     if (messages.length > 6) {
       return "summarize_conversation";
     }
-    // Otherwise we can just end
+    // 否则我们可以直接结束
     return END;
   };
 
   const summarizeConversation = async (state: z.infer<typeof GraphState>) => {
-    // First, we summarize the conversation
+    // 首先，我们总结对话
     const { summary, messages } = state;
     let summaryMessage: string;
     if (summary) {
-      // If a summary already exists, we use a different system prompt
-      // to summarize it than if one didn't
+      // 如果已有摘要，我们将使用不同的系统提示进行总结
+      // 比没有摘要时要好
       summaryMessage =
         `This is summary of the conversation to date: ${summary}\n\n` +
         "Extend the summary by taking into account the new messages above:";
@@ -1772,8 +1765,8 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 
     const response = await model.invoke(allMessages);
 
-    // We now need to delete messages that we no longer want to show up
-    // I will delete all but the last two messages, but you can change this
+    // 我们现在需要删除我们不再希望显示的任何消息
+    // 我将删除除最后两条消息之外的所有消息，但您可以更改此设置
     const deleteMessages = messages
       .slice(0, -2)
       .map((m) => new RemoveMessage({ id: m.id! }));
@@ -1785,37 +1778,37 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     return { summary: response.content, messages: deleteMessages };
   };
 
-  // Define a new graph
+  // 定义一个新图
   const workflow = new StateGraph(GraphState)
-    // Define the conversation node and the summarize node
+    // 定义对话节点和总结节点
     .addNode("conversation", callModel)
     .addNode("summarize_conversation", summarizeConversation)
-    // Set the entrypoint as conversation
+    // 将入口点设置为 conversation
     .addEdge(START, "conversation")
-    // We now add a conditional edge
+    // 我们现在添加一个条件边
     .addConditionalEdges(
-      // First, we define the start node. We use `conversation`.
-      // This means these are the edges taken after the `conversation` node is called.
+      // 首先，我们定义起始节点。我们使用 `conversation`。
+      // 这意味着调用 `conversation` 节点后采用的边。
       "conversation",
-      // Next, we pass in the function that will determine which node is called next.
+      // 接下来，我们传入将确定下一步调用哪个节点的函数。
       shouldContinue,
     )
-    // We now add a normal edge from `summarize_conversation` to END.
-    // This means that after `summarize_conversation` is called, we end.
+    // 我们现在从 `summarize_conversation` 到 END 添加一条普通边。
+    // 这意味着调用 `summarize_conversation` 后，我们就结束。
     .addEdge("summarize_conversation", END);
 
-  // Finally, we compile it!
+  // 最后，我们编译它！
   const app = workflow.compile({ checkpointer: memory });
   ```
   :::
 </Accordion>
 
-### Manage checkpoints
+### 管理检查点
 
-You can view and delete the information stored by the checkpointer.
+您可以查看和删除 checkpointer 存储的信息。
 
 <a id="checkpoint"></a>
-#### View thread state
+#### 查看线程状态
 
 :::python
 <Tabs>
@@ -1873,7 +1866,7 @@ You can view and delete the information stored by the checkpointer.
             'ts': '2025-05-05T16:01:24.680462+00:00',
             'id': '1f029ca3-1f5b-6704-8004-820c16b69a5a',
             'channel_versions': {'__start__': '00000000000000000000000000000005.0.5290678567601859', 'messages': '00000000000000000000000000000006.0.3205149138784782', 'branch:to:call_model': '00000000000000000000000000000006.0.14611156755133758'}, 'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000004.0.5736472536395331'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000005.0.1410174088651449'}},
-            'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today?), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]},
+            'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]},
         },
         metadata={
             'source': 'loop',
@@ -1924,7 +1917,7 @@ await graph.getState(config);
 :::
 
 <a id="checkpoints"></a>
-#### View the history of the thread
+#### 查看线程历史记录
 
 :::python
 <Tabs>
@@ -1961,7 +1954,7 @@ await graph.getState(config);
             interrupts=()
         ),
         StateSnapshot(
-            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')]},
+            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?")]},
             next=('__start__',),
             config={...},
             metadata={'source': 'input', 'writes': {'__start__': {'messages': [{'role': 'user', 'content': "what's my name?"}]}}, 'step': 2, 'parents': {}, 'thread_id': '1'},
@@ -1971,7 +1964,7 @@ await graph.getState(config);
             interrupts=()
         ),
         StateSnapshot(
-            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')]},
+            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')], 'branch:to:call_model': None},
             next=(),
             config={...},
             metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')}}, 'step': 1, 'parents': {}, 'thread_id': '1'},
@@ -2120,7 +2113,7 @@ for await (const state of graph.getStateHistory(config)) {
 ```
 :::
 
-#### Delete all checkpoints for a thread
+#### 删除线程的所有检查点
 
 :::python
 ```python
@@ -2137,7 +2130,7 @@ await checkpointer.deleteThread(threadId);
 :::
 
 :::python
-## Prebuilt memory tools
+## 预构建内存工具
 
-**LangMem** is a LangChain-maintained library that offers tools for managing long-term memories in your agent. See the [LangMem documentation](https://langchain-ai.github.io/langmem/) for usage examples.
+**LangMem** 是一个由 LangChain 维护的库，它提供了管理代理长期记忆的工具。有关用法示例，请参阅 [LangMem 文档](https://langchain-ai.github.io/langmem/)。
 :::

@@ -1,43 +1,43 @@
----
+```yaml
 title: Llama CPP
----
+```
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 上可用。
 </Tip>
 
-This module is based on the [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp), allowing you to work with a locally running LLM. This allows you to work with a much smaller quantized model capable of running on a laptop environment, ideal for testing and scratch padding ideas without running up a bill!
+此模块基于 [llama.cpp](https://github.com/ggerganov/llama.cpp) 的 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js 绑定，允许您使用本地运行的大语言模型（LLM）。这使得您可以在笔记本电脑环境等资源受限的环境中运行一个更小的量化模型，非常适合在不产生高额费用的情况下进行测试和快速构思！
 
-## Setup
+## 设置
 
-You'll need to install major version `3` of the [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) module to communicate with your local model.
+您需要安装 `node-llama-cpp` 模块的**major version 3** 版本才能与您的本地模型通信。
 
 ```bash npm
 npm install -S node-llama-cpp@3
 ```
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 软件包的通用说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
 
-You will also need a local Llama 3 model (or a model supported by [node-llama-cpp](https://github.com/withcatai/node-llama-cpp)). You will need to pass the path to this model to the LlamaCpp module as a part of the parameters (see example).
+您还需要一个本地的 Llama 3 模型（或 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) 支持的模型）。您需要将此模型的路径作为参数的一部分传递给 `LlamaCpp` 模块（参见示例）。
 
-Out-of-the-box `node-llama-cpp` is tuned for running on a MacOS platform with support for the Metal GPU of Apple M-series of processors. If you need to turn this off or need support for the CUDA architecture then refer to the documentation at [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/).
+开箱即用时，`node-llama-cpp` 针对在 MacOS 平台上运行进行了调整，支持 Apple M 系列处理器的 Metal GPU。如果您需要禁用此功能或需要支持 CUDA 架构，请参阅 [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/) 上的文档。
 
-For advice on getting and preparing `llama3` see the documentation for the LLM version of this module.
+有关获取和准备 `llama3` 的建议，请参阅此模块 LLM 版本的文档。
 
-A note to LangChain.js contributors: if you want to run the tests associated with this module you will need to put the path to your local model in the environment variable `LLAMA_PATH`.
+致 LangChain.js 贡献者：如果您想运行与此模块相关的测试，则需要在环境变量 `LLAMA_PATH` 中指定本地模型的路径。
 
-## Usage
+## 用法
 
-### Basic use
+### 基本用法
 
-We need to provide a path to our local Llama3 model, also the `embeddings` property is always set to `true` in this module.
+我们需要提供本地 Llama3 模型的路径，并且在此模块中，`embeddings` 属性始终设置为 `true`。
 
 ```typescript
 import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
@@ -57,7 +57,7 @@ console.log(res);
 */
 ```
 
-### Document embedding
+### 文档嵌入
 
 ```typescript
 import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
@@ -79,7 +79,7 @@ console.log(res);
 */
 ```
 
-## Related
+## 相关
 
-- Embedding model [conceptual guide](/oss/integrations/text_embedding)
-- Embedding model [how-to guides](/oss/integrations/text_embedding)
+- 嵌入模型[概念指南](/oss/integrations/text_embedding)
+- 嵌入模型[操作指南](/oss/integrations/text_embedding)

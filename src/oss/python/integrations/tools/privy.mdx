@@ -2,72 +2,72 @@
 title: Privy
 ---
 
-[Privy](https://privy.io) is powerful wallet infrastructure for AI agents, built for scale.
+[Privy](https://privy.io) 是一个强大的钱包基础设施，专为 AI 智能体（Agent）构建，并支持大规模扩展。
 
-## Overview
+## 概述 (Overview)
 
-Create agents that can:
+使用 Privy，您可以创建能够执行以下操作的智能体：
 
-- Automatically create and manage wallets
-- Make payments in a variety of digital assets, including stablecoins
-- Sign messages and transactions
-- Query wallet balances and addresses
+- 自动创建和管理钱包
+- 使用包括稳定币在内的多种数字资产进行支付
+- 对消息和交易进行签名
+- 查询钱包余额和地址
 
-### How it works
+### 工作原理 (How it works)
 
-Privy provides wallet infrastructure that removes the complexity of blockchain interactions:
+Privy 提供了钱包基础设施，有效消除了与区块链交互的复杂性：
 
-1. Give your agent a powerful wallet
-2. Secure your agent's assets with transaction policies
-3. Make payments with speed
+1. 为您的智能体提供一个功能强大的钱包
+2. 使用交易策略保护您智能体的资产
+3. 快速完成支付
 
-**Zero-friction onboarding**
-Different from traditional wallet solutions, Privy automatically creates embedded wallets for your agents without requiring private key management, seed phrases, or complex setup.
+**零摩擦的用户入门体验**
+与传统的钱包解决方案不同，Privy 会自动为您的智能体创建嵌入式钱包，而无需用户管理私钥、助记词（seed phrases）或复杂的初始设置。
 
-**Production-ready infrastructure**
-Trusted by leading Web3 applications, Privy handles secure key generation, multi-chain address derivation, transaction signing, and compliance policies at scale.
+**生产级基础设施**
+Privy 受到领先 Web3 应用的信赖，负责在规模化场景下处理安全密钥生成、多链地址派生、交易签名和合规性策略。
 
-### Quickstart
+### 快速入门 (Quickstart)
 
 ```python
 import os
 from langchain_privy import PrivyWalletTool
 from langchain.agents import create_agent
 
-# Set credentials
+# 设置凭证
 os.environ["PRIVY_APP_ID"] = "your-privy-app-id"
 os.environ["PRIVY_APP_SECRET"] = "your-privy-app-secret"
 
-# Initialize wallet tool (automatically creates wallet)
+# 初始化钱包工具（会自动创建钱包）
 privy_tool = PrivyWalletTool()
 print(f"Wallet created! Address: {privy_tool.wallet_address}")
 
-# Create agent
+# 创建智能体
 agent = create_agent(
     model="claude-sonnet-4-5-20250929",
     tools=[privy_tool],
 )
 
-# Agent can now perform wallet operations
+# 智能体现在可以执行钱包操作
 agent.invoke({"messages": [{"role": "user", "content": "What's my wallet address on Base?"}]})
 ```
 
-See the complete [example](https://github.com/privy-io/langchain-privy/tree/main/examples) for a full implementation.
+有关完整的实现，请参阅完整的 [示例](https://github.com/privy-io/langchain-privy/tree/main/examples)。
 
-## Setup
+## 设置 (Setup)
 
-Head to [Privy's dashboard](https://dashboard.privy.io) to sign up and create a new app. You'll receive:
+请访问 [Privy 的仪表板](https://dashboard.privy.io) 进行注册并创建一个新的应用。您将获得：
 
--   **App ID** - Your application identifier
--   **App Secret** - Your server-side authentication secret
+-   **App ID** - 您的应用程序标识符
+-   **App Secret** - 您的服务端身份验证密钥
 
-1. Install the package:
+1. 安装软件包：
 
 ```bash
 pip install langchain-privy
 ```
 
-2. Set your credentials:
+2. 设置您的凭证：
 
 ```python
 import os
@@ -77,47 +77,47 @@ os.environ["PRIVY_APP_ID"] = getpass.getpass("Enter your Privy App ID: ")
 os.environ["PRIVY_APP_SECRET"] = getpass.getpass("Enter your Privy App Secret: ")
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
 ```python
 from langchain_privy import PrivyWalletTool
 
-# Automatically creates a new Ethereum wallet
+# 自动创建一个新的以太坊钱包
 tool = PrivyWalletTool()
 
-# Or create on a specific chain
+# 或者在特定链上创建
 base_tool = PrivyWalletTool(chain_type="base")
 solana_tool = PrivyWalletTool(chain_type="solana")
 
-# Or reuse an existing wallet
+# 或者重用一个现有钱包
 existing_tool = PrivyWalletTool(wallet_id="wal_abc123...")
 ```
 
-## Invocation
+## 调用 (Invocation)
 
-### Available operations
+### 可用操作 (Available operations)
 
 ```python
-# Get wallet address for any chain
+# 获取任何链上的钱包地址
 tool.invoke({
     "operation": "get_wallet_address",
     "chain": "base"
 })
 
-# Sign a message
+# 签名消息
 tool.invoke({
     "operation": "sign_message",
     "message": "Hello from LangChain!",
     "chain": "ethereum"
 })
 
-# Check balance
+# 检查余额
 tool.invoke({
     "operation": "get_balance",
     "chain": "base"
 })
 
-# Send transaction
+# 发送交易
 tool.invoke({
     "operation": "send_transaction",
     "chain": "base",
@@ -127,27 +127,27 @@ tool.invoke({
 })
 ```
 
-## Use within an agent
+## 在智能体内部使用 (Use within an agent)
 
 ```python
 import os
 from langchain_privy import PrivyWalletTool
 from langchain.agents import create_agent
 
-# Set credentials
+# 设置凭证
 os.environ["PRIVY_APP_ID"] = "your-privy-app-id"
 os.environ["PRIVY_APP_SECRET"] = "your-privy-app-secret"
 
-# Initialize tools
+# 初始化工具
 tools = [PrivyWalletTool()]
 
-# Create agent
+# 创建智能体
 agent = create_agent(
     model="claude-sonnet-4-5-20250929",
     tools=tools,
 )
 
-# Natural language wallet operations
+# 自然语言钱包操作
 agent.invoke({
     "messages": [{"role": "user", "content": "Sign the message 'Verified by AI Agent' and then check my balance on Base"}]
 })
@@ -155,7 +155,7 @@ agent.invoke({
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
--   For complete documentation, see the [langchain-privy GitHub repository](https://github.com/privy-io/langchain-privy)
--   For more information on Privy, see [Privy Documentation](https://docs.privy.io)
+-   如需完整文档，请参阅 [langchain-privy GitHub 仓库](https://github.com/privy-io/langchain-privy)
+-   如需了解 Privy 的更多信息，请参阅 [Privy 文档](https://docs.privy.io)

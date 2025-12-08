@@ -1,25 +1,25 @@
 ---
-title: Intel Weight-Only Quantization
+title: 英特尔仅权重量化
 ---
 
-## Weight-Only Quantization for Huggingface Models with Intel Extension for Transformers Pipelines
+## 使用面向 Transformer 的英特尔扩展在 Huggingface 模型上进行仅权重量化 (Weight-Only Quantization)
 
-Hugging Face models can be run locally with Weight-Only quantization through the `WeightOnlyQuantPipeline` class.
+可以通过 `WeightOnlyQuantPipeline` 类使用仅权重量化在本地运行 Hugging Face 模型。
 
-The [Hugging Face Model Hub](https://huggingface.co/models) hosts over 120k models, 20k datasets, and 50k demo apps (Spaces), all open source and publicly available, in an online platform where people can easily collaborate and build ML together.
+[Hugging Face Model Hub](https://huggingface.co/models) 托管了超过 12 万个模型、2 万个数据集和 5 万个演示应用（Spaces），所有这些都是开源且公开可用的，位于一个人们可以轻松协作和共同构建机器学习模型的在线平台中。
 
-These can be called from LangChain through this local pipeline wrapper class.
+这些模型可以通过此本地管道包装类从 LangChain 调用。
 
-To use, you should have the `transformers` python [package installed](https://pypi.org/project/transformers/), as well as [pytorch](https://pytorch.org/get-started/locally/), [intel-extension-for-transformers](https://github.com/intel/intel-extension-for-transformers).
+要使用，您需要安装 `transformers` Python [包](https://pypi.org/project/transformers/)，以及 [pytorch](https://pytorch.org/get-started/locally/) 和 [intel-extension-for-transformers](https://github.com/intel/intel-extension-for-transformers)。
 
 ```python
 pip install transformers --quiet
 pip install intel-extension-for-transformers
 ```
 
-### Model Loading
+### 模型加载
 
-Models can be loaded by specifying the model parameters using the `from_model_id` method. The model parameters include `WeightOnlyQuantConfig` class in intel_extension_for_transformers.
+可以通过使用 `from_model_id` 方法指定模型参数来加载模型。模型参数包括 `intel_extension_for_transformers` 中的 `WeightOnlyQuantConfig` 类。
 
 ```python
 from intel_extension_for_transformers.transformers import WeightOnlyQuantConfig
@@ -34,7 +34,7 @@ hf = WeightOnlyQuantPipeline.from_model_id(
 )
 ```
 
-They can also be loaded by passing in an existing `transformers` pipeline directly
+也可以通过直接传入一个现有的 `transformers` pipeline 来加载它们：
 
 ```python
 from intel_extension_for_transformers.transformers import AutoModelForSeq2SeqLM
@@ -49,10 +49,9 @@ pipe = pipeline(
 hf = WeightOnlyQuantPipeline(pipeline=pipe)
 ```
 
-### Create Chain
+### 创建链 (Chain)
 
-With the model loaded into memory, you can compose it with a prompt to
-form a chain.
+将模型加载到内存后，您可以将其与提示 (Prompt) 组合以形成一个链 (Chain)。
 
 ```python
 from langchain_core.prompts import PromptTemplate
@@ -69,10 +68,10 @@ question = "What is electroencephalography?"
 print(chain.invoke({"question": question}))
 ```
 
-### CPU Inference
+### CPU 推理
 
-Now intel-extension-for-transformers only support CPU device inference. Will support intel GPU soon.When running on a machine with CPU, you can specify the `device="cpu"` or `device=-1` parameter to put the model on CPU device.
-Defaults to `-1` for CPU inference.
+目前，intel-extension-for-transformers 只支持 CPU 设备推理。未来将支持英特尔 GPU。在具有 CPU 的机器上运行时，您可以指定 `device="cpu"` 或 `device=-1` 参数将模型置于 CPU 设备上。
+CPU 推理的默认值为 `-1`。
 
 ```python
 conf = WeightOnlyQuantConfig(weight_dtype="nf4")
@@ -95,9 +94,9 @@ question = "What is electroencephalography?"
 print(chain.invoke({"question": question}))
 ```
 
-### Batch CPU Inference
+### 批量 CPU 推理
 
-You can also run inference on the CPU in batch mode.
+您也可以在 CPU 上以批处理模式运行推理。
 
 ```python
 conf = WeightOnlyQuantConfig(weight_dtype="nf4")
@@ -119,34 +118,34 @@ for answer in answers:
     print(answer)
 ```
 
-### Data Types Supported by Intel-extension-for-transformers
+### 面向 Transformer 的英特尔扩展支持的数据类型
 
-We support quantize the weights to following data types for storing(weight_dtype in WeightOnlyQuantConfig):
+我们支持将权重量化为以下数据类型进行存储（`WeightOnlyQuantConfig` 中的 `weight_dtype`）：
 
-* **int8**: Uses 8-bit data type.
-* **int4_fullrange**: Uses the -8 value of int4 range compared with the normal int4 range [-7,7].
-* **int4_clip**: Clips and retains the values within the int4 range, setting others to zero.
-* **nf4**: Uses the normalized float 4-bit data type.
-* **fp4_e2m1**: Uses regular float 4-bit data type. "e2" means that 2 bits are used for the exponent, and "m1" means that 1 bits are used for the mantissa.
+* **int8**: 使用 8 位数据类型。
+* **int4_fullrange**: 使用 int4 范围的 -8 值，而不是正常的 int4 范围 [-7, 7]。
+* **int4_clip**: 裁剪并将值保留在 int4 范围内，将其他值设置为零。
+* **nf4**: 使用归一化浮点 4 位数据类型。
+* **fp4_e2m1**: 使用常规浮点 4 位数据类型。“e2”表示使用 2 位表示指数（exponent），“m1”表示使用 1 位表示尾数（mantissa）。
 
-While these techniques store weights in 4 or 8 bit, the computation still happens in float32, bfloat16 or int8(compute_dtype in WeightOnlyQuantConfig):
+虽然这些技术以 4 位或 8 位存储权重，但计算仍然以 float32、bfloat16 或 int8（`WeightOnlyQuantConfig` 中的 `compute_dtype`）执行：
 
-* **fp32**: Uses the float32 data type to compute.
-* **bf16**: Uses the bfloat16 data type to compute.
-* **int8**: Uses 8-bit data type to compute.
+* **fp32**: 使用 float32 数据类型进行计算。
+* **bf16**: 使用 bfloat16 数据类型进行计算。
+* **int8**: 使用 8 位数据类型进行计算。
 
-### Supported Algorithms Matrix
+### 支持的算法矩阵
 
-Quantization algorithms supported in intel-extension-for-transformers(algorithm in WeightOnlyQuantConfig):
+面向 Transformer 的英特尔扩展中支持的量化算法（`WeightOnlyQuantConfig` 中的 `algorithm`）：
 
-| Algorithms |   PyTorch  |    LLM Runtime    |
-|:--------------:|:----------:|:----------:|
-|       RTN      |  &#10004;  |  &#10004;  |
-|       AWQ      |  &#10004;  | stay tuned |
-|      TEQ      | &#10004; | stay tuned |
+| 算法 | PyTorch | LLM 运行时 |
+|:------:|:-------:|:----------:|
+|   RTN  |   &#10004;   |   &#10004;   |
+|   AWQ  |   &#10004;   |   敬请期待   |
+|   TEQ  |  &#10004;  |   敬请期待   |
 
-> **RTN:** A quantification method that we can think of very intuitively. It does not require additional datasets and is a very fast quantization method. Generally speaking, RTN will convert the weight into a uniformly distributed integer data type, but some algorithms, such as Qlora, propose a non-uniform NF4 data type and prove its theoretical optimality.
+> **RTN (Round-To-Nearest):** 一种我们可以非常直观理解的量化方法。它不需要额外的训练数据集，是一种非常快速的量化方法。通常情况下，RTN 会将权重转换为均匀分布的整数数据类型，但像 Qlora 这样的某些算法提出了非均匀的 NF4 数据类型，并证明了其理论上的最优性。
 
-> **AWQ:** Proved that protecting only 1% of salient weights can greatly reduce quantization error. the salient weight channels are selected by observing the distribution of activation and weight per channel. The salient weights are also quantized after multiplying a big scale factor before quantization for preserving.
+> **AWQ (Activation-aware Weight Quantization):** 证明了仅保护 1% 的显著权重（salient weights）就能大大减少量化误差。显著权重是通过观察每通道的激活和权重的分布来选择的。显著权重在量化之前，会先乘以一个较大的缩放因子（scale factor）以进行保护。
 
-> **TEQ:** A trainable equivalent transformation that preserves the FP32 precision in weight-only quantization. It is inspired by AWQ while providing a new solution to search for the optimal per-channel scaling factor between activations and weights.
+> **TEQ (Trainable Equivalent Transformation):** 一种保留 FP32 精度在仅权重量化中的可训练等效变换。它受到 AWQ 的启发，同时提供了一种新的解决方案来搜索激活和权重之间的最佳每通道缩放因子。

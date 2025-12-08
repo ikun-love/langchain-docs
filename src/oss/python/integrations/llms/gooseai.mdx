@@ -2,19 +2,19 @@
 title: GooseAI
 ---
 
-`GooseAI` is a fully managed NLP-as-a-Service, delivered via API. GooseAI provides access to [these models](https://goose.ai/docs/models).
+`GooseAI` 是一个通过 API 交付的完全托管的 NLP 即服务（NLP-as-a-Service）平台。GooseAI 提供了对 [这些模型](https://goose.ai/docs/models) 的访问。
 
-This notebook goes over how to use LangChain with [GooseAI](https://goose.ai/).
+本指南将介绍如何将 LangChain 与 [GooseAI](https://goose.ai/) 结合使用。
 
-## Install openai
+## 安装 openai
 
-The `openai` package is required to use the GooseAI API. Install `openai` using `pip install openai`.
+使用 GooseAI API 需要 `openai` 软件包。请使用 `pip install openai` 来安装 `openai`。
 
 ```python
 pip install -qU  langchain-openai
 ```
 
-## Imports
+## 导入模块
 
 ```python
 import os
@@ -24,9 +24,9 @@ from langchain_community.llms import GooseAI
 from langchain_core.prompts import PromptTemplate
 ```
 
-## Set the Environment API Key
+## 设置环境变量 API 密钥
 
-Make sure to get your API key from GooseAI. You are given $10 in free credits to test different models.
+请确保从 GooseAI 获取您的 API 密钥。您将获得 $10 的免费积分来测试不同的模型。
 
 ```python
 from getpass import getpass
@@ -38,17 +38,17 @@ GOOSEAI_API_KEY = getpass()
 os.environ["GOOSEAI_API_KEY"] = GOOSEAI_API_KEY
 ```
 
-## Create the GooseAI instance
+## 创建 GooseAI 实例
 
-You can specify different parameters such as the model name, max tokens generated, temperature, etc.
+您可以指定不同的参数，例如模型名称、生成最大 Token 数、温度（temperature）等。
 
 ```python
 llm = GooseAI()
 ```
 
-## Create a Prompt Template
+## 创建提示模板
 
-We will create a prompt template for Question and Answer.
+我们将创建一个用于问答任务的提示模板。
 
 ```python
 template = """Question: {question}
@@ -58,15 +58,15 @@ Answer: Let's think step by step."""
 prompt = PromptTemplate.from_template(template)
 ```
 
-## Initiate the LLMChain
+## 初始化 LLMChain
 
 ```python
 llm_chain = LLMChain(prompt=prompt, llm=llm)
 ```
 
-## Run the LLMChain
+## 运行 LLMChain
 
-Provide a question and run the LLMChain.
+提供一个问题并运行 LLMChain。
 
 ```python
 question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"

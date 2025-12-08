@@ -1,30 +1,30 @@
 ---
-title: How to run evaluations with pytest (beta)
-sidebarTitle: Run evaluations with pytest
+title: 使用 pytest 运行评估（Beta 版）
+sidebarTitle: 使用 pytest 运行评估
 ---
 
-The LangSmith pytest plugin lets Python developers define their datasets and evaluations as pytest test cases.
+LangSmith 的 pytest 插件允许 Python 开发者将数据集和评估定义为 pytest 测试用例。
 
-Compared to the standard evaluation flow, this is useful when:
+与标准的评估流程相比，在以下情况下使用此方法更有用：
 
-* **Each example requires different evaluation logic**: Standard evaluation flows assume consistent application and evaluator execution across all dataset examples. For more complex systems or comprehensive evaluations, specific system subsets may require evaluation with particular input types and metrics. These heterogeneous evaluations are simpler to write as distinct test case suites that track together.
-* **You want to assert binary expectations**: Track assertions in LangSmith and raise assertion errors locally (e.g. in CI pipelines). Testing tools help when both evaluating system outputs and asserting basic properties about them.
-* **You want pytest-like terminal outputs**: Get familiar pytest output formatting
-* **You already use pytest to test your app**: Add LangSmith tracking to existing pytest workflows
+* **每个示例需要不同的评估逻辑**：标准的评估流程假设评估器在所有数据集示例上保持一致的应用程序和执行方式。对于更复杂的系统或全面的评估，特定的系统子集可能需要使用特定的输入类型和指标进行评估。将这些异构（不同的）评估编写为跟踪在一起的独立测试用例套件会更简单。
+* **您想断言二进制期望**：在 LangSmith 中跟踪断言，并在本地（例如在 CI 管道中）抛出断言错误。当同时评估系统输出并断言其基本属性时，测试工具有助于实现这一点。
+* **您想要类似 pytest 的终端输出**：获得熟悉的 pytest 输出格式。
+* **您已经使用 pytest 来测试您的应用程序**：将 LangSmith 跟踪添加到现有的 pytest 工作流中。
 
 <Warning>
-The pytest integration is in beta and is subject to change in upcoming releases.
+pytest 集成处于 Beta 阶段，未来版本可能会有所更改。
 </Warning>
 
 <Info>
-The JS/TS SDK has an analogous [Vitest/Jest integration](/langsmith/vitest-jest).
+JS/TS SDK 有一个类似的 [Vitest/Jest 集成](/langsmith/vitest-jest)。
 </Info>
 
-## Installation
+## 安装
 
-This functionality requires Python SDK version `langsmith>=0.3.4`.
+此功能需要 Python SDK 版本 `langsmith>=0.3.4`。
 
-For extra features like [rich terminal outputs](#rich-outputs) and [test caching](#caching) install:
+如需额外的功能，例如 [丰富的终端输出](#rich-outputs) 和 [测试缓存](#caching)，请安装：
 
 <CodeGroup>
 ```bash pip
@@ -36,11 +36,11 @@ uv add langsmith[pytest]
 ```
 </CodeGroup>
 
-## Define and run tests
+## 定义和运行测试
 
-The pytest integration lets you define datasets and evaluators as test cases.
+pytest 集成允许您将数据集和评估器定义为测试用例。
 
-To track a test in LangSmith add the `@pytest.mark.langsmith` decorator. Every decorated test case will be synced to a dataset example. When you run the test suite, the dataset will be updated and a new experiment will be created with one result for each test case.
+要在 LangSmith 中跟踪测试，请添加 `@pytest.mark.langsmith` 装饰器。每个带有装饰器的测试用例都将同步到一个数据集示例。当您运行测试套件时，数据集将被更新，并且会针对每个测试用例创建一个新的实验（其中包含一个结果）。
 
 <CodeGroup>
 
@@ -56,7 +56,7 @@ def generate_sql(user_query: str) -> str:
     result = oai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Convert the user query to a SQL query."},
+            {"role": "system", "content": "将用户查询转换为 SQL 查询。"},
             {"role": "user", "content": user_query},
         ],
     )
@@ -67,57 +67,57 @@ import pytest
 from langsmith import testing as t
 
 def is_valid_sql(query: str) -> bool:
-    """Return True if the query is valid SQL."""
-    return True  # Dummy implementation
+    """返回查询是否为有效 SQL。"""
+    return True  # 虚拟实现
 
-@pytest.mark.langsmith  # <-- Mark as a LangSmith test case
+@pytest.mark.langsmith  # <-- 标记为 LangSmith 测试用例
 def test_sql_generation_select_all() -> None:
-    user_query = "Get all users from the customers table"
-    t.log_inputs({"user_query": user_query})  # <-- Log example inputs, optional
+    user_query = "从 customers 表中获取所有用户"
+    t.log_inputs({"user_query": user_query})  # <-- 记录示例输入，可选
     expected = "SELECT * FROM customers;"
-    t.log_reference_outputs({"sql": expected})  # <-- Log example reference outputs, optional
+    t.log_reference_outputs({"sql": expected})  # <-- 记录示例参考输出，可选
 
     sql = generate_sql(user_query)
-    t.log_outputs({"sql": sql})  # <-- Log run outputs, optional
+    t.log_outputs({"sql": sql})  # <-- 记录运行输出，可选
 
-    t.log_feedback(key="valid_sql", score=is_valid_sql(sql))  # <-- Log feedback, optional
-    assert sql == expected  # <-- Test pass/fail status automatically logged to LangSmith under 'pass' feedback key
+    t.log_feedback(key="valid_sql", score=is_valid_sql(sql))  # <-- 记录反馈，可选
+    assert sql == expected  # <-- 测试通过/失败状态会自动记录到 LangSmith 的 'pass' 反馈键下
 ```
 
 </CodeGroup>
 
-When you run this test it will have a default `pass` boolean feedback key based on the test case passing / failing. It will also track any inputs, outputs, and reference (expected) outputs that you log.
+当您运行此测试时，它将根据测试用例的通过/失败状态具有默认的 `pass` 布尔值反馈键。它还将跟踪您记录的任何输入、输出和参考（期望）输出。
 
-Use `pytest` as you normally would to run the tests:
+使用 `pytest` 像往常一样运行测试：
 
 ```bash
 pytest tests/
 ```
 
-In most cases we recommend setting a test suite name:
+在大多数情况下，我们建议设置一个测试套件名称：
 
 ```bash
 LANGSMITH_TEST_SUITE='SQL app tests' pytest tests/
 ```
 
-Each time you run this test suite, LangSmith:
+每次运行此测试套件时，LangSmith 会：
 
-* creates a [dataset](/langsmith/evaluation-concepts#datasets) for each test file. If a dataset for this test file already exists it will be updated
-* creates an [experiment](/langsmith/evaluation-concepts#experiment) in each created/updated dataset
-* creates an experiment row for each test case, with the inputs, outputs, reference outputs and feedback you've logged
-* collects the pass/fail rate under the `pass` feedback key for each test case
+* 为每个测试文件创建一个[数据集](/langsmith/evaluation-concepts#datasets)。如果此测试文件的数据集已存在，它将被更新。
+* 在每个创建/更新的数据集中创建一个[实验](/langsmith/evaluation-concepts#experiment)。
+* 为每个测试用例创建一个实验行，其中包含您记录的输入、输出、参考输出和反馈。
+* 收集每个测试用例的 `pass` 反馈键下的通过/失败率。
 
-Here's what a test suite dataset looks like:
+以下是测试套件数据集的外观：
 
 ![Dataset](/langsmith/images/simple-pytest-dataset.png)
 
-And what an experiment against that test suite looks like:
+以及针对该测试套件的实验外观：
 
 ![Experiment](/langsmith/images/simple-pytest.png)
 
-## Log inputs, outputs, and reference outputs
+## 记录输入、输出和参考输出
 
-Every time we run a test we're syncing it to a dataset example and tracing it as a run. There's a few different ways that we can trace the example inputs and reference outputs and the run outputs. The simplest is to use the `log_inputs`, `log_outputs`, and `log_reference_outputs` methods. You can run these any time in a test to update the example and run for that test:
+每次我们运行测试时，我们都会将其同步到一个数据集示例并将其跟踪为一次运行。有几种方法可以跟踪示例输入、参考输出和运行输出。最简单的方法是使用 `log_inputs`、`log_outputs` 和 `log_reference_outputs` 方法。您可以在测试中的任何时间运行它们来更新该测试的示例和运行：
 
 ```python
 import pytest
@@ -131,11 +131,11 @@ def test_foo() -> None:
     assert True
 ```
 
-Running this test will create/update an example with name "test_foo", inputs `{"a": 1, "b": 2}`, reference outputs `{"foo": "bar"}` and trace a run with outputs `{"foo": "baz"}`.
+运行此测试将创建一个/更新一个名称为 "test_foo" 的示例，其输入为 `{"a": 1, "b": 2}`，参考输出为 `{"foo": "bar"}`，并跟踪一个输出为 `{"foo": "baz"}` 的运行。
 
-**NOTE**: If you run `log_inputs`, `log_outputs`, or `log_reference_outputs` twice, the previous values will be overwritten.
+**注意**：如果您运行 `log_inputs`、`log_outputs` 或 `log_reference_outputs` 两次，先前的值将被覆盖。
 
-Another way to define example inputs and reference outputs is via pytest fixtures/parametrizations. By default any arguments to your test function will be logged as inputs on the corresponding example. If certain arguments are meant to represet reference outputs, you can specify that they should be logged as such using `@pytest.mark.langsmith(output_keys=["name_of_ref_output_arg"])`:
+定义示例输入和参考输出的另一种方法是通过 pytest fixtures/参数化。默认情况下，您的测试函数的任何参数都将作为输入记录到相应的示例中。如果某些参数旨在表示参考输出，您可以使用 `@pytest.mark.langsmith(output_keys=["name_of_ref_output_arg"])` 指定它们应记录为参考输出：
 
 ```python
 import pytest
@@ -151,15 +151,15 @@ def d() -> int:
 @pytest.mark.langsmith(output_keys=["d"])
 def test_cd(c: int, d: int) -> None:
     result = 2 * c
-    t.log_outputs({"d": result})  # Log run outputs
+    t.log_outputs({"d": result})  # 记录运行输出
     assert result == d
 ```
 
-This will create/sync an example with name "test_cd", inputs `{"c": 5}` and reference outputs `{"d": 6}`, and run output `{"d": 10}`.
+这将创建/同步一个名称为 "test_cd" 的示例，其中包含输入 `{"c": 5}` 和参考输出 `{"d": 6}`，以及运行输出 `{"d": 10}`。
 
-## Log feedback
+## 记录反馈
 
-By default LangSmith collects the pass/fail rate under the `pass` feedback key for each test case. You can add additional feedback with `log_feedback`.
+默认情况下，LangSmith 会收集每个测试用例的 `pass` 反馈键下的通过/失败率。您可以使用 `log_feedback` 添加额外反馈。
 
 ```python
 import openai
@@ -177,15 +177,13 @@ def test_offtopic_input() -> None:
     sql = generate_sql(user_query)
     t.log_outputs({"sql": sql})
 
-    expected = "Sorry that is not a valid query."
+    expected = "抱歉，这不是一个有效的查询。"
     t.log_reference_outputs({"sql": expected})
 
-    # Use this context manager to trace any steps used for generating evaluation
-    # feedback separately from the main application logic
+    # 使用此上下文管理器来跟踪用于生成评估反馈的任何步骤，使其与主应用程序逻辑分开
     with t.trace_feedback():
         instructions = (
-            "Return 1 if the ACTUAL and EXPECTED answers are semantically equivalent, "
-            "otherwise return 0. Return only 0 or 1 and nothing else."
+            "如果 ACTUAL 和 EXPECTED 答案在语义上等价，则返回 1，否则返回 0。只返回 0 或 1，不要返回其他任何内容。"
         )
 
         grade = oai_client.chat.completions.create(
@@ -201,35 +199,35 @@ def test_offtopic_input() -> None:
     assert score
 ```
 
-Note the use of the `trace_feedback()` context manager. This makes it so that the LLM-as-judge call is traced separately from the rest of the test case. Instead of showing up in the main test case run it will instead show up in the trace for the `correct` feedback key.
+请注意 `trace_feedback()` 上下文管理器的使用。这使得 LLM-as-judge 调用与测试用例的其余部分分开跟踪。它不会显示在主测试用例运行中，而是会显示在 `correct` 反馈键的跟踪中。
 
-**NOTE**: Make sure that the `log_feedback` call associated with the feedback trace occurs inside the `trace_feedback` context. This way we'll be able to associate the feedback with the trace, and when seeing the feedback in the UI you'll be able to click on it to see the trace that generated it.
+**注意**：确保与反馈跟踪相关的 `log_feedback` 调用发生在 `trace_feedback` 上下文**内部**。这样，我们将能够将反馈与跟踪相关联，当在 UI 中看到反馈时，您可以点击它来查看生成它的跟踪。
 
-## Trace intermediate calls
+## 跟踪中间调用
 
-LangSmith will automatically trace any traceable intermediate calls that happen in the course of test case execution.
+LangSmith 将自动跟踪在测试用例执行过程中发生的任何可跟踪的中间调用。
 
-## Grouping tests into a test suite
+## 将测试分组到测试套件中
 
-By default, all tests within a given file will be grouped as a single "test suite" with a corresponding dataset. You can configure which test suite a test belongs to by passing the `test_suite_name` parameter to `@pytest.mark.langsmith` for case-by-case grouping, or you can set the `LANGSMITH_TEST_SUITE` env var to group all tests from an execution into a single test suite:
+默认情况下，给定文件中的所有测试都将分组为单个“测试套件”，并具有相应的单个数据集。您可以通过将 `test_suite_name` 参数传递给 `@pytest.mark.langsmith` 来按用例分组配置测试属于哪个测试套件，或者您可以通过设置 `LANGSMITH_TEST_SUITE` 环境变量，将来自一次执行的所有测试分组到单个测试套件中：
 
 ```bash
 LANGSMITH_TEST_SUITE="SQL app tests" pytest tests/
 ```
 
-We generally recommend setting `LANGSMITH_TEST_SUITE` to get a consolidated view of all of your results.
+我们通常建议设置 `LANGSMITH_TEST_SUITE` 以获得所有结果的合并视图。
 
-## Naming experiments
+## 命名实验
 
-You can name an experiment using the `LANGSMITH_EXPERIMENT` env var:
+您可以使用 `LANGSMITH_EXPERIMENT` 环境变量命名实验：
 
 ```bash
 LANGSMITH_TEST_SUITE="SQL app tests" LANGSMITH_EXPERIMENT="baseline" pytest tests/
 ```
 
-## Caching
+## 缓存
 
-LLMs on every commit in CI can get expensive. To save time and resources, LangSmith lets you cache HTTP requests to disk. To enable caching, install with `langsmith[pytest]` and set an env var: `LANGSMITH_TEST_CACHE=/my/cache/path`:
+CI 中每一次提交都运行 LLM 可能会很昂贵。为了节省时间和资源，LangSmith 允许您将 HTTP 请求缓存到磁盘。要启用缓存，请使用 `langsmith[pytest]` 安装，并设置环境变量：`LANGSMITH_TEST_CACHE=/my/cache/path`：
 
 <CodeGroup>
 ```bash pip
@@ -243,9 +241,9 @@ LANGSMITH_TEST_CACHE=tests/cassettes pytest tests/my_llm_tests
 ```
 </CodeGroup>
 
-All requests will be cached to `tests/cassettes` and loaded from there on subsequent runs. If you check this in to your repository, your CI will be able to use the cache as well.
+所有请求都将缓存到 `tests/cassettes`，并在后续运行中从那里加载。如果将其检入到您的存储库中，您的 CI 也可以使用该缓存。
 
-In `langsmith>=0.4.10`, you may selectively enable caching for requests to individual URLs or hostnames like this:
+在 `langsmith>=0.4.10` 中，您可以选择性地为对单个 URL 或主机的请求启用缓存，如下所示：
 
 ```python
 @pytest.mark.langsmith(cached_hosts=["api.openai.com", "https://api.anthropic.com"])
@@ -253,21 +251,21 @@ def my_test():
     ...
 ```
 
-## pytest features
+## pytest 功能
 
-`@pytest.mark.langsmith` is designed to stay out of your way and works well with familiar `pytest` features.
+`@pytest.mark.langsmith` 的设计目的是不干扰您的工作，并与熟悉的 `pytest` 功能良好配合。
 
-### Parametrize with `pytest.mark.parametrize`
+### 使用 `pytest.mark.parametrize` 进行参数化
 
-You can use the `parametrize` decorator as before. This will create a new test case for each parametrized instance of the test.
+您可以像以前一样使用 `parametrize` 装饰器。这将为测试的每个参数化实例创建一个新的测试用例。
 
 ```python
 @pytest.mark.langsmith(output_keys=["expected_sql"])
 @pytest.mark.parametrize(
     "user_query, expected_sql",
     [
-        ("Get all users from the customers table", "SELECT * FROM customers"),
-        ("Get all users from the orders table", "SELECT * FROM orders"),
+        ("从 customers 表中获取所有用户", "SELECT * FROM customers"),
+        ("从 orders 表中获取所有用户", "SELECT * FROM orders"),
     ],
 )
 def test_sql_generation_parametrized(user_query, expected_sql):
@@ -275,11 +273,11 @@ def test_sql_generation_parametrized(user_query, expected_sql):
     assert sql == expected_sql
 ```
 
-**Note:** as the parametrized list grows, you may consider using `evaluate()` instead. This parallelizes the evaluation and makes it easier to control individual experiments and the corresponding dataset.
+**注意**：随着参数化列表的增长，您可能需要考虑使用 `evaluate()`。这会并行化评估过程，并使控制单个实验和相应的更容易。
 
-### Parallelize with `pytest-xdist`
+### 使用 `pytest-xdist` 进行并行化
 
-You can use [pytest-xdist](https://pytest-xdist.readthedocs.io/en/stable/) as you normally would to parallelize test execution:
+您可以像往常一样使用 [pytest-xdist](https://pytest-xdist.readthedocs.io/en/stable/) 来并行化测试执行：
 
 <CodeGroup>
 ```bash pip
@@ -293,13 +291,13 @@ pytest -n auto tests
 ```
 </CodeGroup>
 
-### Async tests with `pytest-asyncio`
+### 使用 `pytest-asyncio` 的异步测试
 
-`@pytest.mark.langsmith` works with sync or async tests, so you can run async tests exactly as before.
+`@pytest.mark.langsmith` 适用于同步或异步测试，因此您可以像以前一样运行异步测试。
 
-### Watch mode with `pytest-watch`
+### 使用 `pytest-watch` 的监视模式
 
-Use watch mode to quickly iterate on your tests. We *highly* recommend ony using this with test caching (see below) enabled to avoid unnecessary LLM calls:
+使用监视模式可以快速迭代您的测试。我们*强烈*建议仅在启用测试缓存（见下文）的情况下使用此功能，以避免不必要的 LLM 调用：
 
 <CodeGroup>
 ```bash pip
@@ -313,92 +311,92 @@ LANGSMITH_TEST_CACHE=tests/cassettes ptw tests/my_llm_tests
 ```
 </CodeGroup>
 
-## Rich outputs
+## 丰富的输出
 
-If you'd like to see a rich display of the LangSmith results of your test run you can specify `--langsmith-output`:
+如果您想看到测试运行的 LangSmith 结果的丰富显示，可以指定 `--langsmith-output`：
 
 ```bash
 pytest --langsmith-output tests
 ```
 
-**Note:** This flag used to be `--output=langsmith` in `langsmith<=0.3.3` but was updated to avoid collisions with other pytest plugins.
+**注意**：在 `langsmith<=0.3.3` 中，此标志曾为 `--output=langsmith`，但已更新以避免与其它 pytest 插件发生冲突。
 
-You'll get a nice table per test suite that updates live as the results are uploaded to LangSmith:
+您将为每个测试套件获得一个漂亮的表格，该表格会随着结果上传到 LangSmith 而实时更新：
 
 ![Rich pytest outputs](/langsmith/images/rich-pytest-outputs.png)
 
-Some important notes for using this feature:
+使用此功能的一些重要说明：
 
-* Make sure you've installed `pip install -U "langsmith[pytest]"`
-* Rich outputs do not currently work with `pytest-xdist`
+* 确保您已安装 `pip install -U "langsmith[pytest]"`
+* 丰富输出目前与 `pytest-xdist` 不兼容
 
-**NOTE**: The custom output removes all the standard pytest outputs. If you're trying to debug some unexpected behavior it's often better to show the regular pytest outputs so to get full error traces.
+**注意**：自定义输出会移除所有标准的 pytest 输出。如果您试图调试某些意外行为，通常最好显示常规 pytest 输出以获取完整的错误跟踪。
 
-## Dry-run mode
+## 模拟运行模式 (Dry-run mode)
 
-If you want to run the tests without syncing the results to LangSmith, you can set `LANGSMITH_TEST_TRACKING=false` in your environment.
+如果您想在不将结果同步到 LangSmith 的情况下运行测试，可以在环境中设置 `LANGSMITH_TEST_TRACKING=false`。
 
 ```bash
 LANGSMITH_TEST_TRACKING=false pytest tests/
 ```
 
-The tests will run as normal, but the experiment logs will not be sent to LangSmith.
+测试将正常运行，但实验日志不会发送到 LangSmith。
 
-## Expectations
+## 期望 (Expectations)
 
-LangSmith provides an [expect](https://docs.smith.langchain.com/reference/python/_expect/langsmith._expect._Expect#langsmith._expect._Expect) utility to help define expectations about your LLM output. For example:
+LangSmith 提供了一个 `expect` 工具，可帮助您定义对 LLM 输出的期望。例如：
 
 ```python
 from langsmith import expect
 
 @pytest.mark.langsmith
 def test_sql_generation_select_all():
-    user_query = "Get all users from the customers table"
+    user_query = "从 customers 表中获取所有用户"
     sql = generate_sql(user_query)
     expect(sql).to_contain("customers")
 ```
 
-This will log the binary "expectation" score to the experiment results, additionally `assert`ing that the expectation is met possibly triggering a test failure.
+这将把二元的“期望”分数记录到实验结果中，还会额外对期望是否满足进行`assert`，可能会触发测试失败。
 
-`expect` also provides "fuzzy match" methods. For example:
+`expect` 还提供“模糊匹配”方法。例如：
 
 ```python
 @pytest.mark.langsmith(output_keys=["expectation"])
 @pytest.mark.parametrize(
     "query, expectation",
     [
-       ("what's the capital of France?", "Paris"),
+       ("法国的首都是哪里？", "巴黎"),
     ],
 )
 def test_embedding_similarity(query, expectation):
     prediction = my_chatbot(query)
     expect.embedding_distance(
-        # This step logs the distance as feedback for this run
+        # 此步骤记录预测与期望之间的距离作为此运行的反馈
         prediction=prediction, expectation=expectation
-        # Adding a matcher (in this case, 'to_be_*"), logs 'expectation' feedback
-    ).to_be_less_than(0.5) # Optional predicate to assert against
+        # 添加一个断言（在本例中为 'to_be_*'），记录 'expectation' 反馈
+    ).to_be_less_than(0.5) # 可选的断言谓词
 
     expect.edit_distance(
-        # This computes the normalized Damerau-Levenshtein distance between the two strings
+        # 计算两者之间归一化的 Damerau-Levenshtein 距离
         prediction=prediction, expectation=expectation
-        # If no predicate is provided below, 'assert' isn't called, but the score is still logged
+        # 如果未提供下方的谓词，则不会调用 'assert'，但分数仍然会被记录
     )
 ```
 
-This test case will be assigned 4 scores:
+此测试用例将被分配 4 个分数：
 
-1. The `embedding_distance` between the prediction and the expectation
-2. The binary `expectation` score (1 if cosine distance is less than 0.5, 0 if not)
-3. The `edit_distance` between the prediction and the expectation
-4. The overall test pass/fail score (binary)
+1. 预测与期望之间的 `embedding_distance`
+2. 二元的 `expectation` 分数（如果余弦距离小于 0.5，则为 1，否则为 0）
+3. 预测与期望之间的 `edit_distance`
+4. 整体测试通过/失败分数（二元）
 
-The `expect` utility is modeled off of [Jest](https://jestjs.io/docs/expect)'s expect API, with some off-the-shelf functionality to make it easier to grade your LLMs.
+`expect` 工具以 [Jest](https://jestjs.io/docs/expect) 的 expect API 为模型，并提供了一些现成的功能，使其更容易评估您的 LLM。
 
-## Legacy
+## 遗留 (Legacy)
 
-#### `@test` / `@unit` decorator
+#### `@test` / `@unit` 装饰器
 
-The legacy method for marking test cases is using the `@test` or `@unit` decorators:
+标记测试用例的遗留方法是使用 `@test` 或 `@unit` 装饰器：
 
 ```python
 from langsmith import test

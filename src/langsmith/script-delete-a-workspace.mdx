@@ -1,79 +1,79 @@
 ---
-title: Delete workspaces
-sidebarTitle: Delete workspaces
+title: 删除工作区
+sidebarTitle: 删除工作区
 ---
 
 <Note>
-Deleting a workspace is supported **nativley in LangSmith Self-Hosted v0.10**. View [instructions for deleting a workspace](/langsmith/set-up-a-workspace#delete-a-workspace).
+在 LangSmith 自托管 (Self-Hosted) 版本 **v0.10 中原生支持**删除工作区。请查看 [删除工作区的说明](/langsmith/set-up-a-workspace#delete-a-workspace)。
 
-Follow the guide below for Self-Hosted versions before v0.10.
+对于早于 v0.10 的自托管版本，请遵循以下指南操作。
 </Note>
 
-The LangSmith UI does not currently support the deletion of an individual workspace from an organization. This, however, can be accomplished by directly removing all traces from all materialized views in ClickHouse (except the runs\_history views) and the runs and feedbacks tables and then removing the Workspace from the Postgres tenants table.
+LangSmith UI 目前不支持从组织中删除单个工作区。然而，可以通过以下方式实现：直接从 ClickHouse 中的所有物化视图（除了 `runs_history` 视图）以及 `runs` 和 `feedbacks` 表中移除工作区的所有痕迹，然后从 Postgres 的 `tenants` 表中删除该工作区。
 
-This command using the Workspace ID as an argument.
+此操作需要提供工作区 ID 作为参数来执行命令。
 
-### Prerequisites
+### 先决条件 (Prerequisites)
 
-Ensure you have the following tools/items ready.
+请确保您准备好以下工具/项目。
 
 1. kubectl
 
    * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
 
-2. PostgreSQL client
+2. PostgreSQL 客户端
 
    * [https://www.postgresql.org/download/](https://www.postgresql.org/download/)
 
-3. PostgreSQL database connection:
+3. PostgreSQL 数据库连接信息：
 
-   * Host
-   * Port
-   * Username
-     * If using the bundled version, this is `postgres`
-   * Password
-     * If using the bundled version, this is `postgres`
-   * Database name
-     * If using the bundled version, this is `postgres`
+   * Host (主机名)
+   * Port (端口)
+   * Username (用户名)
+     * 如果使用捆绑版本，则为 `postgres`
+   * Password (密码)
+     * 如果使用捆绑版本，则为 `postgres`
+   * Database name (数据库名称)
+     * 如果使用捆绑版本，则为 `postgres`
 
-4. Clickhouse database credentials
+4. Clickhouse 数据库凭据
 
-   * Host
-   * Port
-   * Username
-     * If using the bundled version, this is `default`
-   * Password
-     * If using the bundled version, this is `password`
-   * Database name
-     * If using the bundled version, this is `default`
+   * Host (主机名)
+   * Port (端口)
+   * Username (用户名)
+     * 如果使用捆绑版本，则为 `default`
+   * Password (密码)
+     * 如果使用捆绑版本，则为 `password`
+   * Database name (数据库名称)
+     * 如果使用捆绑版本，则为 `default`
 
-5. Connectivity to the PostgreSQL database from the machine you will be running the migration script on.
+5. 从您将运行迁移脚本的机器到 PostgreSQL 数据库的网络连通性。
 
-   * If you are using the bundled version, you may need to port forward the postgresql service to your local machine.
-   * Run `kubectl port-forward svc/langsmith-postgres 5432:5432` to port forward the postgresql service to your local machine.
+   * 如果您使用的是捆绑版本，您可能需要为 postgresql 服务进行端口转发 (port forward) 到本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-postgres 5432:5432` 命令将 postgresql 服务端口转发到您的本地机器。
 
-6. Connectivity to the Clickhouse database from the machine you will be running the migration script on.
+6. 从您将运行迁移脚本的机器到 Clickhouse 数据库的网络连通性。
 
-   * If you are using the bundled version, you may need to port forward the clickhouse service to your local machine.
-     * Run `kubectl port-forward svc/langsmith-clickhouse 8123:8123` to port forward the clickhouse service to your local machine.
-   * If you are using Clickhouse Cloud you will want to specify the --ssl flag and use port `8443`
+   * 如果您使用的是捆绑版本，您可能需要为 clickhouse 服务进行端口转发到本地机器。
+     * 运行 `kubectl port-forward svc/langsmith-clickhouse 8123:8123` 命令将 clickhouse 服务端口转发到您的本地机器。
+   * 如果您使用的是 Clickhouse Cloud，您需要指定 `--ssl` 标志并使用端口 `8443`。
 
-7. The script to delete a workspace
+7. 删除工作区的脚本
 
-   * You can download the script from [here](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/delete_workspace.sh)
+   * 您可以从 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/delete_workspace.sh) 下载该脚本。
 
-### Running the deletion script for a single workspace
+### 运行单个工作区的删除脚本
 
-Run the following command to run the workspace removal script:
+运行以下命令来执行工作区移除脚本：
 
 ```bash
 sh delete_workspace.sh <postgres_url> <clickhouse_url> --workspace_id <workspace_id>
 ```
 
-For example, if you are using the bundled version with port-forwarding, the command would look like:
+例如，如果您使用的是带有端口转发的捆绑版本，命令应如下所示：
 
 ```bash
 sh delete_workspace.sh "postgres://postgres:postgres@localhost:5432/postgres" "clickhouse://default:password@localhost:8123/default" --workspace_id 4ec70ec7-0808-416a-b836-7100aeec934b
 ```
 
-If you visit the LangSmith UI, you should now see workspace is deleted.
+如果您现在访问 LangSmith UI，您应该会看到该工作区已被删除。

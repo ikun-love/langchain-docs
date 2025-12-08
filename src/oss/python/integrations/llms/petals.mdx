@@ -2,21 +2,21 @@
 title: Petals
 ---
 
-`Petals` runs 100B+ language models at home, BitTorrent-style.
+`Petals` 采用类似于 BitTorrent 的方式，让您可以在本地运行 100B 参数以上的语言模型。
 
-This notebook goes over how to use LangChain with [Petals](https://github.com/bigscience-workshop/petals).
+本示例（Notebook）将介绍如何将 LangChain 与 [Petals](https://github.com/bigscience-workshop/petals) 结合使用。
 
-## Install petals
+## 安装 petals
 
-The `petals` package is required to use the Petals API. Install `petals` using `pip3 install petals`.
+要使用 Petals API，必须安装 `petals` 包。请使用 `pip3 install petals` 来安装 `petals`。
 
-For Apple Silicon(M1/M2) users please follow this guide [https://github.com/bigscience-workshop/petals/issues/147#issuecomment-1365379642](https://github.com/bigscience-workshop/petals/issues/147#issuecomment-1365379642) to install petals
+对于 Apple Silicon (M1/M2) 用户，请按照此指南 [https://github.com/bigscience-workshop/petals/issues/147#issuecomment-1365379642](https://github.com/bigscience-workshop/petals/issues/147#issuecomment-1365379642) 来安装 petals。
 
 ```python
 !pip3 install petals
 ```
 
-## Imports
+## 导入模块
 
 ```python
 import os
@@ -26,9 +26,9 @@ from langchain_community.llms import Petals
 from langchain_core.prompts import PromptTemplate
 ```
 
-## Set the Environment API Key
+## 设置环境变量 API 密钥
 
-Make sure to get [your API key](https://huggingface.co/docs/api-inference/quicktour#get-your-api-token) from Huggingface.
+请确保从 Huggingface 获取 [您的 API 密钥](https://huggingface.co/docs/api-inference/quicktour#get-your-api-token)。
 
 ```python
 from getpass import getpass
@@ -44,12 +44,12 @@ HUGGINGFACE_API_KEY = getpass()
 os.environ["HUGGINGFACE_API_KEY"] = HUGGINGFACE_API_KEY
 ```
 
-## Create the Petals instance
+## 创建 Petals 实例
 
-You can specify different parameters such as the model name, max new tokens, temperature, etc.
+您可以指定不同的参数，例如模型名称（`model_name`）、最大新生成 token 数（`max_new_tokens`）、温度（`temperature`）等。
 
 ```python
-# this can take several minutes to download big files!
+# 下载大型文件可能需要几分钟时间！
 
 llm = Petals(model_name="bigscience/bloom-petals")
 ```
@@ -58,9 +58,9 @@ llm = Petals(model_name="bigscience/bloom-petals")
 Downloading:   1%|▏                        | 40.8M/7.19G [00:24<15:44, 7.57MB/s]
 ```
 
-## Create a Prompt Template
+## 创建 Prompt 模板
 
-We will create a prompt template for Question and Answer.
+我们将为问答任务创建一个 Prompt 模板。
 
 ```python
 template = """Question: {question}
@@ -70,15 +70,15 @@ Answer: Let's think step by step."""
 prompt = PromptTemplate.from_template(template)
 ```
 
-## Initiate the LLMChain
+## 初始化 LLMChain
 
 ```python
 llm_chain = LLMChain(prompt=prompt, llm=llm)
 ```
 
-## Run the LLMChain
+## 运行 LLMChain
 
-Provide a question and run the LLMChain.
+提供一个问题并运行 LLMChain。
 
 ```python
 question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"

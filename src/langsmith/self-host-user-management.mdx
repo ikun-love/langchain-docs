@@ -1,28 +1,28 @@
 ---
-title: Customize user management
-sidebarTitle: Customize user management
+title: 自定义用户管理
+sidebarTitle: 自定义用户管理
 ---
 
 <Note>
-This guide assumes you have read the [admin guide](/langsmith/administration-overview) and [organization setup guide](/langsmith/set-up-a-workspace#set-up-an-organization).
+本指南假设您已经阅读了 [管理员指南](/langsmith/administration-overview) 和 [组织设置指南](/langsmith/set-up-a-workspace#set-up-an-organization)。
 </Note>
 
-LangSmith offers additional customization features for user management using feature flags.
+LangSmith 提供了使用功能标志（feature flags）的用户管理附加自定义功能。
 
-## Features
+## 功能
 
-### Workspace level invites to an organization
+### 工作区级别的组织邀请
 
-The default behavior in LangSmith requires a user to be an Organization Admin in order to invite new users to an organization. For self-hosted customers that would like to delegate this responsibility to workspace Admins, a feature flag may be set that enables workspace Admins to invite new users to the organization as well as their specific workspace **at the workspace level**.
+LangSmith 的默认行为要求用户必须是“组织管理员”（Organization Admin）才能邀请新用户加入组织。对于希望将此权限委托给工作区管理员的自托管客户，可以设置一个功能标志，该标志允许工作区管理员邀请新用户加入组织，并将其添加到他们特定的工作区，这些邀请操作是**在工作区级别**进行的。
 
-Once this feature is enabled via the configuration option below, workspace Admins may add new users in the `Workspace members` tab under `Settings` > `Workspaces`. Both of the following cases are supported when inviting at the workspace level, while the organization level invite functions the same as before.
+一旦通过下面的配置选项启用了此功能，工作区管理员就可以在 `设置` > `工作区` 下的 `工作区成员` 选项卡中添加新用户。在工作区级别邀请时，支持以下两种情况，而组织级别的邀请功能保持不变：
 
-1. Invite users who are NOT already active in the organization: this will add the users as pending to the organization and specific workspace
-2. Invite users who ARE already active in the organization: adds the users directly to the workspace as an active member (no pending state).
+1. 邀请**尚未**在组织中激活的用户：这将以待定状态（pending）将用户添加到组织和特定工作区。
+2. 邀请**已经**在组织中激活的用户：用户将直接以活跃成员的身份添加到工作区（没有待定状态）。
 
-Admins may invite users for both cases at the same time.
+管理员可以同时邀请上述两种情况的用户。
 
-#### Configuration
+#### 配置
 
 <CodeGroup>
 
@@ -32,37 +32,35 @@ config:
 ```
 
 ```bash Docker
-# In your .env file
+# 在您的 .env 文件中
 WORKSPACE_SCOPE_ORG_INVITES_ENABLED="true"
 ```
 
 </CodeGroup>
 
-### SSO New Member Login Flow
+### SSO 新成员登录流程
 
-As of helm **v0.11.10**, self-hosted deployments using OAuth SSO will no longer need to manually add members in LangSmith settings for them to join. Deployments will have a <b>default</b> organization, to which new users will automatically be added upon their first login to LangSmith.
+从 Helm **v0.11.10** 版本开始，使用 OAuth SSO 的自托管部署不再需要在 LangSmith 设置中手动添加成员以便他们加入。部署将拥有一个**默认**组织，新用户在首次登录 LangSmith 时将自动添加到该组织。
 
-For your **default** organization, you can set which workspace(s) and workspace role is assigned to new members. For **non-default** organizations, the invitation flow remains the same.
-Once a user joins an organization, any changes to their workspaces or roles beyond the default organization settings must be managed either through LangSmith settings (as before) or via SCIM.
+对于您的**默认**组织，您可以设置新成员被分配到哪个工作区以及分配什么工作区角色。对于**非默认**组织，邀请流程保持不变。一旦用户加入了组织，除默认组织设置之外对其工作区或角色的任何更改，必须通过 LangSmith 设置（和以前一样）或通过 SCIM 进行管理。
 <Note>
-By default, all new users are added to the organization’s initially provisioned workspace (**Workspace 1** by default) with the **Workspace Editor** role.
+默认情况下，所有新用户都将以 **工作区编辑者**（Workspace Editor）的角色添加到组织最初配置的工作区（默认情况下为 **工作区 1**）。
 </Note>
-![Update SSO Member Settings](/langsmith/images/sso-member-settings-update.png)
+![更新 SSO 成员设置](/langsmith/images/sso-member-settings-update.png)
 
 <Note>
-To change your default organization, use **Set Default Organization** in the organization selector dropdown. (Org Admin permissions required in both the source and target organization.)
+要更改您的默认组织，请使用组织选择器下拉菜单中的 **设置默认组织**（Set Default Organization）。（在源组织和目标组织中都需要组织管理员权限。）
 </Note>
 
 
-### Disabling Organization Creating
+### 禁止创建组织
 
-By default, any user can create an organization in LangSmith. For self-hosted customers, an admin may want to restrict this ability after setting up initial organizations. This feature flag allows an admin to disable the ability for users to create new organizations.
+默认情况下，任何用户都可以在 LangSmith 中创建组织。对于自托管客户，在设置初始组织后，管理员可能希望限制此功能。此功能标志允许管理员禁用用户创建新组织的能力。
 
-
-#### Configuration
+#### 配置
 
 <Note>
-The `userOrgCreationDisabled` feature flag is set to `true` by default for organizations using [basic auth](/langsmith/self-host-basic-auth) or [SSO](/langsmith/self-host-sso).
+对于使用 [基本身份验证](/langsmith/self-host-basic-auth) 或 [SSO](/langsmith/self-host-sso) 的组织，`userOrgCreationDisabled` 功能标志默认设置为 `true`。
 </Note>
 <CodeGroup>
 
@@ -72,20 +70,20 @@ config:
 ```
 
 ```bash Docker
-# In your .env file
+# 在您的 .env 文件中
 FF_ORG_CREATION_DISABLED="true"
 ```
 
 </CodeGroup>
 
-### Disabling Personal Organizations
+### 禁止创建个人组织
 
-By default, any user who logs in to LangSmith will have a personal organization created for them. For self-hosted customers, an admin may want to restrict this ability. This feature flag allows an admin to disable the ability for users to create personal organizations.
+默认情况下，任何登录 LangSmith 的用户都会为其创建一个个人组织。对于自托管客户，管理员可能希望限制此能力。此功能标志允许管理员禁用用户创建个人组织的能力。
 
-#### Configuration
+#### 配置
 
 <Note>
-The `personalOrgsDisabled` feature flag is set to `true` by default for organizations using [basic auth](/langsmith/self-host-basic-auth) or [SSO](/langsmith/self-host-sso).
+对于使用 [基本身份验证](/langsmith/self-host-basic-auth) 或 [SSO](/langsmith/self-host-sso) 的组织，`personalOrgsDisabled` 功能标志默认设置为 `true`。
 </Note>
 
 <CodeGroup>
@@ -96,7 +94,7 @@ config:
 ```
 
 ```bash Docker
-# In your .env file
+# 在您的 .env 文件中
 PERSONAL_ORGS_DISABLED="true"
 ```
 

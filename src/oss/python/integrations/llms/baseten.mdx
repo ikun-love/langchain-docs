@@ -2,33 +2,33 @@
 title: Baseten
 ---
 
-[Baseten](https://baseten.co) is a [Provider](/oss/integrations/providers/baseten) in the LangChain ecosystem that implements the LLMs component.
+[Baseten](https://baseten.co) 是 LangChain 生态系统中的一个 [Provider](/oss/integrations/providers/baseten)，它实现了 LLMs（大语言模型）组件功能。
 
-This example demonstrates using an LLM — Mistral 7B hosted on Baseten — with LangChain.
+本示例演示了如何在 LangChain 中使用托管在 Baseten 上的 LLM——Mistral 7B。
 
-# Setup
+# 设置
 
-To run this example, you'll need:
+要运行此示例，您需要：
 
-* A [Baseten account](https://baseten.co)
-* An [API key](https://docs.baseten.co/observability/api-keys)
+* 一个 [Baseten 账户](https://baseten.co)
+* 一个 [API 密钥](https://docs.baseten.co/observability/api-keys)
 
-Export your API key to your as an environment variable called `BASETEN_API_KEY`.
+将您的 API 密钥导出为名为 `BASETEN_API_KEY` 的环境变量。
 
 ```sh
 export BASETEN_API_KEY="paste_your_api_key_here"
 ```
 
-# Single model call
+# 单模型调用
 
-First, you'll need to deploy a model to Baseten.
+首先，您需要将模型部署到 Baseten。
 
-You can deploy foundation models like Mistral and Llama 2 with one click from the [Baseten model library](https://app.baseten.co/explore/) or if you have your own model, [deploy it with Truss](https://truss.baseten.co/welcome).
+您可以从 [Baseten 模型库](https://app.baseten.co/explore/) 一键部署 Mistral 和 Llama 2 等基础模型，或者如果您有自己的模型，可以 [使用 Truss 部署它](https://truss.baseten.co/welcome)。
 
-In this example, we'll work with Mistral 7B. [Deploy Mistral 7B here](https://app.baseten.co/explore/mistral_7b_instruct) and follow along with the deployed model's ID, found in the model dashboard.
+在本例中，我们将使用 Mistral 7B。[在此处部署 Mistral 7B](https://app.baseten.co/explore/mistral_7b_instruct)，并按照已部署模型的 ID（可在模型仪表板中找到）同步操作。
 
 ```python
-##Installing the langchain packages needed to use the integration
+## 安装使用集成所需的 langchain 包
 pip install -qU langchain-community
 ```
 
@@ -37,33 +37,33 @@ from langchain_community.llms import Baseten
 ```
 
 ```python
-# Load the model
+# 加载模型
 mistral = Baseten(model="MODEL_ID", deployment="production")
 ```
 
 ```python
-# Prompt the model
+# 提示模型
 mistral("What is the Mistral wind?")
 ```
 
-# Chained model calls
+# 链式模型调用
 
-We can chain together multiple calls to one or multiple models, which is the whole point of LangChain!
+我们可以将对一个或多个模型的多次调用链接起来，这正是 LangChain 的核心优势所在！
 
-For example, we can replace GPT with Mistral in this demo of terminal emulation.
+例如，我们可以用 Mistral 替换 GPT 在这个终端模拟的演示中。
 
 ```python
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 
-template = """Assistant is a large language model trained by OpenAI.
+template = """Assistant 是一个由 OpenAI 训练的大型语言模型。
 
-Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
+Assistant 旨在协助完成各种任务，从回答简单问题到提供深入的解释和讨论各种主题。作为一个语言模型，Assistant 能够根据接收到的输入生成类似人类的文本，使其能够进行听起来自然的对话，并提供与当前主题连贯且相关的回复。
 
-Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
+Assistant 正在不断学习和改进，其能力也在不断发展。它能够处理和理解大量文本，并利用这些知识对各种问题提供准确和信息丰富的回答。此外，Assistant 能够根据接收到的输入生成自己的文本，使其能够就各种主题进行讨论并提供解释和描述。
 
-Overall, Assistant is a powerful tool that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist.
+总而言之，Assistant 是一个强大的工具，可以帮助完成各种任务，并在广泛的主题上提供有价值的见解和信息。无论您是需要解决特定问题，还是只想就某个主题进行对话，Assistant 都会在此为您提供帮助。
 
 {history}
 Human: {human_input}
@@ -103,4 +103,4 @@ output = chatgpt_chain.predict(
 print(output)
 ```
 
-As we can see from the final example, which outputs a number that may or may not be correct, the model is only approximating likely terminal output, not actually executing provided commands. Still, the example demonstrates Mistral's ample context window, code generation capabilities, and ability to stay on-topic even in conversational sequences.
+从最后一个示例可以看出，该输出可能是一个数字（结果不一定正确），模型只是在近似预期的终端输出，而不是真正执行提供的命令。尽管如此，该示例还是展示了 Mistral 充足的上下文窗口、代码生成能力，以及在对话序列中保持主题一致性的能力。

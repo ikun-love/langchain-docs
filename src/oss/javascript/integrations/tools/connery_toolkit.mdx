@@ -1,5 +1,5 @@
 ---
-title: Connery Toolkit
+title: Connery 工具包
 ---
 
 ```typescript
@@ -8,21 +8,21 @@ import { ConneryToolkit } from "@langchain/community/agents/toolkits/connery";
 import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
 
-// Specify your Connery Runner credentials.
+// 指定您的 Connery Runner 凭据。
 process.env.CONNERY_RUNNER_URL = "";
 process.env.CONNERY_RUNNER_API_KEY = "";
 
-// Specify OpenAI API key.
+// 指定 OpenAI API 密钥。
 process.env.OPENAI_API_KEY = "";
 
-// Specify your email address to receive the emails from examples below.
+// 指定您的电子邮件地址，以便接收下面示例中发送的邮件。
 const recepientEmail = "test@example.com";
 
-// Create a Connery Toolkit with all the available actions from the Connery Runner.
+// 使用 Connery Runner 中所有可用操作创建一个 Connery 工具包（Toolkit）。
 const conneryService = new ConneryService();
 const conneryToolkit = await ConneryToolkit.createInstance(conneryService);
 
-// Use OpenAI Functions agent to execute the prompt using actions from the Connery Toolkit.
+// 使用 OpenAI Functions 代理来执行提示，使用 Connery 工具包中的操作。
 const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const agent = await initializeAgentExecutorWithOptions(
   conneryToolkit.tools,
@@ -34,12 +34,12 @@ const agent = await initializeAgentExecutorWithOptions(
 );
 const result = await agent.invoke({
   input:
-    `Make a short summary of the webpage http://www.paulgraham.com/vb.html in three sentences ` +
-    `and send it to ${recepientEmail}. Include the link to the webpage into the body of the email.`,
+    `用三句话总结网页 http://www.paulgraham.com/vb.html 的内容，` +
+    `并将摘要发送到 ${recepientEmail}。请在邮件正文中包含该网页的链接。`,
 });
 console.log(result.output);
 ```
 
 <Info>
-Connery Action is a structured tool, so you can only use it in the agents supporting structured tools.
+Connery Action 是一种结构化工具，因此您只能在支持结构化工具的智能体（Agent）中使用它。
 </Info>

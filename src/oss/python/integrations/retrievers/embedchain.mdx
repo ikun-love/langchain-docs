@@ -2,30 +2,30 @@
 title: Embedchain
 ---
 
->[Embedchain](https://github.com/embedchain/embedchain) is a RAG framework to create data pipelines. It loads, indexes, retrieves and syncs all the data.
+> [Embedchain](https://github.com/embedchain/embedchain) 是一个 RAG（检索增强生成）框架，用于创建数据管道。它负责加载、索引、检索和同步所有数据。
 >
->It is available as an [open source package](https://github.com/embedchain/embedchain) and as a [hosted platform solution](https://app.embedchain.ai/).
+> 它提供了一个[开源包](https://github.com/embedchain/embedchain)以及一个[托管平台解决方案](https://app.embedchain.ai/)。
 
-This notebook shows how to use a retriever that uses `Embedchain`.
+本 Notebook 演示了如何使用一个利用 `Embedchain` 的检索器（Retriever）。
 
-# Installation
+# 安装
 
-First you will need to install the [`embedchain` package](https://pypi.org/project/embedchain/).
+首先，您需要安装 [`embedchain` 包](https://pypi.org/project/embedchain/)。
 
-You can install the package by running
+您可以通过运行以下命令来安装该包：
 
 ```python
 pip install -qU  embedchain
 ```
 
-# Create New Retriever
+# 创建新的检索器
 
-`EmbedchainRetriever` has a static `.create()` factory method that takes the following arguments:
+`EmbedchainRetriever` 有一个静态的 `.create()` 工厂方法，它接受以下参数：
 
-* `yaml_path: string` optional -- Path to the YAML configuration file. If not provided, a default configuration is used. You can browse the [docs](https://docs.embedchain.ai/) to explore various customization options.
+* `yaml_path: string` (可选) -- YAML 配置文件路径。如果未提供，则使用默认配置。您可以浏览[文档](https://docs.embedchain.ai/)来了解各种定制选项。
 
 ```python
-# Setup API Key
+# 设置 API 密钥
 
 import os
 from getpass import getpass
@@ -41,18 +41,18 @@ if "OPENAI_API_KEY" not in os.environ:
 ```python
 from langchain_community.retrievers import EmbedchainRetriever
 
-# create a retriever with default options
+# 使用默认选项创建一个检索器
 retriever = EmbedchainRetriever.create()
 
-# or if you want to customize, pass the yaml config path
+# 如果您想进行定制，可以传入 YAML 配置文件路径
 # retriever = EmbedchainRetiever.create(yaml_path="config.yaml")
 ```
 
-# Add Data
+# 添加数据
 
-In embedchain, you can as many supported data types as possible. You can browse our [docs](https://docs.embedchain.ai/) to see the data types supported.
+在 Embedchain 中，您可以添加任意数量的支持数据类型。您可以浏览我们的[文档](https://docs.embedchain.ai/)以查看支持的数据类型。
 
-Embedchain automatically deduces the types of the data. So you can add a string, URL or local file path.
+Embedchain 会自动推断数据的类型。因此，您可以添加字符串、URL 或本地文件路径。
 
 ```python
 retriever.add_texts(
@@ -89,9 +89,9 @@ Successfully saved https://www.youtube.com/watch?v=RcYjXbSJBN8 (DataType.YOUTUBE
  'da3227cdbcedb018e05c47b774d625f6']
 ```
 
-# Use Retriever
+# 使用检索器
 
-You can now use the retrieve to find relevant documents given a query
+您现在可以使用 `invoke` 方法根据查询来查找相关的文档：
 
 ```python
 result = retriever.invoke("How many companies does Elon Musk run and name those?")

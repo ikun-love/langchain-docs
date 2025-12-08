@@ -1,15 +1,16 @@
+```markdown
 ---
-title: Auth-aware tool responses
-description: Format tool responses to trigger OAuth flows and resume execution automatically.
-sidebarTitle: Auth responses
+title: 具备认证意识的工具响应
+description: 格式化工具响应，以触发 OAuth 流程并自动恢复执行。
+sidebarTitle: 认证响应
 mode: wide
 ---
 
-Some [tools](/langsmith/agent-builder-tools) require user authorization (for example, Google, Slack, GitHub). Agent Builder includes middleware to detect when a tool needs authorization and to pause the run with a clear prompt to the user. After the user completes auth, the same tool call is retried automatically.
+某些 [工具](/langsmith/agent-builder-tools) 需要用户授权（例如 Google、Slack、GitHub）。Agent Builder 包含中间件，用于检测何时需要对工具进行授权，并以清晰的提示暂停运行，引导用户完成操作。用户完成授权后，系统会自动重试相同的工具调用。
 
-## Return shape to request auth
+## 请求授权的返回结构
 
-If a tool detects missing authorization, return a JSON string containing the following fields:
+如果工具检测到缺少授权，应返回一个包含以下字段的 JSON 字符串：
 
 ```json
 {
@@ -19,14 +20,15 @@ If a tool detects missing authorization, return a JSON string containing the fol
 }
 ```
 
-- `auth_required`: set to `true` to signal an interrupt is needed.
-- `auth_url`: where the user should be redirected to authorize.
-- `auth_id`: optional correlation ID to track the auth session.
+- `auth_required`: 设置为 `true` 以信号指示需要中断。
+- `auth_url`: 用户应被重定向到的授权地址。
+- `auth_id`: 用于跟踪授权会话的可选关联 ID。
 
-When Agent Builder detects this response, it interrupts the run, displays the authentication UI to the user, and automatically retries the tool call once authorization completes.
+当 Agent Builder 检测到此响应时，它会中断运行，向用户显示身份验证 UI，并在授权完成后自动重试该工具调用。
 
-If you want your custom tools to reuse the same authentication required interrupt + UI, ensure your tools return the same shape of JSON.
+如果您希望自定义工具重用相同的“需要授权”的中断和 UI，请确保您的工具返回相同形状的 JSON。
 
 <Note>
-Return only this JSON as the tool's output. Avoid including additional text or content. Agent Builder parses the response to trigger the authentication flow.
+仅将此 JSON 作为工具的输出返回。避免包含任何额外的文本或内容。Agent Builder 会解析此响应以触发身份验证流程。
 </Note>
+```

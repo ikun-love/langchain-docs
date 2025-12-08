@@ -1,14 +1,14 @@
 ---
-title: Doctran extract properties
+title: Doctran 提取属性
 ---
 
-We can extract useful features of documents using the [Doctran](https://github.com/psychic-api/doctran) library, which uses OpenAI's function calling feature to extract specific metadata.
+我们可以使用 [Doctran](https://github.com/psychic-api/doctran) 库来提取文档中有用的特征。该库利用 OpenAI 的函数调用功能来提取特定的元数据。
 
-Extracting metadata from documents is helpful for a variety of tasks, including:
+从文档中提取元数据对于各种任务都很有帮助，包括：
 
-* **Classification:** classifying documents into different categories
-* **Data mining:** Extract structured data that can be used for data analysis
-* **Style transfer:** Change the way text is written to more closely match expected user input, improving vector search results
+* **分类 (Classification):** 将文档分类到不同的类别中。
+* **数据挖掘 (Data mining):** 提取可用于数据分析的结构化数据。
+* **风格迁移 (Style transfer):** 改变文本的撰写方式，使其更符合预期的用户输入，从而提高向量搜索结果的质量。
 
 ```python
 pip install -qU  doctran
@@ -31,9 +31,9 @@ load_dotenv()
 True
 ```
 
-## Input
+## 输入 (Input)
 
-This is the document we'll extract properties from.
+我们将从以下文档中提取属性。
 
 ```python
 sample_text = """[Generated with ChatGPT]
@@ -142,9 +142,9 @@ properties = [
 property_extractor = DoctranPropertyExtractor(properties=properties)
 ```
 
-## Output
+## 输出 (Output)
 
-After extracting properties from a document, the result will be returned as a new document with properties provided in the metadata
+从文档中提取属性后，结果将作为一个新文档返回，其中属性信息包含在 `metadata` 中。
 
 ```python
 extracted_document = property_extractor.transform_documents(
@@ -167,7 +167,7 @@ print(json.dumps(extracted_document[0].metadata, indent=2))
       "Sarah Thompson",
       "David Rodriguez"
     ],
-    "eli5": "This email provides important updates and discussions on various topics. It mentions the implementation of security and privacy measures, HR updates and employee benefits, marketing initiatives and campaigns, and research and development projects. It recognizes the contributions of John Doe, Jane Smith, Michael Johnson, Sarah Thompson, and David Rodriguez. It also reminds everyone to adhere to data protection policies, enroll in the employee benefits program, attend the upcoming product launch event, and share ideas for new projects during the R&D brainstorming session."
+    "eli5": "这个电子邮件提供了关于各种主题的重要更新和讨论。它提到了安全和隐私措施的实施、人力资源更新和员工福利、营销活动以及研发项目。邮件中提到了 John Doe、Jane Smith、Michael Johnson、Sarah Thompson 和 David Rodriguez 的贡献。它还提醒大家遵守数据保护政策、参与员工福利的开放注册期、参加即将举行的产品发布会，并在研发头脑风暴会议期间分享新项目的想法。"
   }
 }
 ```

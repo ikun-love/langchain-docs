@@ -2,21 +2,21 @@
 title: FireworksEmbeddings
 ---
 
-This will help you get started with Fireworks embedding models using LangChain. For detailed documentation on `FireworksEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html).
+本文将帮助您开始使用 LangChain 中的 Fireworks 嵌入模型。有关 `FireworksEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
 <ItemTable category="text_embedding" item="Fireworks" />
 
-## Setup
+## 设置
 
-To access Fireworks embedding models you'll need to create a Fireworks account, get an API key, and install the `langchain-fireworks` integration package.
+要访问 Fireworks 嵌入模型，您需要创建一个 Fireworks 账户，获取 API 密钥，并安装 `langchain-fireworks` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to [fireworks.ai](https://fireworks.ai/) to sign up to Fireworks and generate an API key. Once you’ve done this set the FIREWORKS_API_KEY environment variable:
+请访问 [fireworks.ai](https://fireworks.ai/) 注册 Fireworks 账户并生成 API 密钥。完成此操作后，设置 `FIREWORKS_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -26,24 +26,24 @@ if not os.getenv("FIREWORKS_API_KEY"):
     os.environ["FIREWORKS_API_KEY"] = getpass.getpass("Enter your Fireworks API key: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### Installation
+### 安装
 
-The LangChain Fireworks integration lives in the `langchain-fireworks` package:
+LangChain Fireworks 集成位于 `langchain-fireworks` 包中：
 
 ```python
 pip install -qU langchain-fireworks
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```python
 from langchain_fireworks import FireworksEmbeddings
@@ -53,14 +53,14 @@ embeddings = FireworksEmbeddings(
 )
 ```
 
-## Indexing and Retrieval
+## 索引和检索
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our [RAG tutorials](/oss/langchain/rag).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document in the `InMemoryVectorStore`.
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在这个例子中，我们将使用 `InMemoryVectorStore` 对示例文档进行索引和检索。
 
 ```python
-# Create a vector store with a sample text
+# 使用示例文本创建一个向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
 text = "LangChain is the framework for building context-aware reasoning applications"
@@ -70,13 +70,13 @@ vectorstore = InMemoryVectorStore.from_texts(
     embedding=embeddings,
 )
 
-# Use the vectorstore as a retriever
+# 将向量存储用作检索器
 retriever = vectorstore.as_retriever()
 
-# Retrieve the most similar text
+# 检索最相似的文本
 retrieved_documents = retriever.invoke("What is LangChain?")
 
-# show the retrieved document's content
+# 显示检索到的文档的内容
 retrieved_documents[0].page_content
 ```
 
@@ -84,28 +84,28 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## Direct Usage
+## 直接使用
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embed_documents(...)` and `embeddings.embed_query(...)` to create embeddings for the text(s) used in `from_texts` and retrieval `invoke` operations, respectively.
+在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 中的文本和检索 `invoke` 操作中的文本创建嵌入向量。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取供您自己使用的嵌入向量。
 
-### Embed single texts
+### 嵌入单个文本
 
-You can embed single texts or documents with `embed_query`:
+您可以使用 `embed_query` 嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
-print(str(single_vector)[:100])  # Show the first 100 characters of the vector
+print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
 [0.01666259765625, 0.011688232421875, -0.1181640625, -0.10205078125, 0.05438232421875, -0.0890502929
 ```
 
-### Embed multiple texts
+### 嵌入多个文本
 
-You can embed multiple texts with `embed_documents`:
+您可以使用 `embed_documents` 嵌入多个文本：
 
 ```python
 text2 = (
@@ -113,7 +113,7 @@ text2 = (
 )
 two_vectors = embeddings.embed_documents([text, text2])
 for vector in two_vectors:
-    print(str(vector)[:100])  # Show the first 100 characters of the vector
+    print(str(vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
@@ -123,6 +123,6 @@ for vector in two_vectors:
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `FireworksEmbeddings` features and configurations head to the [API reference](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html).
+有关所有 `FireworksEmbeddings` 功能和配置的详细文档，请转到 [API 参考](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html)。

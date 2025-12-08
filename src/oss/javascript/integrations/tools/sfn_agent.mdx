@@ -1,34 +1,35 @@
+```markdown
 ---
-title: AWS Step Functions Toolkit
+title: AWS Step Functions 工具包
 ---
 
-**AWS Step Functions** are a visual workflow service that helps developers use AWS services to build distributed applications, automate processes, orchestrate microservices, and create data and machine learning (ML) pipelines.
+**AWS Step Functions** 是一种可视化工作流服务，可帮助开发者使用 AWS 服务来构建分布式应用程序、自动化流程、编排微服务以及创建数据和机器学习（ML）管道。
 
-By including a `AWSSfn` tool in the list of tools provided to an Agent, you can grant your Agent the ability to invoke async workflows running in your AWS Cloud.
+通过在提供给 Agent 的工具列表中包含一个 `AWSSfn` 工具，您可以授予 Agent 调用在 AWS 云中运行的异步工作流的能力。
 
-When an Agent uses the `AWSSfn` tool, it will provide an argument of type `string` which will in turn be passed into one of the supported actions this tool supports. The supported actions are: `StartExecution`, `DescribeExecution`, and `SendTaskSuccess`.
+当 Agent 使用 `AWSSfn` 工具时，它将提供一个类型为 `string` 的参数，该参数随后将被传递给此工具支持的某个支持的操作之一。支持的操作包括：`StartExecution`、`DescribeExecution` 和 `SendTaskSuccess`。
 
-## Setup
+## 设置 (Setup)
 
-You'll need to install the Node AWS Step Functions SDK:
+您需要安装 Node AWS Step Functions SDK：
 
 ```bash npm
 npm install @aws-sdk/client-sfn
 ```
-## Usage
+## 用法 (Usage)
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/openai @langchain/community @langchain/core
 ```
 
-### Note about credentials:
+### 关于凭证的注意事项 (Note about credentials):
 
-- If you have not run [`aws configure`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) via the AWS CLI, the `region`, `accessKeyId`, and `secretAccessKey` must be provided to the AWSSfn constructor.
-- The IAM role corresponding to those credentials must have permission to invoke the Step Function.
+- 如果您没有通过 AWS CLI 运行 [`aws configure`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)，则必须向 `AWSSfn` 构造函数提供 `region`、`accessKeyId` 和 `secretAccessKey`。
+- 对应这些凭证的 IAM 角色必须具有调用 Step Function 的权限。
 
 ```typescript
 import { OpenAI } from "@langchain/openai";
@@ -51,18 +52,17 @@ const _EXAMPLE_STATE_MACHINE_ASL = `
 }`;
 
 /**
- * This example uses a deployed AWS Step Function state machine with the above Amazon State Language (ASL) definition.
- * You can test by provisioning a state machine using the above ASL within your AWS environment, or you can use a tool like LocalStack
- * to mock AWS services locally. See https://localstack.cloud/ for more information.
+ * 此示例使用具有上述 Amazon State Language (ASL) 定义的已部署 AWS Step Function 状态机。
+ * 您可以通过在 AWS 环境中使用上述 ASL 配置状态机来测试，或者可以使用 LocalStack 等工具在本地模拟 AWS 服务。有关更多信息，请参阅 https://localstack.cloud/。
  */
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const toolkit = new AWSSfnToolkit({
     name: "onboard-new-client-workflow",
     description:
-      "Onboard new client workflow. Can also be used to get status of any excuting workflow or state machine.",
+      "新的客户端入职工作流。也可用于获取任何正在执行的工作流或状态机的状态。",
     stateMachineArn:
-      "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // Update with your state machine ARN accordingly
+      "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // 请相应地更新为您的状态机 ARN
     region: "<your Sfn's region>",
     accessKeyId: "<your access key id>",
     secretAccessKey: "<your secret access key>",
@@ -71,18 +71,19 @@ export const run = async () => {
 
   const input = `Onboard john doe (john@example.com) as a new client.`;
 
-  console.log(`Executing with input "${input}"...`);
+  console.log(`正在使用输入 "${input}" 执行...`);
 
   const result = await executor.invoke({ input });
 
-  console.log(`Got output ${result.output}`);
+  console.log(`获取到输出 ${result.output}`);
 
   console.log(
-    `Got intermediate steps ${JSON.stringify(
+    `获取到中间步骤 ${JSON.stringify(
       result.intermediateSteps,
       null,
       2
     )}`
   );
 };
+```
 ```

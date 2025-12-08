@@ -2,12 +2,12 @@
 title: Python REPL
 ---
 
-Sometimes, for complex calculations, rather than have an LLM generate the answer directly, it can be better to have the LLM generate code to calculate the answer, and then run that code to get the answer. In order to easily do that, we provide a simple Python REPL to execute commands in.
+有时，对于复杂的计算，与其让 LLM 直接生成答案，不如让 LLM 生成代码来计算答案，然后运行该代码以获得结果。为了方便做到这一点，我们提供了一个简单的 Python REPL（交互式解释器）来执行命令。
 
-This interface will only return things that are printed - therefore, if you want to use it to calculate an answer, make sure to have it print out the answer.
+此界面只会返回被 `print` 输出的内容——因此，如果你希望使用它来计算答案，请务必让它打印出最终答案。
 
 <Warning>
-**Python REPL can execute arbitrary code on the host machine (e.g., delete files, make network requests). Use with caution.**
+**Python REPL 可以执行主机上的任意代码（例如，删除文件、发起网络请求）。请谨慎使用。**
 
 </Warning>
 
@@ -33,10 +33,10 @@ Python REPL can execute arbitrary code. Use with caution.
 ```
 
 ```python
-# You can create the tool to pass to an agent
+# 你可以创建 tool 传递给 Agent
 repl_tool = Tool(
     name="python_repl",
-    description="A Python shell. Use this to execute python commands. Input should be a valid python command. If you want to see the output of a value, you should print it out with `print(...)`.",
+    description="一个 Python shell。使用此工具来执行 Python 命令。输入内容应是有效的 Python 命令。如果你想查看某个值的结果，你应该使用 `print(...)` 将其打印出来。",
     func=python_repl.run,
 )
 ```

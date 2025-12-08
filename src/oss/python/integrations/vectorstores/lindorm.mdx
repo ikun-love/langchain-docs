@@ -2,19 +2,19 @@
 title: LindormVectorStore
 ---
 
-This notebook covers how to get started with the Lindorm vector store.
+本 Notebook 将介绍如何开始使用 Lindorm 向量存储。
 
-## Setup
+## 设置 (Setup)
 
-To access Lindorm vector stores you'll need to create a Lindorm account, get the ak/sk, and install the `langchain-lindorm-integration` integration package.
+要访问 Lindorm 向量存储，您需要创建一个 Lindorm 账户，获取 `ak/sk`（Access Key / Secret Key），并安装 `langchain-lindorm-integration` 集成包。
 
 ```python
 pip install -qU "langchain-lindorm-integration"
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to [here](https://help.aliyun.com/document_detail/2773369.html?spm=a2c4g.11186623.help-menu-172543.d_2_5_0.2a383f96gr5N3M&scm=20140722.H_2773369._.OR_help-T_cn~zh-V_1) to sign up to Lindorm and generate the ak/sk.
+请访问 [此处](https://help.aliyun.com/document_detail/2773369.html?spm=a2c4g.11186623.help-menu-172543.d_2_5_0.2a383f96gr5N3M&scm=20140722.H_2773369._.OR_help-T_cn~zh-V_1) 注册 Lindorm 账户并生成您的 ak/sk。
 
 ```python
 import os
@@ -27,12 +27,12 @@ class Config:
     AI_LLM_ENDPOINT = os.environ.get("AI_ENDPOINT", "<AI_ENDPOINT>")
     AI_USERNAME = os.environ.get("AI_USERNAME", "root")
     AI_PWD = os.environ.get("AI_PASSWORD", "<PASSWORD>")
-    AI_DEFAULT_EMBEDDING_MODEL = "bge_m3_model"  # set to your model
+    AI_DEFAULT_EMBEDDING_MODEL = "bge_m3_model"  # 设置为您使用的模型
 ```
 
-## Initialization
+## 初始化 (Initialization)
 
-here we use the embedding model deployed on Lindorm AI Service.
+这里我们使用部署在 Lindorm AI 服务上的嵌入模型（embedding model）。
 
 ```python
 from langchain_lindorm_integration.embeddings import LindormAIEmbeddings
@@ -58,9 +58,9 @@ vector_store = LindormVectorStore(
 )
 ```
 
-## Manage vector store
+## 管理向量存储 (Manage vector store)
 
-### Add items to vector store
+### 向向量存储添加条目 (Add items to vector store)
 
 ```python
 from langchain_core.documents import Document
@@ -80,7 +80,7 @@ vector_store.add_documents(documents=documents, ids=["1", "2", "3"])
 ['1', '2', '3']
 ```
 
-### Delete items from vector store
+### 从向量存储中删除条目 (Delete items from vector store)
 
 ```python
 vector_store.delete(ids=["3"])
@@ -101,13 +101,13 @@ vector_store.delete(ids=["3"])
  'failures': []}
 ```
 
-## Query vector store
+## 查询向量存储 (Query vector store)
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+一旦您的向量存储被创建并且相关的文档已被添加，您很可能希望在运行链（chain）或代理（agent）时对其进行查询。
 
-### Query directly
+### 直接查询 (Query directly)
 
-Performing a simple similarity search can be done as follows:
+可以按如下方式执行简单的相似性搜索：
 
 ```python
 results = vector_store.similarity_search(query="thud", k=1)
@@ -119,7 +119,7 @@ for doc in results:
 * foo [{'source': 'https://example.com'}]
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似性搜索并接收相应的分数，可以运行：
 
 ```python
 results = vector_store.similarity_search_with_score(query="thud", k=1)
@@ -131,16 +131,16 @@ for doc, score in results:
 * [SIM=0.671268] foo [{'source': 'https://example.com'}]
 ```
 
-## Usage for retrieval-augmented generation
+## 用于检索增强生成的用法 (Usage for retrieval-augmented generation)
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成（RAG）的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag)
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)
 - [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [检索文档](/oss/langchain/retrieval)
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all LindormVectorStore features and configurations head to [the API reference](https://pypi.org/project/langchain-lindorm-integration/).
+有关所有 LindormVectorStore 特性和配置的详细文档，请访问 [API 参考](https://pypi.org/project/langchain-lindorm-integration/)。

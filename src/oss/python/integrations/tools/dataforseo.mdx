@@ -2,11 +2,11 @@
 title: DataForSEO
 ---
 
->[DataForSeo](https://dataforseo.com/) provides comprehensive SEO and digital marketing data solutions via API.
->
->The `DataForSeo API` retrieves `SERP` from the most popular search engines like `Google`, `Bing`, `Yahoo`. It also allows to >get SERPs from different search engine types like `Maps`, `News`, `Events`, etc.
+>[DataForSeo](https://dataforseo.com/) 通过 API 提供全面的 SEO 和数字营销数据解决方案。
 
-This notebook demonstrates how to use the [DataForSeo API](https://dataforseo.com/apis) to obtain search engine results.
+> `DataForSeo API` 可以从最流行的搜索引擎（如 `Google`、`Bing`、`Yahoo`) 中检索 `SERP`。它还允许您从不同类型的搜索引擎（如 `Maps`、`News`、`Events` 等）获取 SERP。
+
+本示例 Notebook 演示了如何使用 [DataForSeo API](https://dataforseo.com/apis) 来获取搜索引擎结果。
 
 ```python
 pip install -qU langchain-community
@@ -16,9 +16,9 @@ pip install -qU langchain-community
 from langchain_community.utilities.dataforseo_api_search import DataForSeoAPIWrapper
 ```
 
-## Setting up the API credentials
+## 设置 API 凭证
 
-You can obtain your API credentials by registering on the `DataForSeo` website.
+您可以通过在 `DataForSeo` 网站上注册来获取您的 API 凭证。
 
 ```python
 import os
@@ -29,23 +29,23 @@ os.environ["DATAFORSEO_PASSWORD"] = "your_api_access_password"
 wrapper = DataForSeoAPIWrapper()
 ```
 
-The run method will return the first result snippet from one of the following elements: answer_box, knowledge_graph, featured_snippet, shopping, organic.
+`run` 方法将从以下元素中返回第一个结果片段：`answer_box`（答案框）、`knowledge_graph`（知识图谱）、`featured_snippet`（精选摘要）、`shopping`（购物）或 `organic`（自然搜索结果）。
 
 ```python
 wrapper.run("Weather in Los Angeles")
 ```
 
-## The Difference Between `run` and `results`
+## `run` 和 `results` 方法的区别
 
-`run` and `results` are two methods provided by the `DataForSeoAPIWrapper` class.
+`run` 和 `results` 是 `DataForSeoAPIWrapper` 类提供的两种方法。
 
-The `run` method executes the search and returns the first result snippet from the answer box, knowledge graph, featured snippet, shopping, or organic results. These elements are sorted by priority from highest to lowest.
+`run` 方法执行搜索，并从答案框、知识图谱、精选摘要、购物或自然搜索结果中返回第一个结果片段。这些元素的优先级从高到低排序。
 
-The `results` method returns a JSON response configured according to the parameters set in the wrapper. This allows for more flexibility in terms of what data you want to return from the API.
+`results` 方法返回一个根据包装器中设置的参数配置的 JSON 响应。这在返回您想要的 API 数据方面提供了更大的灵活性。
 
-## Getting Results as JSON
+## 以 JSON 格式获取结果
 
-You can customize the result types and fields you want to return in the JSON response. You can also set a maximum count for the number of top results to return.
+您可以自定义希望在 JSON 响应中返回的结果类型和字段。您还可以设置要返回的顶部结果的最大数量。
 
 ```python
 json_wrapper = DataForSeoAPIWrapper(
@@ -59,9 +59,9 @@ json_wrapper = DataForSeoAPIWrapper(
 json_wrapper.results("Bill Gates")
 ```
 
-## Customizing Location and Language
+## 自定义位置和语言
 
-You can specify the location and language of your search results by passing additional parameters to the API wrapper.
+您可以将附加参数传递给 API 包装器，以指定搜索结果的地理位置和语言。
 
 ```python
 customized_wrapper = DataForSeoAPIWrapper(
@@ -73,9 +73,9 @@ customized_wrapper = DataForSeoAPIWrapper(
 customized_wrapper.results("coffee near me")
 ```
 
-## Customizing the Search Engine
+## 自定义搜索引擎
 
-You can also specify the search engine you want to use.
+您还可以指定要使用的搜索引擎。
 
 ```python
 customized_wrapper = DataForSeoAPIWrapper(
@@ -87,9 +87,9 @@ customized_wrapper = DataForSeoAPIWrapper(
 customized_wrapper.results("coffee near me")
 ```
 
-## Customizing the Search Type
+## 自定义搜索类型
 
-The API wrapper also allows you to specify the type of search you want to perform. For example, you can perform a maps search.
+API 包装器还允许您指定要执行的搜索类型。例如，您可以执行地图搜索。
 
 ```python
 maps_search = DataForSeoAPIWrapper(
@@ -104,9 +104,9 @@ maps_search = DataForSeoAPIWrapper(
 maps_search.results("coffee near me")
 ```
 
-## Integration with LangChain Agents
+## 与 LangChain Agents 的集成
 
-You can use the `Tool` class from the `langchain.agents` module to integrate the `DataForSeoAPIWrapper` with a langchain agent. The `Tool` class encapsulates a function that the agent can call.
+您可以使用 `langchain.agents` 模块中的 `Tool` 类将 `DataForSeoAPIWrapper` 与 LangChain Agent 集成。`Tool` 类封装了 Agent 可以调用的函数。
 
 ```python
 from langchain.tools import Tool

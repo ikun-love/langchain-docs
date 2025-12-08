@@ -2,59 +2,59 @@
 title: Galaxia
 ---
 
-Galaxia is GraphRAG solution, which automates document processing, knowledge base (Graph Language Model) creation and retrieval:
+Galaxia 是一个 GraphRAG 解决方案，它自动化文档处理、知识库（图语言模型）的创建和检索过程：
 [galaxia-rag](https://smabbler.gitbook.io/smabbler/api-rag/smabblers-api-rag)
 
-To use Galaxia first upload your texts and create a Graph Language Model here: [smabbler-cloud](https://beta.cloud.smabbler.com)
+要使用 Galaxia，请先在此处上传您的文本并创建一个图语言模型（Graph Language Model）：[smabbler-cloud](https://beta.cloud.smabbler.com)
 
-After the model is built and activated, you will be able to use this integration to retrieve what you need.
+模型构建并激活后，您将能够使用此集成来检索所需信息。
 
-The module repository is located here: [github](https://github.com/rrozanski-smabbler/galaxia-langchain)
+该模块的仓库位于此处：[github](https://github.com/rrozanski-smabbler/galaxia-langchain)
 
-### Integration details
+### 集成详情
 
-| Retriever | Self-host | Cloud offering | Package |
-| :--- | :--- | :---: | :---: |
+| 检索器 | 自托管 | 云服务 | 包名 |
+| :--- | :---: | :---: | :---: |
 [Galaxia Retriever](https://github.com/rrozanski-smabbler/galaxia-langchain) | ❌ | ✅ | __langchain-galaxia-retriever__ |
 
-## Setup
+## 设置
 
-Before you can retrieve anything you need to create your Graph Language Model here: [smabbler-cloud](https://beta.cloud.smabbler.com)
+在您能够检索任何内容之前，您需要在 [smabbler-cloud](https://beta.cloud.smabbler.com) 上创建您的图语言模型。
 
-following these 3 simple steps: [rag-instruction](https://smabbler.gitbook.io/smabbler/api-rag/build-rag-model-in-3-steps)
+请遵循以下 3 个简单步骤：[rag-instruction](https://smabbler.gitbook.io/smabbler/api-rag/build-rag-model-in-3-steps)
 
-Don't forget to activate the model after building it!
+不要忘记在构建完成后**激活**模型！
 
-### Installation
+### 安装
 
-The retriever is implemented in the following package: [pypi](https://pypi.org/project/langchain-galaxia-retriever/)
+该检索器实现于以下包中：[pypi](https://pypi.org/project/langchain-galaxia-retriever/)
 
 ```python
 pip install -qU langchain-galaxia-retriever
 ```
 
-## Instantiation
+## 实例化
 
 ```python
 from langchain_galaxia_retriever.retriever import GalaxiaRetriever
 
 gr = GalaxiaRetriever(
     api_url="beta.api.smabbler.com",
-    api_key="<key>",  # you can find it here: https://beta.cloud.smabbler.com/user/account
-    knowledge_base_id="<knowledge_base_id>",  # you can find it in https://beta.cloud.smabbler.com , in the model table
+    api_key="<key>",  # 您可以在这里找到它：https://beta.cloud.smabbler.com/user/account
+    knowledge_base_id="<knowledge_base_id>",  # 您可以在 https://beta.cloud.smabbler.com 的模型表中找到它
     n_retries=10,
     wait_time=5,
 )
 ```
 
-## Usage
+## 使用方法
 
 ```python
 result = gr.invoke("<test question>")
 print(result)
 ```
 
-## Use within a chain
+## 在链中使用
 
 ```python
 # | output: false
@@ -71,11 +71,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
 prompt = ChatPromptTemplate.from_template(
-    """Answer the question based only on the context provided.
+    """仅根据所提供的上下文回答问题。
 
-Context: {context}
+上下文: {context}
 
-Question: {question}"""
+问题: {question}"""
 )
 
 
@@ -97,6 +97,6 @@ chain.invoke("<test question>")
 
 ---
 
-## API reference
+## API 参考
 
-For more information about Galaxia Retriever check its implementation on github [github](https://github.com/rrozanski-smabbler/galaxia-langchain)
+有关 Galaxia Retriever 的更多信息，请查看其在 GitHub 上的实现：[github](https://github.com/rrozanski-smabbler/galaxia-langchain)

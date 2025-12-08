@@ -2,55 +2,54 @@
 title: Momento
 ---
 
-> [Momento Cache](https://docs.momentohq.com/) is the world's first truly serverless caching service, offering instant elasticity, scale-to-zero
-> capability, and blazing-fast performance.
+> [Momento Cache](https://docs.momentohq.com/) 是全球首个完全无服务器的缓存服务，提供即时弹性、自动缩减至零（scale-to-zero）的能力以及极快的性能。
 >
-> [Momento Vector Index](https://docs.momentohq.com/vector-index) stands out as the most productive, easiest-to-use, fully serverless vector index.
+> [Momento Vector Index](https://docs.momentohq.com/vector-index) 是目前最易于使用、最高效的完全无服务器向量索引服务。
 >
-> For both services, simply grab the SDK, obtain an API key, input a few lines into your code, and you're set to go. Together, they provide a comprehensive solution for your LLM data needs.
+> 对于这两项服务，您只需获取 SDK，拿到 API 密钥，在代码中添加几行配置，即可开始使用。它们共同为您的 LLM 数据需求提供了一套全面的解决方案。
 
-This page covers how to use the [Momento](https://gomomento.com) ecosystem within LangChain.
+本页面介绍如何在 LangChain 中使用 [Momento](https://gomomento.com) 生态系统。
 
-## Installation and Setup
+## 安装与设置
 
-- Sign up for a free account [here](https://console.gomomento.com/) to get an API key
-- Install the Momento Python SDK with `pip install momento`
+- [在此处](https://console.gomomento.com/) 注册免费账户以获取 API 密钥
+- 使用 `pip install momento` 安装 Momento Python SDK
 
-## Cache
+## 缓存 (Cache)
 
-Use Momento as a serverless, distributed, low-latency cache for LLM prompts and responses. The standard cache is the primary use case for Momento users in any environment.
+将 Momento 作为无服务器、分布式、低延迟的缓存，用于存储 LLM 的提示（Prompts）和响应（Responses）。标准缓存是 Momento 用户在任何环境下的主要用例。
 
-To integrate Momento Cache into your application:
+要在您的应用中集成 Momento Cache：
 
 ```python
 from langchain.cache import MomentoCache
 ```
 
-Then, set it up with the following code:
+然后，使用以下代码进行设置：
 
 ```python
 from datetime import timedelta
 from momento import CacheClient, Configurations, CredentialProvider
 from langchain.globals import set_llm_cache
 
-# Instantiate the Momento client
+# 实例化 Momento 客户端
 cache_client = CacheClient(
     Configurations.Laptop.v1(),
     CredentialProvider.from_environment_variable("MOMENTO_API_KEY"),
     default_ttl=timedelta(days=1))
 
-# Choose a Momento cache name of your choice
+# 选择您自己定义的 Momento 缓存名称
 cache_name = "langchain"
 
-# Instantiate the LLM cache
+# 实例化 LLM 缓存
 set_llm_cache(MomentoCache(cache_client, cache_name))
 ```
 
-## Vector Store
+## 向量存储 (Vector Store)
 
-Momento Vector Index (MVI) can be used as a vector store.
+Momento Vector Index (MVI) 可用作向量存储。
 
-See [this notebook](/oss/integrations/vectorstores/momento_vector_index) for a walkthrough of how to use MVI as a vector store.
+请参阅[此 Notebook](/oss/integrations/vectorstores/momento_vector_index) 了解如何将 MVI 用作向量存储的详细演练。
 
 ```python
 from langchain_community.vectorstores import MomentoVectorIndex

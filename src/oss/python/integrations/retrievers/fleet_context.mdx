@@ -1,15 +1,15 @@
 ---
-title: Fleet AI Context
+title: Fleet AI 上下文
 ---
 
->[Fleet AI Context](https://www.fleet.so/context) is a dataset of high-quality embeddings of the top 1200 most popular & permissive Python Libraries & their documentation.
->
->The `Fleet AI` team is on a mission to embed the world's most important data. They've started by embedding the top 1200 Python libraries to enable code generation with up-to-date knowledge.
+>[Fleet AI Context](https://www.fleet.so/context) 是一个高质量嵌入式数据集，包含了最受欢迎且具有宽松许可的 1200 个 Python 库及其文档的嵌入向量。
 
-Let's take a look at how we can use these embeddings to power a docs retrieval system and ultimately a simple code-generating chain!
+`Fleet AI` 团队的使命是嵌入世界上最重要的数据。他们从嵌入排名前 1200 的 Python 库开始，旨在实现使用最新知识的代码生成。
+
+让我们看看如何利用这些嵌入来构建一个文档检索系统，并最终构建一个简单的代码生成链！
 
 ```python
-pip install -qU  langchain fleet-context langchain-openai pandas faiss-cpu # faiss-gpu for CUDA supported GPU
+pip install -qU  langchain fleet-context langchain-openai pandas faiss-cpu # 如果支持 CUDA GPU，请使用 faiss-gpu
 ```
 
 ```python
@@ -48,8 +48,8 @@ def _populate_vectorstore(
 ) -> VectorStore:
     if not hasattr(vectorstore_cls, "from_embeddings"):
         raise ValueError(
-            f"Incompatible vector store class {vectorstore_cls}."
-            "Must implement `from_embeddings` class method."
+            f"不兼容的向量存储类 {vectorstore_cls}。"
+            "必须实现 `from_embeddings` 类方法。"
         )
     texts_embeddings = []
     metadatas = []
@@ -81,11 +81,11 @@ def _populate_docstore(df: pd.DataFrame, docstore: BaseStore) -> None:
     docstore.mset(((d.metadata["id"], d) for d in parent_docs))
 ```
 
-## Retriever chunks
+## 检索块 (Retriever chunks)
 
-As part of their embedding process, the Fleet AI team first chunked long documents before embedding them. This means the vectors correspond to sections of pages in the LangChain docs, not entire pages. By default, when we spin up a retriever from these embeddings, we'll be retrieving these embedded chunks.
+在嵌入过程中，Fleet AI 团队首先对长文档进行了分块处理，然后再计算嵌入向量。这意味着这些向量对应于 LangChain 文档中页面的不同部分，而不是整个页面。默认情况下，当我们从这些嵌入向量启动检索器时，检索到的将是这些嵌入的块。
 
-We will be using Fleet Context's `download_embeddings()` to grab LangChain's documentation embeddings. You can view all supported libraries' documentation at [fleet.so/context](https://fleet.so/context).
+我们将使用 Fleet Context 的 `download_embeddings()` 来获取 LangChain 的文档嵌入向量。您可以在 [fleet.so/context](https://fleet.so/context) 查看所有支持的库的文档。
 
 ```python
 from context import download_embeddings
@@ -95,16 +95,16 @@ vecstore_retriever = load_fleet_retriever(df)
 ```
 
 ```python
-vecstore_retriever.invoke("How does the multi vector retriever work")
+vecstore_retriever.invoke("多向量检索器是如何工作的")
 ```
 
-## Other packages
+## 其他包
 
-You can download and use other embeddings from [this Dropbox link](https://www.dropbox.com/scl/fo/54t2e7fogtixo58pnlyub/h?rlkey=tne16wkssgf01jor0p1iqg6p9&dl=0).
+您可以从 [此 Dropbox 链接](https://www.dropbox.com/scl/fo/54t2e7fogtixo58pnlyub/h?rlkey=tne16wkssgf01jor0p1iqg6p9&dl=0) 下载并使用其他嵌入数据。
 
-## Retrieve parent docs
+## 检索父文档 (Retrieve parent docs)
 
-The embeddings provided by Fleet AI contain metadata that indicates which embedding chunks correspond to the same original document page. If we'd like we can use this information to retrieve whole parent documents, and not just embedded chunks. Under the hood, we'll use a MultiVectorRetriever and a BaseStore object to search for relevant chunks and then map them to their parent document.
+Fleet AI 提供的嵌入向量包含元数据，这些元数据指示了哪些嵌入块对应于同一原始文档页面。如果我们希望检索整个父文档而不是单独的嵌入块，我们可以利用此信息。在底层，我们将使用 `MultiVectorRetriever` 和 `BaseStore` 对象来搜索相关的块，然后将它们映射到对应的父文档。
 
 ```python
 from langchain.storage import InMemoryStore
@@ -116,12 +116,12 @@ parent_retriever = load_fleet_retriever(
 ```
 
 ```python
-parent_retriever.invoke("How does the multi vector retriever work")
+parent_retriever.invoke("多向量检索器是如何工作的")
 ```
 
-## Putting it in a chain
+## 整合到链中 (Putting it in a chain)
 
-Let's try using our retrieval systems in a simple chain!
+让我们尝试在简单链中使用我们的检索系统！
 
 ```python
 from langchain_core.output_parsers import StrOutputParser
@@ -133,14 +133,10 @@ prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            """You are a great software engineer who is very familiar \
-with Python. Given a user question or request about a new Python library called LangChain and \
-parts of the LangChain documentation, answer the question or generate the requested code. \
-Your answers must be accurate, should include code whenever possible, and should assume anything \
-about LangChain which is note explicitly stated in the LangChain documentation. If the required \
-information is not available, just say so.
+            """你是一位非常熟悉 Python 的优秀软件工程师。根据用户关于新 Python 库 LangChain 以及 LangChain 文档部分的问题或请求，请回答问题或生成所需的代码。 
+你的答案必须准确，应尽可能包含代码，并且应假设未在 LangChain 文档中明确说明的任何关于 LangChain 的信息。如果所需信息不可用，请直接说明。
 
-LangChain Documentation
+LangChain 文档
 ------------------
 
 {context}""",
@@ -165,7 +161,7 @@ chain = (
 
 ```python
 for chunk in chain.invoke(
-    "How do I create a FAISS vector store retriever that returns 10 documents per search query"
+    "我如何创建一个 FAISS 向量存储检索器，使其每次查询返回 10 个文档"
 ):
     print(chunk, end="", flush=True)
 ```

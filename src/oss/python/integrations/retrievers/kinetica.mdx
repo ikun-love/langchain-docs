@@ -1,22 +1,22 @@
 ---
-title: Kinetica Vectorstore based Retriever
+title: 基于 Kinetica 向量存储的检索器
 ---
 
->[Kinetica](https://www.kinetica.com/) is a database with integrated support for vector similarity search
+>[Kinetica](https://www.kinetica.com/) 是一个内置集成向量相似性搜索功能的数据库。
 
-It supports:
+它支持：
 
-- exact and approximate nearest neighbor search
-- L2 distance, inner product, and cosine distance
+- 精确（exact）和近似（approximate）最近邻搜索
+- L2 距离、内积（inner product）和余弦距离（cosine distance）
 
-This notebook shows how to use a retriever based on Kinetica vector store (`Kinetica`).
+本 Jupyter Notebook 演示了如何使用基于 Kinetica 向量存储的检索器（`Kinetica`）。
 
 ```python
-# Please ensure that this connector is installed in your working environment.
+# 请确保您的工作环境中已安装此连接器
 pip install gpudb==7.2.0.9
 ```
 
-We want to use `OpenAIEmbeddings` so we have to get the OpenAI API Key.
+由于我们想使用 `OpenAIEmbeddings`，因此需要获取 OpenAI API 密钥。
 
 ```python
 import getpass
@@ -27,7 +27,7 @@ if "OPENAI_API_KEY" not in os.environ:
 ```
 
 ```python
-## Loading environment variables
+## 加载环境变量
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,8 +45,8 @@ from langchain_text_splitters import CharacterTextSplitter
 ```
 
 ```python
-# Kinetica needs the connection to the database.
-# This is how to set it up.
+# Kinetica 需要连接到数据库。
+# 以下是设置连接的方式。
 HOST = os.getenv("KINETICA_HOST", "http://127.0.0.1:9191")
 USERNAME = os.getenv("KINETICA_USERNAME", "")
 PASSWORD = os.getenv("KINETICA_PASSWORD", "")
@@ -57,7 +57,7 @@ def create_config() -> KineticaSettings:
     return KineticaSettings(host=HOST, username=USERNAME, password=PASSWORD)
 ```
 
-## Create Retriever from vector store
+## 从向量存储创建检索器
 
 ```python
 loader = TextLoader("../../how_to/state_of_the_union.txt")
@@ -67,8 +67,8 @@ docs = text_splitter.split_documents(documents)
 
 embeddings = OpenAIEmbeddings()
 
-# The Kinetica Module will try to create a table with the name of the collection.
-# So, make sure that the collection name is unique and the user has the permission to create a table.
+# Kinetica 模块会尝试使用 Collection 的名称来创建一个表。
+# 因此，请确保 Collection 名称是唯一的，并且用户拥有创建表的权限。
 
 COLLECTION_NAME = "state_of_the_union_test"
 connection = create_config()
@@ -80,11 +80,11 @@ db = Kinetica.from_documents(
     config=connection,
 )
 
-# create retriever from the vector store
+# 从向量存储创建检索器
 retriever = db.as_retriever(search_kwargs={"k": 2})
 ```
 
-## Search with retriever
+## 使用检索器进行搜索
 
 ```python
 result = retriever.get_relevant_documents(

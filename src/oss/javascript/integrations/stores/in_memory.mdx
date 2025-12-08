@@ -2,23 +2,23 @@
 title: InMemoryStore
 ---
 
-This will help you get started with [InMemoryStore](/oss/integrations/stores). For detailed documentation of all InMemoryStore features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html).
+这将帮助您开始使用 [InMemoryStore](/oss/integrations/stores)。有关 `InMemoryStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html)。
 
-The `InMemoryStore` allows for a generic type to be assigned to the values in the store. We'll assign type `BaseMessage` as the type of our values, keeping with the theme of a chat history store.
+`InMemoryStore` 允许为存储中的值分配一个通用类型（generic type）。我们将类型 `BaseMessage` 分配给我们的值类型，以保持聊天历史存储的主题一致性。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | [PY support](https://python.langchain.com/docs/integrations/stores/in_memory/) | Downloads | Version |
+| 类 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/stores/in_memory/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [InMemoryStore](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html) | [@langchain/core](https://api.js.langchain.com/modules/langchain_core.stores.html) | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/core?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/core?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-### Installation
+### 安装
 
-The LangChain InMemoryStore integration lives in the `@langchain/core` package:
+LangChain `InMemoryStore` 集成位于 `@langchain/core` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -32,9 +32,9 @@ pnpm add @langchain/core
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our byte store:
+现在我们可以实例化我们的字节存储（byte store）：
 
 ```typescript
 import { InMemoryStore } from "@langchain/core/stores"
@@ -43,9 +43,9 @@ import { BaseMessage } from "@langchain/core/messages";
 const kvStore = new InMemoryStore<BaseMessage>();
 ```
 
-## Usage
+## 用法
 
-You can set data under keys like this using the `mset` method:
+您可以使用 `mset` 方法，如下所示，在键下设置数据：
 
 ```typescript
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
@@ -82,7 +82,7 @@ await kvStore.mget(
 ]
 ```
 
-And you can delete data using the `mdelete` method:
+您可以使用 `mdelete` 方法删除数据：
 
 ```typescript
 await kvStore.mdelete(
@@ -104,9 +104,9 @@ await kvStore.mget(
 [ undefined, undefined ]
 ```
 
-## Yielding values
+## 产生值 (Yielding values)
 
-If you want to get back all the keys you can call the `yieldKeys` method. Optionally, you can pass a key prefix to only get back keys which match that prefix.
+如果您想获取所有键，可以调用 `yieldKeys` 方法。可选地，您可以传入一个键前缀 (`key prefix`)，只获取与该前缀匹配的键。
 
 ```typescript
 import { InMemoryStore } from "@langchain/core/stores"
@@ -114,7 +114,7 @@ import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 
 const kvStoreForYield = new InMemoryStore<BaseMessage>();
 
-// Add some data to the store
+// 向存储中添加一些数据
 await kvStoreForYield.mset(
   [
     ["message:id:key1", new HumanMessage("value1")],
@@ -136,6 +136,6 @@ console.log(yieldedKeys);
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all InMemoryStore features and configurations, head to the [API reference](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html)
+有关 `InMemoryStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html)

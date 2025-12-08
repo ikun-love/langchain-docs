@@ -1,10 +1,11 @@
+```markdown
 ---
 title: iFixit
 ---
 
->[iFixit](https://www.ifixit.com) is the largest, open repair community on the web. The site contains nearly 100k repair manuals, 200k Questions & Answers on 42k devices, and all the data is licensed under CC-BY-NC-SA 3.0.
+>[iFixit](https://www.ifixit.com) 是互联网上最大、最开放的维修社区。该网站包含近 10 万篇维修手册、关于 4.2 万台设备的 20 万个问答，所有数据均在 CC-BY-NC-SA 3.0 许可下授权。
 
-This loader will allow you to download the text of a repair guide, text of Q&A's and wikis from devices on `iFixit` using their open APIs.  It's incredibly useful for context related to technical documents and answers to questions about devices in the corpus of data on `iFixit`.
+这个加载器（Loader）允许您使用 iFixit 的开放 API 下载设备上维修指南的文本、问答（Q&A）的文本以及维基（wikis）。对于与技术文档相关的上下文，以及关于 iFixit 数据集中设备的问题答案，它非常有用。
 
 ```python
 from langchain_community.document_loaders import IFixitLoader
@@ -51,9 +52,9 @@ data
 [Document(page_content="Standard iPad\nThe standard edition of the tablet computer made by Apple.\n== Background Information ==\n\nOriginally introduced in January 2010, the iPad is Apple's standard edition of their tablet computer. In total, there have been ten generations of the standard edition of the iPad.\n\n== Additional Information ==\n\n* [link|https://www.apple.com/ipad-select/|Official Apple Product Page]\n* [link|https://en.wikipedia.org/wiki/IPad#iPad|Official iPad Wikipedia]", lookup_str='', metadata={'source': 'https://www.ifixit.com/Device/Standard_iPad', 'title': 'Standard iPad'}, lookup_index=0)]
 ```
 
-## Searching iFixit using /suggest
+## 使用 /suggest 在 iFixit 中搜索
 
-If you're looking for a more general way to search iFixit based on a keyword or phrase, the /suggest endpoint will return content related to the search term, then the loader will load the content from each of the suggested items and prep and return the documents.
+如果您正在寻找一种更通用的方法，根据关键字或短语在 iFixit 中进行搜索，`/suggest` 端点将返回与搜索词相关的内容，然后加载器将加载每个建议项的内容并进行预处理，最后返回文档。
 
 ```python
 data = IFixitLoader.load_suggestions("Banana")
@@ -66,4 +67,5 @@ data
 ```output
 [Document(page_content='Banana\nTasty fruit. Good source of potassium. Yellow.\n== Background Information ==\n\nCommonly misspelled, this wildly popular, phone shaped fruit serves as nutrition and an obstacle to slow down vehicles racing close behind you. Also used commonly as a synonym for “crazy” or “insane”.\n\nBotanically, the banana is considered a berry, although it isn’t included in the culinary berry category containing strawberries and raspberries. Belonging to the genus Musa, the banana originated in Southeast Asia and Australia. Now largely cultivated throughout South and Central America, bananas are largely available throughout the world. They are especially valued as a staple food group in developing countries due to the banana tree’s ability to produce fruit year round.\n\nThe banana can be easily opened. Simply remove the outer yellow shell by cracking the top of the stem. Then, with the broken piece, peel downward on each side until the fruity components on the inside are exposed. Once the shell has been removed it cannot be put back together.\n\n== Technical Specifications ==\n\n* Dimensions: Variable depending on genetics of the parent tree\n* Color: Variable depending on ripeness, region, and season\n\n== Additional Information ==\n\n[link|https://en.wikipedia.org/wiki/Banana|Wiki: Banana]', lookup_str='', metadata={'source': 'https://www.ifixit.com/Device/Banana', 'title': 'Banana'}, lookup_index=0),
  Document(page_content="# Banana Teardown\nIn this teardown, we open a banana to see what's inside.  Yellow and delicious, but most importantly, yellow.\n\n\n###Tools Required:\n\n - Fingers\n\n - Teeth\n\n - Thumbs\n\n\n###Parts Required:\n\n - None\n\n\n## Step 1\nTake one banana from the bunch.\nDon't squeeze too hard!\n\n\n## Step 2\nHold the banana in your left hand and grip the stem between your right thumb and forefinger.\n\n\n## Step 3\nPull the stem downward until the peel splits.\n\n\n## Step 4\nInsert your thumbs into the split of the peel and pull the two sides apart.\nExpose the top of the banana.  It may be slightly squished from pulling on the stem, but this will not affect the flavor.\n\n\n## Step 5\nPull open the peel, starting from your original split, and opening it along the length of the banana.\n\n\n## Step 6\nRemove fruit from peel.\n\n\n## Step 7\nEat and enjoy!\nThis is where you'll need your teeth.\nDo not choke on banana!\n", lookup_str='', metadata={'source': 'https://www.ifixit.com/Teardown/Banana+Teardown/811', 'title': 'Banana Teardown'}, lookup_index=0)]
+```
 ```

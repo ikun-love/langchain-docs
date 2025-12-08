@@ -1,22 +1,22 @@
 ---
-title: Hugging Face Local Pipelines
+title: Hugging Face 本地管道 (Local Pipelines)
 ---
 
-Hugging Face models can be run locally through the `HuggingFacePipeline` class.
+Hugging Face 模型可以通过 `HuggingFacePipeline` 类在本地运行。
 
-The [Hugging Face Model Hub](https://huggingface.co/models) hosts over 120k models, 20k datasets, and 50k demo apps (Spaces), all open source and publicly available, in an online platform where people can easily collaborate and build ML together.
+[Hugging Face 模型中心 (Model Hub)](https://huggingface.co/models) 托管了超过 12 万个模型、2 万个数据集和 5 万个演示应用 (Spaces)，它们都是开源且公开可用的。这是一个人们可以轻松协作、共同构建机器学习项目的在线平台。
 
-These can be called from LangChain either through this local pipeline wrapper or by calling their hosted inference endpoints through the HuggingFaceHub class.
+这些模型可以通过 LangChain 调用，方式有两种：使用此本地管道封装器 (`HuggingFacePipeline`)，或者通过 `HuggingFaceHub` 类调用其托管的推理端点。
 
-To use, you should have the `transformers` python [package installed](https://pypi.org/project/transformers/), as well as [pytorch](https://pytorch.org/get-started/locally/). You can also install `xformer` for a more memory-efficient attention implementation.
+要使用此功能，您应该安装 `transformers` Python [软件包](https://pypi.org/project/transformers/)，以及 [pytorch](https://pytorch.org/get-started/locally/)。您还可以安装 `xformer` 以获得更内存高效的注意力实现。
 
 ```python
 pip install -qU transformers
 ```
 
-### Model Loading
+### 模型加载 (Model Loading)
 
-Models can be loaded by specifying the model parameters using the `from_model_id` method.
+可以通过使用 `from_model_id` 方法并指定模型参数来加载模型。
 
 ```python
 from langchain_huggingface.llms import HuggingFacePipeline
@@ -28,7 +28,7 @@ hf = HuggingFacePipeline.from_model_id(
 )
 ```
 
-They can also be loaded by passing in an existing `transformers` pipeline directly
+也可以通过直接传入一个已存在的 `transformers` pipeline 来加载模型：
 
 ```python
 from langchain_huggingface.llms import HuggingFacePipeline
@@ -41,17 +41,16 @@ pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tok
 hf = HuggingFacePipeline(pipeline=pipe)
 ```
 
-### Create Chain
+### 创建链 (Create Chain)
 
-With the model loaded into memory, you can compose it with a prompt to
-form a chain.
+将模型加载到内存后，您可以将其与 Prompt 组合以构成一个链 (chain)。
 
 ```python
 from langchain_core.prompts import PromptTemplate
 
-template = """Question: {question}
+template = """问题: {question}
 
-Answer: Let's think step by step."""
+答案: 我们一步一步来思考。"""
 prompt = PromptTemplate.from_template(template)
 
 chain = prompt | hf
@@ -61,7 +60,7 @@ question = "What is electroencephalography?"
 print(chain.invoke({"question": question}))
 ```
 
-To get response without prompt, you can bind `skip_prompt=True` with LLM.
+如果要获取不带 Prompt 的响应，您可以将 `skip_prompt=True` 绑定到 LLM 上。
 
 ```python
 chain = prompt | hf.bind(skip_prompt=True)
@@ -71,27 +70,26 @@ question = "What is electroencephalography?"
 print(chain.invoke({"question": question}))
 ```
 
-Streaming repsonse.
+流式响应 (Streaming response)：
 
 ```python
 for chunk in chain.stream(question):
     print(chunk, end="", flush=True)
 ```
 
-### GPU Inference
+### GPU 推理 (GPU Inference)
 
-When running on a machine with GPU, you can specify the `device=n` parameter to put the model on the specified device.
-Defaults to `-1` for CPU inference.
+当在带有 GPU 的机器上运行时，您可以指定 `device=n` 参数将模型放置到指定的设备上。默认值为 `-1`，表示使用 CPU 推理。
 
-If you have multiple-GPUs and/or the model is too large for a single GPU, you can specify `device_map="auto"`, which requires and uses the [Accelerate](https://huggingface.co/docs/accelerate/index) library to automatically determine how to load the model weights.
+如果您有多个 GPU，或者模型对于单个 GPU 来说太大，您可以指定 `device_map="auto"`。这需要并使用 [Accelerate](https://huggingface.co/docs/accelerate/index) 库来自动确定如何加载模型权重。
 
-*Note*: both `device` and `device_map` should not be specified together and can lead to unexpected behavior.
+*注意*：`device` 和 `device_map` 不应同时指定，否则可能导致意外行为。
 
 ```python
 gpu_llm = HuggingFacePipeline.from_model_id(
     model_id="gpt2",
     task="text-generation",
-    device=0,  # replace with device_map="auto" to use the accelerate library.
+    device=0,  # 替换为 device_map="auto" 以使用 accelerate 库。
     pipeline_kwargs={"max_new_tokens": 10},
 )
 
@@ -102,16 +100,16 @@ question = "What is electroencephalography?"
 print(gpu_chain.invoke({"question": question}))
 ```
 
-### Batch GPU Inference
+### 批量 GPU 推理 (Batch GPU Inference)
 
-If running on a device with GPU, you can also run inference on the GPU in batch mode.
+如果在带有 GPU 的设备上运行，您也可以在 GPU 上以批处理模式运行推理。
 
 ```python
 gpu_llm = HuggingFacePipeline.from_model_id(
     model_id="bigscience/bloom-1b7",
     task="text-generation",
-    device=0,  # -1 for CPU
-    batch_size=2,  # adjust as needed based on GPU map and model size.
+    device=0,  # -1 代表 CPU
+    batch_size=2,  # 根据 GPU 映射和模型大小进行调整。
     model_kwargs={"temperature": 0, "max_length": 64},
 )
 
@@ -126,11 +124,11 @@ for answer in answers:
     print(answer)
 ```
 
-### Inference with OpenVINO backend
+### 使用 OpenVINO 后端进行推理 (Inference with OpenVINO backend)
 
-To deploy a model with OpenVINO, you can specify the `backend="openvino"` parameter to trigger OpenVINO as backend inference framework.
+要使用 OpenVINO 部署模型，您可以指定 `backend="openvino"` 参数来触发 OpenVINO 作为后端推理框架。
 
-If you have an Intel GPU, you can specify `model_kwargs={"device": "GPU"}` to run inference on it.
+如果您有 Intel GPU，您可以指定 `model_kwargs={"device": "GPU"}` 在其上运行推理。
 
 ```python
 pip install -U-strategy eager "optimum[openvino,nncf]" --quiet
@@ -154,20 +152,20 @@ question = "What is electroencephalography?"
 print(ov_chain.invoke({"question": question}))
 ```
 
-### Inference with local OpenVINO model
+### 使用本地 OpenVINO 模型进行推理 (Inference with local OpenVINO model)
 
-It is possible to [export your model](https://github.com/huggingface/optimum-intel?tab=readme-ov-file#export) to the OpenVINO IR format with the CLI, and load the model from local folder.
+可以通过 CLI [将您的模型导出](https://github.com/huggingface/optimum-intel?tab=readme-ov-file#export) 为 OpenVINO IR 格式，然后从本地文件夹加载模型。
 
 ```python
 !optimum-cli export openvino --model gpt2 ov_model_dir
 ```
 
-It is recommended to apply 8 or 4-bit weight quantization to reduce inference latency and model footprint using `--weight-format`:
+建议使用 `--weight-format` 参数应用 8 位或 4 位权重量化，以减少推理延迟和模型占用空间：
 
 ```python
-!optimum-cli export openvino --model gpt2  --weight-format int8 ov_model_dir # for 8-bit quantization
+!optimum-cli export openvino --model gpt2  --weight-format int8 ov_model_dir # 用于 8 位量化
 
-!optimum-cli export openvino --model gpt2  --weight-format int4 ov_model_dir # for 4-bit quantization
+!optimum-cli export openvino --model gpt2  --weight-format int4 ov_model_dir # 用于 4 位量化
 ```
 
 ```python
@@ -186,7 +184,7 @@ question = "What is electroencephalography?"
 print(ov_chain.invoke({"question": question}))
 ```
 
-You can get additional inference speed improvement with Dynamic Quantization of activations and KV-cache quantization. These options can be enabled with `ov_config` as follows:
+您可以通过如下方式在 `ov_config` 中启用动态量化（针对激活和 KV 缓存量化）来获得额外的推理速度提升：
 
 ```python
 ov_config = {
@@ -198,4 +196,4 @@ ov_config = {
 }
 ```
 
-For more information refer to [OpenVINO LLM guide](https://docs.openvino.ai/2024/learn-openvino/llm_inference_guide.html) and [OpenVINO Local Pipelines notebook](/oss/integrations/llms/openvino/).
+如需更多信息，请参阅 [OpenVINO LLM 指南](https://docs.openvino.ai/2024/learn-openvino/llm_inference_guide.html) 和 [OpenVINO 本地管道 notebook](/oss/integrations/llms/openvino/)。

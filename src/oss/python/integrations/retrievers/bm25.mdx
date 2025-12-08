@@ -2,9 +2,9 @@
 title: BM25
 ---
 
->[BM25 (Wikipedia)](https://en.wikipedia.org/wiki/Okapi_BM25) also known as the `Okapi BM25`, is a ranking function used in information retrieval systems to estimate the relevance of documents to a given search query.
+> [BM25 (维基百科)](https://en.wikipedia.org/wiki/Okapi_BM25) 也被称为 `Okapi BM25`，它是一种常用于信息检索系统中的排序函数，用于评估文档与给定搜索查询的相关性程度。
 >
->`BM25Retriever` retriever uses the [`rank_bm25`](https://github.com/dorianbrown/rank_bm25) package.
+> `BM25Retriever` 使用 [`rank_bm25`](https://github.com/dorianbrown/rank_bm25) 软件包。
 
 ```python
 pip install -qU  rank_bm25
@@ -14,15 +14,15 @@ pip install -qU  rank_bm25
 from langchain_community.retrievers import BM25Retriever
 ```
 
-## Create New Retriever with Texts
+## 使用文本创建新的检索器 (Create New Retriever with Texts)
 
 ```python
 retriever = BM25Retriever.from_texts(["foo", "bar", "world", "hello", "foo bar"])
 ```
 
-## Create a New Retriever with Documents
+## 使用文档创建新的检索器 (Create a New Retriever with Documents)
 
-You can now create a new retriever with the documents you created.
+您现在可以使用创建的文档来初始化一个新的检索器。
 
 ```python
 from langchain_core.documents import Document
@@ -38,9 +38,9 @@ retriever = BM25Retriever.from_documents(
 )
 ```
 
-## Use Retriever
+## 使用检索器 (Use Retriever)
 
-We can now use the retriever!
+现在我们可以使用这个检索器了！
 
 ```python
 result = retriever.invoke("foo")
@@ -57,9 +57,9 @@ result
  Document(metadata={}, page_content='world')]
 ```
 
-## Preprocessing Function
+## 预处理函数 (Preprocessing Function)
 
-Pass a custom preprocessing function to the retriever to improve search results. Tokenizing text at the word level can enhance retrieval, especially when using vector stores like Chroma, Pinecone, or Faiss for chunked documents.
+您可以向检索器传递一个自定义的预处理函数，以改进搜索结果。在词级别对文本进行分词（Tokenizing）可以增强检索效果，尤其是在使用 Chroma、Pinecone 或 Faiss 等向量存储并处理分块文档时。
 
 ```python
 import nltk

@@ -2,20 +2,20 @@
 title: StarRocks
 ---
 
->[StarRocks](https://www.starrocks.io/) is a High-Performance Analytical Database.
-`StarRocks` is a next-gen sub-second MPP database for full analytics scenarios, including multi-dimensional analytics, real-time analytics and ad-hoc query.
+>[StarRocks](https://www.starrocks.io/) 是一款高性能分析型数据库。
+`StarRocks` 是一款面向全分析场景（包括多维分析、实时分析和即席查询）的下一代亚秒级 MPP 数据库。
 
->Usually `StarRocks` is categorized into OLAP, and it has showed excellent performance in [ClickBench — a Benchmark For Analytical DBMS](https://benchmark.clickhouse.com/). Since it has a super-fast vectorized execution engine, it could also be used as a fast vectordb.
+>通常情况下，`StarRocks` 被归类为 OLAP 数据库，它在 [ClickBench — 面向分析型 DBMS 的基准测试](https://benchmark.clickhouse.com/) 中展示了卓越的性能。由于它拥有超快速的向量化执行引擎，它也可以被用作快速的向量数据库（vectordb）。
 
-Here we'll show how to use the StarRocks Vector Store.
+这里我们将展示如何使用 StarRocks 向量存储（Vector Store）。
 
-## Setup
+## 设置 (Setup)
 
 ```python
 pip install -qU  pymysql langchain-community
 ```
 
-Set `update_vectordb = False` at the beginning. If there is no docs updated, then we don't need to rebuild the embeddings of docs
+在开始时设置 `update_vectordb = False`。如果没有文档更新，则无需重新构建文档的嵌入向量 (embeddings)。
 
 ```python
 from langchain.chains import RetrievalQA
@@ -36,11 +36,11 @@ update_vectordb = False
   warnings.warn("urllib3 ({}) or chardet ({})/charset_normalizer ({}) doesn't match a supported "
 ```
 
-## Load docs and split them into tokens
+## 加载文档并将其分割成 Token
 
-Load all markdown files under the `docs` directory
+加载 `docs` 目录下的所有 markdown 文件。
 
-for starrocks documents, you can clone repo from [github.com/StarRocks/starrocks](https://github.com/StarRocks/starrocks), and there is `docs` directory in it.
+对于 StarRocks 文档，您可以从 [github.com/StarRocks/starrocks](https://github.com/StarRocks/starrocks) 克隆仓库，其中包含一个 `docs` 目录。
 
 ```python
 loader = DirectoryLoader(
@@ -49,14 +49,14 @@ loader = DirectoryLoader(
 documents = loader.load()
 ```
 
-Split docs into tokens, and set `update_vectordb = True` because there are new docs/tokens.
+将文档分割成 Token，并将 `update_vectordb = True` 设置为 True，因为存在新的文档/Token。
 
 ```python
-# load text splitter and split docs into snippets of text
+# 加载文本分割器并将文档分割成文本片段
 text_splitter = TokenTextSplitter(chunk_size=400, chunk_overlap=50)
 split_docs = text_splitter.split_documents(documents)
 
-# tell vectordb to update text embeddings
+# 通知向量数据库更新文本嵌入向量
 update_vectordb = True
 ```
 
@@ -76,9 +76,9 @@ print("# docs  = %d, # splits = %d" % (len(documents), len(split_docs)))
 # docs  = 657, # splits = 2802
 ```
 
-## Create vectordb instance
+## 创建向量数据库实例
 
-### Use StarRocks as vectordb
+### 使用 StarRocks 作为向量数据库
 
 ```python
 def gen_starrocks(update_vectordb, embeddings, settings):
@@ -89,22 +89,22 @@ def gen_starrocks(update_vectordb, embeddings, settings):
     return docsearch
 ```
 
-## Convert tokens into embeddings and put them into vectordb
+## 将 Token 转换为嵌入向量并存入向量数据库
 
-Here we use StarRocks as vectordb, you can configure StarRocks instance via `StarRocksSettings`.
+这里我们使用 StarRocks 作为向量数据库，您可以通过 `StarRocksSettings` 配置 StarRocks 实例。
 
-Configuring StarRocks instance is pretty much like configuring mysql instance. You need to specify:
+配置 StarRocks 实例几乎等同于配置 MySQL 实例。您需要指定：
 
 1. host/port
-2. username(default: 'root')
-3. password(default: '')
-4. database(default: 'default')
-5. table(default: 'langchain')
+2. username (默认为 'root')
+3. password (默认为 '')
+4. database (默认为 'default')
+5. table (默认为 'langchain')
 
 ```python
 embeddings = OpenAIEmbeddings()
 
-# configure starrocks settings(host/port/user/pw/db)
+# 配置 StarRocks 设置（host/port/user/pw/db）
 settings = StarRocksSettings()
 settings.port = 41003
 settings.host = "127.0.0.1"
@@ -137,7 +137,7 @@ Table Schema:
 ----------------------------------------------------------------------------
 ```
 
-## Build QA and ask question to it
+## 构建 QA 链并向其提问
 
 ```python
 llm = OpenAI()

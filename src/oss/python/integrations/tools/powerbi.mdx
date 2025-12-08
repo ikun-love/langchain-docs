@@ -1,19 +1,19 @@
 ---
-title: PowerBI Toolkit
+title: PowerBI 工具包
 ---
 
-This notebook showcases an agent interacting with a `Power BI Dataset`. The agent is answering more general questions about a dataset, as well as recover from errors.
+本 Notebook 展示了一个与 `Power BI 数据集`交互的智能体。该智能体不仅能回答关于数据集的一般性问题，还能从错误中恢复。
 
-Note that, as this agent is in active development, all answers might not be correct. It runs against the [executequery endpoint](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/execute-queries), which does not allow deletes.
+请注意，由于此智能体仍在积极开发中，所有答案可能并不完全正确。它针对 [executequery 终结点](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/execute-queries) 运行，该终结点不允许执行删除操作。
 
-### Notes
+### 备注
 
-- It relies on authentication with the azure.identity package, which can be installed with `pip install azure-identity`. Alternatively you can create the powerbi dataset with a token as a string without supplying the credentials.
-- You can also supply a username to impersonate for use with datasets that have RLS enabled.
-- The toolkit uses a LLM to create the query from the question, the agent uses the LLM for the overall execution.
-- Testing was done mostly with a `gpt-3.5-turbo-instruct` model, codex models did not seem to perform ver well.
+- 它依赖于 `azure.identity` 包进行身份验证，您可以使用 `pip install azure-identity` 进行安装。或者，您也可以在不提供凭据的情况下，使用令牌作为字符串来创建 PowerBI 数据集。
+- 您还可以提供一个用户名以供模仿（impersonate），用于与启用了行级别安全性（RLS）的数据集配合使用。
+- 该工具包使用 LLM（大型语言模型）根据用户问题生成查询，而智能体则使用 LLM 来进行整体执行。
+- 测试主要使用 `gpt-3.5-turbo-instruct` 模型进行，Codex 模型的效果似乎不太好。
 
-## Initialization
+## 初始化 (Initialization)
 
 ```python
 from azure.identity import DefaultAzureCredential
@@ -44,21 +44,21 @@ agent_executor = create_pbi_agent(
 )
 ```
 
-## Example: describing a table
+## 示例：描述一个表 (Example: describing a table)
 
 ```python
 agent_executor.run("Describe table1")
 ```
 
-## Example: simple query on a table
+## 示例：在表上执行简单查询 (Example: simple query on a table)
 
-In this example, the agent actually figures out the correct query to get a row count of the table.
+在这个例子中，智能体会设法找出正确的查询语句，以获取表的行数。
 
 ```python
 agent_executor.run("How many records are in table1?")
 ```
 
-## Example: running queries
+## 示例：运行查询 (Example: running queries)
 
 ```python
 agent_executor.run("How many records are there by dimension1 in table2?")
@@ -68,7 +68,7 @@ agent_executor.run("How many records are there by dimension1 in table2?")
 agent_executor.run("What unique values are there for dimensions2 in table2")
 ```
 
-## Example: add your own few-shot prompts
+## 示例：添加您自己的少样本提示 (Example: add your own few-shot prompts)
 
 ```python
 # fictional example

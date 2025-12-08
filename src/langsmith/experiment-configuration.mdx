@@ -1,34 +1,34 @@
 ---
-title: Experiment configuration
-sidebarTitle: Experiment configuration
+title: 实验配置
+sidebarTitle: 实验配置
 ---
 
-LangSmith supports several configuration options for experiments:
+LangSmith 支持实验的多种配置选项：
 
-- [Repetitions](#repetitions)
-- [Concurrency](#concurrency)
-- [Caching](#caching)
+- [重复运行](#repetitions)
+- [并发性](#concurrency)
+- [缓存](#caching)
 
-### Repetitions
+### Repetitions (重复运行)
 
-_Repetitions_ run an experiment multiple times to account for LLM output variability. Since LLM outputs are non-deterministic, multiple repetitions provide a more accurate performance estimate.
+_Repetitions_（重复运行）会多次执行实验，以应对大型语言模型（LLM）输出的随机性。由于 LLM 的输出通常是非确定性的，多次重复运行可以提供更准确的性能评估。
 
-Configure repetitions by passing the `num_repetitions` argument to `evaluate` / `aevaluate` ([Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)). Each repetition re-runs both the target function and all evaluators.
+通过向 `evaluate` 或 `aevaluate` 函数传递 `num_repetitions` 参数来配置重复运行次数（[Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)）。每次重复运行都会重新执行目标函数和所有的评估器。
 
-Learn more in the [repetitions how-to guide](/langsmith/repetition).
+在 [重复运行操作指南](/langsmith/repetition) 中了解更多信息。
 
-### Concurrency
+### Concurrency (并发性)
 
-_Concurrency_ controls how many examples run simultaneously during an experiment. Configure it by passing the `max_concurrency` argument to `evaluate` / `aevaluate`. The semantics differ between the two functions:
+_Concurrency_（并发性）控制实验期间同时运行的示例（examples）数量。通过向 `evaluate` 或 `aevaluate` 传递 `max_concurrency` 参数来配置它。这两个函数的语义有所不同：
 
 #### `evaluate`
 
-The `max_concurrency` argument specifies the maximum number of concurrent threads for running both the target function and evaluators.
+`max_concurrency` 参数指定用于运行目标函数和评估器的最大并发线程数。
 
 #### `aevaluate`
 
-The `max_concurrency` argument uses a semaphore to limit concurrent tasks. `aevaluate` creates a task for each example, where each task runs the target function and all evaluators for that example. The `max_concurrency` argument specifies the maximum number of concurrent examples to process.
+`max_concurrency` 参数使用信号量（semaphore）来限制并发任务。`aevaluate` 会为每个示例创建一个任务，每个任务都会运行该示例的目标函数和所有评估器。`max_concurrency` 参数指定要处理的最大并发示例数量。
 
-### Caching
+### Caching (缓存)
 
-_Caching_ stores API call results to disk to speed up future experiments. Set the `LANGSMITH_TEST_CACHE` environment variable to a valid folder path with write access. Future experiments that make identical API calls will reuse cached results instead of making new requests.
+_Caching_（缓存）将 API 调用结果存储到磁盘，以加速未来的实验。将 `LANGSMITH_TEST_CACHE` 环境变量设置为具有写入权限的有效文件夹路径。未来执行相同 API 调用的实验将重用缓存的结果，而不是发起新的请求。

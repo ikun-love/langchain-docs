@@ -2,19 +2,19 @@
 title: RELLM
 ---
 
-[RELLM](https://github.com/r2d4/rellm) is a library that wraps local Hugging Face pipeline models for structured decoding.
+[RELLM](https://github.com/r2d4/rellm) 是一个库，用于将本地的 Hugging Face pipeline 模型封装起来，以实现结构化解码。
 
-It works by generating tokens one at a time. At each step, it masks tokens that don't conform to the provided partial regular expression.
+它的工作原理是**逐个**生成 token。在每一步中，它会屏蔽掉不符合所提供的部分正则表达式的 token。
 
-**Warning - this module is still experimental**
+**警告 - 此模块仍处于实验阶段**
 
 ```python
 pip install -qU  rellm langchain-huggingface > /dev/null
 ```
 
-### Hugging Face Baseline
+### Hugging Face 基线测试
 
-First, let's establish a qualitative baseline by checking the output of the model without structured decoding.
+首先，我们通过检查模型在没有结构化解码情况下的输出，来建立一个定性的基线。
 
 ```python
 import logging
@@ -60,16 +60,16 @@ Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
 generations=[[Generation(text=' "What\'s the capital of Maryland?"\n', generation_info=None)]] llm_output=None
 ```
 
-***That's not so impressive, is it? It didn't answer the question and it didn't follow the JSON format at all! Let's try with the structured decoder.***
+***这看起来并不令人印象深刻，对吗？模型没有回答问题，而且完全没有遵循 JSON 格式！让我们尝试使用结构化解码器。***
 
-## RELLM LLM Wrapper
+## RELLM LLM 包装器
 
-Let's try that again, now providing a regex to match the JSON structured format.
+我们再试一次，这次我们提供一个正则表达式来匹配如下所示的 JSON 结构格式：
 
 ```python
-import regex  # Note this is the regex library NOT python's re stdlib module
+import regex  # 注意这里使用的是 regex 库，而不是 Python 的 re 标准库模块
 
-# We'll choose a regex that matches to a structured json string that looks like:
+# 我们选择一个正则表达式，用于匹配如下结构的 JSON 字符串：
 # {
 #  "action": "Final Answer",
 # "action_input": string or dict
@@ -94,7 +94,7 @@ print(generated)
 }
 ```
 
-**Voila! Free of parsing errors.**
+**太棒了！没有解析错误。**
 
 ```python
 

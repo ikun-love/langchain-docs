@@ -2,57 +2,54 @@
 title: ChatGoogleGenerativeAI
 ---
 
-[Google AI](https://ai.google.dev/) offers a number of different chat models, including the powerful Gemini series. For information on the latest models, their features, context windows, etc. head to the [Google AI docs](https://ai.google.dev/gemini-api/docs/models/gemini).
+[Google AI](https://ai.google.dev/) 提供了多种聊天模型，包括强大的 Gemini 系列。有关最新模型、特性、上下文窗口等方面的信息，请参阅 [Google AI 文档](https://ai.google.dev/gemini-api/docs/models/gemini)。
 
-This will help you getting started with `ChatGoogleGenerativeAI` [chat models](/oss/langchain/models). For detailed documentation of all `ChatGoogleGenerativeAI` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html).
+本指南将帮助您开始使用 `ChatGoogleGenerativeAI` [聊天模型](/oss/langchain/models)。有关 `ChatGoogleGenerativeAI` 所有特性和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [PY support](https://python.langchain.com/docs/integrations/chat/google_generative_ai) | Downloads | Version |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| 类名 | 包名 | 本地 | 可序列化 | [Python 支持](https://python.langchain.com/docs/integrations/chat/google_generative_ai) | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | [ChatGoogleGenerativeAI](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html) | [@langchain/google-genai](https://api.js.langchain.com/modules/langchain_google_genai.html) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/google-genai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/google-genai?style=flat-square&label=%20&) |
 
-### Model features
+### 模型特性
 
-See the links in the table headers below for guides on how to use specific features.
+请查看下方表格标题中的链接，以获取关于如何使用特定功能的指南。
 
-| [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output) | JSON mode | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 
-## Setup
+## 设置
 
-You can access Google's `gemini` and `gemini-vision` models, as well as other
-generative models in LangChain through `ChatGoogleGenerativeAI` class in the
-`@langchain/google-genai` integration package.
-
+您可以通过 `@langchain/google-genai` 集成包中的 `ChatGoogleGenerativeAI` 类来访问 LangChain 中的 Google `gemini` 和 `gemini-vision` 模型，以及其他生成式模型。
 
 <Tip>
-You can also access Google's `gemini` family of models via the LangChain VertexAI and VertexAI-web integrations. Click [here](/oss/integrations/chat/google_vertex_ai) to read the docs.
+您还可以通过 LangChain 的 VertexAI 和 VertexAI-web 集成来访问 Google 的 `gemini` 系列模型。点击 [此处](/oss/integrations/chat/google_vertex_ai) 阅读文档。
 </Tip>
 
-### Credentials
+### 凭证 (Credentials)
 
-Get an API key here: [https://ai.google.dev/tutorials/setup](https://ai.google.dev/tutorials/setup)
+请在此处获取 API 密钥：[https://ai.google.dev/tutorials/setup](https://ai.google.dev/tutorials/setup)
 
-Then set the `GOOGLE_API_KEY` environment variable:
+然后设置 `GOOGLE_API_KEY` 环境变量：
 
 ```bash
 export GOOGLE_API_KEY="your-api-key"
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您希望对模型调用进行自动追踪（tracing），您也可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### Installation
+### 安装
 
-The LangChain `ChatGoogleGenerativeAI` integration lives in the `@langchain/google-genai` package:
+LangChain 的 `ChatGoogleGenerativeAI` 集成位于 `@langchain/google-genai` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -66,9 +63,9 @@ pnpm add @langchain/google-genai @langchain/core
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全（chat completions）：
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
@@ -81,7 +78,7 @@ const llm = new ChatGoogleGenerativeAI({
 })
 ```
 
-## Invocation
+## 调用 (Invocation)
 
 ```typescript
 const aiMsg = await llm.invoke([
@@ -159,9 +156,9 @@ console.log(aiMsg.content)
 J'adore programmer.
 ```
 
-## Safety settings
+## 安全设置 (Safety settings)
 
-Gemini models have default safety settings that can be overridden. If you are receiving lots of "Safety Warnings" from your models, you can try tweaking the safety_settings attribute of the model. For example, to turn off safety blocking for dangerous content, you can import enums from the `@google/generative-ai` package, then construct your LLM as follows:
+Gemini 模型具有默认的安全设置，可以被覆盖。如果您从模型收到大量“安全警告”（Safety Warnings），可以尝试调整模型的 `safety_settings` 属性。例如，要关闭对危险内容的安全性阻止，可以从 `@google/generative-ai` 包中导入枚举 (enums)，然后像下面这样构建您的 LLM：
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
@@ -180,26 +177,26 @@ const llmWithSafetySettings = new ChatGoogleGenerativeAI({
 });
 ```
 
-## Tool calling
+## 工具调用 (Tool calling)
 
-Tool calling with Google AI is mostly the same [as tool calling with other models](/oss/langchain/tools), but has a few restrictions on schema.
+Google AI 的工具调用与 [其他模型的工具调用](/oss/langchain/tools) 大多相同，但在 Schema 方面有一些限制。
 
-The Google AI API does not allow tool schemas to contain an object with unknown properties. For example, the following Zod schemas will throw an error:
+Google AI API 不允许工具 Schema 包含具有未知属性的对象。例如，以下 Zod Schema 会抛出错误：
 
 `const invalidSchema = z.object({ properties: z.record(z.unknown()) });`
 
-and
+以及
 
 `const invalidSchema2 = z.record(z.unknown());`
 
-Instead, you should explicitly define the properties of the object field. Here's an example:
+相反，您应该明确定义对象字段的属性。下面是一个示例：
 
 ```typescript
 import { tool } from "@langchain/core/tools";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import * as z from "zod";
 
-// Define your tool
+// 定义您的工具
 const fakeBrowserTool = tool((_) => {
   return "The search result is xyz..."
 }, {
@@ -213,7 +210,7 @@ const fakeBrowserTool = tool((_) => {
 
 const llmWithTool = new ChatGoogleGenerativeAI({
   model: "gemini-pro",
-}).bindTools([fakeBrowserTool]) // Bind your tools to the model
+}).bindTools([fakeBrowserTool]) // 将您的工具绑定到模型
 
 const toolRes = await llmWithTool.invoke([
   [
@@ -238,9 +235,9 @@ console.log(toolRes.tool_calls);
 ]
 ```
 
-### Built in Google Search Retrieval
+### 内置 Google 搜索检索 (Built in Google Search Retrieval)
 
-Google also offers a built in search tool which you can use to ground content generation in real-world information. Here's an example of how to use it:
+Google 还提供了一个内置的搜索工具，可用于根据现实世界信息来确定内容生成的依据。以下是如何使用它的示例：
 
 ```typescript
 import { DynamicRetrievalMode, GoogleSearchRetrievalTool } from "@google/generative-ai";
@@ -250,7 +247,7 @@ const searchRetrievalTool: GoogleSearchRetrievalTool = {
   googleSearchRetrieval: {
     dynamicRetrievalConfig: {
       mode: DynamicRetrievalMode.MODE_DYNAMIC,
-      dynamicThreshold: 0.7, // default is 0.7
+      dynamicThreshold: 0.7, // 默认为 0.7
     }
   }
 };
@@ -269,7 +266,7 @@ console.log(searchRetrievalResult.content);
 The Los Angeles Dodgers won the 2024 World Series, defeating the New York Yankees in Game 5 on October 30, 2024, by a score of 7-6. This victory marks the Dodgers' eighth World Series title and their first in a full season since 1988.  They achieved this win by overcoming a 5-0 deficit, making them the first team in World Series history to win a clinching game after being behind by such a margin.  The Dodgers also became the first team in MLB postseason history to overcome a five-run deficit, fall behind again, and still win.  Walker Buehler earned the save in the final game, securing the championship for the Dodgers.
 ```
 
-The response also includes metadata about the search result:
+响应中还包含有关搜索结果的元数据：
 
 ```typescript
 console.dir(searchRetrievalResult.response_metadata?.groundingMetadata, { depth: null });
@@ -441,16 +438,16 @@ console.dir(searchRetrievalResult.response_metadata?.groundingMetadata, { depth:
 }
 ```
 
-### Code execution
+### 代码执行 (Code execution)
 
-Google Generative AI also supports code execution. Using the built in `CodeExecutionTool`, you can make the model generate code, execute it, and use the results in a final completion:
+Google Generative AI 也支持代码执行。使用内置的 `CodeExecutionTool`，您可以让模型生成代码、执行代码，并将结果用于最终的补全中：
 
 ```typescript
 import { CodeExecutionTool } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const codeExecutionTool: CodeExecutionTool = {
-  codeExecution: {}, // Simply pass an empty object to enable it.
+  codeExecution: {}, // 仅需传入一个空对象即可启用它。
 };
 const codeExecutionModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-pro",
@@ -501,7 +498,7 @@ console.dir(codeExecutionResult.content, { depth: null });
 ]
 ```
 
-You can also pass this generation back to the model as chat history:
+您也可以将此生成内容作为聊天历史传递回模型：
 
 ```typescript
 const codeExecutionExplanation = await codeExecutionModel.invoke([
@@ -540,9 +537,9 @@ The output of the code was:
 Therefore, the answer to your question is 21.
 ```
 
-## Context caching
+## 上下文缓存 (Context caching)
 
-Context caching allows you to pass some content to the model once, cache the input tokens, and then refer to the cached tokens for subsequent requests to reduce cost. You can create a `CachedContent` object using `GoogleAICacheManager` class and then pass the `CachedContent` object to your `ChatGoogleGenerativeAIModel` with `enableCachedContent()` method.
+上下文缓存允许您首先向模型提供某些内容，缓存输入的 Token，然后对后续请求引用缓存的 Token，以降低成本。您可以使用 `GoogleAICacheManager` 类创建 `CachedContent` 对象，然后使用 `enableCachedContent()` 方法将 `CachedContent` 对象传递给 `ChatGoogleGenerativeAIModel`。
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
@@ -554,7 +551,7 @@ import {
 const fileManager = new GoogleAIFileManager(process.env.GOOGLE_API_KEY);
 const cacheManager = new GoogleAICacheManager(process.env.GOOGLE_API_KEY);
 
-// uploads file for caching
+// 上传文件用于缓存
 const pathToVideoFile = "/path/to/video/file";
 const displayName = "example-video";
 const fileResult = await fileManager.uploadFile(pathToVideoFile, {
@@ -562,7 +559,7 @@ const fileResult = await fileManager.uploadFile(pathToVideoFile, {
     mimeType: "video/mp4",
 });
 
-// creates cached content AFTER uploading is finished
+// 在上传完成后创建缓存内容
 const cachedContent = await cacheManager.create({
     model: "models/gemini-2.5-flash",
     displayName: displayName,
@@ -584,29 +581,29 @@ const cachedContent = await cacheManager.create({
     ttlSeconds: 300,
 });
 
-// passes cached video to model
+// 将缓存的视频传递给模型
 const model = new ChatGoogleGenerativeAI({});
 model.useCachedContent(cachedContent);
 
-// invokes model with cached video
+// 调用模型以总结视频
 await model.invoke("Summarize the video");
 ```
 
-**Note**
+**注意**
 
-- The minimum input token count for context caching is 32,768, and the maximum is the same as the maximum for the given model.
+- 上下文缓存的最小输入 Token 数为 32,768，最大输入 Token 数与给定模型的最大 Token 数相同。
 
-## Gemini prompting FAQs
+## Gemini 提示词常见问题 (Gemini prompting FAQs)
 
-As of the time this doc was written (2023/12/12), Gemini has some restrictions on the types and structure of prompts it accepts. Specifically:
+在本文撰写之时（2023/12/12），Gemini 对其接受的提示词的类型和结构有一些限制。具体来说：
 
-1. When providing multimodal (image) inputs, you are restricted to at most 1 message of "human" (user) type. You cannot pass multiple messages (though the single human message may have multiple content entries)
-2. System messages are not natively supported, and will be merged with the first human message if present.
-3. For regular chat conversations, messages must follow the human/ai/human/ai alternating pattern. You may not provide 2 AI or human messages in sequence.
-4. Message may be blocked if they violate the safety checks of the LLM. In this case, the model will return an empty response.
+1. 当提供多模态（图像）输入时，您被限制最多只能有一个 “human”（用户）类型的消息。您不能传递多条消息（尽管单条 human 消息可以包含多个内容条目）。
+2. 系统消息 (System messages) 不受原生支持，如果存在，它们将被合并到第一条 human 消息中。
+3. 对于常规的对话（chat）场景，消息必须遵循 human/ai/human/ai 交替模式。您不能连续提供两条 AI 或 human 消息。
+4. 如果消息违反了 LLM 的安全检查，可能会被阻止。在这种情况下，模型将返回一个空响应。
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `ChatGoogleGenerativeAI` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html).
+有关 `ChatGoogleGenerativeAI` 所有特性和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。

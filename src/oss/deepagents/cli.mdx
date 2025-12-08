@@ -1,59 +1,59 @@
 ---
 title: Deep Agents CLI
-sidebarTitle: Use the CLI
-description: Interactive command-line interface for building with Deep Agents
+sidebarTitle: 使用 CLI
+description: 用于构建 Deep Agents 的交互式命令行界面
 ---
 
-A terminal interface for building agents with persistent memory. Agents maintain context across sessions, learn project conventions, and execute code with approval controls.
+一个用于构建具有持久化内存的智能体的终端界面。智能体可以在会话中保持上下文、学习项目约定，并在批准控制下执行代码。
 
-The Deep Agents CLI has the following built-in capabilities:
+Deep Agents CLI 具有以下内置功能：
 
-* <Icon icon="file" size={16} /> **File operations** - read, write, and edit files in your project with tools that enable agents to manage and modify code and documentation.
-* <Icon icon="terminal" size={16} /> **Shell command execution** - execute shell commands to run tests, build projects, manage dependencies, and interact with version control systems.
-* <Icon icon="magnifying-glass" size={16} /> **Web search** - search the web for up-to-date information and documentation (requires Tavily API key).
-* <Icon icon="globe" size={16} /> **HTTP requests** - make HTTP requests to APIs and external services for data fetching and integration tasks.
-* <Icon icon="list-check" size={16} /> **Task planning and tracking** - break down complex tasks into discrete steps and track progress through the built-in todo system.
-* <Icon icon="brain" size={16} /> **Memory storage and retrieval** - store and retrieve information across sessions, enabling agents to remember project conventions and learned patterns.
-* <Icon icon="head-side" size={16} /> **Human-in-the-loop** - require human approval for sensitive tool operations.
+* <Icon icon="file" size={16} /> **文件操作** - 使用户体能够管理和修改代码和文档的工具来读取、写入和编辑项目文件。
+* <Icon icon="terminal" size={16} /> **Shell 命令执行** - 执行 shell 命令来运行测试、构建项目、管理依赖项以及与版本控制系统交互。
+* <Icon icon="magnifying-glass" size={16} /> **网络搜索** - 搜索网络以获取最新信息和文档（需要 Tavily API 密钥）。
+* <Icon icon="globe" size={16} /> **HTTP 请求** - 对 API 和外部服务发出 HTTP 请求，以完成数据获取和集成任务。
+* <Icon icon="list-check" size={16} /> **任务规划与跟踪** - 将复杂任务分解为离散的步骤，并通过内置的待办事项系统跟踪进度。
+* <Icon icon="brain" size={16} /> **内存的存储与检索** - 在会话之间存储和检索信息，使智能体能够记住项目约定和学到的模式。
+* <Icon icon="head-side" size={16} /> **人在回路 (Human-in-the-loop)** - 要求人工批准敏感的工具操作。
 
 <Tip>
-[Watch the demo video](https://youtu.be/IrnacLa9PJc?si=3yUnPbxnm2yaqVQb) to see how the Deep Agents CLI works.
+[观看演示视频](https://youtu.be/IrnacLa9PJc?si=3yUnPbxnm2yaqVQb) 了解 Deep Agents CLI 的工作原理。
 </Tip>
 
-## Quick start
+## 快速开始
 
 <Steps>
-  <Step title="Set your API key" icon="key">
-    Export as an environment variable:
+  <Step title="设置 API 密钥" icon="key">
+    作为环境变量导出：
 
     ```bash
     export ANTHROPIC_API_KEY="your-api-key"
     ```
 
-    Or create a `.env` file in your project root:
+    或者在项目根目录创建一个 `.env` 文件：
 
     ```bash
     ANTHROPIC_API_KEY=your-api-key
     ```
   </Step>
 
-  <Step title="Run the CLI" icon="terminal">
+  <Step title="运行 CLI" icon="terminal">
     ```bash
     uvx deepagents-cli
     ```
   </Step>
 
-  <Step title="Give the agent a task" icon="message">
+  <Step title="给智能体分配任务" icon="message">
     ```bash
     > Create a Python script that prints "Hello, World!"
     ```
 
-    The agent proposes changes with diffs for your approval before modifying files.
+    在修改文件之前，智能体会提供带有 diff 差异对比的更改建议供您批准。
   </Step>
 </Steps>
 
-<Accordion title="Additional installation and configuration options">
-Install locally if needed:
+<Accordion title="其他安装和配置选项">
+如有需要，可本地安装：
 
 <CodeGroup>
 ```bash pip
@@ -65,57 +65,55 @@ uv add deepagents-cli
 ```
 </CodeGroup>
 
-The CLI uses Anthropic Claude Sonnet 4 by default. To use OpenAI:
+CLI 默认使用 Anthropic Claude Sonnet 4。如需使用 OpenAI：
 
 ```bash
 export OPENAI_API_KEY="your-key"
 ```
 
-Enable web search (optional):
+启用网络搜索（可选）：
 
 ```bash
 export TAVILY_API_KEY="your-key"
 ```
 
-API keys can be set as environment variables or in a `.env` file.
+API 密钥可以设置为环境变量或保存在 `.env` 文件中。
 </Accordion>
 
-## Configuration
+## 配置
 
 <AccordionGroup>
-  <Accordion title="Command-line options" icon="flag">
-    | Option                 | Description                                                 |
+  <Accordion title="命令行选项" icon="flag">
+    | 选项 | 描述 |
     |------------------------|-------------------------------------------------------------|
-    | `--agent NAME`         | Use named agent with separate memory                        |
-    | `--auto-approve`       | Skip tool confirmation prompts (toggle with `Ctrl+T`)       |
-    | `--sandbox TYPE`       | Execute in remote sandbox: `modal`, `daytona`, or `runloop` |
-    | `--sandbox-id ID`      | Reuse existing sandbox                                      |
-    | `--sandbox-setup PATH` | Run setup script in sandbox                                 |
+    | `--agent NAME` | 使用具有独立内存的命名智能体 |
+    | `--auto-approve` | 跳过工具确认提示（使用 `Ctrl+T` 切换） |
+    | `--sandbox TYPE` | 在远程沙箱中执行：`modal`、`daytona` 或 `runloop` |
+    | `--sandbox-id ID` | 重用现有沙箱 |
+    | `--sandbox-setup PATH` | 在沙箱中运行设置脚本 |
   </Accordion>
 
-  <Accordion title="CLI commands" icon="terminal">
-    | Command                              | Description                            |
+  <Accordion title="CLI 命令" icon="terminal">
+    | 命令 | 描述 |
     |--------------------------------------|----------------------------------------|
-    | `deepagents list`                    | List all agents                        |
-    | `deepagents help`                    | Show help                              |
-    | `deepagents reset --agent NAME`      | Clear agent memory and reset to default|
-    | `deepagents reset --agent NAME --target SOURCE` | Copy memory from another agent |
+    | `deepagents list` | 列出所有智能体 |
+    | `deepagents help` | 显示帮助信息 |
+    | `deepagents reset --agent NAME` | 清除智能体内存并重置为默认状态 |
+    | `deepagents reset --agent NAME --target SOURCE` | 从另一个智能体复制内存 |
   </Accordion>
 </AccordionGroup>
 
-## Interactive mode
-
 <AccordionGroup>
-  <Accordion title="Slash commands" icon="slash">
-    Use these commands within the CLI session:
+  <Accordion title="交互模式" icon="slash">
+    在 CLI 会话中使用以下命令：
 
-    - `/tokens` - Display token usage
-    - `/clear` - Clear conversation history
-    - `/exit` - Exit the CLI
+    - `/tokens` - 显示令牌使用情况
+    - `/clear` - 清除对话历史记录
+    - `/exit` - 退出 CLI
   </Accordion>
 
-  <Accordion title="Bash commands" icon="terminal">
-    Execute shell commands directly by prefixing with `!`:
+  <Accordion title="Bash 命令" icon="terminal">
+    通过在前面加 `!` 来直接执行 shell 命令：
 
     ```bash
     !git status
@@ -124,28 +122,28 @@ API keys can be set as environment variables or in a `.env` file.
     ```
   </Accordion>
 
-  <Accordion title="Keyboard shortcuts" icon="keyboard">
-    | Shortcut    | Action              |
+  <Accordion title="键盘快捷键" icon="keyboard">
+    | 快捷键 | 操作 |
     |-------------|---------------------|
-    | `Enter`     | Submit              |
-    | `Alt+Enter` | Newline             |
-    | `Ctrl+E`    | External editor     |
-    | `Ctrl+T`    | Toggle auto-approve |
-    | `Ctrl+C`    | Interrupt           |
-    | `Ctrl+D`    | Exit                |
+    | `Enter` | 提交 |
+    | `Alt+Enter` | 换行 |
+    | `Ctrl+E` | 外部编辑器 |
+    | `Ctrl+T` | 切换自动批准 |
+    | `Ctrl+C` | 中断 |
+    | `Ctrl+D` | 退出 |
   </Accordion>
 </AccordionGroup>
 
 
-## Set project conventions with memories
+## 使用内存设置项目约定
 
-Agents store information in `~/.deepagents/AGENT_NAME/memories/` as markdown files using a memory-first protocol:
+智能体将信息存储在 `~/.deepagents/AGENT_NAME/memories/` 目录下的 markdown 文件中，采用“内存优先”协议：
 
-1. **Research**: Searches memory for relevant context before starting tasks
-2. **Response**: Checks memory when uncertain during execution
-3. **Learning**: Automatically saves new information for future sessions
+1. **研究 (Research)**：在开始任务前搜索内存以获取相关上下文
+2. **响应 (Response)**：在执行过程中不确定时检查内存
+3. **学习 (Learning)**：自动保存新信息以供将来会话使用
 
-Organize memories by topic with descriptive filenames:
+使用描述性文件名按主题组织内存：
 
 ```
 ~/.deepagents/backend-dev/memories/
@@ -154,33 +152,33 @@ Organize memories by topic with descriptive filenames:
 └── deployment-process.md
 ```
 
-Teach the agent conventions once:
+只需教一次智能体约定：
 
 ```bash
 uvx deepagents-cli --agent backend-dev
 > Our API uses snake_case and includes created_at/updated_at timestamps
 ```
 
-It remembers for future sessions:
+它会在将来的会话中记住这些设置：
 
 ```bash
 > Create a /users endpoint
-# Applies conventions without prompting
+# 无需提示即可应用约定
 ```
 
-## Use remote sandboxes
+## 使用远程沙箱
 
-Execute code in isolated remote environments for safety and flexibility. Remote sandboxes provide the following benefits:
+在隔离的远程环境中执行代码，以确保安全性和灵活性。远程沙箱提供以下优势：
 
-  - **Safety**: Protect your local machine from potentially harmful code execution
-  - **Clean environments**: Use specific dependencies or OS configurations without local setup
-  - **Parallel execution**: Run multiple agents simultaneously in isolated environments
-  - **Long-running tasks**: Execute time-intensive operations without blocking your machine
-  - **Reproducibility**: Ensure consistent execution environments across teams
+  - **安全性**：保护本地机器免受潜在有害的代码执行影响
+  - **干净的环境**：无需本地设置即可使用特定的依赖项或操作系统配置
+  - **并行执行**：在隔离的环境中同时运行多个智能体
+  - **长期任务**：执行耗时的操作而不会阻塞本地机器
+  - **可再现性**：确保团队内部执行环境的一致性
 
-To use a remote sandbox, follow these steps:
+要使用远程沙箱，请遵循以下步骤：
 
-1. Configure your sandbox provider ([Runloop](https://www.runloop.ai/), [Daytona](https://www.daytona.io/), or [Modal](https://modal.com/)):
+1. 配置您的沙箱提供商 ([Runloop](https://www.runloop.ai/)、[Daytona](https://www.daytona.io/) 或 [Modal](https://modal.com/))：
 
     ```bash
     # Runloop
@@ -193,25 +191,25 @@ To use a remote sandbox, follow these steps:
     modal setup
     ```
 
-1. Run the CLI with a sandbox:
+2. 运行带有沙箱的 CLI：
 
     ```bash
     uvx deepagents-cli --sandbox runloop --sandbox-setup ./setup.sh
     ```
 
-    The agent runs locally but executes all code operations in the remote sandbox. Optional setup scripts can configure environment variables, clone repositories, and prepare dependencies.
+    智能体在本地运行，但所有代码操作都在远程沙箱中执行。可选的设置脚本可以配置环境变量、克隆仓库并准备依赖项。
 
-1. (Optional) Create a `setup.sh` file to configure your sandbox environment:
+3.（可选）创建一个 `setup.sh` 文件以配置沙箱环境：
 
     ```bash
     #!/bin/bash
     set -e
 
-    # Clone repository using GitHub token
+    # 使用 GitHub token 克隆仓库
     git clone https://x-access-token:${GITHUB_TOKEN}@github.com/username/repo.git $HOME/workspace
     cd $HOME/workspace
 
-    # Make environment variables persistent
+    # 使环境变量持久化
     cat >> ~/.bashrc <<'EOF'
     export GITHUB_TOKEN="${GITHUB_TOKEN}"
     export OPENAI_API_KEY="${OPENAI_API_KEY}"
@@ -221,8 +219,8 @@ To use a remote sandbox, follow these steps:
     source ~/.bashrc
     ```
 
-    Store secrets in a local `.env` file for the setup script to access.
+    将密钥存储在本地 `.env` 文件中供设置脚本访问。
 
 <Warning>
-  Sandboxes isolate code execution, but agents remain vulnerable to prompt injection with untrusted inputs. Use human-in-the-loop approval, short-lived secrets, and trusted setup scripts only. Note that sandbox APIs are evolving rapidly, and we expect more providers to support proxies that help mitigate prompt injection and secrets management concerns.
+  沙箱隔离了代码执行，但智能体仍然容易受到对不受信任输入的提示注入攻击。仅使用人在回路批准、短期密钥以及受信任的设置脚本。请注意，沙箱 API 发展迅速，我们预计会有更多提供商支持代理（proxies），以帮助缓解提示注入和密钥管理方面的顾虑。
 </Warning>

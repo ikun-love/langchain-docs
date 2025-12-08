@@ -1,37 +1,37 @@
 ---
-title: Google Cloud Vertex AI Reranker
+title: Google Cloud Vertex AI 重新排序器
 ---
 
-> The [Vertex Search Ranking API](https://cloud.google.com/generative-ai-app-builder/docs/ranking) is one of the standalone APIs in [Vertex AI Agent Builder](https://cloud.google.com/generative-ai-app-builder/docs/builder-apis). It takes a list of documents and reranks those documents based on how relevant the documents are to a query. Compared to embeddings, which look only at the semantic similarity of a document and a query, the ranking API can give you precise scores for how well a document answers a given query. The ranking API can be used to improve the quality of search results after retrieving an initial set of candidate documents.
+> [Vertex Search 排名 API](https://cloud.google.com/generative-ai-app-builder/docs/ranking) 是 [Vertex AI Agent Builder](https://cloud.google.com/generative-ai-app-builder/docs/builder-apis) 中的独立 API 之一。它接收一个文档列表，并根据这些文档与查询的相关性对它们进行重新排序 (rerank)。与仅关注文档和查询语义相似性的嵌入 (embeddings) 相比，排名 API 可以为您提供关于文档回答给定查询效果的精确分数。排名 API 可用于在检索到候选文档的初始集合后，提高搜索结果的质量。
 
->The ranking API is stateless so there's no need to index documents before calling the API. All you need to do is pass in the query and documents. This makes the API well suited for reranking documents from any document retrievers.
+> 排名 API 是无状态的，因此在调用 API 之前不需要索引文档。您所需要做的就是传入查询和文档。这使得该 API 非常适合对来自任何文档检索器的文档进行重新排序。
 
->For more information, see [Rank and rerank documents](https://cloud.google.com/generative-ai-app-builder/docs/ranking).
+> 更多信息，请参阅 [Rank and rerank documents](https://cloud.google.com/generative-ai-app-builder/docs/ranking)（排名和重新排序文档）。
 
 ```python
 pip install -qU langchain langchain-community langchain-google-community langchain-google-community[vertexaisearch] langchain-google-vertexai langchain-chroma langchain-text-splitters beautifulsoup4
 ```
 
-### Setup
+### 设置 (Setup)
 
 ```python
 PROJECT_ID = ""
 REGION = ""
 RANKING_LOCATION_ID = "global"  # @param {type:"string"}
 
-# Initialize GCP project for Vertex AI
+# 初始化 Vertex AI 的 GCP 项目
 from google.cloud import aiplatform
 
 aiplatform.init(project=PROJECT_ID, location=REGION)
 ```
 
-### Load and Prepare data
+### 加载和准备数据 (Load and Prepare data)
 
-For this example, we will be using the [Google Wiki page](https://en.wikipedia.org/wiki/Google)to demonstrate how the Vertex Ranking API works.
+在此示例中，我们将使用 [Google 维基百科页面](https://en.wikipedia.org/wiki/Google) 来演示 Vertex 排名 API 的工作原理。
 
-We use a standard pipeline of `load -> split -> embed data`.
+我们使用标准的管道流程：`加载 (load) -> 分割 (split) -> 嵌入 (embed data)`。
 
-The embeddings are created using the [Vertex Embeddings API](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported_models) model - `textembedding-gecko@003`
+嵌入是使用 [Vertex Embeddings API](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported_models) 模型 `textembedding-gecko@003` 创建的。
 
 ```python
 from langchain_chroma import Chroma
@@ -41,17 +41,17 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 vectordb = None
 
-# Load wiki page
+# 加载维基百科页面
 loader = WebBaseLoader("https://en.wikipedia.org/wiki/Google")
 data = loader.load()
 
-# Split doc into chunks
+# 将文档分割成块 (chunks)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=5)
 splits = text_splitter.split_documents(data)
 
-print(f"Your {len(data)} documents have been split into {len(splits)} chunks")
+print(f"您的 {len(data)} 个文档已被分割成 {len(splits)} 个块")
 
-if vectordb is not None:  # delete existing vectordb if it already exists
+if vectordb is not None:  # 如果 vectordb 已存在，则删除其集合
     vectordb.delete_collection()
 
 embedding = VertexAIEmbeddings(model_name="textembedding-gecko@003")
@@ -67,7 +67,7 @@ import pandas as pd
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 from langchain_google_community.vertex_rank import VertexAIRank
 
-# Instantiate the VertexAIReranker with the SDK manager
+# 使用 SDK 管理器实例化 VertexAIReranker
 reranker = VertexAIRank(
     project_id=PROJECT_ID,
     location_id=RANKING_LOCATION_ID,
@@ -76,37 +76,37 @@ reranker = VertexAIRank(
     top_n=5,
 )
 
-basic_retriever = vectordb.as_retriever(search_kwargs={"k": 5})  # fetch top 5 documents
+basic_retriever = vectordb.as_retriever(search_kwargs={"k": 5})  # 获取前 5 个文档
 
-# Create the ContextualCompressionRetriever with the VertexAIRanker as a Reranker
+# 使用 VertexAIRanker 作为重排序器 (Reranker) 创建 ContextualCompressionRetriever
 retriever_with_reranker = ContextualCompressionRetriever(
     base_compressor=reranker, base_retriever=basic_retriever
 )
 ```
 
-### Testing out the Vertex Ranking API
+### 测试 Vertex 排名 API (Testing out the Vertex Ranking API)
 
-Let's query both the `basic_retriever` and `retriever_with_reranker` with the same query and compare the retrieved documents.
+让我们使用相同的查询对 `basic_retriever` 和 `retriever_with_reranker` 进行查询，并比较检索到的文档。
 
-The Ranking API takes in the input from the `basic_retriever` and passes it to the Ranking API.
+排名 API 接收来自 `basic_retriever` 的输入，并将其传递给排名 API。
 
-The ranking API is used to improve the quality of the ranking and determine a score that indicates the relevance of each record to the query.
+排名 API 用于提高排名的质量，并确定一个分数，该分数指示每条记录与查询的相关性。
 
-You can see the difference between the Unranked and the Ranked Documents. The Ranking API moves the most semantically relevant documents to the top of the context window of the LLM thus helping it form a better answer with reasoning.
+您可以看到未排序 (Unranked) 文档和已排序 (Ranked) 文档之间的差异。排名 API 将最相关的文档移到 LLM 上下文窗口的顶部，从而帮助它通过推理形成更好的答案。
 
 ```python
 import pandas as pd
 
-# Use the basic_retriever and the retriever_with_reranker to get relevant documents
+# 使用 basic_retriever 和 retriever_with_reranker 获取相关文档
 query = "how did the name google originate?"
 retrieved_docs = basic_retriever.invoke(query)
 reranked_docs = retriever_with_reranker.invoke(query)
 
-# Create two lists of results for unranked and ranked docs
+# 创建未排序和已排序文档的结果列表
 unranked_docs_content = [docs.page_content for docs in retrieved_docs]
 ranked_docs_content = [docs.page_content for docs in reranked_docs]
 
-# Create a comparison DataFrame using the padded lists
+# 使用填充后的列表创建比较 DataFrame
 comparison_df = pd.DataFrame(
     {
         "Unranked Documents": unranked_docs_content,
@@ -437,7 +437,7 @@ comparison_df
 
 ```
 
-Let's inspect a couple of reranked documents. We observe that the retriever still returns the relevant LangChain type [documents](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) but as part of the metadata field, we also receive the `relevance_score` from the Ranking API.
+让我们检查一下排名前几位的文档。我们观察到检索器仍然返回相关的 LangChain 类型的 [文档](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html)，但作为元数据字段的一部分，我们还收到了来自排名 API 的 `relevance_score`（相关性分数）。
 
 ```python
 for i in range(2):
@@ -465,9 +465,9 @@ page_content='Eventually, they changed the name to Google; the name of the searc
 ----------------------------------------------------------
 ```
 
-### Putting it all together
+### 整合所有内容 (Putting it all together)
 
-This shows an example of a complete RAG chain with a simple prompt template on how you can perform reranking using the Vertex Ranking API.
+这展示了一个完整的 RAG 链的示例，其中包含一个简单的 Prompt 模板，演示了如何使用 Vertex 排名 API 执行重新排序。
 
 ```python
 from langchain.chains import LLMChain
@@ -478,20 +478,20 @@ from langchain_google_vertexai import VertexAI
 
 llm = VertexAI(model_name="gemini-2.5-pro")
 
-# Instantiate the VertexAIReranker with the SDK manager
+# 使用 SDK 管理器实例化 VertexAIReranker
 reranker = VertexAIRank(
     project_id=PROJECT_ID,
     location_id=RANKING_LOCATION_ID,
     ranking_config="default_ranking_config",
-    title_field="source",  # metadata field key from your existing documents
+    title_field="source",  # 您现有文档中的元数据字段键
     top_n=5,
 )
 
-# value of k can be set to a higher value as well for tweaking performance
-# eg: # of docs: basic_retriever(100) -> reranker(5)
-basic_retriever = vectordb.as_retriever(search_kwargs={"k": 5})  # fetch top 5 documents
+# k 的值也可以设置为一个更高的值，以调整性能
+# 例如：# of docs: basic_retriever(100) -> reranker(5)
+basic_retriever = vectordb.as_retriever(search_kwargs={"k": 5})  # 获取前 5 个文档
 
-# Create the ContextualCompressionRetriever with the VertexAIRanker as a Reranker
+# 使用 VertexAIRanker 作为重排序器 (Reranker) 创建 ContextualCompressionRetriever
 retriever_with_reranker = ContextualCompressionRetriever(
     base_compressor=reranker, base_retriever=basic_retriever
 )
@@ -504,7 +504,7 @@ template = """
 Question:
 {query}
 
-Don't give information outside the context or repeat your findings.
+不要提供上下文之外的信息或重复您的发现。
 Answer:
 """
 prompt = PromptTemplate.from_template(template)

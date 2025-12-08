@@ -2,7 +2,7 @@
 title: Vercel KV
 ---
 
-This example demonstrates how to setup chat history storage using the `VercelKVStore` @[`BaseStore`] integration.
+此示例演示了如何使用 `VercelKVStore` @[`BaseStore`] 集成来设置聊天历史记录存储。
 
 ## Setup
 
@@ -17,13 +17,12 @@ import { createClient } from "@vercel/kv";
 import { VercelKVStore } from "@langchain/community/storage/vercel_kv";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
-// Pro tip: define a helper function for getting your client
-// along with handling the case where your environment variables
-// are not set.
+// 专家提示：定义一个帮助函数来获取您的客户端，
+// 同时处理环境变量未设置的情况。
 const getClient = () => {
   if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
     throw new Error(
-      "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment"
+      "必须在环境中设置 VERCEL_KV_API_URL 和 VERCEL_KV_API_TOKEN"
     );
   }
   const client = createClient({
@@ -33,37 +32,36 @@ const getClient = () => {
   return client;
 };
 
-// Define the client and store
+// 定义客户端和存储
 const client = getClient();
 const store = new VercelKVStore({
   client,
 });
-// Define our encoder/decoder for converting between strings and Uint8Arrays
+// 定义我们的编码器/解码器，用于在字符串和 Uint8Array 之间进行转换
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 /**
- * Here you would define your LLM and chat chain, call
- * the LLM and eventually get a list of messages.
- * For this example, we'll assume we already have a list.
+ * 在这里，您将定义您的 LLM 和聊天链，调用
+ * LLM，并最终获得消息列表。
+ * 在此示例中，我们假设我们已经有了一个列表。
  */
 const messages = Array.from({ length: 5 }).map((_, index) => {
   if (index % 2 === 0) {
-    return new AIMessage("ai stuff...");
+    return new AIMessage("ai stuff..."); // 假设这是 AI 的回复内容
   }
-  return new HumanMessage("human stuff...");
+  return new HumanMessage("human stuff..."); // 假设这是用户输入的内容
 });
-// Set your messages in the store
-// The key will be prefixed with `message:id:` and end
-// with the index.
+// 将您的消息设置到存储中 (Set your messages in the store)
+// 键 (key) 将会以 `message:id:` 作为前缀，并以索引结尾。
 await store.mset(
   messages.map((message, index) => [
     `message:id:${index}`,
     encoder.encode(JSON.stringify(message)),
   ])
 );
-// Now you can get your messages from the store
+// 现在您可以从存储中获取您的消息了 (Now you can get your messages from the store)
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
-// Make sure to decode the values
+// 确保解码这些值 (Make sure to decode the values)
 console.log(retrievedMessages.map((v) => decoder.decode(v)));
 /**
 [
@@ -71,15 +69,14 @@ console.log(retrievedMessages.map((v) => decoder.decode(v)));
   '{"id":["langchain","HumanMessage"],"kwargs":{"content":"human stuff..."}}'
 ]
  */
-// Or, if you want to get back all the keys you can call
-// the `yieldKeys` method.
-// Optionally, you can pass a key prefix to only get back
-// keys which match that prefix.
+// 或者，如果您想取回所有键 (Or, if you want to get back all the keys)，您可以调用
+// `yieldKeys` 方法。
+// 您可以选择传递一个键前缀，以仅获取匹配该前缀的键。
 const yieldedKeys = [];
 for await (const key of store.yieldKeys("message:id:")) {
   yieldedKeys.push(key);
 }
-// The keys are not encoded, so no decoding is necessary
+// 键是没有被编码的，所以不需要解码 (The keys are not encoded, so no decoding is necessary)
 console.log(yieldedKeys);
 /**
 [
@@ -90,10 +87,10 @@ console.log(yieldedKeys);
   'message:id:4'
 ]
  */
-// Finally, let's delete the keys from the store
+// 最后，让我们从存储中删除这些键 (Finally, let's delete the keys from the store)
 await store.mdelete(yieldedKeys);
 ```
 
 ## Related
 
-- [Key-value store conceptual guide](/oss/integrations/stores)
+- [键值存储概念指南](/oss/integrations/stores)

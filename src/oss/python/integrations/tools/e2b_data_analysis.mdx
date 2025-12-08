@@ -1,27 +1,27 @@
 ---
-title: E2B Data Analysis
+title: E2B 数据分析
 ---
 
-[E2B's cloud environments](https://e2b.dev) are great runtime sandboxes for LLMs.
+[E2B 的云环境](https://e2b.dev) 是用于大型语言模型（LLM）的绝佳运行时沙箱。
 
-E2B's Data Analysis sandbox allows for safe code execution in a sandboxed environment. This is ideal for building tools such as code interpreters, or Advanced Data Analysis like in ChatGPT.
+E2B 的数据分析沙箱允许在沙盒环境中安全地执行代码。这非常适合构建代码解释器或像 ChatGPT 中那样的**高级数据分析**工具。
 
-E2B Data Analysis sandbox allows you to:
+E2B 数据分析沙箱允许您：
 
-- Run Python code
-- Generate charts via matplotlib
-- Install Python packages dynamically during runtime
-- Install system packages dynamically during runtime
-- Run shell commands
-- Upload and download files
+- 运行 Python 代码
+- 通过 `matplotlib` 生成图表
+- 在运行时动态安装 Python 包
+- 在运行时动态安装系统包
+- 运行 Shell 命令
+- 上传和下载文件
 
-We'll create a simple OpenAI agent that will use E2B's Data Analysis sandbox to perform analysis on a uploaded files using Python.
+我们将创建一个简单的 OpenAI 智能体（Agent），它将使用 E2B 的数据分析沙箱，通过 Python 对上传的文件执行分析。
 
-Get your OpenAI API key and [E2B API key here](https://e2b.dev/docs/getting-started/api-key) and set them as environment variables.
+获取您的 OpenAI API 密钥和 [E2B API 密钥（地址在此）](https://e2b.dev/docs/getting-started/api-key)，并将它们设置为环境变量。
 
-You can find the full API documentation [here](https://e2b.dev/docs).
+您可以在[此处](https://e2b.dev/docs)找到完整的 API 文档。
 
-You'll need to install `e2b` to get started:
+要开始使用，您需要安装 `e2b`：
 
 ```python
 pip install -qU  langchain e2b langchain-community
@@ -41,23 +41,23 @@ os.environ["E2B_API_KEY"] = "<E2B_API_KEY>"
 os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
 ```
 
-When creating an instance of the `E2BDataAnalysisTool`, you can pass callbacks to listen to the output of the sandbox. This is useful, for example, when creating more responsive UI. Especially with the combination of streaming output from LLMs.
+在创建 `E2BDataAnalysisTool` 实例时，您可以传递回调函数来监听沙箱的输出。这在创建响应更快的用户界面（UI）时非常有用，特别是与 LLM 的流式输出结合使用时。
 
 ```python
-# Artifacts are charts created by matplotlib when `plt.show()` is called
+# Artifacts 是调用 `plt.show()` 时由 matplotlib 创建的图表
 def save_artifact(artifact):
-    print("New matplotlib chart generated:", artifact.name)
-    # Download the artifact as `bytes` and leave it up to the user to display them (on frontend, for example)
+    print("新生成的 matplotlib 图表:", artifact.name)
+    # 将构件（artifact）下载为 `bytes`，并由用户自行决定如何显示它们（例如，在前端）
     file = artifact.download()
     basename = os.path.basename(artifact.name)
 
-    # Save the chart to the `charts` directory
+    # 将图表保存到 `charts` 目录
     with open(f"./charts/{basename}", "wb") as f:
         f.write(file)
 
 
 e2b_data_analysis_tool = E2BDataAnalysisTool(
-    # Pass environment variables to the sandbox
+    # 将环境变量传递给沙箱
     env_vars={"MY_SECRET": "secret_value"},
     on_stdout=lambda stdout: print("stdout:", stdout),
     on_stderr=lambda stderr: print("stderr:", stderr),
@@ -65,13 +65,13 @@ e2b_data_analysis_tool = E2BDataAnalysisTool(
 )
 ```
 
-Upload an example CSV data file to the sandbox so we can analyze it with our agent. You can use for example [this file](https://storage.googleapis.com/e2b-examples/netflix.csv) about Netflix tv shows.
+上传一个示例 CSV 数据文件到沙箱，以便我们可以使用智能体对其进行分析。例如，您可以使用[这个文件](https://storage.googleapis.com/e2b-examples/netflix.csv)（关于 Netflix 电视节目的数据）。
 
 ```python
 with open("./netflix.csv") as f:
     remote_path = e2b_data_analysis_tool.upload_file(
         file=f,
-        description="Data about Netflix tv shows including their title, category, director, release date, casting, age rating, etc.",
+        description="关于 Netflix 电视节目的数据，包括标题、类别、导演、发布日期、演员阵容、年龄分级等。",
     )
     print(remote_path)
 ```
@@ -80,7 +80,7 @@ with open("./netflix.csv") as f:
 name='netflix.csv' remote_path='/home/user/netflix.csv' description='Data about Netflix tv shows including their title, category, director, release date, casting, age rating, etc.'
 ```
 
-Create a `Tool` object and initialize the LangChain agent.
+创建一个 `Tool` 对象并初始化 LangChain 智能体。
 
 ```python
 tools = [e2b_data_analysis_tool.as_tool()]
@@ -95,11 +95,11 @@ agent = initialize_agent(
 )
 ```
 
-Now we can ask the agent questions about the CSV file we uploaded earlier.
+现在我们可以就先前上传的 CSV 文件向智能体提问了。
 
 ```python
 agent.run(
-    "What are the 5 longest movies on netflix released between 2000 and 2010? Create a chart with their lengths."
+    "在 2000 年到 2010 年间发布的 Netflix 上最长的 5 部电影是什么？创建一张显示它们时长的图表。"
 )
 ```
 
@@ -115,15 +115,15 @@ stdout: 4573                  Jodhaa Akbar       214
 stdout: 2731      Kabhi Khushi Kabhie Gham       209
 stdout: 2632  No Direction Home: Bob Dylan       208
 stdout: 2126          What's Your Raashee?       203
-{'stdout': "                             title  duration\n1019                        Lagaan       224\n4573                  Jodhaa Akbar       214\n2731      Kabhi Khushi Kabhie Gham       209\n2632  No Direction Home: Bob Dylan       208\n2126          What's Your Raashee?       203", 'stderr': ''}The 5 longest movies on Netflix released between 2000 and 2010 are:
+{'stdout': "                             title  duration\n1019                        Lagaan       224\n4573                  Jodhaa Akbar       214\n2731      Kabhi Khushi Kabhie Gham       209\n2632  No Direction Home: Bob Dylan       208\n2126          What's Your Raashee?       203", 'stderr': ''}2000 年到 2010 年间 Netflix 上最长的 5 部电影是：
 
-1. Lagaan - 224 minutes
-2. Jodhaa Akbar - 214 minutes
-3. Kabhi Khushi Kabhie Gham - 209 minutes
-4. No Direction Home: Bob Dylan - 208 minutes
-5. What's Your Raashee? - 203 minutes
+1. Lagaan - 224 分钟
+2. Jodhaa Akbar - 214 分钟
+3. Kabhi Khushi Kabhie Gham - 209 分钟
+4. No Direction Home: Bob Dylan - 208 分钟
+5. What's Your Raashee? - 203 分钟
 
-Here is the chart showing their lengths:
+这是显示它们时长的图表：
 
 ![Longest Movies](sandbox:/home/user/longest_movies.png)
 
@@ -134,10 +134,10 @@ Here is the chart showing their lengths:
 "The 5 longest movies on Netflix released between 2000 and 2010 are:\n\n1. Lagaan - 224 minutes\n2. Jodhaa Akbar - 214 minutes\n3. Kabhi Khushi Kabhie Gham - 209 minutes\n4. No Direction Home: Bob Dylan - 208 minutes\n5. What's Your Raashee? - 203 minutes\n\nHere is the chart showing their lengths:\n\n![Longest Movies](sandbox:/home/user/longest_movies.png)"
 ```
 
-E2B also allows you to install both Python and system (via `apt`) packages dynamically during runtime like this:
+E2B 还允许您在运行时动态安装 Python 包和系统包（通过 `apt`），如下所示：
 
 ```python
-# Install Python package
+# 安装 Python 包
 e2b_data_analysis_tool.install_python_packages("pandas")
 ```
 
@@ -150,21 +150,21 @@ stdout: Requirement already satisfied: tzdata>=2022.1 in /usr/local/lib/python3.
 stdout: Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.8.2->pandas) (1.16.0)
 ```
 
-Additionally, you can download any file from the sandbox like this:
+此外，您可以通过 `download_file` 像这样从沙箱中下载任何文件：
 
 ```python
-# The path is a remote path in the sandbox
+# 路径是沙箱中的远程路径
 files_in_bytes = e2b_data_analysis_tool.download_file("/home/user/netflix.csv")
 ```
 
-Lastly, you can run any shell command inside the sandbox via `run_command`.
+最后，您可以通过 `run_command` 在沙箱内运行任何 Shell 命令。
 
 ```python
-# Install SQLite
+# 安装 SQLite
 e2b_data_analysis_tool.run_command("sudo apt update")
 e2b_data_analysis_tool.install_system_packages("sqlite3")
 
-# Check the SQLite version
+# 检查 SQLite 版本
 output = e2b_data_analysis_tool.run_command("sqlite3 --version")
 print("version: ", output["stdout"])
 print("error: ", output["stderr"])
@@ -203,11 +203,11 @@ stdout: Unpacking sqlite3 (3.37.2-2ubuntu0.1) ...
 stdout: Setting up sqlite3 (3.37.2-2ubuntu0.1) ...
 stdout: 3.37.2 2022-01-06 13:25:41 872ba256cbf61d9290b571c0e6d82a20c224ca3ad82971edc46b29818d5dalt1
 version:  3.37.2 2022-01-06 13:25:41 872ba256cbf61d9290b571c0e6d82a20c224ca3ad82971edc46b29818d5dalt1
-error:
+error: 
 exit code:  0
 ```
 
-When your agent is finished, don't forget to close the sandbox
+当您的智能体完成任务后，请务必关闭沙箱：
 
 ```python
 e2b_data_analysis_tool.close()

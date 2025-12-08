@@ -1,35 +1,36 @@
+```markdown
 ---
-title: Build a custom SQL agent
-sidebarTitle: Custom SQL agent
+title: 构建自定义 SQL 代理
+sidebarTitle: 自定义 SQL 代理
 ---
 
 import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
 import ChatModelTabsJS from '/snippets/chat-model-tabs-js.mdx';
 
 
-In this tutorial we will build a custom agent that can answer questions about a SQL database using LangGraph.
+在本教程中，我们将使用 LangGraph 构建一个可以回答关于 SQL 数据库问题的自定义代理。
 
-LangChain offers built-in [agent](/oss/langchain/agents) implementations, implemented using [LangGraph](/oss/langgraph/overview) primitives. If deeper customization is required, agents can be implemented directly in LangGraph. This guide demonstrates an example implementation of a SQL agent. You can find a tutorial building a SQL agent using higher-level LangChain abstractions [here](/oss/langchain/sql-agent).
+LangChain 提供了内置的[代理](/oss/langchain/agents)实现，这些实现是使用 [LangGraph](/oss/langgraph/overview) 基本单元构建的。如果需要更深入的自定义，可以直接在 LangGraph 中实现代理。本指南展示了一个 SQL 代理的示例实现。您可以通过[此处](/oss/langchain/sql-agent)的教程了解使用 LangChain 更高级抽象构建 SQL 代理的方法。
 
 <Warning>
-Building Q&A systems of SQL databases requires executing model-generated SQL queries. There are inherent risks in doing this. Make sure that your database connection permissions are always scoped as narrowly as possible for your agent's needs. This will mitigate, though not eliminate, the risks of building a model-driven system.
+构建 SQL 数据库的问答系统需要执行模型生成的 SQL 查询。这样做存在固有风险。请确保您的数据库连接权限始终根据代理的需求进行尽可能严格的限制。这将减轻构建模型驱动的系统所带来的风险，但无法完全消除这些风险。
 </Warning>
 
-The [prebuilt agent](/oss/langchain/sql-agent) lets us get started quickly, but we relied on the system prompt to constrain its behavior— for example, we instructed the agent to always start with the "list tables" tool, and to always run a query-checker tool before executing the query.
+[预构建的代理](/oss/langchain/sql-agent) 让我们能快速上手，但我们依赖系统提示（system prompt）来约束其行为——例如，我们指示代理始终以“列出表”工具开始，并在执行查询前始终运行查询检查器工具。
 
-We can enforce a higher degree of control in LangGraph by customizing the agent. Here, we implement a simple ReAct-agent setup, with dedicated nodes for specific tool-calls. We will use the same [state] as the pre-built agent.
+通过自定义代理，我们可以在 LangGraph 中强制执行更高程度的控制。在这里，我们实现了一个简单的 ReAct 代理设置，为特定的工具调用设置了专用的节点。我们将使用与预构建代理相同的[状态]（state）。
 
-### Concepts
+### 概念
 
-We will cover the following concepts:
+我们将介绍以下概念：
 
-- [Tools](/oss/langchain/tools) for reading from SQL databases
-- The LangGraph [Graph API](/oss/langgraph/graph-api), including state, nodes, edges, and conditional edges.
-- [Human-in-the-loop](/oss/langgraph/interrupts) processes
+- 用于从 SQL 数据库读取的[工具](/oss/langchain/tools)
+- LangGraph 的[图 API](/oss/langgraph/graph-api)，包括状态（state）、节点（nodes）、边（edges）和条件边（conditional edges）。
+-[人工干预（Human-in-the-loop）](/oss/langgraph/interrupts) 流程
 
-## Setup
+## 设置
 
-### Installation
+### 安装
 
     :::python
     <CodeGroup>
@@ -53,16 +54,16 @@ We will cover the following concepts:
     :::
 
 ### LangSmith
-Set up [LangSmith](https://smith.langchain.com) to inspect what is happening inside your chain or agent. Then set the following environment variables:
+设置 [LangSmith](https://smith.langchain.com) 以检查链或代理内部正在发生的事情。然后设置以下环境变量：
 
     ```shell
     export LANGSMITH_TRACING="true"
     export LANGSMITH_API_KEY="..."
     ```
 
-## 1. Select an LLM
+## 1. 选择 LLM
 
-Select a model that supports [tool-calling](/oss/integrations/providers/overview):
+选择一个支持[工具调用](/oss/integrations/providers/overview)的模型：
 
 :::python
 <ChatModelTabsPy />
@@ -71,13 +72,13 @@ Select a model that supports [tool-calling](/oss/integrations/providers/overview
 <ChatModelTabsJS />
 :::
 
-The output shown in the examples below used OpenAI.
+下面示例中显示的是使用 OpenAI 的输出。
 
-## 2. Configure the database
+## 2. 配置数据库
 
-You will be creating a [SQLite database](https://www.sqlitetutorial.net/sqlite-sample-database/) for this tutorial. SQLite is a lightweight database that is easy to set up and use. We will be loading the `chinook` database, which is a sample database that represents a digital media store.
+对于本教程，您将创建一个 [SQLite 数据库](https://www.sqlitetutorial.net/sqlite-sample-database/)。SQLite 是一种轻量级数据库，易于设置和使用。我们将加载 `chinook` 数据库，这是一个代表数字媒体商店的示例数据库。
 
-For convenience, we have hosted the database (`Chinook.db`) on a public GCS bucket.
+为方便起见，我们将数据库 (`Chinook.db`) 托管在一个公共 GCS 存储桶上。
 
 :::python
 ```python
@@ -87,31 +88,31 @@ url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db"
 local_path = pathlib.Path("Chinook.db")
 
 if local_path.exists():
-    print(f"{local_path} already exists, skipping download.")
+    print(f"{local_path} 已存在，跳过下载。")
 else:
     response = requests.get(url)
     if response.status_code == 200:
         local_path.write_bytes(response.content)
-        print(f"File downloaded and saved as {local_path}")
+        print(f"文件已下载并保存为 {local_path}")
     else:
-        print(f"Failed to download the file. Status code: {response.status_code}")
+        print(f"下载文件失败。状态码: {response.status_code}")
 ```
 
-We will use a handy SQL database wrapper available in the `langchain_community` package to interact with the database. The wrapper provides a simple interface to execute SQL queries and fetch results:
+我们将使用 `langchain_community` 包中提供的便捷 SQL 数据库包装器与数据库进行交互。该包装器提供了一个简单的接口来执行 SQL 查询和获取结果：
 
 ```python
 from langchain_community.utilities import SQLDatabase
 
 db = SQLDatabase.from_uri("sqlite:///Chinook.db")
 
-print(f"Dialect: {db.dialect}")
-print(f"Available tables: {db.get_usable_table_names()}")
-print(f'Sample output: {db.run("SELECT * FROM Artist LIMIT 5;")}')
+print(f"方言（Dialect）: {db.dialect}")
+print(f"可用表: {db.get_usable_table_names()}")
+print(f'示例输出: {db.run("SELECT * FROM Artist LIMIT 5;")}')
 ```
 ```
-Dialect: sqlite
-Available tables: ['Album', 'Artist', 'Customer', 'Employee', 'Genre', 'Invoice', 'InvoiceLine', 'MediaType', 'Playlist', 'PlaylistTrack', 'Track']
-Sample output: [(1, 'AC/DC'), (2, 'Accept'), (3, 'Aerosmith'), (4, 'Alanis Morissette'), (5, 'Alice In Chains')]
+方言（Dialect）: sqlite
+可用表: ['Album', 'Artist', 'Customer', 'Employee', 'Genre', 'Invoice', 'InvoiceLine', 'MediaType', 'Playlist', 'PlaylistTrack', 'Track']
+示例输出: [(1, 'AC/DC'), (2, 'Accept'), (3, 'Aerosmith'), (4, 'Alanis Morissette'), (5, 'Alice In Chains')]
 ```
 :::
 :::js
@@ -125,19 +126,19 @@ const localPath = path.resolve("Chinook.db");
 async function resolveDbPath() {
   const exists = await fs.access(localPath).then(() => true).catch(() => false);
   if (exists) {
-    console.log(`${localPath} already exists, skipping download.`);
+    console.log(`${localPath} 已存在，跳过下载。`);
     return localPath;
   }
   const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Failed to download DB. Status code: ${resp.status}`);
+  if (!resp.ok) throw new Error(`下载 DB 失败。状态码: ${resp.status}`);
   const buf = Buffer.from(await resp.arrayBuffer());
   await fs.writeFile(localPath, buf);
-  console.log(`File downloaded and saved as ${localPath}`);
+  console.log(`文件已下载并保存为 ${localPath}`);
   return localPath;
 }
 ```
 
-We will use a handy SQL database wrapper available in the `@langchain/classic/sql_db` module to interact with the database. The wrapper provides a simple interface to execute SQL queries and fetch results:
+我们将使用 `@langchain/classic/sql_db` 模块中提供的便捷 SQL 数据库包装器与数据库进行交互。该包装器提供了一个简单的接口来执行 SQL 查询和获取结果：
 
 ```typescript
 import { SqlDatabase } from "@langchain/classic/sql_db";
@@ -148,23 +149,23 @@ const datasource = new DataSource({ type: "sqlite", database: dbPath });
 const db = await SqlDatabase.fromDataSourceParams({ appDataSource: datasource });
 const dialect = db.appDataSourceOptions.type;
 
-console.log(`Dialect: ${dialect}`);
+console.log(`方言（Dialect）: ${dialect}`);
 const tableNames = db.allTables.map(t => t.tableName);
-console.log(`Available tables: ${tableNames.join(", ")}`);
+console.log(`可用表: ${tableNames.join(", ")}`);
 const sampleResults = await db.run("SELECT * FROM Artist LIMIT 5;");
-console.log(`Sample output: ${sampleResults}`);
+console.log(`示例输出: ${sampleResults}`);
 ```
 ```
-Dialect: sqlite
-Available tables: Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track
-Sample output: [{"ArtistId":1,"Name":"AC/DC"},{"ArtistId":2,"Name":"Accept"},{"ArtistId":3,"Name":"Aerosmith"},{"ArtistId":4,"Name":"Alanis Morissette"},{"ArtistId":5,"Name":"Alice In Chains"}]
+方言（Dialect）: sqlite
+可用表: Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track
+示例输出: [{"ArtistId":1,"Name":"AC/DC"},{"ArtistId":2,"Name":"Accept"},{"ArtistId":3,"Name":"Aerosmith"},{"ArtistId":4,"Name":"Alanis Morissette"},{"ArtistId":5,"Name":"Alice In Chains"}]
 ```
 :::
 
-## 3. Add tools for database interactions
+## 3. 添加数据库交互工具
 
 :::python
-Use the `SQLDatabase` wrapper available in the `langchain_community` package to interact with the database. The wrapper provides a simple interface to execute SQL queries and fetch results:
+使用 `langchain_community` 包中提供的 `SQLDatabase` 包装器与数据库进行交互。该包装器提供了一个简单的接口来执行 SQL 查询和获取结果：
 
 ```python
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
@@ -177,23 +178,23 @@ for tool in tools:
     print(f"{tool.name}: {tool.description}\n")
 ```
 ```
-sql_db_query: Input to this tool is a detailed and correct SQL query, output is a result from the database. If the query is not correct, an error message will be returned. If an error is returned, rewrite the query, check the query, and try again. If you encounter an issue with Unknown column 'xxxx' in 'field list', use sql_db_schema to query the correct table fields.
+sql_db_query: 此工具的输入是详细且正确的 SQL 查询，输出是数据库的结果。如果查询不正确，将返回错误消息。如果返回错误，请重写查询，检查查询，然后重试。如果遇到 “Unknown column 'xxxx' in 'field list'” 的问题，请使用 sql_db_schema 工具查询正确的表字段。
 
-sql_db_schema: Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables. Be sure that the tables actually exist by calling sql_db_list_tables first! Example Input: table1, table2, table3
+sql_db_schema: 此工具的输入是以逗号分隔的表列表，输出是这些表的 schema（结构）和样本行。在调用此工具前，请务必先调用 sql_db_list_tables 确认表确实存在！示例输入: table1, table2, table3
 
-sql_db_list_tables: Input is an empty string, output is a comma-separated list of tables in the database.
+sql_db_list_tables: 输入为空字符串，输出是数据库中表的逗号​​分隔列表。
 
-sql_db_query_checker: Use this tool to double check if your query is correct before executing it. Always use this tool before executing a query with sql_db_query!
+sql_db_query_checker: 在执行查询前，使用此工具双重检查查询是否正确。在对 sql_db_query 执行任何查询前，务必使用此工具！
 ```
 :::
 :::js
-We'll create custom tools to interact with the database:
+我们将创建自定义工具与数据库交互：
 
 ```typescript
 import { tool } from "langchain";
 import { z } from "zod";
 
-// Tool to list all tables
+// 列出所有表的工具
 const listTablesTool = tool(
   async () => {
     const tableNames = db.allTables.map(t => t.tableName);
@@ -201,12 +202,12 @@ const listTablesTool = tool(
   },
   {
     name: "sql_db_list_tables",
-    description: "Input is an empty string, output is a comma-separated list of tables in the database.",
+    description: "输入为空字符串，输出是数据库中表的逗号​​分隔列表。",
     schema: z.object({}),
   }
 );
 
-// Tool to get schema for specific tables
+// 获取特定表 schema 的工具
 const getSchemaTool = tool(
   async ({ table_names }) => {
     const tables = table_names.split(",").map(t => t.trim());
@@ -214,14 +215,14 @@ const getSchemaTool = tool(
   },
   {
     name: "sql_db_schema",
-    description: "Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables. Be sure that the tables actually exist by calling sql_db_list_tables first! Example Input: table1, table2, table3",
+    description: "此工具的输入是以逗号分隔的表列表，输出是这些表的 schema（结构）和样本行。在调用此工具前，请务必先调用 sql_db_list_tables 确认表确实存在！示例输入: table1, table2, table3",
     schema: z.object({
-      table_names: z.string().describe("Comma-separated list of table names"),
+      table_names: z.string().describe("逗号分隔的表名列表"),
     }),
   }
 );
 
-// Tool to execute SQL query
+// 执行 SQL 查询的工具
 const queryTool = tool(
   async ({ query }) => {
     try {
@@ -233,9 +234,9 @@ const queryTool = tool(
   },
   {
     name: "sql_db_query",
-    description: "Input to this tool is a detailed and correct SQL query, output is a result from the database. If the query is not correct, an error message will be returned. If an error is returned, rewrite the query, check the query, and try again.",
+    description: "此工具的输入是详细且正确的 SQL 查询，输出是数据库的结果。如果查询不正确，将返回错误消息。如果返回错误，请重写查询，检查查询，然后重试。",
     schema: z.object({
-      query: z.string().describe("SQL query to execute"),
+      query: z.string().describe("要执行的 SQL 查询"),
     }),
   }
 );
@@ -247,24 +248,24 @@ for (const tool of tools) {
 }
 ```
 ```
-sql_db_list_tables: Input is an empty string, output is a comma-separated list of tables in the database.
+sql_db_list_tables: 输入为空字符串，输出是数据库中表的逗号​​分隔列表。
 
-sql_db_schema: Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables. Be sure that the tables actually exist by calling sql_db_list_tables first! Example Input: table1, table2, table3
+sql_db_schema: 此工具的输入是以逗号分隔的表列表，输出是这些表的 schema（结构）和样本行。在调用此工具前，请务必先调用 sql_db_list_tables 确认表确实存在！示例输入: table1, table2, table3
 
-sql_db_query: Input to this tool is a detailed and correct SQL query, output is a result from the database. If the query is not correct, an error message will be returned. If an error is returned, rewrite the query, check the query, and try again.
+sql_db_query: 此工具的输入是详细且正确的 SQL 查询，输出是数据库的结果。如果查询不正确，将返回错误消息。如果返回错误，请重写查询，检查查询，然后重试。
 ```
 :::
 
-## 4. Define application steps
+## 4. 定义应用步骤
 
-We construct dedicated nodes for the following steps:
+我们为以下步骤构建了专用的节点：
 
-- Listing DB tables
-- Calling the "get schema" tool
-- Generating a query
-- Checking the query
+- 列出 DB 表
+- 调用“获取 schema”工具
+- 生成查询
+- 检查查询
 
-Putting these steps in dedicated nodes lets us (1) force tool-calls when needed, and (2) customize the prompts associated with each step.
+将这些步骤放入专用的节点中，可以让我们 (1) 在需要时强制工具调用，并且 (2) 自定义与每个步骤相关的提示（prompt）。
 
 :::python
 ```python
@@ -283,7 +284,7 @@ run_query_tool = next(tool for tool in tools if tool.name == "sql_db_query")
 run_query_node = ToolNode([run_query_tool], name="run_query")
 
 
-# Example: create a predetermined tool call
+# 示例：创建预先确定的工具调用
 def list_tables(state: MessagesState):
     tool_call = {
         "name": "sql_db_list_tables",
@@ -295,15 +296,15 @@ def list_tables(state: MessagesState):
 
     list_tables_tool = next(tool for tool in tools if tool.name == "sql_db_list_tables")
     tool_message = list_tables_tool.invoke(tool_call)
-    response = AIMessage(f"Available tables: {tool_message.content}")
+    response = AIMessage(f"可用表: {tool_message.content}")
 
     return {"messages": [tool_call_message, tool_message, response]}
 
 
-# Example: force a model to create a tool call
+# 示例：强制模型创建工具调用
 def call_get_schema(state: MessagesState):
-    # Note that LangChain enforces that all models accept `tool_choice="any"`
-    # as well as `tool_choice=<string name of tool>`.
+    # 注意：LangChain 强制所有模型都接受 `tool_choice="any"`
+    # 以及 `tool_choice=<工具的名称字符串>`。
     llm_with_tools = model.bind_tools([get_schema_tool], tool_choice="any")
     response = llm_with_tools.invoke(state["messages"])
 
@@ -311,17 +312,15 @@ def call_get_schema(state: MessagesState):
 
 
 generate_query_system_prompt = """
-You are an agent designed to interact with a SQL database.
-Given an input question, create a syntactically correct {dialect} query to run,
-then look at the results of the query and return the answer. Unless the user
-specifies a specific number of examples they wish to obtain, always limit your
-query to at most {top_k} results.
+你是一个旨在与 SQL 数据库交互的代理。
+给定一个输入问题，创建一个语法正确的 {dialect} 查询以供执行，
+然后查看查询结果并返回答案。除非用户指定了他们希望获取的具体示例数量，
+否则始终将您的查询限制在最多 {top_k} 个结果。
 
-You can order the results by a relevant column to return the most interesting
-examples in the database. Never query for all the columns from a specific table,
-only ask for the relevant columns given the question.
+您可以根据相关的列对结果进行排序，以返回数据库中最有趣的示例。
+切勿为一个特定的表查询所有列，只查询给定问题相关的列。
 
-DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database.
+绝对不应对数据库执行任何 DML 语句（INSERT, UPDATE, DELETE, DROP 等）。
 """.format(
     dialect=db.dialect,
     top_k=5,
@@ -333,8 +332,7 @@ def generate_query(state: MessagesState):
         "role": "system",
         "content": generate_query_system_prompt,
     }
-    # We do not force a tool call here, to allow the model to
-    # respond naturally when it obtains the solution.
+    # 我们不强制进行工具调用，以便模型在获得解决方案时能自然地响应。
     llm_with_tools = model.bind_tools([run_query_tool])
     response = llm_with_tools.invoke([system_message] + state["messages"])
 
@@ -342,21 +340,20 @@ def generate_query(state: MessagesState):
 
 
 check_query_system_prompt = """
-You are a SQL expert with a strong attention to detail.
-Double check the {dialect} query for common mistakes, including:
-- Using NOT IN with NULL values
-- Using UNION when UNION ALL should have been used
-- Using BETWEEN for exclusive ranges
-- Data type mismatch in predicates
-- Properly quoting identifiers
-- Using the correct number of arguments for functions
-- Casting to the correct data type
-- Using the proper columns for joins
+你是一位 SQL 专家，对细节非常关注。
+仔细检查 {dialect} 查询是否存在常见错误，包括：
+- 对 NULL 值使用 NOT IN
+- 在本应使用 UNION ALL 时使用 UNION
+- 对排他性范围使用 BETWEEN
+- 谓词中的数据类型不匹配
+- 正确引用标识符
+- 函数参数数量正确
+- 转换为正确的数据类型
+- 连接时使用正确的列
 
-If there are any of the above mistakes, rewrite the query. If there are no mistakes,
-just reproduce the original query.
+如果存在任何上述错误，请重写查询。如果没有错误，只需重现原始查询。
 
-You will call the appropriate tool to execute the query after running this check.
+在运行此检查后，您将调用适当的工具来执行查询。
 """.format(dialect=db.dialect)
 
 
@@ -366,12 +363,12 @@ def check_query(state: MessagesState):
         "content": check_query_system_prompt,
     }
 
-    # Generate an artificial user message to check
+    # 生成一个用于检查的人工用户消息
     tool_call = state["messages"][-1].tool_calls[0]
     user_message = {"role": "user", "content": tool_call["args"]["query"]}
     llm_with_tools = model.bind_tools([run_query_tool], tool_choice="any")
     response = llm_with_tools.invoke([system_message, user_message])
-    response.id = state["messages"][-1].id
+    response.id = state["messages"][-1].id # 保留原始消息ID
 
     return {"messages": [response]}
 ```
@@ -382,11 +379,11 @@ import { AIMessage, ToolMessage, SystemMessage, HumanMessage } from "@langchain/
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { MessagesAnnotation, StateGraph, START, END } from "@langchain/langgraph";
 
-// Create tool nodes for schema and query execution
+// 为 schema 和查询执行创建工具节点
 const getSchemaNode = new ToolNode([getSchemaTool]);
 const runQueryNode = new ToolNode([queryTool]);
 
-// Example: create a predetermined tool call
+// 示例：创建预先确定的工具调用
 async function listTables(state: typeof MessagesAnnotation.State) {
   const toolCall = {
     name: "sql_db_list_tables",
@@ -400,12 +397,12 @@ async function listTables(state: typeof MessagesAnnotation.State) {
   });
 
   const toolMessage = await listTablesTool.invoke({});
-  const response = new AIMessage(`Available tables: ${toolMessage}`);
+  const response = new AIMessage(`可用表: ${toolMessage}`);
 
   return { messages: [toolCallMessage, new ToolMessage({ content: toolMessage, tool_call_id: "abc123" }), response] };
 }
 
-// Example: force a model to create a tool call
+// 示例：强制模型创建工具调用
 async function callGetSchema(state: typeof MessagesAnnotation.State) {
   const llmWithTools = model.bindTools([getSchemaTool], {
     tool_choice: "any",
@@ -418,23 +415,20 @@ async function callGetSchema(state: typeof MessagesAnnotation.State) {
 const topK = 5;
 
 const generateQuerySystemPrompt = `
-You are an agent designed to interact with a SQL database.
-Given an input question, create a syntactically correct ${dialect}
-query to run, then look at the results of the query and return the answer. Unless
-the user specifies a specific number of examples they wish to obtain, always limit
-your query to at most ${topK} results.
+你是一个旨在与 SQL 数据库交互的代理。
+给定一个输入问题，创建一个语法正确的 ${dialect}
+查询以供执行，然后查看查询结果并返回答案。除非用户指定了他们希望获取的具体示例数量，
+始终将您的查询限制在最多 ${topK} 个结果。
 
-You can order the results by a relevant column to return the most interesting
-examples in the database. Never query for all the columns from a specific table,
-only ask for the relevant columns given the question.
+您可以根据相关的列对结果进行排序，以返回数据库中最有趣的示例。
+切勿为一个特定的表查询所有列，只查询给定问题相关的列。
 
-DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database.
+绝对不应对数据库执行任何 DML 语句（INSERT, UPDATE, DELETE, DROP 等）。
 `;
 
 async function generateQuery(state: typeof MessagesAnnotation.State) {
   const systemMessage = new SystemMessage(generateQuerySystemPrompt);
-  // We do not force a tool call here, to allow the model to
-  // respond naturally when it obtains the solution.
+  // 我们不强制进行工具调用，以便模型在获得解决方案时能自然地响应。
   const llmWithTools = model.bindTools([queryTool]);
   const response = await llmWithTools.invoke([systemMessage, ...state.messages]);
 
@@ -442,30 +436,29 @@ async function generateQuery(state: typeof MessagesAnnotation.State) {
 }
 
 const checkQuerySystemPrompt = `
-You are a SQL expert with a strong attention to detail.
-Double check the ${dialect} query for common mistakes, including:
-- Using NOT IN with NULL values
-- Using UNION when UNION ALL should have been used
-- Using BETWEEN for exclusive ranges
-- Data type mismatch in predicates
-- Properly quoting identifiers
-- Using the correct number of arguments for functions
-- Casting to the correct data type
-- Using the proper columns for joins
+你是一位 SQL 专家，对细节非常关注。
+仔细检查 ${dialect} 查询是否存在常见错误，包括：
+- 对 NULL 值使用 NOT IN
+- 在本应使用 UNION ALL 时使用 UNION
+- 对排他性范围使用 BETWEEN
+- 谓词中的数据类型不匹配
+- 正确引用标识符
+- 函数参数数量正确
+- 转换为正确的数据类型
+- 连接时使用正确的列
 
-If there are any of the above mistakes, rewrite the query. If there are no mistakes,
-just reproduce the original query.
+如果存在任何上述错误，请重写查询。如果没有错误，只需重现原始查询。
 
-You will call the appropriate tool to execute the query after running this check.
+在运行此检查后，您将调用适当的工具来执行查询。
 `;
 
 async function checkQuery(state: typeof MessagesAnnotation.State) {
   const systemMessage = new SystemMessage(checkQuerySystemPrompt);
 
-  // Generate an artificial user message to check
+  // 生成一个用于检查的人工用户消息
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0) {
-    throw new Error("No tool calls found in the last message");
+    throw new Error("最后一条消息中未找到工具调用");
   }
   const toolCall = lastMessage.tool_calls[0];
   const userMessage = new HumanMessage(toolCall.args.query);
@@ -473,7 +466,7 @@ async function checkQuery(state: typeof MessagesAnnotation.State) {
     tool_choice: "any",
   });
   const response = await llmWithTools.invoke([systemMessage, userMessage]);
-  // Preserve the original message ID
+  // 保留原始消息 ID
   response.id = lastMessage.id;
 
   return { messages: [response] };
@@ -481,9 +474,9 @@ async function checkQuery(state: typeof MessagesAnnotation.State) {
 ```
 :::
 
-## 5. Implement the agent
+## 5. 实现代理
 
-We can now assemble these steps into a workflow using the [Graph API](/oss/langgraph/graph-api). We define a [conditional edge](/oss/langgraph/graph-api#conditional-edges) at the query generation step that will route to the query checker if a query is generated, or end if there are no tool calls present, such that the LLM has delivered a response to the query.
+我们现在可以使用[图 API](/oss/langgraph/graph-api)将这些步骤组装成一个工作流。我们定义了一个在查询生成步骤处的[条件边](/oss/langgraph/graph-api#conditional-edges)，如果生成了查询，它将路由到查询检查器；如果没有工具调用，则会结束，表示 LLM 已经对查询做出了回应。
 
 :::python
 ```python
@@ -517,7 +510,7 @@ builder.add_edge("run_query", "generate_query")
 
 agent = builder.compile()
 ```
-We visualize the application below:
+我们可视化下面的应用：
 ```python
 from IPython.display import Image, display
 from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeStyles
@@ -554,7 +547,7 @@ const builder = new StateGraph(MessagesAnnotation)
 
 const agent = builder.compile();
 ```
-We visualize the application below:
+我们可视化下面的应用：
 ```typescript
 import * as fs from "node:fs/promises";
 
@@ -567,11 +560,11 @@ await fs.writeFile("graph.png", imageBuffer);
 :::
 <img
   src="/oss/images/sql-agent-langgraph.png"
-  alt="SQL agent graph"
+  alt="SQL 代理图"
   style={{ height: "800px" }}
 />
 
-We can now invoke the graph:
+我们现在可以调用该图：
 :::python
 ```python
 question = "Which genre on average has the longest tracks?"
@@ -601,19 +594,19 @@ for await (const step of stream) {
 ```
 :::
 ```
-================================ Human Message =================================
+================================= 用户消息 =================================
 
 Which genre on average has the longest tracks?
-================================== Ai Message ==================================
+================================== AI 消息 ==================================
 
-Available tables: Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track
-================================== Ai Message ==================================
-Tool Calls:
+可用表: Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track
+================================== AI 消息 ==================================
+工具调用:
   sql_db_schema (call_yzje0tj7JK3TEzDx4QnRR3lL)
  Call ID: call_yzje0tj7JK3TEzDx4QnRR3lL
   Args:
     table_names: Genre, Track
-================================= Tool Message =================================
+================================= 工具消息 =================================
 Name: sql_db_schema
 
 
@@ -624,7 +617,7 @@ CREATE TABLE "Genre" (
 )
 
 /*
-3 rows from Genre table:
+Genre 表的前 3 行:
 GenreId	Name
 1	Rock
 2	Jazz
@@ -649,50 +642,50 @@ CREATE TABLE "Track" (
 )
 
 /*
-3 rows from Track table:
+Track 表的前 3 行:
 TrackId	Name	AlbumId	MediaTypeId	GenreId	Composer	Milliseconds	Bytes	UnitPrice
 1	For Those About To Rock (We Salute You)	1	1	1	Angus Young, Malcolm Young, Brian Johnson	343719	11170334	0.99
 2	Balls to the Wall	2	2	1	U. Dirkschneider, W. Hoffmann, H. Frank, P. Baltes, S. Kaufmann, G. Hoffmann	342562	5510424	0.99
 3	Fast As a Shark	3	2	1	F. Baltes, S. Kaufman, U. Dirkscneider & W. Hoffman	230619	3990994	0.99
 */
-================================== Ai Message ==================================
-Tool Calls:
+================================== AI 消息 ==================================
+工具调用:
   sql_db_query (call_cb9ApLfZLSq7CWg6jd0im90b)
  Call ID: call_cb9ApLfZLSq7CWg6jd0im90b
   Args:
     query: SELECT Genre.Name, AVG(Track.Milliseconds) AS AvgMilliseconds FROM Track JOIN Genre ON Track.GenreId = Genre.GenreId GROUP BY Genre.GenreId ORDER BY AvgMilliseconds DESC LIMIT 5;
-================================== Ai Message ==================================
-Tool Calls:
+================================== AI 消息 ==================================
+工具调用:
   sql_db_query (call_DMVALfnQ4kJsuF3Yl6jxbeAU)
  Call ID: call_DMVALfnQ4kJsuF3Yl6jxbeAU
   Args:
     query: SELECT Genre.Name, AVG(Track.Milliseconds) AS AvgMilliseconds FROM Track JOIN Genre ON Track.GenreId = Genre.GenreId GROUP BY Genre.GenreId ORDER BY AvgMilliseconds DESC LIMIT 5;
-================================= Tool Message =================================
+================================= 工具消息 =================================
 Name: sql_db_query
 
 [('Sci Fi & Fantasy', 2911783.0384615385), ('Science Fiction', 2625549.076923077), ('Drama', 2575283.78125), ('TV Shows', 2145041.0215053763), ('Comedy', 1585263.705882353)]
-================================== Ai Message ==================================
+================================== AI 消息 ==================================
 
-The genre with the longest tracks on average is "Sci Fi & Fantasy," with an average track length of approximately 2,911,783 milliseconds. Other genres with relatively long tracks include "Science Fiction," "Drama," "TV Shows," and "Comedy."
+平均轨道最长的流派是“科幻与奇幻”，平均轨道长度约为 2,911,783 毫秒。其他轨道相对较长的流派包括“科幻”、“戏剧”、“电视节目”和“喜剧”。
 ```
 :::python
 <Tip>
-See [LangSmith trace](https://smith.langchain.com/public/94b8c9ac-12f7-4692-8706-836a1f30f1ea/r) for the above run.
+[LangSmith 跟踪记录](/oss/images/sql-agent-langgraph.png) 查看上述运行的详细信息。
 </Tip>
 :::
 :::js
 <Tip>
-See [LangSmith trace](https://smith.langchain.com/public/a6a96896-686a-4040-b9b5-28d701453d6f/r) for the above run.
+[LangSmith 跟踪记录](/oss/images/sql-agent-langgraph.png) 查看上述运行的详细信息。
 </Tip>
 :::
 
-## 6. Implement human-in-the-loop review
+## 6. 实现人工干预审查
 
-It can be prudent to check the agent's SQL queries before they are executed for any unintended actions or inefficiencies.
+在执行代理的 SQL 查询之前，检查代理生成的 SQL 查询是否存在任何意外操作或效率低下的情况是明智的。
 
-Here we leverage LangGraph's [human-in-the-loop](/oss/langgraph/interrupts) features to pause the run before executing a SQL query and wait for human review. Using LangGraph's [persistence layer](/oss/langgraph/persistence), we can pause the run indefinitely (or at least as long as the persistence layer is alive).
+在这里，我们利用 LangGraph 的[人工干预（human-in-the-loop）](/oss/langgraph/interrupts)功能，在执行 SQL 查询前暂停运行，等待人工审查。使用 LangGraph 的[持久化层](/oss/langgraph/persistence)，我们可以无限期地暂停运行（或者只要持久化层保持活动状态）。
 
-Let's wrap the `sql_db_query` tool in a node that receives human input. We can implement this using the [interrupt](/oss/langgraph/interrupts) function. Below, we allow for input to approve the tool call, edit its arguments, or provide user feedback.
+下面，我们通过使用[中断（interrupt）](/oss/langgraph/interrupts)函数来包装 `sql_db_query` 工具，该中断接收人工输入来批准工具调用、编辑其参数或提供用户反馈。
 
 :::python
 ```python
@@ -709,60 +702,61 @@ def run_query_tool_with_interrupt(config: RunnableConfig, **tool_input):
     request = {
         "action": run_query_tool.name,
         "args": tool_input,
-        "description": "Please review the tool call"
+        "description": "请审查工具调用"
     }
     response = interrupt([request]) # [!code highlight]
-    # approve the tool call
+    # 批准工具调用
     if response["type"] == "accept":
         tool_response = run_query_tool.invoke(tool_input, config)
-    # update tool call args
+    # 更新工具调用参数
     elif response["type"] == "edit":
         tool_input = response["args"]["args"]
         tool_response = run_query_tool.invoke(tool_input, config)
-    # respond to the LLM with user feedback
+    # 用用户反馈响应 LLM
     elif response["type"] == "response":
         user_feedback = response["args"]
         tool_response = user_feedback
     else:
-        raise ValueError(f"Unsupported interrupt response type: {response['type']}")
+        raise ValueError(f"不受支持的中断响应类型: {response['type']}")
 
     return tool_response
 
-# Redefine the tool node to use the interrupt version
+# 重新定义工具节点以使用中断版本
 run_query_node = ToolNode([run_query_tool_with_interrupt], name="run_query") # [!code highlight]
 ```
 :::
 :::js
 ```typescript
-import { RunnableConfig } from "@langchain/core/runnables";
 import { tool } from "langchain";
 import { interrupt } from "@langchain/langgraph";
+import { RunnableConfig } from "@langchain/core/runnables";
+
 
 const queryToolWithInterrupt = tool(
   async (input, config: RunnableConfig) => {
     const request = {
       action: queryTool.name,
       args: input,
-      description: "Please review the tool call",
+      description: "请审查工具调用",
     };
     const response = interrupt([request]); // [!code highlight]
-    // approve the tool call
+    // 批准工具调用
     if (response.type === "accept") {
       const toolResponse = await queryTool.invoke(input, config);
       return toolResponse;
     }
-    // update tool call args
+    // 更新工具调用参数
     else if (response.type === "edit") {
       const editedInput = response.args.args;
       const toolResponse = await queryTool.invoke(editedInput, config);
       return toolResponse;
     }
-    // respond to the LLM with user feedback
+    // 用用户反馈响应 LLM
     else if (response.type === "response") {
       const userFeedback = response.args;
       return userFeedback;
     } else {
-      throw new Error(`Unsupported interrupt response type: ${response.type}`);
+      throw new Error(`不受支持的中断响应类型: ${response.type}`);
     }
   },
   {
@@ -775,10 +769,10 @@ const queryToolWithInterrupt = tool(
 :::
 
 <Note>
-The above implementation follows the [tool interrupt example](/oss/langgraph/interrupts#configuring-interrupts) in the broader [human-in-the-loop](/oss/langgraph/interrupts) guide. Refer to that guide for details and alternatives.
+上述实现遵循了更广泛的[人工干预指南](/oss/langgraph/interrupts#configuring-interrupts)中的[工具中断示例](/oss/langgraph/interrupts)。有关详细信息和替代方案，请参阅该指南。
 </Note>
 
-Let's now re-assemble our graph. We will replace the programmatic check with human review. Note that we now include a [checkpointer](/oss/langgraph/persistence); this is required to pause and resume the run.
+现在让我们重新组装图。我们将用人工审查替换程序化的检查。请注意，我们现在包含了一个[检查点（checkpointer）](/oss/langgraph/persistence)；这是暂停和恢复运行所必需的。
 
 :::python
 ```python
@@ -847,7 +841,7 @@ const agentWithHuman = builderWithHuman.compile({ checkpointer }); // [!code hig
 ```
 :::
 
-We can invoke the graph as before. This time, execution is interrupted:
+我们像以前一样调用图。这次，执行被中断：
 
 :::python
 ```python
@@ -891,7 +885,7 @@ for await (const step of stream) {
   }
 }
 
-// Check for interrupts
+// 检查中断
 const state = await agentWithHuman.getState(config);
 if (state.next.length > 0) {
   console.log("\nINTERRUPTED:");
@@ -909,10 +903,10 @@ INTERRUPTED:
   "args": {
     "query": "SELECT Genre.Name, AVG(Track.Milliseconds) AS AvgLength FROM Track JOIN Genre ON Track.GenreId = Genre.GenreId GROUP BY Genre.Name ORDER BY AvgLength DESC LIMIT 5;"
   },
-  "description": "Please review the tool call"
+  "description": "请审查工具调用"
 }
 ```
-We can accept or edit the tool call using [Command](/oss/langgraph/use-graph-api#combine-control-flow-and-state-updates-with-command):
+我们可以使用[命令（Command）](/oss/langgraph/use-graph-api#combine-control-flow-and-state-updates-with-command)接受或编辑工具调用：
 
 :::python
 ```python
@@ -956,22 +950,23 @@ for await (const step of resumeStream) {
 :::
 
 ```
-================================== Ai Message ==================================
-Tool Calls:
+================================== AI 消息 ==================================
+工具调用:
   sql_db_query (call_t4yXkD6shwdTPuelXEmY3sAY)
  Call ID: call_t4yXkD6shwdTPuelXEmY3sAY
   Args:
     query: SELECT Genre.Name, AVG(Track.Milliseconds) AS AvgLength FROM Track JOIN Genre ON Track.GenreId = Genre.GenreId GROUP BY Genre.Name ORDER BY AvgLength DESC LIMIT 5;
-================================= Tool Message =================================
+================================= 工具消息 =================================
 Name: sql_db_query
 
 [('Sci Fi & Fantasy', 2911783.0384615385), ('Science Fiction', 2625549.076923077), ('Drama', 2575283.78125), ('TV Shows', 2145041.0215053763), ('Comedy', 1585263.705882353)]
-================================== Ai Message ==================================
+================================== AI 消息 ==================================
 
-The genre with the longest average track length is "Sci Fi & Fantasy" with an average length of about 2,911,783 milliseconds. Other genres with long average track lengths include "Science Fiction," "Drama," "TV Shows," and "Comedy."
+平均轨道最长的流派是“科幻与奇幻”，平均长度约为 2,911,783 毫秒。其他平均轨道较长的流派包括“科幻”、“戏剧”、“电视节目”和“喜剧”。
 ```
 
-Refer to the [human-in-the-loop guide](/oss/langgraph/interrupts) for details.
+有关详细信息，请参阅[人工干预指南](/oss/langgraph/interrupts)。
 
-## Next steps
-Check out the [Evaluate a graph](/langsmith/evaluate-graph) guide for evaluating LangGraph applications, including SQL agents like this one, using LangSmith.
+## 后续步骤
+请查看[评估图表](/langsmith/evaluate-graph)指南，了解如何使用 LangSmith 评估 LangGraph 应用程序，包括像本教程中的 SQL 代理。
+```

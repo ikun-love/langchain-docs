@@ -1,54 +1,54 @@
 ---
-title: Backends
-description: Choose and configure filesystem backends for deep agents. You can specify routes to different backends, implement virtual filesystems, and enforce policies.
+title: 后端
+description: 为深度代理（Deep Agents）选择和配置文件系统后端。您可以为不同的后端指定路由、实现虚拟文件系统以及强制执行策略。
 ---
 
-Deep agents expose a filesystem surface to the agent via tools like `ls`, `read_file`, `write_file`, `edit_file`, `glob`, and `grep`. These tools operate through a pluggable backend.
+深度代理通过 `ls`、`read_file`、`write_file`、`edit_file`、`glob` 和 `grep` 等工具，向代理暴露一个文件系统界面。这些工具通过一个可插拔的后端（Backend）来操作。
 
 ```mermaid
 graph TB
-    Tools[Filesystem Tools] --> Backend[Backend]
+    Tools[文件系统工具] --> Backend[后端]
 
-    Backend --> State[State]
-    Backend --> Disk[Filesystem]
-    Backend --> Store[Store]
-    Backend --> Composite[Composite]
-    Backend --> Custom[Custom]
+    Backend --> State[状态]
+    Backend --> Disk[文件系统]
+    Backend --> Store[存储]
+    Backend --> Composite[复合]
+    Backend --> Custom[自定义]
 
-    Composite --> Router{Routes}
+    Composite --> Router{路由}
     Router --> State
     Router --> Disk
     Router --> Store
 ```
 
-This page explains how to [choose a backend](#specify-a-backend), [route different paths to different backends](#route-to-different-backends), [implement your own virtual filesystem](#use-a-virtual-filesystem) (e.g., S3 or Postgres), [add policy hooks](#add-policy-hooks), and [comply with the backend protocol](#protocol-reference).
+本页面将解释如何 [选择一个后端](#specify-a-backend)，[将不同路径路由到不同后端](#route-to-different-backends)，[实现您自己的虚拟文件系统](#use-a-virtual-filesystem)（例如 S3 或 Postgres），[添加策略钩子](#add-policy-hooks)，以及 [遵循后端协议](#protocol-reference)。
 
-## Quickstart
+## 快速开始
 
-Here are a few pre-built filesystem backends that you can quickly use with your deep agent:
+以下是您可以快速用于深度代理的一些预构建文件系统后端：
 
- | Built-in backend | Description |
- |---|---|
- | [Default](#statebackend-ephemeral) | `agent = create_deep_agent()` <br></br> Ephemeral in state. The default filesystem backend for an agent is stored in `langgraph` state. Note that this filesystem only persists _for a single thread_. |
- | [Local filesystem persistence](#filesystembackend-local-disk) | `agent = create_deep_agent(backend=FilesystemBackend(root_dir="/Users/nh/Desktop/"))` <br></br>This gives the deep agent access to your local machine's filesystem. You can specify the root directory that the agent has access to. Note that any provided `root_dir` must be an absolute path. |
- | [Durable store (LangGraph store)](#storebackend-langgraph-store) | `agent = create_deep_agent(backend=lambda rt: StoreBackend(rt))` <br></br>This gives the agent access to long-term storage that is _persisted across threads_. This is great for storing longer term memories or instructions that are applicable to the agent over multiple executions. |
- | [Composite](#compositebackend-router) | Ephemeral by default, `/memories/` persisted. The Composite backend is maximally flexible. You can specify different routes in the filesystem to point towards different backends. See Composite routing below for a ready-to-paste example. |
+| 内置后端 | 描述 |
+|---|---|
+| [默认](#statebackend-ephemeral) | `agent = create_deep_agent()` <br></br> 内存中暂存（Ephemeral in state）。代理的默认文件系统后端存储在 `langgraph` 状态中。请注意，此文件系统仅在**单个线程内**保持有效。 |
+| [本地文件系统持久化](#filesystembackend-local-disk) | `agent = create_deep_agent(backend=FilesystemBackend(root_dir="/Users/nh/Desktop/"))` <br></br> 这为深度代理提供了对其本地机器文件系统的访问权限。您可以指定代理可以访问的根目录。请注意，任何提供的 `root_dir` 都必须是绝对路径。 |
+| [持久化存储（LangGraph Store）](#storebackend-langgraph-store) | `agent = create_deep_agent(backend=lambda rt: StoreBackend(rt))` <br></br> 这使代理能够访问**跨线程持久化**的长期存储。这非常适合存储在多次执行中对代理适用的长期记忆或指令。 |
+| [复合（Composite）](#compositebackend-router) | 默认是内存暂存，`/memories/` 是持久化的。Composite 后端具有最大的灵活性。您可以指定文件系统中的不同路由指向不同的后端。有关可立即粘贴的示例，请参阅下面的 Composite 路由。 |
 
 
-## Built-in backends
+## 内置后端
 
-### StateBackend (ephemeral)
+### StateBackend (内存暂存)
 
 :::python
 ```python
-# By default we provide a StateBackend
+# 默认情况下，我们提供一个 StateBackend
 agent = create_deep_agent()
 
-# Under the hood, it looks like
+# 在底层实现中，它看起来像这样
 from deepagents.backends import StateBackend
 
 agent = create_deep_agent(
-    backend=(lambda rt: StateBackend(rt))   # Note that the tools access State through the runtime.state
+    backend=(lambda rt: StateBackend(rt))   # 注意工具通过 runtime.state 访问 State
 )
 ```
 :::
@@ -57,25 +57,25 @@ agent = create_deep_agent(
 ```typescript
 import { createDeepAgent, StateBackend } from "deepagents";
 
-// By default we provide a StateBackend
+// 默认情况下，我们提供一个 StateBackend
 const agent = createDeepAgent();
 
-// Under the hood, it looks like
+// 在底层实现中，它看起来像这样
 const agent2 = createDeepAgent({
-  backend: (rt) => new StateBackend(rt),   // Note that the tools access State through the runtime.state
+  backend: (rt) => new StateBackend(rt),   // 注意工具通过 runtime.state 访问 State
 });
 ```
 :::
 
-**How it works:**
-- Stores files in LangGraph agent state for the current thread.
-- Persists across multiple agent turns on the same thread via checkpoints.
+**工作原理：**
+- 将文件存储在当前线程的 LangGraph Agent 状态中。
+- 通过检查点（Checkpoints）在同一线程中的多次代理轮次中保持持久化。
 
-**Best for:**
-- A scratch pad for the agent to write intermediate results.
-- Automatic eviction of large tool outputs which the agent can then read back in piece by piece.
+**最适合：**
+- 作为代理的草稿板（scratch pad），用于写入中间结果。
+- 自动清除大型工具输出，代理随后可以分塊读取。
 
-### FilesystemBackend (local disk)
+### FilesystemBackend (本地磁盘)
 
 :::python
 ```python
@@ -97,17 +97,17 @@ const agent = createDeepAgent({
 ```
 :::
 
-**How it works:**
-- Reads/writes real files under a configurable `root_dir`.
-- You can optionally set `virtual_mode=True` to sandbox and normalize paths under `root_dir`.
-- Uses secure path resolution, prevents unsafe symlink traversal when possible, can use ripgrep for fast `grep`.
+**工作原理：**
+- 在可配置的 `root_dir` 下读/写真实文件。
+- 您可以选择设置 `virtual_mode=True` 以在 `root_dir` 下对路径进行沙箱化和标准化处理。
+- 使用安全的路径解析，尽可能阻止不安全的符号链接遍历，可以使用 `ripgrep` 实现快速的 `grep`。
 
-**Best for:**
-- Local projects on your machine
-- CI sandboxes
-- Mounted persistent volumes
+**最适合：**
+- 机器上的本地项目
+- CI 沙箱
+- 挂载的持久化卷
 
-### StoreBackend (LangGraph Store)
+### StoreBackend (LangGraph 存储)
 
 :::python
 ```python
@@ -115,7 +115,7 @@ from langgraph.store.memory import InMemoryStore
 from deepagents.backends import StoreBackend
 
 agent = create_deep_agent(
-    backend=(lambda rt: StoreBackend(rt)),   # Note that the tools access Store through the runtime.store
+    backend=(lambda rt: StoreBackend(rt)),   # 注意工具通过 runtime.store 访问 Store
     store=InMemoryStore()
 )
 ```
@@ -134,15 +134,15 @@ const agent = createDeepAgent({
 ```
 :::
 
-**How it works:**
-- Stores files in a LangGraph `BaseStore` provided by the runtime, enabling cross‑thread durable storage.
+**工作原理：**
+- 将文件存储在运行时提供的 LangGraph `BaseStore` 中，从而实现跨线程的持久化存储。
 
-**Best for:**
-- When you already run with a configured LangGraph store (for example, Redis, Postgres, or cloud implementations behind `BaseStore`).
-- When you're deploying your agent through LangSmith Deployments (a store is automatically provisioned for your agent).
+**最适合：**
+- 当您已经使用配置好的 LangGraph 存储（例如，`BaseStore` 后面的 Redis、Postgres 或云实现）运行时。
+- 当您通过 LangSmith Deployments 部署代理时（会自动为您的代理配置一个存储）。
 
 
-### CompositeBackend (router)
+### CompositeBackend (路由)
 
 :::python
 ```python
@@ -159,7 +159,7 @@ composite_backend = lambda rt: CompositeBackend(
 
 agent = create_deep_agent(
     backend=composite_backend,
-    store=InMemoryStore()  # Store passed to create_deep_agent, not backend
+    store=InMemoryStore()  # 传递给 create_deep_agent，而不是后端
 )
 ```
 :::
@@ -181,27 +181,27 @@ const agent = createDeepAgent({ backend: compositeBackend, store });
 ```
 :::
 
-**How it works:**
-- Routes file operations to different backends based on path prefix.
-- Preserves the original path prefixes in listings and search results.
+**工作原理：**
+- 根据路径前缀将文件操作路由到不同的后端。
+- 在列表和搜索结果中保留原始路径前缀。
 
-**Best for:**
-- When you want to give your agent both ephemeral and cross-thread storage, a CompositeBackend allows you provide both a StateBackend and StoreBackend
-- When you have multiple sources of information that you want to provide to your agent as part of a single filesystem.
-    - e.g. You have long-term memories stored under /memories/ in one Store and you also have a custom backend that has documentation accessible at /docs/.
+**最适合：**
+- 当您希望为代理提供内存暂存和跨线程存储时，CompositeBackend 允许您提供 StateBackend 和 StoreBackend。
+- 当您有多个信息源希望作为单个文件系统的一部分提供给代理时。
+    - 例如：在 `/memories/` 下以一种方式存储长期记忆（使用 Store），并且您也有可通过 `/docs/` 访问的文档（使用自定义后端）。
 
-## Specify a backend
+## 选择一个后端
 
-- Pass a backend to `create_deep_agent(backend=...)`. The filesystem middleware uses it for all tooling.
-- You can pass either:
-  - An instance implementing `BackendProtocol` (for example, `FilesystemBackend(root_dir=".")`), or
-  - A factory `BackendFactory = Callable[[ToolRuntime], BackendProtocol]` (for backends that need runtime like `StateBackend` or `StoreBackend`).
-- If omitted, the default is `lambda rt: StateBackend(rt)`.
+- 通过 `create_deep_agent(backend=...)` 传递一个后端。文件系统中间件将对所有工具使用它。
+- 您可以传递：
+  - 一个实现 `BackendProtocol` 的实例（例如 `FilesystemBackend(root_dir=".")`），或
+  - 一个工厂函数（`BackendFactory = Callable[[ToolRuntime], BackendProtocol]`），适用于需要运行时上下文的后端（如 `StateBackend` 或 `StoreBackend`）。
+- 如果省略，默认值为 `lambda rt: StateBackend(rt)`。
 
 
-## Route to different backends
+## 路由到不同的后端
 
-Route parts of the namespace to different backends. Commonly used to persist `/memories/*` and keep everything else ephemeral.
+将命名空间的部分路由到不同的后端。通常用于持久化 `/memories/*` 并保持所有其他内容为内存暂存。
 
 :::python
 ```python
@@ -234,27 +234,27 @@ const agent = createDeepAgent({ backend: compositeBackend });
 ```
 :::
 
-Behavior:
-- `/workspace/plan.md` → StateBackend (ephemeral)
-- `/memories/agent.md` → FilesystemBackend under `/deepagents/myagent`
-- `ls`, `glob`, `grep` aggregate results and show original path prefixes.
+行为：
+- `/workspace/plan.md` → StateBackend（内存暂存）
+- `/memories/agent.md` → 位于 `/deepagents/myagent` 下的 FilesystemBackend
+- `ls`、`glob`、`grep` 聚合结果并显示原始路径前缀。
 
-Notes:
-- Longer prefixes win (for example, route `"/memories/projects/"` can override `"/memories/"`).
-- For StoreBackend routing, ensure the agent runtime provides a store (`runtime.store`).
+注意：
+- 较长的前缀优先（例如，路由 `"/memories/projects/"` 可以覆盖 `"/memories/"`）。
+- 对于 StoreBackend 路由，请确保代理运行时提供了存储（即 `runtime.store`）。
 
-## Use a virtual filesystem
+## 使用虚拟文件系统
 
-Build a custom backend to project a remote or database filesystem (e.g., S3 or Postgres) into the tools namespace.
+构建自定义后端，将远程或数据库文件系统（例如 S3 或 Postgres）投影到工具命名空间中。
 
-Design guidelines:
+设计指南：
 
-- Paths are absolute (`/x/y.txt`). Decide how to map them to your storage keys/rows.
-- Implement `ls_info` and `glob_info` efficiently (server-side listing where available, otherwise local filter).
-- Return user-readable error strings for missing files or invalid regex patterns.
-- For external persistence, set `files_update=None` in results; only in-state backends should return a `files_update` dict.
+- 路径是绝对路径（`/x/y.txt`）。确定如何将它们映射到存储密钥/行。
+- 高效实现 `ls_info` 和 `glob_info`（在服务器端可用列表时，否则进行本地过滤）。
+- 对于文件不存在或正则表达式无效的情况，返回用户可读的错误字符串。
+- 对于外部持久化，在结果中将 `files_update` 设置为 `None`；只有内存暂存后端才应返回 `files_update` 字典。
 
-S3-style outline:
+S3 风格大纲：
 
 :::python
 ```python
@@ -270,44 +270,44 @@ class S3Backend(BackendProtocol):
         return f"{self.prefix}{path}"
 
     def ls_info(self, path: str) -> list[FileInfo]:
-        # List objects under _key(path); build FileInfo entries (path, size, modified_at)
+        # 在 _key(path) 下列出对象；构建 FileInfo 条目 (path, size, modified_at)
         ...
 
     def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> str:
-        # Fetch object; return numbered content or an error string
+        # 获取对象；返回编号内容或错误字符串
         ...
 
     def grep_raw(self, pattern: str, path: str | None = None, glob: str | None = None) -> list[GrepMatch] | str:
-        # Optionally filter server‑side; else list and scan content
+        # 可选地在服务器端过滤；否则列出并扫描内容
         ...
 
     def glob_info(self, pattern: str, path: str = "/") -> list[FileInfo]:
-        # Apply glob relative to path across keys
+        # 相对于 path 在键上应用 glob
         ...
 
     def write(self, file_path: str, content: str) -> WriteResult:
-        # Enforce create‑only semantics; return WriteResult(path=file_path, files_update=None)
+        # 强制执行仅创建语义；返回 WriteResult(path=file_path, files_update=None)
         ...
 
     def edit(self, file_path: str, old_string: str, new_string: str, replace_all: bool = False) -> EditResult:
-        # Read → replace (respect uniqueness vs replace_all) → write → return occurrences
+        # 读取 → 替换 (遵守唯一性 vs replace_all) → 写入 → 返回出现次数
         ...
 ```
 :::
 
-Postgres-style outline:
+Postgres 风格大纲：
 
-- Table `files(path text primary key, content text, created_at timestamptz, modified_at timestamptz)`
-- Map tool operations onto SQL:
-  - `ls_info` uses `WHERE path LIKE $1 || '%'`
-  - `glob_info` filter in SQL or fetch then apply glob in Python
-  - `grep_raw` can fetch candidate rows by extension or last modified time, then scan lines
+- 表 `files(path text primary key, content text, created_at timestamptz, modified_at timestamptz)`
+- 将工具操作映射到 SQL：
+  - `ls_info` 使用 `WHERE path LIKE $1 || '%'`
+  - `glob_info` 在 SQL 中过滤或获取后在 Python 中应用 glob
+  - `grep_raw` 可通过扩展名或最后修改时间获取候选行，然后扫描内容
 
-## Add policy hooks
+## 添加策略钩子
 
-Enforce enterprise rules by subclassing or wrapping a backend.
+通过子类化或包装后端来强制执行企业规则。
 
-Block writes/edits under selected prefixes (subclass):
+阻止在选定前缀下写入/编辑（子类化）：
 
 :::python
 ```python
@@ -331,7 +331,7 @@ class GuardedBackend(FilesystemBackend):
 ```
 :::
 
-Generic wrapper (works with any backend):
+通用包装器（适用于任何后端）：
 
 :::python
 ```python
@@ -365,26 +365,26 @@ class PolicyWrapper(BackendProtocol):
 ```
 :::
 
-## Protocol reference
+## 协议参考
 
-Backends must implement the `BackendProtocol`.
+后端必须实现 `BackendProtocol`。
 
-Required endpoints:
+必需的端点：
 - `ls_info(path: str) -> list[FileInfo]`
-  - Return entries with at least `path`. Include `is_dir`, `size`, `modified_at` when available. Sort by `path` for deterministic output.
+  - 返回包含至少 `path` 的条目。在可用时包含 `is_dir`、`size`、`modified_at`。按 `path` 排序以确保输出确定性。
 - `read(file_path: str, offset: int = 0, limit: int = 2000) -> str`
-  - Return numbered content. On missing file, return `"Error: File '/x' not found"`.
+  - 返回编号内容。文件未找到时，返回 `"Error: File '/x' not found"`。
 - `grep_raw(pattern: str, path: Optional[str] = None, glob: Optional[str] = None) -> list[GrepMatch] | str`
-  - Return structured matches. For an invalid regex, return a string like `"Invalid regex pattern: ..."` (do not raise).
+  - 返回结构化的匹配项。对于无效的正则表达式，返回一个字符串，如 `"Invalid regex pattern: ..."`（不要抛出异常）。
 - `glob_info(pattern: str, path: str = "/") -> list[FileInfo]`
-  - Return matched files as `FileInfo` entries (empty list if none).
+  - 返回匹配的文件作为 `FileInfo` 条目（如果没有匹配，则为空列表）。
 - `write(file_path: str, content: str) -> WriteResult`
-  - Create-only. On conflict, return `WriteResult(error=...)`. On success, set `path` and for state backends set `files_update={...}`; external backends should use `files_update=None`.
+  - 仅创建。冲突时，返回 `WriteResult(error=...)`。成功时，设置 `path`；对于状态后端设置 `files_update={...}`；外部后端应使用 `files_update=None`。
 - `edit(file_path: str, old_string: str, new_string: str, replace_all: bool = False) -> EditResult`
-  - Enforce uniqueness of `old_string` unless `replace_all=True`. If not found, return error. Include `occurrences` on success.
+  - 除非 `replace_all=True`，否则强制执行 `old_string` 的唯一性。如果未找到，则返回错误。成功时包含 `occurrences`。
 
-Supporting types:
+支持的类型：
 - `WriteResult(error, path, files_update)`
 - `EditResult(error, path, files_update, occurrences)`
-- `FileInfo` with fields: `path` (required), optionally `is_dir`, `size`, `modified_at`.
-- `GrepMatch` with fields: `path`, `line`, `text`.
+- `FileInfo` 包含字段：`path`（必需），可选地 `is_dir`、`size`、`modified_at`。
+- `GrepMatch` 包含字段：`path`、`line`、`text`。

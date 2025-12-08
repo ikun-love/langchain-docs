@@ -1,76 +1,78 @@
+```yaml
 ---
-title: Configure PagerDuty integration for LangSmith alerts
-sidebarTitle: Configure PagerDuty integration
+title: 为 LangSmith 警报配置 PagerDuty 集成
+sidebarTitle: 配置 PagerDuty 集成
 ---
 
-## Overview
+## 概述
 
-This guide walks through the process of configuring PagerDuty as a notification channel for [LangSmith alerts](/langsmith/alerts) using PagerDuty's [Events API v2](https://developer.pagerduty.com/docs/events-api-v2-overview). This integration allows critical LLM application issues to trigger PagerDuty incidents, enabling rapid response through your established incident management workflow.
+本指南将指导您完成配置 PagerDuty 作为 [LangSmith 警报](/langsmith/alerts) 通知渠道的过程，利用 PagerDuty 的 [Events API v2](https://developer.pagerduty.com/docs/events-api-v2-overview)。通过此集成，关键的 LLM 应用问题可以触发 PagerDuty 事件，从而允许您通过已建立的事件管理工作流程快速响应。
 
-## Prerequisites
+## 先决条件
 
-* An active PagerDuty account with administrator access
-* Appropriate service-level permissions in PagerDuty
+* 一个拥有管理员访问权限的有效 PagerDuty 帐户
+* PagerDuty 中相应的服务级别权限
 
-Additionally, if on a custom deployment of LangSmith, make sure there are no firewall settings blocking egress traffic from LangSmith services.
+此外，如果您使用的是自定义部署的 LangSmith，请确保没有防火墙设置阻止来自 LangSmith 服务的出站流量。
 
-## Integration Steps
+## 集成步骤
 
-### Step 1: Create a Service in PagerDuty
+### 步骤 1：在 PagerDuty 中创建一个服务
 
-1. Log in to your PagerDuty account
+1. 登录您的 PagerDuty 帐户
 
-2. Navigate to **Services → Service Directory**
+2. 导航到 **Services → Service Directory**（服务 → 服务目录）
 
-3. Click **+ New Service**
+3. 点击 **+ New Service**（+ 新建服务）
 
-4. Complete the following fields:
+4. 填写以下字段：
 
-   * **Name**: Provide a descriptive name (e.g., "LangSmith Monitoring")
-   * **Description**: Add details about the monitored application
-   * **Escalation Policy**: Select the appropriate team escalation policy
-   * **Integration Type**: Select "Events API V2"
+   * **Name**（名称）：提供一个描述性的名称（例如："LangSmith Monitoring"）
+   * **Description**（描述）：添加有关被监控应用的信息
+   * **Escalation Policy**（升级策略）：选择适当的团队升级策略
+   * **Integration Type**（集成类型）：选择 "Events API V2"
 
-5. Click **Add Service** to create the service
+5. 点击 **Add Service**（添加服务）以创建服务
 
-### Step 2: Obtain Integration Key
+### 步骤 2：获取集成密钥 (Integration Key)
 
-After creating the service, you'll need to retrieve the Integration Key:
+创建服务后，您需要检索集成密钥：
 
-1. From the **Service Directory** under the Service dropdown, locate and click on your newly created service
-2. Select the **Integrations** tab
-3. Find the "Events API V2" integration
-4. Copy the **Integration Key** (a 32-character alphanumeric string)
+1. 在 **Service Directory**（服务目录）中，于“Service”（服务）下拉菜单下，找到并点击您刚刚创建的服务
+2. 选择 **Integrations**（集成）标签页
+3. 找到 "Events API V2" 集成
+4. 复制 **Integration Key**（集成密钥）（这是一个 32 个字符的字母数字字符串）
 
 ![PagerDuty Integration Key Location](/langsmith/images/pager-duty.png)
 
-### Step 3: Configure LangSmith Alert with PagerDuty
+### 步骤 3：使用 PagerDuty 配置 LangSmith 警报
 
 <Info>
-To receive the same alert again within an hour of it being triggered, you must resolve the active incident created by the alert in PagerDuty.
+要在警报触发后的一小时内再次收到相同的警报，您必须在 PagerDuty 中解决由该警报创建的活动事件。
 </Info>
 
 ![PagerDuty Setup](/langsmith/images/pagerduty-setup.png)
 
-1. In the notification section of your alert set-up in LangSmith, select **PagerDuty**
-2. Click the key icon to save the Integration Key as a Workspace secret or select an existing Workspace secret. As a best practice, we recommend saving the Integration Key as a Workspace Secret rather than adding it directy. This will allow you to re-use the same key across alerts for a workspace.
-3. Configure additional notification options:
-   * **Severity**: Maps to PagerDuty incident priority
-4. Send a test alert by clicking **Send Test Alert**
-5. Verify the incident is triggered by PagerDuty and contains relevant LangSmith alert information
+1. 在 LangSmith 中警报设置的通知部分，选择 **PagerDuty**
+2. 点击钥匙图标（key icon）将集成密钥保存为“Workspace secret”（工作区密钥），或选择一个现有的工作区密钥。我们建议的最佳实践是将集成密钥保存为工作区密钥，而不是直接添加。这样做允许您在工作区的警报中重复使用相同的密钥。
+3. 配置额外的通知选项：
+   * **Severity**（严重程度）：映射到 PagerDuty 事件的优先级
+4. 点击 **Send Test Alert**（发送测试警报）发送一个测试警报
+5. 验证 PagerDuty 是否成功触发了事件，并且该事件包含相关的 LangSmith 警报信息
 
-## Troubleshooting
+## 故障排除
 
-If incidents aren't being created in PagerDuty:
+如果 PagerDuty 中没有创建事件：
 
-* Verify the Integration Key is entered correctly in LangSmith
-* Ensure the PagerDuty service is active and not in maintenance mode
-* Check that your PagerDuty account has Events API v2 enabled
-* If an alert trigger appears to be missing in PagerDuty, check whether the expected trigger occurred within one hour of a previous trigger from the same alert rule, and whether the incident created by the previous alert is still open.
-* Review network connectivity if your LangSmith instance is behind a firewall
+* 验证 LangSmith 中输入的集成密钥是否正确
+* 确保 PagerDuty 服务处于活动状态且未处于维护模式
+* 确认您的 PagerDuty 帐户已启用 Events API v2
+* 如果警报触发似乎在 PagerDuty 中丢失，请检查预期的触发是否发生在与前一个触发（来自同一警报规则）相隔一小时的范围内，以及前一个警报创建的事件是否仍然处于打开状态。
+* 如果您的 LangSmith 实例位于防火墙后，请检查网络连通性
 
-## Additional Resources
+## 附加资源
 
-* [PagerDuty Events API v2 Documentation](https://developer.pagerduty.com/docs/events-api-v2/overview/)
-* [PagerDuty Integration Guide](https://support.pagerduty.com/docs/services-and-integrations)
-* [LangSmith Alerts Documentation](/langsmith/alerts)
+* [PagerDuty Events API v2 文档](https://developer.pagerduty.com/docs/events-api-v2/overview/)
+* [PagerDuty 集成指南](https://support.pagerduty.com/docs/services-and-integrations)
+* [LangSmith 警报文档](/langsmith/alerts)
+```

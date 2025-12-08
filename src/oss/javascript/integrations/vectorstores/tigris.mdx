@@ -2,37 +2,35 @@
 title: Tigris
 ---
 
-Tigris makes it easy to build AI applications with vector embeddings.
-It is a fully managed cloud-native database that allows you store and
-index documents and vector embeddings for fast and scalable vector search.
+Tigris 使得构建包含向量嵌入（vector embeddings）的人工智能应用程序变得简单。
+它是一个完全托管的云原生数据库，允许您存储和索引文档以及向量嵌入，以实现快速且可扩展的向量搜索。
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 环境下可用。
 </Tip>
 
-## Setup
+## 设置
 
-### 1. Install the Tigris SDK
+### 1. 安装 Tigris SDK
 
-Install the SDK as follows
+按如下方式安装 SDK：
 
 ```bash npm
 npm install -S @tigrisdata/vector
 ```
-### 2. Fetch Tigris API credentials
+### 2. 获取 Tigris API 凭证
 
-You can sign up for a free Tigris account [here](https://www.tigrisdata.com/).
+您可以在 [此处](https://www.tigrisdata.com/) 注册一个免费的 Tigris 账户。
 
-Once you have signed up for the Tigris account, create a new project called `vectordemo`.
-Next, make a note of the `clientId` and `clientSecret`, which you can get from the
-Application Keys section of the project.
+注册 Tigris 账户后，请创建一个名为 `vectordemo` 的新项目。
+接下来，记下 `clientId` 和 `clientSecret`，这些信息可以在项目的“应用程序密钥 (Application Keys)”部分获取。
 
-## Index docs
+## 索引文档
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -52,7 +50,7 @@ const index = new VectorDocumentStore({
     clientSecret: process.env.TIGRIS_CLIENT_SECRET,
   },
   indexName: "examples_index",
-  numDimensions: 1536, // match the OpenAI embedding size
+  numDimensions: 1536, // 匹配 OpenAI 的嵌入维度大小
 });
 
 const docs = [
@@ -77,7 +75,7 @@ const docs = [
 await TigrisVectorStore.fromDocuments(docs, new OpenAIEmbeddings(), { index });
 ```
 
-## Query docs
+## 查询文档
 
 ```typescript
 import { VectorDocumentStore } from "@tigrisdata/vector";
@@ -92,7 +90,7 @@ const index = new VectorDocumentStore({
     clientSecret: process.env.TIGRIS_CLIENT_SECRET,
   },
   indexName: "examples_index",
-  numDimensions: 1536, // match the OpenAI embedding size
+  numDimensions: 1536, // 匹配 OpenAI 的嵌入维度大小
 });
 
 const vectorStore = await TigrisVectorStore.fromExistingIndex(
@@ -100,7 +98,7 @@ const vectorStore = await TigrisVectorStore.fromExistingIndex(
   { index }
 );
 
-/* Search the vector DB independently with metadata filters */
+/* 使用元数据过滤器独立搜索向量数据库 */
 const results = await vectorStore.similaritySearch("tigris", 1, {
   "metadata.foo": "bar",
 });
@@ -115,7 +113,7 @@ console.log(JSON.stringify(results, null, 2));
 */
 ```
 
-## Related
+## 相关
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储概念指南](/oss/integrations/vectorstores)
+- 向量存储实操指南](/oss/integrations/vectorstores)

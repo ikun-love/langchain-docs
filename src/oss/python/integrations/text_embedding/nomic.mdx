@@ -1,22 +1,23 @@
+```markdown
 ---
 title: NomicEmbeddings
 ---
 
-This will help you get started with Nomic embedding models using LangChain. For detailed documentation on `NomicEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html).
+本文将指导您开始使用 LangChain 中的 Nomic 嵌入模型（Nomic embedding models）。有关 `NomicEmbeddings` 的功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。
 
-## Overview
+## 概览 (Overview)
 
-### Integration details
+### 集成详情 (Integration details)
 
 <ItemTable category="text_embedding" item="Nomic" />
 
-## Setup
+## 设置 (Setup)
 
-To access Nomic embedding models you'll need to create a/an Nomic account, get an API key, and install the `langchain-nomic` integration package.
+要访问 Nomic 嵌入模型，您需要创建一个 Nomic 账户，获取一个 API 密钥，并安装 `langchain-nomic` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to [https://atlas.nomic.ai/](https://atlas.nomic.ai/) to sign up to Nomic and generate an API key. Once you've done this set the `NOMIC_API_KEY` environment variable:
+前往 [https://atlas.nomic.ai/](https://atlas.nomic.ai/) 注册 Nomic 账户并生成 API 密钥。完成此操作后，设置 `NOMIC_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -26,24 +27,24 @@ if not os.getenv("NOMIC_API_KEY"):
     os.environ["NOMIC_API_KEY"] = getpass.getpass("Enter your Nomic API key: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### Installation
+### 安装 (Installation)
 
-The LangChain Nomic integration lives in the `langchain-nomic` package:
+LangChain 的 Nomic 集成位于 `langchain-nomic` 包中：
 
-```python
+```bash
 pip install -qU langchain-nomic
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成文本嵌入：
 
 ```python
 from langchain_nomic import NomicEmbeddings
@@ -51,29 +52,29 @@ from langchain_nomic import NomicEmbeddings
 embeddings = NomicEmbeddings(
     model="nomic-embed-text-v1.5",
     # dimensionality=256,
-    # Nomic's `nomic-embed-text-v1.5` model was [trained with Matryoshka learning](https://blog.nomic.ai/posts/nomic-embed-matryoshka)
-    # to enable variable-length embeddings with a single model.
-    # This means that you can specify the dimensionality of the embeddings at inference time.
-    # The model supports dimensionality from 64 to 768.
+    # Nomic 的 `nomic-embed-text-v1.5` 模型是[使用 Matryoshka 学习训练的](https://blog.nomic.ai/posts/nomic-embed-matryoshka)
+    # 以支持使用单个模型进行可变长度嵌入。
+    # 这意味着您可以在推理时指定嵌入的维度（dimensionality）。
+    # 该模型支持的维度范围是 64 到 768。
     # inference_mode="remote",
-    # One of `remote`, `local` (Embed4All), or `dynamic` (automatic). Defaults to `remote`.
-    # api_key=... , # if using remote inference,
+    # 可选值包括 `remote`（远程），`local` (Embed4All)，或 `dynamic`（自动）。默认为 `remote`。
+    # api_key=... , # 如果使用远程推理，
     # device="cpu",
-    # The device to use for local embeddings. Choices include
-    # `cpu`, `gpu`, `nvidia`, `amd`, or a specific device name. See
-    # the docstring for `GPT4All.__init__` for more info. Typically
-    # defaults to CPU. Do not use on macOS.
+    # 用于本地嵌入的设备。选项包括
+    # `cpu`, `gpu`, `nvidia`, `amd`，或特定的设备名称。请参阅
+    # `GPT4All.__init__` 的文档字符串以获取更多信息。通常
+    # 默认为 CPU。在 macOS 上请勿使用此设置。
 )
 ```
 
-## Indexing and Retrieval
+## 索引和检索 (Indexing and Retrieval)
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our [RAG tutorials](/oss/langchain/rag).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既用于索引数据，也用于后续的检索。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document in the `InMemoryVectorStore`.
+下面是如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将索引并检索一个示例文档到 `InMemoryVectorStore` 中。
 
 ```python
-# Create a vector store with a sample text
+# 使用示例文本创建一个向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
 text = "LangChain is the framework for building context-aware reasoning applications"
@@ -83,13 +84,13 @@ vectorstore = InMemoryVectorStore.from_texts(
     embedding=embeddings,
 )
 
-# Use the vectorstore as a retriever
+# 将向量存储用作检索器
 retriever = vectorstore.as_retriever()
 
-# Retrieve the most similar text
+# 检索最相似的文本
 retrieved_documents = retriever.invoke("What is LangChain?")
 
-# show the retrieved document's content
+# 显示检索到的文档内容
 retrieved_documents[0].page_content
 ```
 
@@ -97,28 +98,28 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## Direct Usage
+## 直接使用 (Direct Usage)
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embed_documents(...)` and `embeddings.embed_query(...)` to create embeddings for the text(s) used in `from_texts` and retrieval `invoke` operations, respectively.
+在底层，向量存储和检索器的实现会调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来分别为用于 `from_texts` 和检索 `invoke` 操作的文本创建嵌入。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取用于您自己用例的嵌入。
 
-### Embed single texts
+### 嵌入单个文本 (Embed single texts)
 
-You can embed single texts or documents with `embed_query`:
+您可以使用 `embed_query` 来嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
-print(str(single_vector)[:100])  # Show the first 100 characters of the vector
+print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
 [0.024642944, 0.029083252, -0.14013672, -0.09082031, 0.058898926, -0.07489014, -0.0138168335, 0.0037
 ```
 
-### Embed multiple texts
+### 嵌入多个文本 (Embed multiple texts)
 
-You can embed multiple texts with `embed_documents`:
+您可以使用 `embed_documents` 来嵌入多个文本：
 
 ```python
 text2 = (
@@ -126,7 +127,7 @@ text2 = (
 )
 two_vectors = embeddings.embed_documents([text, text2])
 for vector in two_vectors:
-    print(str(vector)[:100])  # Show the first 100 characters of the vector
+    print(str(vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
@@ -136,6 +137,7 @@ for vector in two_vectors:
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation on `NomicEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html).
+有关 `NomicEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。
+```

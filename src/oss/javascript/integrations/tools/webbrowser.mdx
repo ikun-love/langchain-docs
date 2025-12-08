@@ -1,26 +1,26 @@
 ---
-title: Web Browser Tool
+title: Web 浏览器工具
 ---
 
-The Webbrowser Tool gives your agent the ability to visit a website and extract information. It is described to the agent as
+Web 浏览器工具赋予智能体访问网站并提取信息的能力。它向智能体描述为：
 
 ```
-useful for when you need to find something on or summarize a webpage. input should be a comma separated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".
+在你需要查找网页上的内容或总结网页内容时很有用。输入应为用逗号分隔的列表，格式为 "包含协议的有效 URL","你想在页面上查找的内容或用于总结的空字符串"。
 ```
 
-It exposes two modes of operation:
+它提供两种操作模式：
 
-- when called by the Agent with only a URL it produces a summary of the website contents
-- when called by the Agent with a URL and a description of what to find it will instead use an in-memory Vector Store to find the most relevant snippets and summarise those
+- 当智能体仅使用 URL 调用它时，它会生成对该网站内容的总结。
+- 当智能体使用 URL 和要查找内容的描述来调用它时，它将使用内存中的 Vector Store (向量存储) 来查找最相关的片段并对这些片段进行总结。
 
-## Setup
+## 设置
 
-To use the Webbrowser Tool you need to install the dependencies:
+要使用 Web 浏览器工具，你需要安装依赖项：
 
 ```bash npm
 npm install cheerio axios
 ```
-## Usage, standalone
+## 用法：独立模式
 
 ```typescript
 import { WebBrowser } from "@langchain/classic/tools/webbrowser";
@@ -38,9 +38,9 @@ export async function run() {
 
   console.log(result);
   /*
-  Joseph Campbell was a mythologist and writer who discussed spirituality, psychological archetypes, cultural myths, and the mythology of self. He sat down with Bill Moyers for a lengthy conversation at George Lucas’s Skywalker Ranch in California, which continued the following year at the American Museum of Natural History in New York. The resulting 24 hours of raw footage were edited down to six one-hour episodes and broadcast on PBS in 1988, shortly after Campbell’s death, in what became one of the most popular in the history of public television.
+  Joseph Campbell 是一位神话学家和作家，他讨论了灵性、心理原型、文化神话和自我神话。他与 Bill Moyers 在加州乔治·卢卡斯的天行者牧场（Skywalker Ranch）进行了长时间的对话，该对话在第二年继续在美国自然历史博物馆进行。由此产生的 24 小时的原始素材被剪辑成六个一小时的剧集，并于 1988 年在 PBS 播出，这正值 Campbell 去世后不久，成为了公共电视历史上最受欢迎的节目之一。
 
-  Relevant Links:
+  相关链接：
   - [The Holstee Manifesto](http://holstee.com/manifesto-bp)
   - [The Silent Music of the Mind: Remembering Oliver Sacks](https://www.themarginalian.org/2015/08/31/remembering-oliver-sacks)
   - [Joseph Campbell series](http://billmoyers.com/spotlight/download-joseph-campbell-and-the-power-of-myth-audio/)
@@ -50,7 +50,7 @@ export async function run() {
 }
 ```
 
-## Usage, in an Agent
+## 用法：在 Agent 中
 
 ```typescript
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
@@ -85,23 +85,23 @@ export const run = async () => {
   const result = await executor.invoke({ input });
   /*
   Entering new agent_executor chain...
-  I need to find the word of the day on Merriam Webster and then search for it on Google
+  我需要找到 Merriam Webster 的每日一词，然后在 Google 上搜索它
   Action: web-browser
   Action Input: "https://www.merriam-webster.com/word-of-the-day", ""
 
 
-  Summary: Merriam-Webster is a website that provides users with a variety of resources, including a dictionary, thesaurus, word finder, word of the day, games and quizzes, and more. The website also allows users to log in and save words, view recents, and access their account settings. The Word of the Day for April 14, 2023 is "lackadaisical", which means lacking in life, spirit, or zest. The website also provides quizzes and games to help users build their vocabulary.
+  Summary: Merriam-Webster 是一个网站，为用户提供各种资源，包括词典、同义词库、单词查找器、每日一词、游戏和测验等。该网站还允许用户登录并保存单词、查看最近访问记录以及访问其账户设置。2023 年 4 月 14 日的每日一词是 "lackadaisical"（懒散的），意思是缺乏活力、精神或热情。该网站还提供测验和游戏，帮助用户构建词汇量。
 
-  Relevant Links:
+  相关链接：
   - [Test Your Vocabulary](https://www.merriam-webster.com/games)
   - [Thesaurus](https://www.merriam-webster.com/thesaurus)
   - [Word Finder](https://www.merriam-webster.com/wordfinder)
   - [Word of the Day](https://www.merriam-webster.com/word-of-the-day)
   - [Shop](https://shop.merriam-webster.com/?utm_source=mwsite&utm_medium=nav&utm_content=
-  I now need to search for the word of the day on Google
+  我现在需要在 Google 上搜索每日一词
   Action: search
   Action Input: "lackadaisical"
-  lackadaisical implies a carefree indifference marked by half-hearted efforts. lackadaisical college seniors pretending to study. listless suggests a lack of ...
+  lackadaisical 暗示着一种漫不经心的冷漠，其特点是半心半意的努力。lackadaisical college seniors pretending to study. listless suggests a lack of ...
   Finished chain.
   */
 
@@ -114,17 +114,17 @@ export const run = async () => {
         "action": {
           "tool": "web-browser",
           "toolInput": "https://www.merriam-webster.com/word-of-the-day\", ",
-          "log": " I need to find the word of the day on Merriam Webster and then search for it on Google\nAction: web-browser\nAction Input: \"https://www.merriam-webster.com/word-of-the-day\", \"\""
+          "log": " 我需要找到 Merriam Webster 的每日一词，然后在 Google 上搜索它\nAction: web-browser\nAction Input: \"https://www.merriam-webster.com/word-of-the-day\", \"\""
         },
-        "observation": "\n\nSummary: Merriam-Webster is a website that provides users with a variety of resources, including a dictionary, thesaurus, word finder, word of the day, games and quizzes, and more. The website also allows users to log in and save words, view recents, and access their account settings. The Word of the Day for April 14, 2023 is \"lackadaisical\", which means lacking in life, spirit, or zest. The website also provides quizzes and games to help users build their vocabulary.\n\nRelevant Links: \n- [Test Your Vocabulary](https://www.merriam-webster.com/games)\n- [Thesaurus](https://www.merriam-webster.com/thesaurus)\n- [Word Finder](https://www.merriam-webster.com/wordfinder)\n- [Word of the Day](https://www.merriam-webster.com/word-of-the-day)\n- [Shop](https://shop.merriam-webster.com/?utm_source=mwsite&utm_medium=nav&utm_content="
+        "observation": "\n\nSummary: Merriam-Webster 是一个网站，为用户提供各种资源，包括词典、同义词库、单词查找器、每日一词、游戏和测验等。该网站还允许用户登录并保存单词、最近查看记录以及访问其账户设置。2023 年 4 月 14 日的每日一词是 \"lackadaisical\"（懒散的），意思是缺乏活力、精神或热情。该网站还提供测验和游戏，帮助用户构建词汇量。\n\n相关链接： \n- [Test Your Vocabulary](https://www.merriam-webster.com/games)\n- [Thesaurus](https://www.merriam-webster.com/thesaurus)\n- [Word Finder](https://www.merriam-webster.com/wordfinder)\n- [Word of the Day](https://www.merriam-webster.com/word-of-the-day)\n- [Shop](https://shop.merriam-webster.com/?utm_source=mwsite&utm_medium=nav&utm_content="
       },
       {
         "action": {
           "tool": "search",
           "toolInput": "lackadaisical",
-          "log": " I now need to search for the word of the day on Google\nAction: search\nAction Input: \"lackadaisical\""
+          "log": " 我现在需要在 Google 上搜索每日一词\nAction: search\nAction Input: \"lackadaisical\""
         },
-        "observation": "lackadaisical implies a carefree indifference marked by half-hearted efforts. lackadaisical college seniors pretending to study. listless suggests a lack of ..."
+        "observation": "lackadaisical 暗示着一种漫不经心的冷漠，其特点是半心半意的努力。lackadaisical college seniors pretending to study. listless suggests a lack of ..."
       }
     ]
   }
@@ -132,7 +132,7 @@ export const run = async () => {
 };
 ```
 
-## Related
+## 相关
 
-- Tool [conceptual guide](/oss/langchain/tools)
-- Tool [how-to guides](/oss/langchain/tools)
+- 工具 [概念指南](/oss/langchain/tools)
+- 工具 [操作指南](/oss/langchain/tools)

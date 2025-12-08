@@ -1,33 +1,33 @@
 ---
-title: Valyu Deep Search
+title: Valyu 深度搜索
 ---
 
->[Valyu](https://www.valyu.network/) allows AI applications and agents to search the internet and proprietary data sources for relevant LLM ready information.
+>[Valyu](https://www.valyu.network/) 允许 AI 应用程序和智能体（agents）在互联网和专有数据源中搜索与 LLM（大型语言模型）准备就绪的相关信息。
 
-This notebook goes over how to use Valyu in LangChain.
+本示例 Notebook 将介绍如何在 LangChain 中使用 Valyu。
 
-First, get an Valyu API key and add it as an environment variable. Get $10 free credit  by [signing up here](https://platform.valyu.network/).
+首先，获取一个 Valyu API 密钥，并将其设置为环境变量。您可以通过[在此处注册](https://platform.valyu.network/)获得 $10 免费额度。
 
-## Setup
+## 设置 (Setup)
 
-The integration lives in the `langchain-valyu` package.
+该集成位于 `langchain-valyu` 包中。
 
 ```python
 pip install -qU langchain-valyu
 ```
 
-In order to use the package, you will also need to set the `VALYU_API_KEY` environment variable to your Valyu API key.
+为了使用该包，您还需要将环境变量 `VALYU_API_KEY` 设置为您获得的 Valyu API 密钥。
 
-## Context Retriever
+## 上下文检索器 (Context Retriever)
 
-You can use the [`ValyuContextRetriever`](https://pypi.org/project/langchain-valyu/) in a standard retrieval pipeline.
+您可以在标准的检索管道中使用 [`ValyuContextRetriever`](https://pypi.org/project/langchain-valyu/)。
 
 ```python
 from langchain_valyu import ValyuRetriever
 
 valyu_api_key = "YOUR API KEY"
 
-# Create a new instance of the ValyuRetriever
+# 创建 ValyuRetriever 的新实例
 valyu_retriever = ValyuRetriever(
     k=5,
     search_type="all",
@@ -38,28 +38,28 @@ valyu_retriever = ValyuRetriever(
     valyu_api_key=valyu_api_key,
 )
 
-# Search for a query and save the results
-docs = valyu_retriever.invoke("What are the benefits of renewable energy?")
+# 搜索查询并保存结果
+docs = valyu_retriever.invoke("可再生能源的好处是什么？")
 
-# Print the results
+# 打印结果
 for doc in docs:
     print(doc.page_content)
     print(doc.metadata)
 ```
 
-## Context Search Tool
+## 上下文搜索工具 (Context Search Tool)
 
-You can use the `ValyuSearchTool` for advanced search queries.
+您可以使用 `ValyuSearchTool` 执行更高级的搜索查询。
 
 ```python
 from langchain_valyu import ValyuSearchTool
 
-# Initialize the ValyuSearchTool
+# 初始化 ValyuSearchTool
 search_tool = ValyuSearchTool(valyu_api_key="YOUR API KEY")
 
-# Perform a search query
+# 执行搜索查询
 search_results = search_tool._run(
-    query="What are agentic search-enhanced large reasoning models?",
+    query="什么是增强了智能体搜索能力的大型推理模型？",
     search_type="all",
     max_num_results=5,
     relevance_threshold=0.5,
@@ -68,5 +68,5 @@ search_results = search_tool._run(
     end_date="2024-12-31",
 )
 
-print("Search Results:", search_results)
+print("搜索结果:", search_results)
 ```

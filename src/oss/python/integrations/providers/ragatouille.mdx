@@ -2,15 +2,15 @@
 title: RAGatouille
 ---
 
->[RAGatouille](https://github.com/bclavie/RAGatouille) makes it as simple as can be to use `ColBERT`! [ColBERT](https://github.com/stanford-futuredata/ColBERT) is a fast and accurate retrieval model, enabling scalable BERT-based search over large text collections in tens of milliseconds.
->
->See the [ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction](https://arxiv.org/abs/2112.01488) paper.
+>[RAGatouille](https://github.com/bclavie/RAGatouille) 使其使用 `ColBERT` 变得尽可能简单！[ColBERT](https://github.com/stanford-futuredata/ColBERT) 是一个快速且准确的检索模型，它可以在毫秒级别的时间内对大型文本集合实现可扩展的、基于 BERT 的搜索。
 
-There are multiple ways that we can use RAGatouille.
+请参阅 [ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction](https://arxiv.org/abs/2112.01488) 论文。
 
-## Setup
+我们可以通过多种方式使用 RAGatouille。
 
-The integration lives in the `ragatouille` package.
+## 安装 (Setup)
+
+集成存在于 `ragatouille` 包中。
 
 ```bash
 pip install -U ragatouille
@@ -23,24 +23,24 @@ RAG = RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")
 ```
 
 ```output
-[Jan 10, 10:53:28] Loading segmented_maxsim_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
+[Jan 10, 10:53:28] 正在加载 segmented_maxsim_cpp 扩展 (设置 COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True 查看更多信息)...
 ```
 ```output
-/Users/harrisonchase/.pyenv/versions/3.10.1/envs/langchain/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:125: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+/Users/harrisonchase/.pyenv/versions/3.10.1/envs/langchain/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:125: UserWarning: torch.cuda.amp.GradScaler 已启用，但 CUDA 不可用。正在禁用。
   warnings.warn(
 ```
 
-## Retriever
+## 检索器 (Retriever)
 
-We can use RAGatouille as a retriever. For more information on this, see the [RAGatouille Retriever](/oss/integrations/retrievers/ragatouille)
+我们可以将 RAGatouille 用作检索器 (Retriever)。有关此方面的更多信息，请参阅 [RAGatouille Retriever](/oss/integrations/retrievers/ragatouille)
 
-## Document Compressor
+## 文档压缩器 (Document Compressor)
 
-We can also use RAGatouille off-the-shelf as a reranker. This will allow us to use ColBERT to rerank retrieved results from any generic retriever. The benefits of this are that we can do this on top of any existing index, so that we don't need to create a new index.
+我们也可以在现成 (off-the-shelf) 的情况下使用 RAGatouille 作为重排序器 (reranker)。这将允许我们使用 ColBERT 对从任何通用检索器检索到的结果进行重新排序。这样做的好处是我们可以基于任何现有索引执行此操作，因此我们不需要创建新的索引。
 
-## Setup Vanilla Retriever
+## 设置通用检索器 (Setup Vanilla Retriever)
 
-First, let's set up a vanilla retriever as an example.
+首先，我们设置一个通用的检索器作为示例。
 
 ```python
 import requests
@@ -51,15 +51,15 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 def get_wikipedia_page(title: str):
     """
-    Retrieve the full text content of a Wikipedia page.
+    检索维基百科页面的完整文本内容。
 
-    :param title: str - Title of the Wikipedia page.
-    :return: str - Full text content of the page as raw string.
+    :param title: str - 维基百科页面的标题。
+    :return: str - 页面的完整文本内容，以原始字符串形式返回。
     """
-    # Wikipedia API endpoint
+    # 维基百科 API 端点
         URL = "https://en.wikipedia.org/w/api.php"
 
-    # Parameters for the API request
+    # API 请求参数
         params = {
         "action": "query",
         "format": "json",
@@ -68,13 +68,13 @@ def get_wikipedia_page(title: str):
         "explaintext": True,
     }
 
-    # Custom User-Agent header to comply with Wikipedia's best practices
+    # 自定义 User-Agent 标头以符合维基百科的最佳实践
         headers = {"User-Agent": "RAGatouille_tutorial/0.0.1 (ben@clavie.eu)"}
 
         response = requests.get(URL, params=params, headers=headers)
         data = response.json()
 
-    # Extracting page content
+    # 提取页面内容
         page = next(iter(data["query"]["pages"].values()))
     return page["extract"] if "extract" in page else None
 
@@ -99,9 +99,9 @@ docs[0]
 Document(page_content='collaborative projects. In April 1984, Miyazaki opened his own office in Suginami Ward, naming it Nibariki.')
 ```
 
-We can see that the result isn't super relevant to the question asked
+我们可以看到结果与所问问题不是特别相关。
 
-## Using ColBERT as a reranker
+## 使用 ColBERT 作为重排序器 (Using ColBERT as a reranker)
 
 ```python
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
@@ -116,7 +116,7 @@ compressed_docs = compression_retriever.invoke(
 ```
 
 ```output
-/Users/harrisonchase/.pyenv/versions/3.10.1/envs/langchain/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+/Users/harrisonchase/.pyenv/versions/3.10.1/envs/langchain/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: 用户提供的 device_type 为 'cuda'，但 CUDA 不可用。正在禁用。
   warnings.warn(
 ```
 
@@ -128,7 +128,7 @@ compressed_docs[0]
 Document(page_content='In June 1985, Miyazaki, Takahata, Tokuma and Suzuki founded the animation production company Studio Ghibli, with funding from Tokuma Shoten. Studio Ghibli\'s first film, Laputa: Castle in the Sky (1986), employed the same production crew of Nausicaä. Miyazaki\'s designs for the film\'s setting were inspired by Greek architecture and "European urbanistic templates". Some of the architecture in the film was also inspired by a Welsh mining town; Miyazaki witnessed the mining strike upon his first', metadata={'relevance_score': 26.5194149017334})
 ```
 
-This answer is much more relevant!
+这个答案相关性高多了！
 
 ```python
 

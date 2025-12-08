@@ -1,17 +1,17 @@
 ---
-title: Overview
-description: Control and customize agent execution at every step
+title: 概述
+description: 在智能体执行的每一步控制和自定义其行为
 ---
 
-Middleware provides a way to more tightly control what happens inside the agent. Middleware is useful for the following:
+中间件（Middleware）提供了一种方式，可以更紧密地控制智能体内部发生的操作。中间件在以下方面非常有用：
 
-- Tracking agent behavior with logging, analytics, and debugging.
-- Transforming prompts, [tool selection](/oss/langchain/middleware/built-in#llm-tool-selector), and output formatting.
-- Adding [retries](/oss/langchain/middleware/built-in#tool-retry), [fallbacks](/oss/langchain/middleware/built-in#model-fallback), and early termination logic.
-- Applying [rate limits](/oss/langchain/middleware/built-in#model-call-limit), guardrails, and [PII detection](/oss/langchain/middleware/built-in#pii-detection).
+- 使用日志记录（logging）、分析（analytics）和调试（debugging）来跟踪智能体的行为。
+- 转换提示词（prompts）、[工具选择](/oss/langchain/middleware/built-in#llm-tool-selector)和输出格式化。
+- 添加[重试机制](/oss/langchain/middleware/built-in#tool-retry)、[回退（fallbacks）策略](/oss/langchain/middleware/built-in#model-fallback)和提前终止逻辑。
+- 应用[速率限制](/oss/langchain/middleware/built-in#model-call-limit)、护栏（guardrails）和[个人身份信息（PII）检测](/oss/langchain/middleware/built-in#pii-detection)。
 
 :::python
-Add middleware by passing them to @[`create_agent`]:
+通过将中间件传递给 @[`create_agent`] 来添加它们：
 
 ```python
 from langchain.agents import create_agent
@@ -29,7 +29,7 @@ agent = create_agent(
 :::
 
 :::js
-Add middleware by passing them to `createAgent`:
+通过将中间件传递给 `createAgent` 来添加它们：
 
 ```typescript
 import {
@@ -46,39 +46,39 @@ const agent = createAgent({
 ```
 :::
 
-## The agent loop
+## 智能体循环 (The agent loop)
 
-The core agent loop involves calling a model, letting it choose tools to execute, and then finishing when it calls no more tools:
+核心的智能体循环涉及调用模型（model），允许它选择要执行的工具（tools），然后在它不再调用任何工具时结束：
 
 <img
     src="/oss/images/core_agent_loop.png"
-    alt="Core agent loop diagram"
+    alt="核心智能体循环图示"
     style={{height: "200px", width: "auto", justifyContent: "center"}}
     className="rounded-lg block mx-auto"
 />
 
-Middleware exposes hooks before and after each of those steps:
+中间件在这些步骤的每一次调用之前和之后暴露了钩子（hooks）：
 
 <img
     src="/oss/images/middleware_final.png"
-    alt="Middleware flow diagram"
+    alt="中间件流程图"
     style={{height: "300px", width: "auto", justifyContent: "center"}}
     className="rounded-lg mx-auto"
 />
 
-## Additional resources
+## 附加资源 (Additional resources)
 
 <CardGroup cols={2}>
-    <Card title="Built-in middleware" icon="box" href="/oss/langchain/middleware/built-in">
-        Explore built-in middleware for common use cases.
+    <Card title="内置中间件" icon="box" href="/oss/langchain/middleware/built-in">
+        探索用于常见用例的内置中间件。
     </Card>
-    <Card title="Custom middleware" icon="code" href="/oss/langchain/middleware/custom">
-        Build your own middleware with hooks and decorators.
+    <Card title="自定义中间件" icon="code" href="/oss/langchain/middleware/custom">
+        使用钩子和装饰器构建您自己的中间件。
     </Card>
-    <Card title="Middleware API reference" icon="book" href="https://reference.langchain.com/python/langchain/middleware/">
-        Complete API reference for middleware.
+    <Card title="中间件 API 参考文档" icon="book" href="https://reference.langchain.com/python/langchain/middleware/">
+        中间件的完整 API 参考。
     </Card>
-    <Card title="Testing agents" icon="scale-unbalanced" href="/oss/langchain/test">
-        Test your agents with LangSmith.
+    <Card title="测试智能体" icon="scale-unbalanced" href="/oss/langchain/test">
+        使用 LangSmith 测试您的智能体。
     </Card>
 </CardGroup>

@@ -1,30 +1,30 @@
 ---
-title: Interact with your self-hosted instance of LangSmith
-sidebarTitle: Interact with an installation
+title: 与自托管的 LangSmith 实例进行交互
+sidebarTitle: 与安装实例进行交互
 ---
 
-This guide will walk you through the process of using your self-hosted instance of LangSmith.
+本指南将引导您完成使用自托管 LangSmith 实例的过程。
 
 <Info>
-This guide assumes you have already deployed a self-hosted LangSmith instance. If you have not, please refer to the [kubernetes deployment guide](/langsmith/kubernetes) or the [docker deployment guide](/langsmith/docker).
+本指南假设您已经部署了一个自托管的 LangSmith 实例。如果您尚未部署，请参考 [Kubernetes 部署指南](/langsmith/kubernetes) 或 [Docker 部署指南](/langsmith/docker)。
 </Info>
 
-### Configuring the application you want to use with LangSmith
+### 配置要与 LangSmith 配合使用的应用程序
 
-LangSmith has a single API for interacting with both the hub and the LangSmith backend.
+LangSmith 使用单个 API 与 Hub 和 LangSmith 后端进行交互。
 
-1. Once you have deployed your instance, you can access the LangSmith UI at `http(s)://<host>`.
-2. The LangSmith API will be available at `http(s)://<host>/api/v1`
-3. The LangSmith Control Plane will be available at `http(s)://<host>/api-host`
+1. 部署完实例后，您可以通过 `http(s)://<host>` 访问 LangSmith UI。
+2. LangSmith API 将可通过 `http(s)://<host>/api/v1` 访问。
+3. LangSmith 控制平面将可通过 `http(s)://<host>/api-host` 访问。
 
-To use the API of your instance, you will need to set the following environment variables in your application:
+要使用您的实例的 API，您需要在应用程序中设置以下环境变量：
 
 ```bash
 LANGSMITH_ENDPOINT=http://<host>/api/v1
-LANGSMITH_API_KEY=foo # Set to a legitimate API key if using OAuth
+LANGSMITH_API_KEY=foo # 如果使用 OAuth，请设置为一个合法的 API 密钥
 ```
 
-You can also configure these variables directly in the LangSmith SDK client:
+您也可以直接在 LangSmith SDK 客户端中配置这些变量：
 
 ```python
 import langsmith
@@ -34,22 +34,22 @@ langsmith_client = langsmith.Client(
 )
 ```
 
-After setting the above, you should be able to run your code and see the results in your self-hosted instance. We recommend running through the [*quickstart guide*](https://docs.smith.langchain.com/#quick-start) to get a feel for how to use LangSmith.
+设置完上述配置后，您应该能够运行代码并将结果显示在您的自托管实例中。我们建议您运行 [*快速入门指南*](https://docs.smith.langchain.com/#quick-start) 以了解如何使用 LangSmith 的基本操作。
 
-### Self-Signed Certificates
+### 自签名证书
 
-If you are using self-signed certificates for your self-hosted LangSmith instance, this can be problematic as Python comes with its own set of trusted certificates, which may not include your self-signed certificate. To resolve this, you may need to use something like `truststore` to load system certificates into your Python environment.
+如果您为自托管的 LangSmith 实例使用了自签名证书，这可能会导致问题，因为 Python 带有自己的一套受信任证书，其中可能不包含您的自签名证书。要解决此问题，您可能需要使用 `truststore` 等工具将系统证书加载到您的 Python 环境中。
 
-You can do this like so:
+您可以按如下方式操作：
 
-1. pip install truststore (or similar depending on the package manager you are using)
+1. `pip install truststore`（或根据您使用的包管理器安装类似的工具）
 
-Then use the following code to load the system certificates:
+然后，使用以下代码加载系统证书：
 
 ```python
 import truststore
 truststore.inject_into_ssl()
-# The rest of your code
+# 您的其余代码
 import langsmith
 langsmith_client = langsmith.Client(
     api_key='<api_key>',
@@ -59,6 +59,6 @@ langsmith_client = langsmith.Client(
 
 ---
 
-## API reference
+## API 参考
 
-To access the API reference, navigate to `http://<host>/api/docs` in your browser.
+要访问 API 参考文档，请在浏览器中导航至 `http://<host>/api/docs`。

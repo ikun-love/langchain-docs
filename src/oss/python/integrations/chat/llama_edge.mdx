@@ -2,38 +2,38 @@
 title: LlamaEdge
 ---
 
-[LlamaEdge](https://github.com/second-state/LlamaEdge) allows you to chat with LLMs of [GGUF](https://github.com/ggerganov/llama.cpp/blob/master/gguf-py/README.md) format both locally and via chat service.
+[LlamaEdge](https://github.com/second-state/LlamaEdge) 允许您与本地或通过聊天服务运行的 [GGUF](https://github.com/ggerganov/llama.cpp/blob/master/gguf-py/README.md) 格式的大型语言模型（LLMs）进行交互。
 
-- `LlamaEdgeChatService` provides developers an OpenAI API compatible service to chat with LLMs via HTTP requests.
+- `LlamaEdgeChatService` 为开发者提供了一个兼容 OpenAI API 的服务，允许通过 HTTP 请求与 LLMs 进行聊天。
 
-- `LlamaEdgeChatLocal` enables developers to chat with LLMs locally (coming soon).
+- `LlamaEdgeChatLocal` 允许开发者在本地与 LLMs 进行聊天（即将推出）。
 
-Both `LlamaEdgeChatService` and `LlamaEdgeChatLocal` run on the infrastructure driven by [WasmEdge Runtime](https://wasmedge.org/), which provides a lightweight and portable WebAssembly container environment for LLM inference tasks.
+`LlamaEdgeChatService` 和 `LlamaEdgeChatLocal` 都运行在由 [WasmEdge Runtime](https://wasmedge.org/) 驱动的基础设施之上，该运行时为 LLM 推理任务提供了一个轻量级且可移植的 WebAssembly 容器环境。
 
-## Chat via API Service
+## 通过 API 服务聊天
 
-`LlamaEdgeChatService` works on the `llama-api-server`. Following the steps in [llama-api-server quick-start](https://github.com/second-state/llama-utils/tree/main/api-server#readme), you can host your own API service so that you can chat with any models you like on any device you have anywhere as long as the internet is available.
+`LlamaEdgeChatService` 用于操作 `llama-api-server`。遵循 [llama-api-server 快速启动](https://github.com/second-state/llama-utils/tree/main/api-server#readme) 中的步骤，您可以托管自己的 API 服务，只要有互联网连接，就可以在任何设备上与任何您喜欢的模型进行聊天。
 
 ```python
 from langchain_community.chat_models.llama_edge import LlamaEdgeChatService
 from langchain.messages import HumanMessage, SystemMessage
 ```
 
-### Chat with LLMs in the non-streaming mode
+### 在非流式模式下与 LLMs 聊天
 
 ```python
-# service url
+# 服务 URL
 service_url = "https://b008-54-186-154-209.ngrok-free.app"
 
-# create wasm-chat service instance
+# 创建 wasm-chat 服务实例
 chat = LlamaEdgeChatService(service_url=service_url)
 
-# create message sequence
+# 创建消息序列
 system_message = SystemMessage(content="You are an AI assistant")
 user_message = HumanMessage(content="What is the capital of France?")
 messages = [system_message, user_message]
 
-# chat with wasm-chat service
+# 与 wasm-chat 服务进行调用（invoke）
 response = chat.invoke(messages)
 
 print(f"[Bot] {response.content}")
@@ -43,16 +43,16 @@ print(f"[Bot] {response.content}")
 [Bot] Hello! The capital of France is Paris.
 ```
 
-### Chat with LLMs in the streaming mode
+### 在流式模式下与 LLMs 聊天
 
 ```python
-# service url
+# 服务 URL
 service_url = "https://b008-54-186-154-209.ngrok-free.app"
 
-# create wasm-chat service instance
+# 创建 wasm-chat 服务实例
 chat = LlamaEdgeChatService(service_url=service_url, streaming=True)
 
-# create message sequence
+# 创建消息序列
 system_message = SystemMessage(content="You are an AI assistant")
 user_message = HumanMessage(content="What is the capital of Norway?")
 messages = [

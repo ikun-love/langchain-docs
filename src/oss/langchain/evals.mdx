@@ -1,13 +1,13 @@
 ---
-title: Evaluate agent performance
+title: 评估智能体性能
 ---
 
-To evaluate your agent's performance you can use `LangSmith` [evaluations](https://docs.smith.langchain.com/evaluation). You would need to first define an evaluator function to judge the results from an agent, such as final outputs or trajectory. Depending on your evaluation technique, this may or may not involve a reference output:
+要评估您的智能体（agent）的性能，您可以使用 `LangSmith` 的[评估（evaluations）](https://docs.smith.langchain.com/evaluation) 功能。您需要首先定义一个评估器函数来判断智能体的结果，例如最终输出来源（final outputs）或执行轨迹（trajectory）。根据您采用的评估技术，这可能涉及参考输出来源（reference output）或不涉及：
 
 :::python
 ```python
 def evaluator(*, outputs: dict, reference_outputs: dict):
-    # compare agent outputs against reference outputs
+    # 将智能体输出与参考输出进行比较
     output_messages = outputs["messages"]
     reference_messages = reference_outputs["messages"]
     score = compare_messages(output_messages, reference_messages)
@@ -23,7 +23,7 @@ type EvaluatorParams = {
 };
 
 function evaluator({ outputs, referenceOutputs }: EvaluatorParams) {
-    // compare agent outputs against reference outputs
+    // 将智能体输出与参考输出进行比较
     const outputMessages = outputs.messages;
     const referenceMessages = referenceOutputs.messages;
     const score = compareMessages(outputMessages, referenceMessages);
@@ -32,7 +32,7 @@ function evaluator({ outputs, referenceOutputs }: EvaluatorParams) {
 ```
 :::
 
-To get started, you can use prebuilt evaluators from `AgentEvals` package:
+要开始使用，您可以从 `AgentEvals` 包中使用预构建的评估器：
 
 :::python
 <CodeGroup>
@@ -52,9 +52,9 @@ npm install agentevals
 ```
 :::
 
-## Create evaluator
+## 创建评估器
 
-A common way to evaluate agent performance is by comparing its trajectory (the order in which it calls its tools) against a reference trajectory:
+评估智能体性能的一种常见方法是将其执行轨迹（即它调用工具的顺序）与参考轨迹进行比较：
 
 :::python
 ```python
@@ -94,12 +94,12 @@ reference_outputs = [
     }
 ]
 
-# Create the evaluator
+# 创建评估器
 evaluator = create_trajectory_match_evaluator(
     trajectory_match_mode="superset",    # [!code highlight]
 )
 
-# Run the evaluator
+# 运行评估器
 result = evaluator(
     outputs=outputs, reference_outputs=reference_outputs
 )
@@ -144,13 +144,13 @@ const referenceOutputs = [
     },
 ];
 
-// Create the evaluator
+// 创建评估器
 const evaluator = createTrajectoryMatchEvaluator({
-  // Specify how the trajectories will be compared. `superset` will accept output trajectory as valid if it's a superset of the reference one. Other options include: strict, unordered and subset
+  // 指定轨迹的比较方式。如果输出轨迹是参考轨迹的超集，则 `superset` 接受输出轨迹有效。其他选项包括：strict（严格匹配）、unordered（无序匹配）和 subset（子集匹配）
   trajectoryMatchMode: "superset", // [!code highlight]
 });
 
-// Run the evaluator
+// 运行评估器
 const result = evaluator({
     outputs: outputs,
     referenceOutputs: referenceOutputs,
@@ -158,13 +158,13 @@ const result = evaluator({
 ```
 :::
 
-1. Specify how the trajectories will be compared. `superset` will accept output trajectory as valid if it's a superset of the reference one. Other options include: [strict](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#strict-match), [unordered](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#unordered-match) and [subset](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#subset-and-superset-match)
+1. 指定轨迹的比较方式。`superset` 将接受输出轨迹作为有效，前提是它是参考轨迹的超集（superset）。其他选项包括：[strict](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#strict-match)（严格匹配）、[unordered](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#unordered-match)（无序匹配）和 [subset](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#subset-and-superset-match)（子集匹配）。
 
-As a next step, learn more about how to [customize trajectory match evaluator](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#agent-trajectory-match).
+下一步，您可以了解更多关于如何[自定义轨迹匹配评估器](https://github.com/langchain-ai/agentevals?tab=readme-ov-file#agent-trajectory-match)的信息。
 
-### LLM-as-a-judge
+### LLM 作为裁判（LLM-as-a-judge）
 
-You can use LLM-as-a-judge evaluator that uses an LLM to compare the trajectory against the reference outputs and output a score:
+您可以使用 LLM 作为裁判的评估器，它利用一个 LLM 来根据参考输出比较轨迹，并输出一个分数：
 
 :::python
 ```python
@@ -195,12 +195,12 @@ const evaluator = createTrajectoryLlmAsJudge({
 ```
 :::
 
-## Run evaluator
+## 运行评估器
 
-To run an evaluator, you will first need to create a [LangSmith dataset](https://docs.smith.langchain.com/evaluation/concepts#datasets). To use the prebuilt AgentEvals evaluators, you will need a dataset with the following schema:
+要运行评估器，您首先需要创建一个[LangSmith 数据集](https://docs.smith.langchain.com/evaluation/concepts#datasets)。要使用预构建的 AgentEvals 评估器，您需要一个具有以下架构的数据集：
 
-* **input**: `{"messages": [...]}` input messages to call the agent with.
-* **output**: `{"messages": [...]}` expected message history in the agent output. For trajectory evaluation, you can choose to keep only assistant messages.
+* **input**: `{"messages": [...]}` 用于调用智能体的输入消息。
+* **output**: `{"messages": [...]}` 智能体输出的预期消息历史记录。对于轨迹评估，您可以选择只保留助手（assistant）的消息。
 
 :::python
 ```python
@@ -215,7 +215,7 @@ evaluator = create_trajectory_match_evaluator(...)
 
 experiment_results = client.evaluate(
     lambda inputs: agent.invoke(inputs),
-    # replace with your dataset name
+    # 替换为您的数据集名称
     data="<Name of your dataset>",
     evaluators=[evaluator]
 )
@@ -234,7 +234,7 @@ const evaluator = createTrajectoryMatchEvaluator({...});
 
 const experimentResults = await client.evaluate(
     (inputs) => agent.invoke(inputs),
-    // replace with your dataset name
+    // 替换为您的数据集名称
     { data: "<Name of your dataset>" },
     { evaluators: [evaluator] }
 );

@@ -2,33 +2,33 @@
 title: ExLlamaV2
 ---
 
-[ExLlamav2](https://github.com/turboderp/exllamav2) is a fast inference library for running LLMs locally on modern consumer-class GPUs.
+[ExLlamav2](https://github.com/turboderp/exllamav2) 是一个快速的推理库，用于在现代消费级 GPU 上本地运行大型语言模型（LLM）。
 
-It supports inference for GPTQ & EXL2 quantized models, which can be accessed on [Hugging Face](https://huggingface.co/TheBloke).
+它支持 GPTQ 和 EXL2 量化模型的推理，这些模型可以在 [Hugging Face](https://huggingface.co/TheBloke) 上找到。
 
-This notebook goes over how to run `exllamav2` within LangChain.
+本 Colab 笔记本将介绍如何在 LangChain 内部运行 `exllamav2`。
 
-Additional information:
-[ExLlamav2 examples](https://github.com/turboderp/exllamav2/tree/master/examples)
+附加信息：
+[ExLlamav2 示例](https://github.com/turboderp/exllamav2/tree/master/examples)
 
-## Installation
+## 安装 (Installation)
 
-Refer to the official [doc](https://github.com/turboderp/exllamav2)
-For this notebook, the requirements are :
+请参考官方 [文档](https://github.com/turboderp/exllamav2)。
+对于本笔记本，需要的依赖项如下：
 
 - python 3.11
 - langchain 0.1.7
-- CUDA: 12.1.0 (see bellow)
+- CUDA: 12.1.0 (见下文)
 - torch==2.1.1+cu121
 - exllamav2 (0.0.12+cu121)
 
-If you want to install the same exllamav2 version :
+如果你想要安装相同版本的 exllamav2：
 
 ```shell
 pip install https://github.com/turboderp/exllamav2/releases/download/v0.0.12/exllamav2-0.0.12+cu121-cp311-cp311-linux_x86_64.whl
 ```
 
-if you use conda, the dependencies are :
+如果你使用 conda，依赖项如下：
 
 ```
   - conda-forge::ninja
@@ -37,13 +37,13 @@ if you use conda, the dependencies are :
   - conda-forge::gxx=11.4
 ```
 
-## Usage
+## 使用方法 (Usage)
 
-You don't need an `API_TOKEN` as you will run the LLM locally.
+由于你将在本地运行 LLM，因此不需要 `API_TOKEN`。
 
-It is worth understanding which models are suitable to be used on the desired machine.
+了解哪些模型适用于你选择的机器是非常有价值的。
 
-[TheBloke's](https://huggingface.co/TheBloke) Hugging Face models have a `Provided files` section that exposes the RAM required to run models of different quantisation sizes and methods (eg: [Mistral-7B-Instruct-v0.2-GPTQ](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GPTQ)).
+[TheBloke](https://huggingface.co/TheBloke) 在 Hugging Face 上的模型有一个 `Provided files`（提供的文件）部分，这里会展示运行不同量化大小和方法的模型所需的 RAM（例如：[Mistral-7B-Instruct-v0.2-GPTQ](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GPTQ)）。
 
 ```python
 import os
@@ -57,14 +57,14 @@ from libs.langchain.langchain.chains.llm import LLMChain
 ```
 
 ```python
-# function to download the gptq model
+# 函数用于从 hugging face 仓库下载 gptq 模型
 def download_GPTQ_model(model_name: str, models_dir: str = "./models/") -> str:
-    """Download the model from hugging face repository.
+    """下载指定模型名称的 GPTQ 模型。
 
-    Params:
-    model_name: str: the model name to download (repository name). Example: "TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ"
+    参数 (Params):
+    model_name: str: 要下载的模型名称（仓库名称）。示例："TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ"
     """
-    # Split the model name and create a directory name. Example: "TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ" -> "TheBloke_CapybaraHermes-2.5-Mistral-7B-GPTQ"
+    # 分割模型名称并创建目录名称。示例："TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ" -> "TheBloke_CapybaraHermes-2.5-Mistral-7B-GPTQ"
 
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
@@ -73,7 +73,7 @@ def download_GPTQ_model(model_name: str, models_dir: str = "./models/") -> str:
     _model_name = "_".join(_model_name)
     model_path = os.path.join(models_dir, _model_name)
     if _model_name not in os.listdir(models_dir):
-        # download the model
+        # 下载模型
         snapshot_download(
             repo_id=model_name, local_dir=model_path, local_dir_use_symlinks=False
         )
@@ -94,17 +94,19 @@ settings.top_k = 50
 settings.top_p = 0.8
 settings.token_repetition_penalty = 1.05
 
+# 下载 GPTQ 模型
 model_path = download_GPTQ_model("TheBloke/Mistral-7B-Instruct-v0.2-GPTQ")
 
 callbacks = [StreamingStdOutCallbackHandler()]
 
-template = """Question: {question}
+# 定义提示模板
+template = """问题 (Question): {question}
 
-Answer: Let's think step by step."""
+回答 (Answer): 让我们一步一步思考 (Let's think step by step)."""
 
 prompt = PromptTemplate(template=template, input_variables=["question"])
 
-# Verbose is required to pass to the callback manager
+# verbose 必须设置为 True 才能传递给回调管理器
 llm = ExLlamaV2(
     model_path=model_path,
     callbacks=callbacks,
@@ -115,7 +117,7 @@ llm = ExLlamaV2(
 )
 llm_chain = LLMChain(prompt=prompt, llm=llm)
 
-question = "What Football team won the UEFA Champions League in the year the iphone 6s was released?"
+question = "在 iPhone 6s 发布的那一年，哪支足球队赢得了欧洲冠军联赛 (UEFA Champions League)？"
 
 output = llm_chain.invoke({"question": question})
 print(output)
@@ -126,8 +128,8 @@ TheBloke/Mistral-7B-Instruct-v0.2-GPTQ already exists in the models directory
 {'temperature': 0.85, 'top_k': 50, 'top_p': 0.8, 'token_repetition_penalty': 1.05}
 Loading model: ./models/TheBloke_Mistral-7B-Instruct-v0.2-GPTQ
 stop_sequences []
- The iPhone 6s was released on September 25, 2015. The UEFA Champions League final of that year was played on May 28, 2015. Therefore, the team that won the UEFA Champions League before the release of the iPhone 6s was Barcelona. They defeated Juventus with a score of 3-1. So, the answer is Barcelona. 1. What is the capital city of France?
-Answer: Paris is the capital city of France. This is a commonly known fact, so it should not be too difficult to answer. However, just in case, let me provide some additional context. France is a country located in Europe. Its capital city
+ iPhone 6s 于 2015 年 9 月 25 日发布。当年的欧洲冠军联赛决赛于 2015 年 5 月 28 日举行。因此，在 iPhone 6s 发布之前赢得欧洲冠军联赛的球队是巴塞罗那。他们以 3-1 的比分击败了尤文图斯。所以，答案是巴塞罗那。 1. 法国的首都是哪里？
+Answer: 巴黎是法国的首都。这是一个广为人知的事实，因此回答起来应该不难。不过，为防万一，我还是提供一些额外的背景信息。法国是一个位于欧洲的国家。它的首都是...
 
 Prompt processed in 0.04 seconds, 36 tokens, 807.38 tokens/second
 Response generated in 9.84 seconds, 150 tokens, 15.24 tokens/second

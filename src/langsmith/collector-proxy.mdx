@@ -1,74 +1,74 @@
 ---
-title: Beta LangSmith Collector-Proxy
-sidebarTitle: Beta LangSmith Collector-Proxy
+title: Beta LangSmith Collector-Proxy (测试版)
+sidebarTitle: Beta LangSmith Collector-Proxy (测试版)
 ---
 
 <Note>
-This is a beta feature. The API may change in future releases.
+这是一个测试版（Beta）功能。API 可能会在未来的版本中发生变化。
 </Note>
 
-The LangSmith Collector-Proxy is a lightweight, high-performance proxy server that sits between your application and the LangSmith backend. It batches and compresses trace data before sending it to LangSmith, reducing network overhead and improving performance.
+LangSmith Collector-Proxy 是一个轻量级、高性能的代理服务器，它部署在您的应用程序和 LangSmith 后端之间。它会在将追踪数据发送到 LangSmith 之前对数据进行批处理和压缩，从而减少网络开销并提高性能。
 
-## When to Use the Collector-Proxy
+## 何时使用 Collector-Proxy
 
-The Collector-Proxy is particularly valuable when:
+当出现以下情况时，Collector-Proxy 特别有价值：
 
-* You're running multiple instances of your application in parallel and need to efficiently aggregate traces
-* You want more efficient tracing than direct OTEL API calls to LangSmith (the collector optimizes batching and compression)
-* You're using a language that doesn't have a native LangSmith SDK
+* 您正在并行运行多个应用程序实例，需要高效地聚合追踪数据。
+* 您希望获得比直接调用 OTEL API 到 LangSmith 更高效的追踪性能（Collector 会优化批处理和压缩）。
+* 您正在使用目前尚无原生 LangSmith SDK 的编程语言。
 
-## Key Features
+## 核心特性
 
-* **Efficient Data Transfer** Batches multiple spans into fewer, larger uploads.
-* **Compression** Uses zstd to minimize payload size.
-* **OTLP Support** Accepts OTLP JSON and Protobuf over HTTP POST.
-* **Semantic Translation** Maps GenAI/OpenInference conventions to the LangSmith Run model.
-* **Flexible Batching** Flush by span count or time interval.
+* **高效数据传输**：将多个 Span 批处理成更少、更大的上传请求。
+* **压缩**：使用 zstd 算法来最小化有效负载（Payload）大小。
+* **OTLP 支持**：通过 HTTP POST 接收 OTLP JSON 和 Protobuf 格式的数据。
+* **语义转换**：将 GenAI/OpenInference 的惯例映射到 LangSmith 的 Run 模型。
+* **灵活的批处理**：可以根据 Span 数量或时间间隔触发数据刷新（Flush）。
 
-## Configuration
+## 配置
 
-Configure via environment variables:
+通过环境变量进行配置：
 
-| Variable             | Description                       | Default                           |
-| -------------------- | --------------------------------- | --------------------------------- |
-| `HTTP_PORT`          | Port to run the proxy server      | `4318`                            |
-| `LANGSMITH_ENDPOINT` | LangSmith backend URL             | `https://api.smith.langchain.com` |
-| `LANGSMITH_API_KEY`  | API key for LangSmith             | **Required** (env var or header)  |
-| `LANGSMITH_PROJECT`  | Default tracing project           | Default project if not specified  |
-| `BATCH_SIZE`         | Spans per upload batch            | `100`                             |
-| `FLUSH_INTERVAL_MS`  | Flush interval in milliseconds    | `1000`                            |
-| `MAX_BUFFER_BYTES`   | Max uncompressed buffer size      | `10485760` (10 MB)                |
-| `MAX_BODY_BYTES`     | Max incoming request body size    | `209715200` (200 MB)              |
-| `MAX_RETRIES`        | Retry attempts for failed uploads | `3`                               |
-| `RETRY_BACKOFF_MS`   | Initial backoff in milliseconds   | `100`                             |
+| 变量 | 描述 | 默认值 |
+| :--- | :--- | :--- |
+| `HTTP_PORT` | 运行代理服务器的端口 | `4318` |
+| `LANGSMITH_ENDPOINT` | LangSmith 后端 URL | `https://api.smith.langchain.com` |
+| `LANGSMITH_API_KEY` | LangSmith 的 API 密钥 | **必需**（环境变量或 Header）|
+| `LANGSMITH_PROJECT` | 默认追踪项目 | 如果未指定，则使用默认项目 |
+| `BATCH_SIZE` | 每次上传的 Span 数量 | `100` |
+| `FLUSH_INTERVAL_MS` | 毫秒级的刷新间隔 | `1000` |
+| `MAX_BUFFER_BYTES` | 最大未压缩缓冲区大小 | `10485760` (10 MB) |
+| `MAX_BODY_BYTES` | 最大传入请求体大小 | `209715200` (200 MB) |
+| `MAX_RETRIES` | 失败上传的重试次数 | `3` |
+| `RETRY_BACKOFF_MS` | 初始退避时间（毫秒） | `100` |
 
-### Project Configuration
+### 项目配置
 
-The Collector-Proxy supports LangSmith project configuration with the following priority:
+Collector-Proxy 支持 LangSmith 项目配置，优先级如下：
 
-1. If a project is specified in the request headers (`Langsmith-Project`), that project will be used
-2. If no project is specified in headers, it will use the project set in the `LANGSMITH_PROJECT` environment variable
-3. If neither is set, it will trace to the `default` project.
+1. 如果请求 Header 中指定了项目（`Langsmith-Project`），则使用该项目。
+2. 如果 Header 中未指定项目，则使用 `LANGSMITH_PROJECT` 环境变量中设置的项目。
+3. 如果两者都未设置，则追踪到 `default` 项目。
 
-### Authentication
+### 认证
 
-The API key can be provided either:
+API 密钥可以通过以下任一方式提供：
 
-* As an environment variable (`LANGSMITH_API_KEY`)
-* In the request headers (`X-API-Key`)
+* 作为环境变量（`LANGSMITH_API_KEY`）
+* 在请求 Header 中（`X-API-Key`）
 
-## Deployment (Docker)
+## 部署 (Docker)
 
-You can deploy the Collector-Proxy with Docker:
+您可以使用 Docker 部署 Collector-Proxy：
 
-1. **Build the image**
+1. **构建镜像**
 
    ```bash
    docker build \
      -t langsmith-collector-proxy:beta .
    ```
 
-2. **Run the container**
+2. **运行容器**
 
    ```bash
    docker run -d \
@@ -78,16 +78,16 @@ You can deploy the Collector-Proxy with Docker:
      langsmith-collector-proxy:beta
    ```
 
-## Usage
+## 用法
 
-Point any OTLP-compatible client or the OpenTelemetry Collector exporter at:
+将任何 OTLP 兼容的客户端或 OpenTelemetry Collector 导出器指向：
 
 ```bash
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://<host>:4318/v1/traces
 export OTEL_EXPORTER_OTLP_HEADERS="X-API-Key=<your_api_key>,Langsmith-Project=<your_project>"
 ```
 
-Send a test trace:
+发送一个测试追踪：
 
 ```bash
 curl -X POST http://localhost:4318/v1/traces \
@@ -156,18 +156,18 @@ curl -X POST http://localhost:4318/v1/traces \
   }'
 ```
 
-## Health & Scaling
+## 健康检查与伸缩
 
-* **Liveness**: `GET /live` → 200
-* **Readiness**: `GET /ready` → 200
+* **Liveness (存活)**: `GET /live` → 200
+* **Readiness (就绪)**: `GET /ready` → 200
 
-## Horizontal Scaling
+## 水平伸缩 (Horizontal Scaling)
 
-To ensure full traces are batched correctly, route spans with the same trace ID to the same instance (e.g., via consistent hashing).
+为确保追踪数据能被正确地批处理，请通过一致性哈希（consistent hashing）等方式，将具有相同 `trace ID` 的 Span 路由到同一个代理实例。
 
-## Fork & Extend
+## Fork 与扩展
 
-Fork the [Collector-Proxy repo on GitHub](https://github.com/langchain-ai/langsmith-collector-proxy) and implement your own converter:
+您可以在 [GitHub 上的 Collector-Proxy 仓库](https://github.com/langchain-ai/langsmith-collector-proxy) Fork 项目并实现自己的转换器：
 
-* Create a custom `GenAiConverter` or modify the existing one in `internal/translator/otel_converter.go`
-* Register the custom converter in `internal/translator/translator.go`
+* 在 `internal/translator/otel_converter.go` 中创建一个自定义的 `GenAiConverter` 或修改现有的转换器。
+* 在 `internal/translator/translator.go` 中注册自定义的转换器。

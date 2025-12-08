@@ -1,40 +1,41 @@
 ---
-title: Oracle Cloud Infrastructure Generative AI
+title: Oracle Cloud Infrastructure 生成式 AI
 ---
 
-Oracle Cloud Infrastructure (OCI) Generative AI is a fully managed service that provides a set of state-of-the-art, customizable large language models (LLMs), that cover a wide range of use cases, and which are available through a single API.
-Using the OCI Generative AI service you can access ready-to-use pretrained models, or create and host your own fine-tuned custom models based on your own data on dedicated AI clusters. Detailed documentation of the service and API is available __[here](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__ and __[here](https://docs.oracle.com/en-us/iaas/api/#/en/generative-ai/20231130/)__.
+Oracle Cloud Infrastructure (OCI) 生成式 AI 是一项完全托管的服务，它提供了一套尖端的、可定制的大型语言模型（LLM）。这些模型涵盖了广泛的使用场景，并通过**单个 API** 即可访问。
 
-This notebook explains how to use OCI's Genrative AI models with LangChain.
+使用 OCI 生成式 AI 服务，您可以访问**即用型预训练模型**，或者基于您自己的数据，在专用的 AI 集群上创建和托管您自己**微调（fine-tuned）的定制模型**。有关该服务和 API 的详细文档，请点击__[此处](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__和__[此处](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__。
 
-### Prerequisite
+本 Notebook 解释了如何将 OCI 的生成式 AI 模型与 LangChain 结合使用。
 
-We will need to install the oci sdk
+### 先决条件
+
+我们需要安装 oci sdk：
 
 ```python
 !pip install -U oci
 ```
 
-### OCI Generative AI API endpoint
+### OCI 生成式 AI API 端点
 [inference.generativeai.us-chicago-1.oci.oraclecloud.com](https://inference.generativeai.us-chicago-1.oci.oraclecloud.com)
 
-## Authentication
+## 认证（Authentication）
 
-The authentication methods supported for this langchain integration are:
+此 LangChain 集成支持以下认证方法：
 
-1. API Key
-2. Session token
-3. Instance principal
-4. Resource principal
+1. API 密钥 (API Key)
+2. 会话令牌 (Session token)
+3. 实例主体 (Instance principal)
+4. 资源主体 (Resource principal)
 
-These follows the standard SDK authentication methods detailed __[here](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)__.
+这些方法遵循 __[此处](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)__ 中详细介绍的标准 SDK 认证方法。
 
-## Usage
+## 用法
 
 ```python
 from langchain_community.embeddings import OCIGenAIEmbeddings
 
-# use default authN method API-key
+# 使用默认的 API 密钥认证方法
 embeddings = OCIGenAIEmbeddings(
     model_id="MY_EMBEDDING_MODEL",
     service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
@@ -52,14 +53,14 @@ print(response)
 ```
 
 ```python
-# Use Session Token to authN
+# 使用会话令牌 (Session Token) 进行认证
 embeddings = OCIGenAIEmbeddings(
     model_id="MY_EMBEDDING_MODEL",
     service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
     compartment_id="MY_OCID",
     auth_type="SECURITY_TOKEN",
-    auth_profile="MY_PROFILE",  # replace with your profile name
-    auth_file_location="MY_CONFIG_FILE_LOCATION",  # replace with file location where profile name configs present
+    auth_profile="MY_PROFILE",  # 替换为您的配置文件名称
+    auth_file_location="MY_CONFIG_FILE_LOCATION",  # 替换为配置文件所在的位置
 )
 
 

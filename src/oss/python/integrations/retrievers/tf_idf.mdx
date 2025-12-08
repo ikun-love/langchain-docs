@@ -2,11 +2,11 @@
 title: TF-IDF
 ---
 
->[TF-IDF](https://scikit-learn.org/stable/modules/feature_extraction.html#tfidf-term-weighting) means term-frequency times inverse document-frequency.
+> [TF-IDF](https://scikit-learn.org/stable/modules/feature_extraction.html#tfidf-term-weighting) 代表“词频-逆文档频率”（Term-Frequency times Inverse Document-Frequency）。
 
-This notebook goes over how to use a retriever that under the hood uses [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) using `scikit-learn` package.
+本教程将介绍如何使用一个检索器（Retriever），该检索器底层使用 `scikit-learn` 包中的 [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) 算法。
 
-For more information on the details of TF-IDF see [this blog post](https://medium.com/data-science-bootcamp/tf-idf-basics-of-information-retrieval-48de122b2a4c).
+有关 TF-IDF 细节的更多信息，请参阅[这篇博客文章](https://medium.com/data-science-bootcamp/tf-idf-basics-of-information-retrieval-48de122b2a4c)。
 
 ```python
 pip install -qU  scikit-learn
@@ -16,15 +16,15 @@ pip install -qU  scikit-learn
 from langchain_community.retrievers import TFIDFRetriever
 ```
 
-## Create New Retriever with Texts
+## 使用文本创建新的检索器
 
 ```python
 retriever = TFIDFRetriever.from_texts(["foo", "bar", "world", "hello", "foo bar"])
 ```
 
-## Create a New Retriever with Documents
+## 使用文档创建新的检索器
 
-You can now create a new retriever with the documents you created.
+您现在可以使用已创建的文档来初始化新的检索器。
 
 ```python
 from langchain_core.documents import Document
@@ -40,9 +40,9 @@ retriever = TFIDFRetriever.from_documents(
 )
 ```
 
-## Use Retriever
+## 使用检索器
 
-We can now use the retriever!
+现在我们可以使用这个检索器了！
 
 ```python
 result = retriever.invoke("foo")
@@ -59,9 +59,9 @@ result
  Document(page_content='world', metadata={})]
 ```
 
-## Save and load
+## 保存和加载
 
-You can easily save and load this retriever, making it handy for local development!
+您可以轻松地保存和加载此检索器，这对于本地开发非常方便！
 
 ```python
 retriever.save_local("testing.pkl")
@@ -82,6 +82,6 @@ retriever_copy.invoke("foo")
  Document(page_content='world', metadata={})]
 ```
 
-```python
+```
 
 ```

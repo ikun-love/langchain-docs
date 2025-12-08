@@ -1,39 +1,40 @@
+```markdown
 ---
-title: Data purging for compliance
-sidebarTitle: Data purging for compliance
+title: 数据清除以满足合规性要求
+sidebarTitle: 数据清除以满足合规性要求
 ---
 
-This guide covers the various features available after data reaches LangSmith Cloud servers to help you achieve your privacy goals.
+本指南涵盖了数据到达 LangSmith Cloud 服务器后可用的各种功能，以帮助您实现隐私目标。
 
-## Data retention
+## 数据保留
 
-LangSmith provides automatic data retention capabilities to help with compliance and storage management. Data retention policies can be configured at the organization and project levels.
+LangSmith 提供自动数据保留功能，以协助进行合规性和存储管理。数据保留策略可以在组织（organization）级别和项目（project）级别进行配置。
 
-For detailed information about data retention configuration and management, please refer to the [Data Retention concepts](/langsmith/administration-overview#data-retention) documentation.
+有关数据保留配置和管理的详细信息，请参阅 [数据保留概念](/langsmith/administration-overview#data-retention) 文档。
 
-## Trace deletes
+## 追踪删除 (Trace Deletes)
 
-You can use the API to complete trace deletes. The API supports two methods for deleting traces:
+您可以使用 API 来完成追踪删除操作。API 支持两种删除追踪的方法：
 
-1. **By trace IDs and session ID**: Delete specific traces by providing a list of trace IDs and their corresponding session ID (up to 1000 traces per request)
-2. **By metadata**: Delete traces across a workspace that match any of the specified metadata key-value pairs
+1. **通过追踪 ID 和会话 ID (Trace IDs and session ID)**：通过提供一组追踪 ID 及其对应的会话 ID 来删除特定的追踪记录（每次请求最多 1000 条追踪记录）。
+2. **通过元数据 (Metadata)**：删除工作区（workspace）中与指定的任意键值对匹配的追踪记录。
 
-For more details, refer to the [API spec](https://api.smith.langchain.com/redoc#tag/run/operation/delete_runs_api_v1_runs_delete_post).
+如需了解更多详情，请参阅 [API 规范](https://api.smith.langchain.com/redoc#tag/run/operation/delete_runs_api_v1_runs_delete_post)。
 
 <Warning>
-All trace deletions will delete related entities like feedbacks, aggregations, and stats across all data storages.
+所有追踪记录的删除都将删除所有数据存储中相关的实体，例如反馈（feedbacks）、聚合（aggregations）和统计数据（stats）。
 </Warning>
 
-### Deletion timeline
+### 删除时间线
 
-Trace deletions are processed during non-peak usage times and are not instant. LangChain runs the delete job on the weekend. There is no confirmation of deletion - you'll need to query the data again to verify it has been removed.
+追踪记录的删除操作在非高峰使用时段内处理，并非即时完成。LangChain 会在周末运行删除作业。**系统不会提供删除确认**——您需要再次查询数据以验证记录是否已被移除。
 
-### Delete specific traces
+### 删除特定的追踪记录
 
-To delete specific traces by their trace IDs from a single session:
+要从单个会话中按追踪 ID 删除特定的追踪记录：
 
 <Note>
-The `session_id` is the project ID for the trace you are trying to delete. You can find it on the tracing project page in the LangSmith UI.
+`session_id` 即为您尝试删除的追踪记录所属的项目 ID。您可以在 LangSmith UI 中的追踪项目页面找到此 ID。
 </Note>
 
 ```bash
@@ -46,14 +47,14 @@ curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
   }'
 ```
 
-### Delete by metadata
+### 按元数据删除
 
-When deleting by metadata:
+在按元数据删除时：
 
-- Accepts a `metadata` object of key/value pairs. KV pair matching uses an **or** condition. A trace will match if it has **any** of the key-value pairs specified in metadata (not all)
-- You don't need to specify a session id when deleting by metadata. Deletes will apply across the workspace.
+- 接受一个包含键/值对的 `metadata` 对象。键值对匹配采用 **或 (or)** 条件。如果追踪记录匹配了元数据中指定的**任意**（而非所有）键值对，则该追踪记录会被选中。
+- 按元数据删除时，您无需指定 `session_id`。删除操作将应用于整个工作区。
 
-To delete traces based on metadata across a workspace (matches **any** of the metadata key-value pairs):
+要根据元数据跨工作区删除追踪记录（匹配**任意**元数据键值对）：
 
 ```bash
 curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
@@ -67,31 +68,31 @@ curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
   }'
 ```
 
-This will delete traces that have either `user_id: "user123"` **or** `environment: "staging"` in their metadata.
+这将删除其元数据中同时包含 `user_id: "user123"` **或** `environment: "staging"` 的追踪记录。
 
 <Warning>
-Remember that you can only schedule up to 1000 traces per session per request. For larger deletions, you'll need to make multiple requests.
+请记住，每次请求最多只能安排删除 1000 条追踪记录（按会话/请求计算）。对于大规模删除，您需要发起多次请求。
 </Warning>
 
-## Example deletes
+## 示例删除 (Example Deletes)
 
-You can delete dataset examples self-serve via our API, which supports both soft and hard deletion methods depending on your data retention needs.
+您可以通过我们的 API 自助服务删除数据集示例（dataset examples）。API 支持**软删除**和**硬删除**两种方法，具体取决于您的数据保留需求。
 
 <Warning>
-Hard deletes will permanently remove inputs, outputs, and metadata from ALL versions of the specified examples across the entire dataset history.
+硬删除将永久移除指定示例在整个数据集历史记录的所有版本中的输入（inputs）、输出（outputs）和元数据。
 </Warning>
 
-### Deleting examples is a two-step process
+### 删除示例是两步流程
 
-For bulk operations, example deletion follows a two-step process:
+对于批量操作，示例删除遵循一个两步流程：
 
-#### 1. Search for examples by metadata
+#### 1. 通过元数据搜索示例
 
-Find all examples with matching metadata across all datasets in a workspace.
+查找工作区中所有数据集中与指定元数据匹配的示例。
 
 [GET /examples](https://api.smith.langchain.com/redoc#tag/examples/operation/read_examples_api_v1_examples_get)
 
-- `as_of` must be explicitly specified as a timestamp. Only examples created before the `as_of` date will be returned
+- 必须明确指定 `as_of` 时间戳。只返回早于 `as_of` 日期创建的示例。
 
 ```bash
 curl -X GET "https://api.smith.langchain.com/api/v1/examples?as_of=2024-01-01T00:00:00Z" \
@@ -105,15 +106,15 @@ curl -X GET "https://api.smith.langchain.com/api/v1/examples?as_of=2024-01-01T00
   }'
 ```
 
-This will return examples that have either `user_id: "user123"` **or** `environment: "staging"` in their metadata across all datasets in your workspace.
+这将返回其元数据中包含 `user_id: "user123"` **或** `environment: "staging"` 的示例，这些示例来自您工作区中的所有数据集。
 
-#### 2. Hard delete examples
+#### 2. 硬删除示例
 
-Once you have the example IDs, send a delete request. This will zero-out the inputs, outputs, and metadata from all versions of the dataset for that example.
+获取到示例 ID 后，发送删除请求。这将清除该示例在数据集所有版本中的输入、输出和元数据。
 
 [DELETE /examples](https://api.smith.langchain.com/redoc#tag/examples/operation/delete_examples_api_v1_examples_delete)
 
-- Specify example IDs and add `"hard_delete": true` to the query params of the request
+- 在请求的查询参数中指定示例 ID 并添加参数 `"hard_delete": true`。
 
 ```bash
 curl -X DELETE "https://api.smith.langchain.com/api/v1/examples?hard_delete=true" \
@@ -124,18 +125,19 @@ curl -X DELETE "https://api.smith.langchain.com/api/v1/examples?hard_delete=true
   }'
 ```
 
-### Deletion types
+### 删除类型
 
-#### Soft delete (default)
+#### 软删除 (默认)
 
-- Creates tombstoned entries with NULL inputs/outputs in the dataset
-- Preserves historical data and maintains dataset versioning
-- Only affects the current version of the dataset
+- 在数据集中创建带有 `NULL` 输入/输出的“标记”条目（tombstoned entries）。
+- 保留历史数据并维持数据集版本控制。
+- **仅影响**数据集的当前版本。
 
-#### Hard delete
+#### 硬删除
 
-- Permanently removes inputs, outputs, and metadata from ALL dataset versions
-- Complete data removal when compliance requires zero-out across all versions
-- Add `"hard_delete": true` to the query parameters
+- **永久**删除所有数据集版本中的输入、输出和元数据。
+- 当合规性要求跨所有版本实现零数据残留时使用。
+- 通过在查询参数中添加 `"hard_delete": true` 来启用。
 
-For more details, refer to the [API spec](https://api.smith.langchain.com/redoc#tag/examples/operation/delete_examples_api_v1_examples_delete).
+如需了解更多详情，请参阅 [API 规范](https://api.smith.langchain.com/redoc#tag/examples/operation/delete_examples_api_v1_examples_delete)。
+```

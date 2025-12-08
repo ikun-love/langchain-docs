@@ -1,53 +1,45 @@
+```markdown
 ---
 title: Bodo DataFrames
 ---
 
-[Bodo DataFrames](https://github.com/bodo-ai/Bodo) is a high performance DataFrame library
-for large scale Python data processing and drop-in replacement for Pandas; simply replace:
+[Bodo DataFrames](https://github.com/bodo-ai/Bodo) 是一个高性能的 DataFrame 库，专为大规模 Python 数据处理而设计，是 Pandas 的**即插即用替代品**。只需简单地将：
 
 ```python
 import pandas as pd
 ```
 
-with:
+替换为：
 
 ```python
 import bodo.pandas as pd
 ```
 
-to automatically scale and accelerate Pandas workloads.
-Since Bodo DataFrames is compatible with Pandas, it is an ideal target for LLM code generation
-that's easy to verify, efficient, and scalable beyond the typical limitations of Pandas.
+即可自动扩展和加速 Pandas 工作负载。由于 Bodo DataFrames 与 Pandas 兼容，它是大型语言模型 (LLM) 代码生成的理想目标，因为生成的代码易于验证、高效，并且能够扩展到超过 Pandas 常见的局限性。
 
-Our integration package provides a toolkit for asking agents questions about large datasets
-using Bodo DataFrames for efficiency and scalability.
+我们的集成包提供了一个工具包，可使用 Bodo DataFrames 来高效、可扩展地回答关于大型数据集的问题。
 
-Under the hood, Bodo DataFrames uses lazy evaluation to optimize sequences of Pandas operations,
-streams data through operators to enable processing larger-than-memory datasets, and
-leverages MPI-based high-performance computing technology for efficient parallel execution that can
-easily scale from laptop to large cluster.
+在底层，Bodo DataFrames 采用**惰性求值 (lazy evaluation)** 来优化一系列 Pandas 操作，通过操作符流式传输数据以处理**超过内存大小 (larger-than-memory)** 的数据集，并利用基于 MPI 的高性能计算技术进行高效的并行执行，可以轻松地从笔记本电脑扩展到大型集群。
 
-## Installation and setup
+## 安装与设置
 
 ```bash pip
 pip install -U langchain_bodo
 ```
 
-## Toolkit
+## 工具集 (Toolkit)
 
-The [langchain-bodo package](https://pypi.org/project/langchain-bodo/) provides functionality for creating agents that can answer questions about large datasets using Bodo DataFrames.
-See the [Bodo DataFrames tools page](/oss/integrations/tools/bodo) for more detailed usage examples.
+[langchain-bodo 包](https://pypi.org/project/langchain-bodo/) 提供了创建智能体 (agents) 的功能，这些智能体可以使用 Bodo DataFrames 来回答关于大型数据集的问题。有关更详细的使用示例，请参阅 [Bodo DataFrames 工具页面](/oss/integrations/tools/bodo)。
 
-**NOTE: This feature uses the `Python` agent under the hood, which executes LLM generated Python code - this can be bad if the LLM generated Python code is harmful. Use cautiously.**
+**注意：此功能在底层使用了 `Python` 智能体，它会执行 LLM生成的 Python 代码——如果 LLM 生成的 Python 代码存在恶意行为，这可能是有风险的。请谨慎使用。**
 
 ```python
 from langchain_bodo import create_bodo_dataframes_agent
 ```
 
-### Usage Example
+### 用法示例
 
-Before running the code below, copy the [titanic dataset](https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv)
-and save locally as `titanic.csv`.
+在运行下面的代码之前，请复制 [泰坦尼克数据集](https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv) 并将其本地保存为 `titanic.csv`。
 
 ```python
 import bodo.pandas as pd
@@ -75,4 +67,5 @@ Final Answer: 891
 
 ```output
 {'input': 'how many rows are there?', 'output': '891'}
+```
 ```

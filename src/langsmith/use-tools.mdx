@@ -1,74 +1,74 @@
 ---
-title: Use tools in a prompt
-sidebarTitle: Use tools in a prompt
+title: 在提示词中使用工具
+sidebarTitle: 在提示词中使用工具
 ---
 
-Tools allow language models to interact with external systems and perform actions beyond just generating text. In the LangSmith playground, you can use two types of tools:
+工具允许语言模型与外部系统交互，并执行超出仅仅生成文本之外的操作。在 LangSmith Playground 中，您可以使用两种类型的工具：
 
-1. **Built-in tools**: Pre-configured tools provided by model providers (like OpenAI and Anthropic) that are ready to use. These include capabilities like web search, code interpretation, and more.
+1. **内置工具 (Built-in tools)**：由模型提供商（如 OpenAI 和 Anthropic）提供的预配置工具，即开即用。这些工具包括网络搜索、代码解释等功能。
 
-2. **Custom tools**: Functions you define to perform specific tasks. These are useful when you need to integrate with your own systems or create specialized functionality. When you define custom tools within the LangSmith Playground, you can verify that the model correctly identifies and calls these tools with the correct arguments. Soon we plan to support executing these custom tool calls directly.
+2. **自定义工具 (Custom tools)**：您定义的用于执行特定任务的函数。当您需要与自己的系统集成或创建专业功能时，自定义工具非常有用。在 LangSmith Playground 中定义自定义工具时，您可以验证模型是否能正确识别这些工具，并以正确的参数调用它们。我们计划在不久的将来支持直接执行这些自定义工具调用。
 
-## When to use tools
+## 何时使用工具
 
-* Use **built-in tools** when you need common capabilities like web search or code interpretation. These are built and maintained by the model providers.
+* 当您需要网络搜索或代码解释等通用功能时，请使用**内置工具**。这些工具由模型提供商构建和维护。
 
-* Use **custom tools** when you want to test and validate your own tool designs, including:
+* 当您想测试和验证自己的工具设计时，请使用**自定义工具**，包括：
 
-  * Validating which tools the model chooses to use and seeing the specific arguments it provides in tool calls
-  * Simulating tool interactions
+  * 验证模型选择使用哪些工具，并查看其在工具调用中提供的具体参数。
+  * 模拟工具交互。
 
-## Built-in tools
+## 内置工具
 
-The LangSmith Playground has native support for a variety of tools from OpenAI and Anthropic. If you want to use a tool that isn't explicitly listed in the Playground, you can still add it by manually specifying its `type` and any required arguments.
+LangSmith Playground 原生支持来自 OpenAI 和 Anthropic 的各种工具。如果您想使用 Playground 中未明确列出的工具，仍然可以通过手动指定其 `type` 和任何必需的参数来添加它。
 
-### OpenAI Tools
+### OpenAI 工具
 
-* **Web search**: [Search the web for real-time information](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses)
-* **Image generation**: [Generate images based on a text prompt](https://platform.openai.com/docs/guides/tools-image-generation)
-* **MCP**: [Gives the model access to tools hosted on a remote MCP server](https://platform.openai.com/docs/guides/tools-remote-mcp)
-* [View all OpenAI tools](https://platform.openai.com/docs/guides/tools?api-mode=responses)
+* **网络搜索 (Web search)**：[搜索网络以获取实时信息](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses)
+* **图像生成 (Image generation)**：[根据文本提示生成图像](https://platform.openai.com/docs/guides/tools-image-generation)
+* **MCP**：[授予模型访问托管在远程 MCP 服务器上的工具的权限](https://platform.openai.com/docs/guides/tools-remote-mcp)
+* [查看所有 OpenAI 工具](https://platform.openai.com/docs/guides/tools?api-mode=responses)
 
-### Anthropic Tools
+### Anthropic 工具
 
-* **Web search**: [Search the web for up-to-date information](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)
-* [View all Anthropic tools](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)
+* **网络搜索 (Web search)**：[搜索网络以获取最新信息](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)
+* [查看所有 Anthropic 工具](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)
 
-## Adding and using tools
+## 添加和使用工具
 
-### Add a tool
+### 添加工具
 
-To add a tool to your prompt, click the `+ Tool` button at the bottom of the prompt editor. ![](/langsmith/images/add-tool.png)
+要向提示词添加工具，请点击提示词编辑器底部的 `+ Tool` 按钮。![](/langsmith/images/add-tool.png)
 
-### Use a built-in tool
+### 使用内置工具
 
-1. In the tool section, select the built-in tool you want to use. You'll only see the tools that are compatible with the provider and model you've chosen.
-2. When the model calls the tool, the playground will display the response
+1. 在工具部分，选择您想要使用的内置工具。您只会看到与您所选提供商和模型兼容的工具。
+2. 当模型调用工具时，Playground 将显示响应。
 
 ![](/langsmith/images/web-search-tool.gif)
 
-### Create a custom tool
+### 创建自定义工具
 
-To create a custom tool, you'll need to provide:
+要创建自定义工具，您需要提供以下信息：
 
-* Name: A descriptive name for your tool
-* Description: Clear explanation of what the tool does
-* Arguments: The inputs your tool requires
+* 名称 (Name)：工具的描述性名称
+* 描述 (Description)：清晰说明工具的作用
+* 参数 (Arguments)：您的工具所需的输入
 
 ![](/langsmith/images/custom-tool.gif)
 
-Note: When running a custom tool in the playground, the model will respond with a JSON object containing the tool name and the tool call. Currently, there's no way to connect this to a hosted tool via MCP.
+注意：在 Playground 中运行自定义工具时，模型将响应一个包含工具名称和工具调用的 JSON 对象。目前，无法通过 MCP 将此工具连接到托管工具。
 
 ![](/langsmith/images/tool-call.png)
 
-## Tool choice settings
+## 工具选择设置 (Tool choice settings)
 
-Some models provide control over which tools are called. To configure this:
+某些模型提供了控制调用哪个工具的选项。要进行配置：
 
-1. Go to prompt settings
-2. Navigate to tool settings
-3. Select tool choice
+1. 转到提示词设置 (prompt settings)
+2. 导航到工具设置 (tool settings)
+3. 选择工具选择 (tool choice)
 
-To understand the available tool choice options, check the documentation for your specific provider. For example, [OpenAI's documentation on tool choice](https://platform.openai.com/docs/guides/function-calling/function-calling-behavior?api-mode=responses#tool-choice).
+要了解可用的工具选择选项，请查阅特定提供商的文档。例如，[OpenAI 关于工具选择的文档](https://platform.openai.com/docs/guides/function-calling/function-calling-behavior?api-mode=responses#tool-choice)。
 
 ![](/langsmith/images/tool-choice.png)

@@ -2,10 +2,10 @@
 title: DocArray
 ---
 
->[DocArray](https://github.com/docarray/docarray) is a versatile, open-source tool for managing your multi-modal data. It lets you shape your data however you want, and offers the flexibility to store and search it using various document index backends. Plus, it gets even better - you can utilize your `DocArray` document index to create a `DocArrayRetriever`, and build awesome LangChain apps!
+>[DocArray](https://github.com/docarray/docarray) 是一个多功能、开源的工具，用于管理多模态数据。它允许您以任何所需的方式塑造数据，并提供使用各种文档索引后端存储和搜索数据的灵活性。更棒的是——您可以通过利用 `DocArray` 文档索引来创建一个 `DocArrayRetriever`，进而构建强大的 LangChain 应用！
 
-This notebook is split into two sections. The [first section](#document-index-backends) offers an introduction to all five supported document index backends. It provides guidance on setting up and indexing each backend and also instructs you on how to build a `DocArrayRetriever` for finding relevant documents.
-In the [second section](#movie-retrieval-using-hnswdocumentindex), we'll select one of these backends and illustrate how to use it through a basic example.
+本 Jupyter Notebook 分为两个部分。[第一部分](#document-index-backends) 介绍了所有五个支持的文档索引后端。它提供了有关设置和索引每个后端的指南，并指导您如何构建 `DocArrayRetriever` 来查找相关的文档。
+在[第二部分](#movie-retrieval-using-hnswdocumentindex) 中，我们将选择其中一个后端，并通过一个基本示例来说明如何使用它。
 
 ## Document Index Backends
 
@@ -20,9 +20,9 @@ from langchain_community.retrievers import DocArrayRetriever
 embeddings = FakeEmbeddings(size=32)
 ```
 
-Before you start building the index, it's important to define your document schema. This determines what fields your documents will have and what type of data each field will hold.
+在开始构建索引之前，定义文档模式（schema）非常重要。这决定了您的文档将包含哪些字段以及每个字段将容纳什么类型的数据。
 
-For this demonstration, we'll create a somewhat random schema containing 'title' (str), 'title_embedding' (numpy array), 'year' (int), and 'color' (str)
+为了进行本次演示，我们将创建一个包含 'title' (str)、'title_embedding' (numpy array)、'year' (int) 和 'color' (str) 的随机模式。
 
 ```python
 class MyDoc(BaseDoc):
@@ -34,16 +34,16 @@ class MyDoc(BaseDoc):
 
 ### InMemoryExactNNIndex
 
-`InMemoryExactNNIndex` stores all Documents in memory. It is a great starting point for small datasets, where you may not want to launch a database server.
+`InMemoryExactNNIndex` 将所有文档（Documents）存储在内存中。对于小型数据集，这是一个很好的起点，特别是当您不想启动数据库服务器时。
 
-Learn more here: [docs.docarray.org/user_guide/storing/index_in_memory/](https://docs.docarray.org/user_guide/storing/index_in_memory/)
+点击此处了解更多信息：[docs.docarray.org/user_guide/storing/index_in_memory/](https://docs.docarray.org/user_guide/storing/index_in_memory/)
 
 ```python
 from docarray.index import InMemoryExactNNIndex
 
-# initialize the index
+# 初始化索引
 db = InMemoryExactNNIndex[MyDoc]()
-# index data
+# 索引数据
 db.index(
     [
         MyDoc(
@@ -55,12 +55,12 @@ db.index(
         for i in range(100)
     ]
 )
-# optionally, you can create a filter query
+# 可选：您可以创建一个过滤查询
 filter_query = {"year": {"$lte": 90}}
 ```
 
 ```python
-# create a retriever
+# 创建一个检索器 (retriever)
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -69,7 +69,7 @@ retriever = DocArrayRetriever(
     filters=filter_query,
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("some query")
 print(doc)
 ```
@@ -80,17 +80,17 @@ print(doc)
 
 ### HnswDocumentIndex
 
-`HnswDocumentIndex` is a lightweight Document Index implementation that runs fully locally and is best suited for small- to medium-sized datasets. It stores vectors on disk in [hnswlib](https://github.com/nmslib/hnswlib), and stores all other data in [SQLite](https://www.sqlite.org/index.html).
+`HnswDocumentIndex` 是一个轻量级的文档索引实现，完全在本地运行，最适合中小型数据集。它将向量存储在磁盘上的 [hnswlib](https://github.com/nmslib/hnswlib) 中，并将所有其他数据存储在 [SQLite](https://www.sqlite.org/index.html) 中。
 
-Learn more here: [docs.docarray.org/user_guide/storing/index_hnswlib/](https://docs.docarray.org/user_guide/storing/index_hnswlib/)
+点击此处了解更多信息：[docs.docarray.org/user_guide/storing/index_hnswlib/](https://docs.docarray.org/user_guide/storing/index_hnswlib/)
 
 ```python
 from docarray.index import HnswDocumentIndex
 
-# initialize the index
+# 初始化索引
 db = HnswDocumentIndex[MyDoc](work_dir="hnsw_index")
 
-# index data
+# 索引数据
 db.index(
     [
         MyDoc(
@@ -102,12 +102,12 @@ db.index(
         for i in range(100)
     ]
 )
-# optionally, you can create a filter query
+# 可选：您可以创建一个过滤查询
 filter_query = {"year": {"$lte": 90}}
 ```
 
 ```python
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -116,7 +116,7 @@ retriever = DocArrayRetriever(
     filters=filter_query,
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("some query")
 print(doc)
 ```
@@ -127,14 +127,14 @@ print(doc)
 
 ### WeaviateDocumentIndex
 
-`WeaviateDocumentIndex` is a document index that is built upon [Weaviate](https://weaviate.io/) vector database.
+`WeaviateDocumentIndex` 是一个构建在 [Weaviate](https://weaviate.io/) 向量数据库之上的文档索引。
 
-Learn more here: [docs.docarray.org/user_guide/storing/index_weaviate/](https://docs.docarray.org/user_guide/storing/index_weaviate/)
+点击此处了解更多信息：[docs.docarray.org/user_guide/storing/index_weaviate/](https://docs.docarray.org/user_guide/storing/index_weaviate/)
 
 ```python
-# There's a small difference with the Weaviate backend compared to the others.
-# Here, you need to 'mark' the field used for vector search with 'is_embedding=True'.
-# So, let's create a new schema for Weaviate that takes care of this requirement.
+# Weaviate 后端与其他后端有一个小区别。
+# 在这里，您需要将用于向量搜索的字段标记为 'is_embedding=True'。
+# 因此，让我们为 Weaviate 创建一个新的 schema，以满足此要求。
 
 from pydantic import Field
 
@@ -149,11 +149,11 @@ class WeaviateDoc(BaseDoc):
 ```python
 from docarray.index import WeaviateDocumentIndex
 
-# initialize the index
+# 初始化索引
 dbconfig = WeaviateDocumentIndex.DBConfig(host="http://localhost:8080")
 db = WeaviateDocumentIndex[WeaviateDoc](db_config=dbconfig)
 
-# index data
+# 索引数据
 db.index(
     [
         MyDoc(
@@ -165,12 +165,12 @@ db.index(
         for i in range(100)
     ]
 )
-# optionally, you can create a filter query
+# 可选：您可以创建一个过滤查询
 filter_query = {"path": ["year"], "operator": "LessThanEqual", "valueInt": "90"}
 ```
 
 ```python
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -179,7 +179,7 @@ retriever = DocArrayRetriever(
     filters=filter_query,
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("some query")
 print(doc)
 ```
@@ -190,19 +190,19 @@ print(doc)
 
 ### ElasticDocIndex
 
-`ElasticDocIndex` is a document index that is built upon [ElasticSearch](https://github.com/elastic/elasticsearch)
+`ElasticDocIndex` 是一个构建在 [ElasticSearch](https://github.com/elastic/elasticsearch) 上的文档索引。
 
-Learn more [here](https://docs.docarray.org/user_guide/storing/index_elastic/)
+点击[此处](https://docs.docarray.org/user_guide/storing/index_elastic/)了解更多信息。
 
 ```python
 from docarray.index import ElasticDocIndex
 
-# initialize the index
+# 初始化索引
 db = ElasticDocIndex[MyDoc](
     hosts="http://localhost:9200", index_name="docarray_retriever"
 )
 
-# index data
+# 索引数据
 db.index(
     [
         MyDoc(
@@ -214,12 +214,12 @@ db.index(
         for i in range(100)
     ]
 )
-# optionally, you can create a filter query
+# 可选：您可以创建一个过滤查询
 filter_query = {"range": {"year": {"lte": 90}}}
 ```
 
 ```python
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -228,7 +228,7 @@ retriever = DocArrayRetriever(
     filters=filter_query,
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("some query")
 print(doc)
 ```
@@ -239,19 +239,19 @@ print(doc)
 
 ### QdrantDocumentIndex
 
-`QdrantDocumentIndex` is a document index that is built upon [Qdrant](https://qdrant.tech/) vector database
+`QdrantDocumentIndex` 是一个构建在 [Qdrant](https://qdrant.tech/) 向量数据库之上的文档索引。
 
-Learn more [here](https://docs.docarray.org/user_guide/storing/index_qdrant/)
+点击[此处](https://docs.docarray.org/user_guide/storing/index_qdrant/)了解更多信息。
 
 ```python
 from docarray.index import QdrantDocumentIndex
 from qdrant_client.http import models as rest
 
-# initialize the index
+# 初始化索引
 qdrant_config = QdrantDocumentIndex.DBConfig(path=":memory:")
 db = QdrantDocumentIndex[MyDoc](qdrant_config)
 
-# index data
+# 索引数据
 db.index(
     [
         MyDoc(
@@ -263,7 +263,7 @@ db.index(
         for i in range(100)
     ]
 )
-# optionally, you can create a filter query
+# 可选：您可以创建一个过滤查询
 filter_query = rest.Filter(
     must=[
         rest.FieldCondition(
@@ -282,7 +282,7 @@ WARNING:root:Payload indexes have no effect in the local Qdrant. Please use serv
 ```
 
 ```python
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -291,7 +291,7 @@ retriever = DocArrayRetriever(
     filters=filter_query,
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("some query")
 print(doc)
 ```
@@ -361,7 +361,7 @@ from docarray.typing import NdArray
 from langchain_openai import OpenAIEmbeddings
 
 
-# define schema for your movie documents
+# 定义电影文档的 schema
 class MyDoc(BaseDoc):
     title: str
     description: str
@@ -373,7 +373,7 @@ class MyDoc(BaseDoc):
 embeddings = OpenAIEmbeddings()
 
 
-# get "description" embeddings, and create documents
+# 获取 "description" 嵌入向量，并创建文档 (docs)
 docs = DocList[MyDoc](
     [
         MyDoc(
@@ -387,10 +387,10 @@ docs = DocList[MyDoc](
 ```python
 from docarray.index import HnswDocumentIndex
 
-# initialize the index
+# 初始化索引
 db = HnswDocumentIndex[MyDoc](work_dir="movie_search")
 
-# add data
+# 添加数据
 db.index(docs)
 ```
 
@@ -399,7 +399,7 @@ db.index(docs)
 ```python
 from langchain_community.retrievers import DocArrayRetriever
 
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -407,7 +407,7 @@ retriever = DocArrayRetriever(
     content_field="description",
 )
 
-# find the relevant document
+# 查找相关文档
 doc = retriever.invoke("movie about dreams")
 print(doc)
 ```
@@ -421,7 +421,7 @@ print(doc)
 ```python
 from langchain_community.retrievers import DocArrayRetriever
 
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -431,7 +431,7 @@ retriever = DocArrayRetriever(
     top_k=2,
 )
 
-# find relevant documents
+# 查找相关文档
 docs = retriever.invoke("space travel")
 print(docs)
 ```
@@ -445,7 +445,7 @@ print(docs)
 ```python
 from langchain_community.retrievers import DocArrayRetriever
 
-# create a retriever
+# 创建一个检索器
 retriever = DocArrayRetriever(
     index=db,
     embeddings=embeddings,
@@ -456,7 +456,7 @@ retriever = DocArrayRetriever(
     top_k=3,
 )
 
-# find relevant documents
+# 查找相关文档
 docs = retriever.invoke("action movies")
 print(docs)
 ```

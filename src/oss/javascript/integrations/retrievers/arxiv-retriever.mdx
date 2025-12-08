@@ -1,47 +1,48 @@
+```markdown
 ---
 title: ArxivRetriever
 ---
 
-The `arXiv Retriever` allows users to query the arXiv database for academic articles. It supports both full-document retrieval (PDF parsing) and summary-based retrieval.
+`arXiv Retriever` 允许用户查询 arXiv 数据库中的学术文章。它同时支持全文检索（PDF 解析）和基于摘要的检索。
 
-For detailed documentation of all ArxivRetriever features and configurations, head to the [API reference](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
+有关 `ArxivRetriever` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
 
-## Features
+## 功能特性
 
-- Query Flexibility: Search using natural language queries or specific arXiv IDs.
-- Full-Document Retrieval: Option to fetch and parse PDFs.
-- Summaries as Documents: Retrieve summaries for faster results.
-- Customizable Options: Configure maximum results and output format.
+- 搜索灵活性：支持使用自然语言查询或特定的 arXiv ID 进行搜索。
+- 全文检索：可以选择获取和解析 PDF 文件。
+- 摘要作为文档：检索摘要以获得更快的搜索结果。
+- 可定制的选项：配置最大结果数和输出格式。
 
-## Integration details
+## 集成详情
 
-| Retriever        | Source                       | Package                                                                      |
-| ---------------- | ---------------------------- | ---------------------------------------------------------------------------- |
-| `ArxivRetriever` | Academic articles from arXiv | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) |
+| 检索器        | 来源                       | 包                                                                           |
+| ------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| `ArxivRetriever` | 来自 arXiv 的学术文章 | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) |
 
-## Setup
+## 设置
 
-Ensure the following dependencies are installed:
+确保安装了以下依赖项：
 
-- `pdf-parse` for parsing PDFs
-- `fast-xml-parser` for parsing XML responses from the arXiv API
+- `pdf-parse` 用于解析 PDF
+- `fast-xml-parser` 用于解析来自 arXiv API 的 XML 响应
 
 ```
 npm install pdf-parse fast-xml-parser
 ```
 
-## Instantiation
+## 实例化
 
 ```typescript
 const retriever = new ArxivRetriever({
-  getFullDocuments: false, // Set to true to fetch full documents (PDFs)
-  maxSearchResults: 5, // Maximum number of results to retrieve
+  getFullDocuments: false, // 设置为 true 以获取完整文档 (PDFs)
+  maxSearchResults: 5, // 要检索的最大结果数量
 });
 ```
 
-## Usage
+## 用法
 
-Use the `invoke` method to search arXiv for relevant articles. You can use either natural language queries or specific arXiv IDs.
+使用 `invoke` 方法搜索 arXiv 中相关的文章。您可以使用自然语言查询或特定的 arXiv ID。
 
 ```typescript
 const query = "quantum computing";
@@ -49,13 +50,13 @@ const query = "quantum computing";
 const documents = await retriever.invoke(query);
 documents.forEach((doc) => {
   console.log("Title:", doc.metadata.title);
-  console.log("Content:", doc.pageContent); // Parsed PDF content
+  console.log("Content:", doc.pageContent); // 解析后的 PDF 内容
 });
 ```
 
-## Use within a chain
+## 在链中使用
 
-Like other retrievers, `ArxivRetriever` can be incorporated into LLM applications via chains. Below is an example of using the retriever within a chain:
+与其它检索器一样，`ArxivRetriever` 可以通过链集成到 LLM 应用中。下面是一个在链中使用此检索器的示例：
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
@@ -73,11 +74,11 @@ const llm = new ChatOpenAI({
 });
 
 const prompt = ChatPromptTemplate.fromTemplate(`
-Answer the question based only on the context provided.
+仅根据提供的上下文回答问题。
 
-Context: {context}
+上下文: {context}
 
-Question: {question}`);
+问题: {question}`);
 
 const formatDocs = (docs: Document[]) => {
   return docs.map((doc) => doc.pageContent).join("\n\n");
@@ -98,10 +99,11 @@ await ragChain.invoke("What are the latest advances in quantum computing?");
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all ArxivRetriever features and configurations, head to the [API reference](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
+有关 `ArxivRetriever` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
 
-## Related
+## 相关内容
 
-- [Retrieval guide](/oss/langchain/retrieval)
+- [检索指南](/oss/langchain/retrieval)
+```

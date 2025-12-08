@@ -2,20 +2,20 @@
 title: Iugu
 ---
 
->[Iugu](https://www.iugu.com/) is a Brazilian services and software as a service (SaaS) company. It offers payment-processing software and application programming interfaces for e-commerce websites and mobile applications.
+>[Iugu](https://www.iugu.com/) 是一家巴西的服务和软件即服务（SaaS）公司。它为电子商务网站和移动应用程序提供支付处理软件和应用程序编程接口（API）。
 
-This notebook covers how to load data from the `Iugu REST API` into a format that can be ingested into LangChain, along with example usage for vectorization.
+本 Notebook 涵盖了如何将来自 `Iugu REST API` 的数据加载成 LangChain 可以摄取（Ingest）的格式，并提供了向量化（Vectorization）的示例用法。
 
 ```python
 from langchain.indexes import VectorstoreIndexCreator
 from langchain_community.document_loaders import IuguLoader
 ```
 
-The Iugu API requires an access token, which can be found inside of the Iugu dashboard.
+Iugu API 需要一个访问令牌（access token），该令牌可以在 Iugu 的控制面板（dashboard）中找到。
 
-This document loader also requires a `resource` option which defines what data you want to load.
+该文档加载器（document loader）还需要一个 `resource` 选项，用于定义您想要加载的数据类型。
 
-Following resources are available:
+以下是可用的资源：
 
 `Documentation` [Documentation](https://dev.iugu.com/reference/metadados)
 
@@ -24,8 +24,8 @@ iugu_loader = IuguLoader("charges")
 ```
 
 ```python
-# Create a vectorstore retriever from the loader
-# see https://python.langchain.com/en/latest/modules/data_connection/getting_started.html for more details
+# 从加载器（loader）创建一个向量存储检索器（vectorstore retriever）
+# 更多详情请参阅 https://python.langchain.com/en/latest/modules/data_connection/getting_started.html
 
 index = VectorstoreIndexCreator().from_loaders([iugu_loader])
 iugu_doc_retriever = index.vectorstore.as_retriever()

@@ -1,30 +1,31 @@
+```markdown
 ---
-title: Log traces to a specific project
-sidebarTitle: Log traces to a specific project
+title: 将追踪数据记录到特定项目
+sidebarTitle: 将追踪数据记录到特定项目
 ---
 
-You can change the destination project of your traces both statically through environment variables and dynamically at runtime.
+您可以通过**环境变量（静态方式）**和**运行时动态设置**这两种方式来更改追踪数据的目标项目。
 
-## Set the destination project statically
+## 静态设置目标项目
 
-As mentioned in the [Tracing Concepts](/langsmith/observability-concepts#projects) section, LangSmith uses the concept of a `Project` to group traces. If left unspecified, the project is set to `default`. You can set the `LANGSMITH_PROJECT` environment variable to configure a custom project name for an entire application run. This should be done before executing your application.
+如 [追踪概念](/langsmith/observability-concepts#projects) 部分所述，LangSmith 使用 `Project`（项目）的概念来组织追踪数据（traces）。如果未指定项目，默认项目会是 `default`。您可以通过设置 `LANGSMITH_PROJECT` 环境变量来为整个应用程序的运行配置一个自定义的项目名称。这需要在执行应用程序**之前**完成设置。
 
 ```
 export LANGSMITH_PROJECT=my-custom-project
 ```
 
 <Warning>
-The `LANGSMITH_PROJECT` flag is only supported in JS SDK versions >= 0.2.16, use `LANGCHAIN_PROJECT` instead if you are using an older version.
+`LANGSMITH_PROJECT` 标志仅在 JS SDK 版本 >= 0.2.16 中受支持。如果使用旧版本，请改用 `LANGCHAIN_PROJECT`。
 </Warning>
 
-If the project specified does not exist, it will be created automatically when the first trace is ingested.
+如果指定的目标项目不存在，当第一条追踪数据被摄入时，该项目将被自动创建。
 
-## Set the destination project dynamically
+## 动态设置目标项目
 
-You can also set the project name at program runtime in various ways, depending on how you are [annotating your code for tracing](/langsmith/annotate-code). This is useful when you want to log traces to different projects within the same application.
+根据您 [如何为追踪数据标注代码](/langsmith/annotate-code) 的方式，您也可以在程序**运行时**通过多种方式动态设置项目名称。当您希望在同一个应用程序中将追踪数据记录到不同的项目时，这种方式非常有用。
 
 <Note>
-Setting the project name dynamically using one of the below methods overrides the project name set by the `LANGSMITH_PROJECT` environment variable.
+使用下面任一方法动态设置项目名称，都会覆盖通过 `LANGSMITH_PROJECT` 环境变量设置的项目名称。
 </Note>
 
 <CodeGroup>
@@ -40,8 +41,8 @@ messages = [
   {"role": "user", "content": "Hello!"}
 ]
 
-# Use the @traceable decorator with the 'project_name' parameter to log traces to LangSmith
-# Ensure that the LANGSMITH_TRACING environment variables is set for @traceable to work
+# 使用带 'project_name' 参数的 @traceable 装饰器将追踪数据记录到 LangSmith
+# 确保已设置 LANGSMITH_TRACING 环境变量以便 @traceable 正常工作
 @traceable(
   run_type="llm",
   name="OpenAI Call Decorator",
@@ -55,19 +56,19 @@ def call_openai(
       messages=messages,
   ).choices[0].message.content
 
-# Call the decorated function
+# 调用被装饰的函数
 call_openai(messages)
 
-# You can also specify the Project via the project_name parameter
-# This will override the project_name specified in the @traceable decorator
+# 您也可以通过 project_name 参数指定项目
+# 这将覆盖 @traceable 装饰器中设置的 project_name
 call_openai(
   messages,
   langsmith_extra={"project_name": "My Overridden Project"},
 )
 
-# The wrapped OpenAI client accepts all the same langsmith_extra parameters
-# as @traceable decorated functions, and logs traces to LangSmith automatically.
-# Ensure that the LANGSMITH_TRACING environment variables is set for the wrapper to work.
+# 包装后的 OpenAI 客户端接受所有与 @traceable 装饰函数相同的 langsmith_extra 参数，
+# 并自动将追踪数据记录到 LangSmith。
+# 确保已设置 LANGSMITH_TRACING 环境变量以便包装器正常工作。
 from langsmith import wrappers
 wrapped_client = wrappers.wrap_openai(client)
 wrapped_client.chat.completions.create(
@@ -76,8 +77,8 @@ wrapped_client.chat.completions.create(
   langsmith_extra={"project_name": "My Project"},
 )
 
-# Alternatively, create a RunTree object
-# You can set the project name using the project_name parameter
+# 或者，创建一个 RunTree 对象
+# 您可以使用 project_name 参数设置项目名称
 rt = RunTree(
   run_type="llm",
   name="OpenAI Call RunTree",
@@ -88,7 +89,7 @@ chat_completion = client.chat.completions.create(
   model="gpt-4o-mini",
   messages=messages,
 )
-# End and submit the run
+# 结束并提交运行
 rt.end(outputs=chat_completion)
 rt.post()
 ```
@@ -117,10 +118,10 @@ const traceableCallOpenAI = traceable(async (messages: {role: string, content: s
   project_name: "My Project"
 });
 
-// Call the traceable function
+// 调用可追踪函数
 await traceableCallOpenAI(messages, "gpt-4o-mini");
 
-// Create and use a RunTree object
+// 创建并使用 RunTree 对象
 const rt = new RunTree({
   run_type: "llm",
   name: "OpenAI Call RunTree",
@@ -129,9 +130,10 @@ const rt = new RunTree({
 });
 await rt.postRun();
 
-// Execute a chat completion and handle it within RunTree
+// 执行聊天补全并在 RunTree 中处理它
 rt.end({outputs: chatCompletion});
 await rt.patchRun();
 ```
 
 </CodeGroup>
+```

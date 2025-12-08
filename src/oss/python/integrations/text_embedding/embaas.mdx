@@ -2,20 +2,20 @@
 title: Embaas
 ---
 
-[embaas](https://embaas.io) is a fully managed NLP API service that offers features like embedding generation, document text extraction, document to embeddings and more. You can choose a [variety of pre-trained models](https://embaas.io/docs/models/embeddings).
+[embaas](https://embaas.io) 是一项全托管的 NLP API 服务，提供包括嵌入生成（embedding generation）、文档文本提取、文档转嵌入等多种功能。您可以选择[各种预训练模型](https://embaas.io/docs/models/embeddings)。
 
-In this tutorial, we will show you how to use the embaas Embeddings API to generate embeddings for a given text.
+在本教程中，我们将向您展示如何使用 embaas Embeddings API 为给定文本生成文本嵌入。
 
-### Prerequisites
+### 前提条件
 
-Create your free embaas account at [https://embaas.io/register](https://embaas.io/register) and generate an [API key](https://embaas.io/dashboard/api-keys).
+请在 [https://embaas.io/register](https://embaas.io/register) 创建您的免费 embaas 账户，并生成一个[API 密钥](https://embaas.io/dashboard/api-keys)。
 
 ```python
 import os
 
-# Set API key
+# 设置 API 密钥
 embaas_api_key = "YOUR_API_KEY"
-# or set environment variable
+# 或者设置环境变量
 os.environ["EMBAAS_API_KEY"] = "YOUR_API_KEY"
 ```
 
@@ -28,34 +28,34 @@ embeddings = EmbaasEmbeddings()
 ```
 
 ```python
-# Create embeddings for a single document
+# 为单个文档创建嵌入
 doc_text = "This is a test document."
 doc_text_embedding = embeddings.embed_query(doc_text)
 ```
 
 ```python
-# Print created embedding
+# 打印生成的嵌入向量
 print(doc_text_embedding)
 ```
 
 ```python
-# Create embeddings for multiple documents
+# 为多个文档创建嵌入
 doc_texts = ["This is a test document.", "This is another test document."]
 doc_texts_embeddings = embeddings.embed_documents(doc_texts)
 ```
 
 ```python
-# Print created embeddings
+# 打印生成的嵌入向量
 for i, doc_text_embedding in enumerate(doc_texts_embeddings):
     print(f"Embedding for document {i + 1}: {doc_text_embedding}")
 ```
 
 ```python
-# Using a different model and/or custom instruction
+# 使用不同的模型和/或自定义指令
 embeddings = EmbaasEmbeddings(
     model="instructor-large",
     instruction="Represent the Wikipedia document for retrieval",
 )
 ```
 
-For more detailed information about the embaas Embeddings API, please refer to [the official embaas API documentation](https://embaas.io/api-reference).
+有关 embaas Embeddings API 的更详细信息，请参阅[官方 embaas API 文档](https://embaas.io/api-reference)。

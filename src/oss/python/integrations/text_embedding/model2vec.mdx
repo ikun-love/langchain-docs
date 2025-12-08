@@ -1,25 +1,26 @@
+```markdown
 ---
 title: Model2Vec
 ---
 
-Model2Vec is a technique to turn any sentence transformer into a really small static model
-[model2vec](https://github.com/MinishLab/model2vec) can be used to generate embeddings.
+Model2Vec 是一种技术，可以将任何句子转换器（sentence transformer）转换为一个非常小的静态模型。
+[model2vec](https://github.com/MinishLab/model2vec) 可用于生成嵌入（embeddings）。
 
-## Setup
+## 安装设置 (Setup)
 
 ```bash
 pip install -U langchain-community
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-Ensure that `model2vec` is installed
+确保已安装 `model2vec`
 
 ```bash
 pip install -U model2vec
 ```
 
-## Indexing and Retrieval
+## 索引和检索 (Indexing and Retrieval)
 
 ```python
 from langchain_community.embeddings import Model2vecEmbeddings
@@ -39,25 +40,26 @@ document_text = "This is a test document."
 document_result = embeddings.embed_documents([document_text])
 ```
 
-## Direct Usage
+## 直接使用 (Direct Usage)
 
-Here's how you would directly make use of `model2vec`
+以下是如何直接利用 `model2vec` 的示例：
 
 ```python
 from model2vec import StaticModel
 
-# Load a model from the HuggingFace hub (in this case the potion-base-8M model)
+# 从 HuggingFace hub 加载一个模型（此处为 potion-base-8M 模型）
 model = StaticModel.from_pretrained("minishlab/potion-base-8M")
 
-# Make embeddings
+# 生成嵌入
 embeddings = model.encode(["It's dangerous to go alone!", "It's a secret to everybody."])
 
-# Make sequences of token embeddings
+# 生成 Token 级别的嵌入序列
 token_embeddings = model.encode_as_sequence(["It's dangerous to go alone!", "It's a secret to everybody."])
 ```
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For more information check out the model2vec github [repo](https://github.com/MinishLab/model2vec)
+有关更多信息，请查看 model2vec 的 [GitHub 仓库](https://github.com/MinishLab/model2vec)。
+```

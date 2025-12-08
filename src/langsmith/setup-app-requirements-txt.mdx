@@ -1,31 +1,31 @@
 ---
-title: How to set up an application with requirements.txt
-sidebarTitle: With requirements.txt
+title: 使用 requirements.txt 设置应用程序
+sidebarTitle: 使用 requirements.txt
 ---
 
 import FrameworkAgnosticPy from '/snippets/langsmith/framework-agnostic-py.mdx';
 import FrameworkAgnosticJS from '/snippets/langsmith/framework-agnostic-js.mdx';
 import PrereleaseBehavior from '/snippets/langsmith/pre-release-behavior.mdx';
 
-An application must be configured with a [configuration file](/langsmith/cli#configuration-file) in order to be deployed to LangSmith (or to be self-hosted). This how-to guide discusses the basic steps to set up an application for deployment using `requirements.txt` to specify project dependencies.
+为了将应用程序部署到 LangSmith（或进行自托管），它必须使用一个[配置文件](/langsmith/cli#configuration-file）进行配置。本指南将介绍使用 `requirements.txt` 来指定项目依赖项以进行部署的基本步骤。
 
-This example is based on [this repository](https://github.com/langchain-ai/langgraph-example), which uses the LangGraph framework.
+此示例基于 [此仓库](https://github.com/langchain-ai/langgraph-example)，该仓库使用了 LangGraph 框架。
 
-The final repository structure will look something like this:
+最终的仓库结构看起来会像这样：
 
 ```bash
 my-app/
-├── my_agent # all project code lies within here
-│   ├── utils # utilities for your graph
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
 │   │   ├── __init__.py
-│   │   ├── tools.py # tools for your graph
-│   │   ├── nodes.py # node functions for your graph
-│   │   └── state.py # state definition of your graph
-│   ├── requirements.txt # package dependencies
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
 │   ├── __init__.py
-│   └── agent.py # code for constructing your graph
-├── .env # environment variables
-└── langgraph.json # configuration file for LangGraph
+│   └── agent.py # 构建图的代码
+├── .env # 环境变量
+└── langgraph.json # LangGraph 的配置文件
 ```
 
 <Tip>
@@ -37,18 +37,18 @@ my-app/
 :::
 </Tip>
 
-You can also set up with:
+您也可以使用以下方式进行设置：
 
-- `pyproject.toml`: If you prefer using poetry for dependency management, check out [this how-to guide](/langsmith/setup-app-requirements-txt) on using `pyproject.toml` for LangSmith.
-- a monorepo: If you are interested in deploying a graph located inside a monorepo, take a look at [this repository](https://github.com/langchain-ai/langgraph-example-monorepo) for an example of how to do so.
+- `pyproject.toml`: 如果您更喜欢使用 Poetry 进行依赖管理，请查看关于如何使用 `pyproject.toml` 的[这篇指南](/langsmith/setup-app-requirements-txt)。
+- 单仓（monorepo）：如果您有兴趣部署位于 monorepo 中的图，请查看[这个仓库](https://github.com/langchain-ai/langgraph-example-monorepo)以获取如何执行此操作的示例。
 
-After each step, an example file directory is provided to demonstrate how code can be organized.
+在每一步之后，都会提供一个示例文件目录，以演示代码的组织方式。
 
-## Specify dependencies
+## 指定依赖项
 
-Dependencies can optionally be specified in one of the following files: `pyproject.toml`, `setup.py`, or `requirements.txt`. If none of these files is created, then dependencies can be specified later in the [configuration file](#create-the-configuration-file).
+依赖项可以**选择性地**在以下文件之一中指定：`pyproject.toml`、`setup.py` 或 `requirements.txt`。如果未创建这些文件，则可以在[配置文件](#create-the-configuration-file)中稍后指定依赖项。
 
-The dependencies below will be included in the image, you can also use them in your code, as long as with a compatible version range:
+下面的依赖项将包含在镜像中，您也可以在代码中使用它们，只要它们具有兼容的版本范围即可：
 
 ```
 langgraph>=0.6.0
@@ -68,7 +68,7 @@ structlog>=24.1.0
 cloudpickle>=3.0.0
 ```
 
-Example `requirements.txt` file:
+`requirements.txt` 文件的示例：
 
 ```
 langgraph
@@ -79,19 +79,19 @@ langchain_openai
 
 ```
 
-Example file directory:
+示例文件目录：
 
 ```bash
 my-app/
-├── my_agent # all project code lies within here
-│   └── requirements.txt # package dependencies
+├── my_agent # 所有项目代码都在这里
+│   └── requirements.txt # 包依赖项
 ```
 
-## Specify environment variables
+## 指定环境变量
 
-Environment variables can optionally be specified in a file (e.g. `.env`). See the [Environment Variables reference](/langsmith/env-var) to configure additional variables for a deployment.
+环境变量可以**选择性地**在一个文件中（例如 `.env`）指定。请参阅[环境变量参考](/langsmith/env-var)以配置部署所需的其他变量。
 
-Example `.env` file:
+`.env` 文件的示例：
 
 ```
 MY_ENV_VAR_1=foo
@@ -99,24 +99,24 @@ MY_ENV_VAR_2=bar
 OPENAI_API_KEY=key
 ```
 
-Example file directory:
+示例文件目录：
 
 ```bash
 my-app/
-├── my_agent # all project code lies within here
-│   └── requirements.txt # package dependencies
-└── .env # environment variables
+├── my_agent # 所有项目代码都在这里
+│   └── requirements.txt # 包依赖项
+└── .env # 环境变量
 ```
 
 <Tip>
 <PrereleaseBehavior/>
 </Tip>
 
-## Define graphs
+## 定义图（Graphs）
 
-Implement your graphs. Graphs can be defined in a single file or multiple files. Make note of the variable names of each @[CompiledStateGraph] to be included in the application. The variable names will be used later when creating the [LangGraph configuration file](/langsmith/cli#configuration-file).
+实现您的图。图可以定义在单个文件中，也可以定义在多个文件中。请注意，您希望包含在应用程序中的每个 @[CompiledStateGraph] 的变量名称。这些变量名稍后在创建[LangGraph 配置文件](/langsmith/cli#configuration-file)时会用到。
 
-Example `agent.py` file, which shows how to import from other modules you define (code for the modules is not shown here, please see [this repository](https://github.com/langchain-ai/langgraph-example) to see their implementation):
+`agent.py` 文件的示例，它展示了如何从您定义的其他模块导入（此处未显示模块的代码，请参阅[此仓库](https://github.com/langchain-ai/langgraph-example)查看其实现）：
 
 ```python
 # my_agent/agent.py
@@ -124,10 +124,10 @@ from typing import Literal
 from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph, END, START
-from my_agent.utils.nodes import call_model, should_continue, tool_node # import nodes
-from my_agent.utils.state import AgentState # import state
+from my_agent.utils.nodes import call_model, should_continue, tool_node # 导入节点
+from my_agent.utils.state import AgentState # 导入状态
 
-# Define the runtime context
+# 定义运行时上下文
 class GraphContext(TypedDict):
     model_name: Literal["anthropic", "openai"]
 
@@ -148,27 +148,27 @@ workflow.add_edge("action", "agent")
 graph = workflow.compile()
 ```
 
-Example file directory:
+示例文件目录：
 
 ```bash
 my-app/
-├── my_agent # all project code lies within here
-│   ├── utils # utilities for your graph
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
 │   │   ├── __init__.py
-│   │   ├── tools.py # tools for your graph
-│   │   ├── nodes.py # node functions for your graph
-│   │   └── state.py # state definition of your graph
-│   ├── requirements.txt # package dependencies
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
 │   ├── __init__.py
-│   └── agent.py # code for constructing your graph
-└── .env # environment variables
+│   └── agent.py # 构建图的代码
+└── .env # 环境变量
 ```
 
-## Create the configuration file
+## 创建配置文件
 
-Create a [configuration file](/langsmith/cli#configuration-file) called `langgraph.json`. See the [configuration file reference](/langsmith/cli#configuration-file) for detailed explanations of each key in the JSON object of the configuration file.
+创建一个名为 `langgraph.json` 的[配置文件](/langsmith/cli#configuration-file)。请参阅[配置文件参考](/langsmith/cli#configuration-file)以获取配置对象中每个键的详细解释。
 
-Example `langgraph.json` file:
+`langgraph.json` 文件的示例：
 
 ```json
 {
@@ -180,30 +180,30 @@ Example `langgraph.json` file:
 }
 ```
 
-Note that the variable name of the `CompiledGraph` appears at the end of the value of each subkey in the top-level `graphs` key (i.e. `:<variable_name>`).
+请注意，`CompiledGraph` 的变量名出现在顶级 `graphs` 键下每个子键值的末尾（即 `:<variable_name>`）。
 
 <Warning>
-**Configuration file location**
-The configuration file must be placed in a directory that is at the same level or higher than the Python files that contain compiled graphs and associated dependencies.
+**配置文件位置**
+配置文件必须放置在与包含已编译图和相关依赖项的 Python 文件**同级或更高级别**的目录中。
 </Warning>
 
-Example file directory:
+示例文件目录：
 
 ```bash
 my-app/
-├── my_agent # all project code lies within here
-│   ├── utils # utilities for your graph
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
 │   │   ├── __init__.py
-│   │   ├── tools.py # tools for your graph
-│   │   ├── nodes.py # node functions for your graph
-│   │   └── state.py # state definition of your graph
-│   ├── requirements.txt # package dependencies
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
 │   ├── __init__.py
-│   └── agent.py # code for constructing your graph
-├── .env # environment variables
-└── langgraph.json # configuration file for LangGraph
+│   └── agent.py # 构建图的代码
+├── .env # 环境变量
+└── langgraph.json # LangGraph 的配置文件
 ```
 
-## Next
+## 后续步骤
 
-After you set up your project and place it in a GitHub repository, it's time to [deploy your app](/langsmith/deployment-quickstart).
+在设置好项目并将其放在 GitHub 仓库中之后，就该[部署您的应用程序](/langsmith/deployment-quickstart)了。

@@ -2,58 +2,56 @@
 title: Agent Server
 ---
 
-LangSmith Deployment's **Agent Server** offers an API for creating and managing agent-based applications. It is built on the concept of [assistants](/langsmith/assistants), which are agents configured for specific tasks, and includes built-in [persistence](/oss/langgraph/persistence#memory-store) and a **task queue**. This versatile API supports a wide range of agentic application use cases, from background processing to real-time interactions.
+LangSmith 部署中的 **Agent Server** 提供了一个用于创建和管理基于智能体（agent-based）应用程序的 API。它基于 [Assistants](/langsmith/assistants)（为特定任务配置的智能体）的概念构建，并内置了 [持久化（persistence）](/oss/langgraph/persistence#memory-store) 和一个**任务队列 (task queue)**。这个多功能的 API 支持广泛的智能体应用场景，从后台处理到实时交互。
 
-Use Agent Server to create and manage [assistants](/langsmith/assistants), [threads](/oss/langgraph/persistence#threads), [runs](/langsmith/assistants#execution), [cron jobs](/langsmith/cron-jobs), [webhooks](/langsmith/use-webhooks), and more.
+使用 Agent Server，您可以创建和管理 [Assistants](/langsmith/assistants)、[Threads](/oss/langgraph/persistence#threads)、[Runs](/langsmith/assistants#execution)、[Cron Jobs](/langsmith/cron-jobs)、[Webhooks](/langsmith/use-webhooks) 等。
 
 <Tip>
-**API reference**<br></br>
-For detailed information on the API endpoints and data models, refer to the [API reference docs](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html).
+**API 参考**<br></br>
+有关 API 端点和数据模型的详细信息，请参阅 [API 参考文档](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html)。
 </Tip>
 
-To use the Enterprise version of the Agent Server, you must acquire a license key that you will need to specify when running the Docker image. To acquire a license key, [contact our sales team](https://www.langchain.com/contact-sales).
+要使用 Agent Server 的企业版 (Enterprise version)，您必须获取一个许可证密钥（license key），并在运行 Docker 镜像时指定该密钥。要获取许可证密钥，请[联系我们的销售团队](https://www.langchain.com/contact-sales)。
 
-You can run the Enterprise version of the Agent Server on the following LangSmith [platform](/langsmith/platform-setup) options:
+您可以在以下 LangSmith [平台](/langsmith/platform-setup) 选项上运行 Agent Server 的企业版：
 
-- [Cloud](/langsmith/cloud)
-- [Hybrid](/langsmith/hybrid)
-- [Self-hosted](/langsmith/self-hosted)
+- [云端 (Cloud)](/langsmith/cloud)
+- [混合模式 (Hybrid)](/langsmith/hybrid)
+- [自托管 (Self-hosted)](/langsmith/self-hosted)
 
-## Application structure
+## 应用结构 (Application structure)
 
-To deploy an Agent Server application, you need to specify the graph(s) you want to deploy, as well as any relevant configuration settings, such as dependencies and environment variables.
+要部署 Agent Server 应用程序，您需要指定要部署的图 (graph(s))，以及任何相关的配置设置，例如依赖项和环境变量。
 
-Read the [application structure](/langsmith/application-structure) guide to learn how to structure your LangGraph application for deployment.
+请阅读 [应用结构](/langsmith/application-structure) 指南，了解如何为部署组织 LangGraph 应用程序。
 
-## Parts of a deployment
+## 部署的组成部分 (Parts of a deployment)
 
-When you deploy Agent Server, you are deploying one or more [graphs](#graphs), a database for [persistence](/oss/langgraph/persistence), and a task queue.
+当您部署 Agent Server 时，您部署的是一个或多个 [图表（graphs）](#graphs)、一个用于[持久化](/oss/langgraph/persistence)的数据库以及一个任务队列。
 
-### Graphs
+### 图表 (Graphs)
 
-When you deploy a graph with Agent Server, you are deploying a "blueprint" for an [Assistant](/langsmith/assistants).
+当您使用 Agent Server 部署一个图时，您部署的是一个 [Assistant](/langsmith/assistants) 的“设计蓝图”。
 
-An [Assistant](/langsmith/assistants) is a graph paired with specific configuration settings. You can create multiple assistants per graph, each with unique settings to accommodate different use cases
-that can be served by the same graph.
+[Assistant](/langsmith/assistants) 是一个与特定配置设置配对的图。您可以为每个图创建多个 Assistants，每个都带有独特的设置，以适应可以由同一图表提供的不同使用场景。
 
-Upon deployment, Agent Server will automatically create a default assistant for each graph using the graph's default configuration settings.
+部署后，Agent Server 将自动使用图表的默认配置设置，为每个图创建一个默认的 Assistant。
 
 <Note>
-We often think of a graph as implementing an [agent](/oss/langgraph/workflows-agents), but a graph does not necessarily need to implement an agent. For example, a graph could implement a simple
-chatbot that only supports back-and-forth conversation, without the ability to influence any application control flow. In reality, as applications get more complex, a graph will often implement a more complex flow that may use [multiple agents](/oss/langchain/multi-agent) working in tandem.
+我们通常认为一个图实现了[一个智能体 (agent)](/oss/langgraph/workflows-agents)，但图表不一定需要实现一个智能体。例如，一个图可以实现一个简单的聊天机器人，它只支持来回对话，而没有能力去影响任何应用程序的控制流。在实际应用中，随着应用的复杂性增加，一个图通常会实现一个更复杂的流程，其中可能包含[多个协同工作的智能体](/oss/langchain/multi-agent)。
 </Note>
 
-### Persistence and task queue
+### 持久化和任务队列 (Persistence and task queue)
 
-Agent Server leverages a database for [persistence](/oss/langgraph/persistence) and a task queue.
+Agent Server 利用数据库进行[持久化](/oss/langgraph/persistence)和一个任务队列。
 
-[PostgreSQL](https://www.postgresql.org/) is supported as a database for Agent Server and [Redis](https://redis.io/) as the task queue.
+Agent Server 支持 [PostgreSQL](https://www.postgresql.org/) 作为数据库，并支持 [Redis](https://redis.io/) 作为任务队列。
 
-If you're deploying using [LangSmith cloud](/langsmith/cloud), these components are managed for you. If you're deploying Agent Server on your [own infrastructure](/langsmith/self-hosted), you'll need to set up and manage these components yourself.
+如果您使用 [LangSmith 云端](/langsmith/cloud) 进行部署，这些组件将由系统为您管理。如果您在[自己的基础设施](/langsmith/self-hosted)上部署 Agent Server，则需要自己设置和管理这些组件。
 
-For more information on how these components are set up and managed, review the [hosting options](/langsmith/platform-setup) guide.
+有关如何设置和管理这些组件的更多信息，请查阅 [托管选项](/langsmith/platform-setup) 指南。
 
-## Learn more
+## 了解更多
 
-- [Application Structure](/langsmith/application-structure) guide explains how to structure your application for deployment.
-- The [API Reference](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html) provides detailed information on the API endpoints and data models.
+- [应用结构 (Application Structure)](/langsmith/application-structure) 指南解释了如何为部署组织您的应用程序。
+- [API 参考 (API Reference)](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html) 提供了有关 API 端点和数据模型的详细信息。

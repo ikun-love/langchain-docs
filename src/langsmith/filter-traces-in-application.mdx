@@ -1,91 +1,91 @@
 ---
-title: Filter traces
-sidebarTitle: Filter traces
+title: 筛选追踪记录
+sidebarTitle: 筛选追踪记录
 ---
 
-<Tip>**Recommended reading**: It might be helpful to read the [Conceptual guide on tracing](/langsmith/observability-concepts) to gain familiarity with the concepts mentioned on this page.</Tip>
+<Tip>**推荐阅读**：阅读 [追踪的概念指南](/langsmith/observability-concepts) 可能有助于您熟悉本页提到的概念。</Tip>
 
-Tracing projects can contain a significant amount of data. Filters are used for effectively navigating and analyzing this data, allowing you to:
+Tracing 项目可能包含大量数据。筛选器（Filters）用于有效地导航和分析这些数据，它们可以帮助您：
 
-- **Have focused investigations**: Quickly narrow down to specific runs for ad-hoc analysis
-- **Debug and analyze**: Identify and examine errors, failed runs, and performance bottlenecks
+- **进行集中调查**：快速缩小范围到特定的运行（runs）以进行即席分析。
+- **调试和分析**：识别和检查错误、失败的运行以及性能瓶颈。
 
-This page contains a series of guides for how to filter runs in a tracing project. If you are programmatically exporting runs for analysis via the [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) or [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs), please refer to the [exporting traces guide](./export-traces) for more information.
+本页面包含一系列关于如何在追踪项目中筛选运行记录的指南。如果您正在通过 [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) 或 [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs) 以编程方式导出运行记录以进行分析，请参阅 [导出追踪指南](./export-traces) 以获取更多信息。
 
-## Creating and Applying Filters
+## 创建和应用筛选器
 
-### Filtering by run attributes
+### 按运行属性筛选
 
-There are two ways to filter runs in a tracing project:
+在追踪项目中，有两种方法可以筛选运行记录：
 
-1. **Filters**: Located towards the top-left of the tracing projects page. This is where you construct and manage detailed filter criteria.
+1. **筛选器 (Filters)**：位于追踪项目页面左上方。您可以在此构建和管理详细的筛选条件。
 
 ![Filtering](/langsmith/images/filter.png)
 
-2. **Filter Shortcuts**: Positioned on the right sidebar of the tracing projects page. The filter shortcuts bar provides quick access to filters based on the most frequently occurring attributes in your project's runs.
+2. **筛选快捷方式 (Filter Shortcuts)**：位于追踪项目页面的右侧边栏。筛选快捷方式栏提供了快速访问基于项目中运行记录中最常出现的属性的筛选器的入口。
 
 ![Filter Shortcuts](/langsmith/images/filter-shortcuts.png)
 
 <Info>
-**Default filter**
+**默认筛选器**
 
-By default, the `IsTrace` is `true` filter is applied. This displays only top-level traces. Removing this filter will show all runs, including intermediate spans, in the project.
+默认情况下，会应用 `IsTrace` 为 `true` 的筛选器。这只会显示顶层的追踪记录（traces）。移除此筛选器将显示项目中的所有运行记录，包括中间的跨度（spans）。
 </Info>
 
-### Filtering by time range
+### 按时间范围筛选
 
-In addition to filtering by run attributes, you can also filter runs within a specific time range. This option is available towards the top-left of the tracing projects page.
+除了按运行属性筛选外，您还可以按特定的时间范围筛选运行记录。此选项位于追踪项目页面的左上方。
 
 ![Filtering on time](/langsmith/images/filter-time.png)
 
-### Filter operators
+### 筛选运算符
 
-The available filter operators depend on the data type of the attribute you are filtering on. Here's an overview of common operators:
+可用的筛选运算符取决于您正在筛选的属性的数据类型。以下是常见运算符的概述：
 
-- **is**: Exact match on the filter value
-- **is not**: Negative match on the filter value
-- **contains**: Partial match on the filter value
-- **does not contain**: Negative partial match on the filter value
-- **is one of**: Match on any of the values in the list
-- `>` / `<`: Available for numeric fields
+- **is**：与筛选值完全匹配
+- **is not**：与筛选值不匹配
+- **contains**：与筛选值进行部分匹配
+- **does not contain**：与筛选值不进行部分匹配
+- **is one of**：与列表中的任何一个值匹配
+- `>` / `<`：适用于数值字段
 
-## Specific Filtering Techniques
+## 特定的筛选技术
 
-### Filter for intermediate runs (spans)
+### 筛选中间运行记录（跨度）
 
-In order to filter for intermediate runs (spans), you first need to remove the default `IsTrace` is `true` filter. For example, you would do this if you wanted to filter by `run name` for sub runs or filter by `run type`.
+为了筛选中间运行记录（spans），您首先需要移除默认的 `IsTrace` is `true` 筛选器。例如，如果您想根据 `run name` 筛选子运行记录或根据 `run type` 进行筛选时，就需要这样做。
 
-Run metadata and tags are also powerful to filter on. These rely on good tagging across all parts of your pipeline. To learn more, you can check out [this guide](./add-metadata-tags).
+运行元数据（metadata）和标签（tags）也是强大的筛选依据。这依赖于在管道的所有部分都进行良好的标记。要了解更多信息，您可以查看 [本指南](./add-metadata-tags)。
 
-### Filter based on inputs and outputs
+### 基于输入和输出内容筛选
 
-You can filter runs based on the content in the inputs and outputs of the run.
+您可以根据运行记录的输入和输出内容来筛选运行记录。
 
-To filter either inputs or outputs, you can use the `Full-Text Search` filter which will match keywords in either field. For more targeted search, you can use the `Input` or `Output` filters which will only match content based on the respective field.
+要筛选输入或输出，您可以使用 `Full-Text Search`（全文搜索）筛选器，它将匹配这两个字段中的关键词。对于更精确的搜索，您可以使用 `Input` 或 `Output` 筛选器，它们将仅根据相应的字段内容进行匹配。
 
 <Note>
-For performance, we index up to 250 characters of data for full-text search. If your search query exceeds this limit, we recommend using [Input/Output key-value search](/langsmith/filter-traces-in-application#filter-based-on-input-%2F-output-key-value-pairs) instead.
+为了性能考虑，我们对全文搜索的数据索引限制在 **250 个字符** 内。如果您的搜索查询超过此限制，我们建议您改用 [输入/输出键值对搜索](/langsmith/filter-traces-in-application#filter-based-on-input-%2F-output-key-value-pairs)。
 </Note>
 
-You can also specify multiple matches, either by including multiple terms separated by whitespace, or adding multiple filters - which will try to match all terms provided.
+您还可以指定多个匹配项，方法是包含多个由空格分隔的术语，或者添加多个筛选器——系统将尝试匹配提供的所有术语。
 
-Note that keyword search is done by splitting the text and finding any partial matches on the search keywords, so it is not done in specific order. We exclude common stop words from the search (from the nltk stop word list along with a few other common JSON keywords).
+请注意，关键词搜索是通过分割文本并查找搜索关键词的任何部分匹配来实现的，因此它们不遵循特定的顺序。我们排除了常见的停用词（来自 nltk 停用词列表以及其他一些常见的 JSON 关键字）。
 
 ![Filtering](/langsmith/images/filter-full-text.png)
 
-Based on the filters above, the system will search for `python` and `tensorflow` in either inputs or outputs, and `embedding` in the inputs along with `fine` and `tune` in the outputs.
+根据上述筛选器，系统将在输入或输出中搜索 `python` 和 `tensorflow`，并在输入中搜索 `embedding` 以及在输出中搜索 `fine` 和 `tune`。
 
-### Filter based on input / output key-value pairs
+### 基于输入/输出键值对筛选
 
-In addition to full-text search, you can filter runs based on specific key-value pairs in the inputs and outputs. This allows for more precise filtering, especially when dealing with structured data.
+除了全文搜索，您还可以根据输入和输出中的特定键值对来筛选运行记录。这允许进行更精确的筛选，尤其是在处理结构化数据时。
 
 <Note>
-We index up to 100 unique keys to keep your data organized and searchable. Each key also has a character limit of 250 characters per value. If your data exceeds either of these limits, the text won't be indexed. This helps us ensure fast, reliable performance.
+我们索引**最多 100 个唯一键**以保持数据有序和可搜索。每个键的值也有 **250 个字符** 的限制。如果您的数据超过任一限制，该文本将不会被索引。这有助于我们确保快速、可靠的性能。
 </Note>
 
-To filter based on key-value pairs, select the `Input Key` or `Output Key` filter from the filters dropdown.
+要根据键值对进行筛选，请从筛选器下拉菜单中选择 `Input Key` 或 `Output Key` 筛选器。
 
-For example, to match the following input:
+例如，要匹配以下输入：
 
 ```json
 {
@@ -93,11 +93,11 @@ For example, to match the following input:
 }
 ```
 
-Select `Filters`, `Add Filter` to bring up the filtering options. Then select `Input Key`, enter `input` as the key and enter `What is the capital of France?` as the value.
+选择 `Filters`，然后选择 `Add Filter` 以显示筛选选项。然后选择 `Input Key`，输入 `input` 作为键（key），输入 `What is the capital of France?` 作为值（value）。
 
 ![Filtering](/langsmith/images/search-kv-input.png)
 
-You can also match nested keys by using dot notation to select the nested key name. For example, to match nested keys in the output:
+您还可以使用点表示法来匹配嵌套的键。例如，要匹配输出中的嵌套键：
 
 ```json
 {
@@ -111,21 +111,21 @@ You can also match nested keys by using dot notation to select the nested key na
 }
 ```
 
-Select `Output Key`, enter `documents.page_content` as the key and enter `The capital of France is Paris` as the value. This will match the nested key `documents.page_content` with the specified value.
+选择 `Output Key`，输入 `documents.page_content` 作为键，输入 `The capital of France is Paris` 作为值。这将使用指定的值匹配嵌套的键 `documents.page_content`。
 
 ![Filtering](/langsmith/images/search-kv-output.png)
 
-You can add multiple key-value filters to create more complex queries. You can also use the `Filter Shortcuts` on the right side to quickly filter based on common key-value pairs as shown below:
+您可以添加多个键值对筛选器以创建更复杂的查询。您还可以使用右侧的 `Filter Shortcuts` 快速基于常见的键值对进行筛选，如下所示：
 
 ![Filtering](/langsmith/images/search-kv-filter-shortcut.png)
 
-### Example: Filtering for tool calls
+### 示例：筛选工具调用 (Tool Calls)
 
-It's common to want to search for traces that contain specific tool calls. Tool calls are typically indicated in the output of an LLM run. To filter for tool calls, you would use the `Output Key` filter.
+通常需要搜索包含特定工具调用的追踪记录。工具调用通常在 LLM 运行的输出中指示。要筛选工具调用，您需要使用 `Output Key` 筛选器。
 
-While this example will show you how to filter for tool calls, the same logic can be applied to filter for any key-value pair in the output.
+虽然此示例将向您展示如何筛选工具调用，但相同的逻辑可以应用于筛选输出中的任何键值对。
 
-In this case, let's assume this is the output you want to filter for:
+在这种情况下，我们假设您想要筛选的输出如下：
 
 ```json
 {
@@ -166,136 +166,136 @@ In this case, let's assume this is the output you want to filter for:
 }
 ```
 
-With the example above, the KV search will map each nested JSON path as a key-value pair that you can use to search and filter.
+以上述示例为例，KV 搜索会将每个嵌套的 JSON 路径映射为一组可用于搜索和筛选的键值对。
 
-LangSmith will break it into the following set of searchable key-value pairs:
+LangSmith 会将其分解为以下一组可搜索的键值对：
 
-| Key                                                | Value                                                                        |
-| -------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `generations.type`                                 | `ChatGeneration`                                                             |
-| `generations.message.type`                         | `constructor`                                                                |
-| `generations.message.kwargs.type`                  | `ai`                                                                         |
-| `generations.message.kwargs.id`                    | `run-ca7f7531-f4de-4790-9c3e-960be7f8b109`                                   |
-| `generations.message.kwargs.tool_calls.name`       | `Plan`                                                                       |
-| `generations.message.kwargs.tool_calls.args.steps` | `Research LangGraph's node configuration capabilities`                       |
-| `generations.message.kwargs.tool_calls.args.steps` | `Investigate how to add a Python code execution node`                        |
+| 键 (Key) | 值 (Value) |
+| :--- | :--- |
+| `generations.type` | `ChatGeneration` |
+| `generations.message.type` | `constructor` |
+| `generations.message.kwargs.type` | `ai` |
+| `generations.message.kwargs.id` | `run-ca7f7531-f4de-4790-9c3e-960be7f8b109` |
+| `generations.message.kwargs.tool_calls.name` | `Plan` |
+| `generations.message.kwargs.tool_calls.args.steps` | `Research LangGraph's node configuration capabilities` |
+| `generations.message.kwargs.tool_calls.args.steps` | `Investigate how to add a Python code execution node` |
 | `generations.message.kwargs.tool_calls.args.steps` | `Find an example or create a sample implementation of a code execution node` |
-| `generations.message.kwargs.tool_calls.id`         | `toolu_01XexPzAVknT3gRmUB5PK5BP`                                             |
-| `generations.message.kwargs.tool_calls.type`       | `tool_call`                                                                  |
-| `type`                                             | `LLMResult`                                                                  |
+| `generations.message.kwargs.tool_calls.id` | `toolu_01XexPzAVknT3gRmUB5PK5BP` |
+| `generations.message.kwargs.tool_calls.type` | `tool_call` |
+| `type` | `LLMResult` |
 
-To search for a specific tool call, you can use the following Output Key search while removing the root runs filter:
+要搜索特定的工具调用，您可以在移除根运行筛选器的同时使用以下 Output Key 搜索：
 
 `generations.message.kwargs.tool_calls.name` = `Plan`
 
-This will match root and non-root runs where the `tool_calls` name is `Plan`.
+这将匹配根运行记录和非根运行记录中 `tool_calls` 名称为 `Plan` 的记录。
 
 ![Filtering](/langsmith/images/search-kv-tool.png)
 
-### Negative filtering on key-value pairs
+### 基于键值对的否定筛选
 
-Different types of negative filtering can be applied to `Metadata`, `Input Key`, and `Output Key` fields to exclude specific runs from your results.
+可以将不同类型的否定筛选应用于 `Metadata`、`Input Key` 和 `Output Key` 字段，以从结果中排除特定的运行记录。
 
-For example, to find all runs where the metadata key `phone` is not equal to `1234567890`, set the `Metadata` `Key` operator to `is` and `Key` field to `phone`, then set the `Value` operator to `is not` and the `Value` field to `1234567890`. This will match all runs that have a metadata key `phone` with any value except `1234567890`.
+例如，要查找元数据中键 `phone` 不等于 `1234567890` 的所有运行记录，请将 `Metadata` 的 `Key` 运算符设置为 `is`，将 `Key` 字段设置为 `phone`，然后将 `Value` 运算符设置为 `is not`，将 `Value` 字段设置为 `1234567890`。这将匹配所有具有元数据键 `phone` 且其值**不是** `1234567890` 的运行记录。
 
 ![Filtering](/langsmith/images/negative-filtering-1.png)
 
-To find runs that don't have a specific metadata key, set the `Key` operator to `is not`. For example, setting the `Key` operator to `is not` with `phone` as the key will match all runs that don't have a `phone` field in their metadata.
+要查找不包含特定元数据键的运行记录，请将 `Key` 运算符设置为 `is not`。例如，将 `Key` 运算符设置为 `is not` 且 Key 为 `phone`，将匹配所有元数据中**不包含** `phone` 字段的运行记录。
 
 ![Filtering](/langsmith/images/negative-filtering-2.png)
 
-You can also filter for runs that neither have a specific key nor a specific value. To find runs where the metadata has neither the key `phone` nor any field with the value `1234567890`, set the `Key` operator to `is not` with key `phone`, and the `Value` operator to `is not` with value `1234567890`.
+您还可以筛选既不包含特定键也不包含特定值的运行记录。要查找元数据中既没有键 `phone` 也没有任何值为 `1234567890` 的运行记录，请将 `Key` 运算符设置为 `is not` 且 Key 为 `phone`，并将 `Value` 运算符设置为 `is not` 且 Value 为 `1234567890`。
 
 ![Filtering](/langsmith/images/negative-filtering-3.png)
 
-Finally, you can also filter for runs that do not have a specific key but have a specific value. To find runs where there is no `phone` key but there is a value of `1234567890` for some other key, set the `Key` operator to `is not` with key `phone`, and the `Value` operator to `is` with value `1234567890`.
+最后，您还可以筛选那些不包含特定键但包含特定值的运行记录。要查找元数据中没有键 `phone`，但某个其他键的值为 `1234567890` 的运行记录，请将 `Key` 运算符设置为 `is not` 且 Key 为 `phone`，并将 `Value` 运算符设置为 `is` 且 Value 为 `1234567890`。
 
 ![Filtering](/langsmith/images/negative-filtering-4.png)
 
-Note that you can use the `does not contain` operator instead of `is not` to perform a substring match.
+请注意，您可以使用 `does not contain` 运算符代替 `is not` 来执行子字符串匹配。
 
-## Save a filter
+## 保存筛选器
 
-Saving filters allows you to store and reuse frequently used filter configurations. Saved filters are specific to a tracing project.
+保存筛选器允许您存储和重用常用的筛选配置。已保存的筛选器特定于当前的追踪项目。
 
-#### Save a filter
+#### 保存筛选器
 
-In the filter box, click the **Save filter** button after you have constructed your filter. This will bring up a dialog to specify the name and a description of the filter.
+在筛选框中，构建好筛选条件后，点击 **Save filter**（保存筛选器）按钮。这将弹出一个对话框，用于指定筛选器的名称和描述。
 
 ![Filtering](/langsmith/images/save-a-filter.png)
 
-#### Use a saved filter
+#### 使用已保存的筛选器
 
-After saving a filter, it is available in the filter bar as a quick filter for you to use. If you have more than three saved filters, only two will be displayed directly, with the rest accessible via a "more" menu. You can use the settings icon in the saved filter bar to optionally hide default saved filters.
+保存筛选器后，它将显示在筛选栏中，您可以将其作为快速筛选器使用。如果您保存了三个以上的筛选器，则只会直接显示两个，其余的可通过“更多”菜单访问。您可以使用已保存筛选器栏中的设置图标，选择性地隐藏默认的已保存筛选器。
 
 ![Filtering](/langsmith/images/selecting-a-filter.png)
 
-#### Update a saved filter
+#### 更新已保存的筛选器
 
-With the filter selected, make any changes to filter parameters. Then click **Update filter** > **Update** to update the filter.
+选择筛选器后，对筛选参数进行任何更改。然后点击 **Update filter** > **Update** 以更新筛选器。
 
-In the same menu, you can also create a new saved filter by clicking **Update filter** > **Create new**.
+在同一个菜单中，您还可以通过点击 **Update filter** > **Create new** 来创建新的已保存筛选器。
 
-#### Delete a saved filter
+#### 删除已保存的筛选器
 
-Click the settings icon in the saved filter bar, and delete a filter using the trash icon.
+点击已保存筛选器栏中的设置图标，然后使用垃圾桶图标删除筛选器。
 
-## Copy a filter
+## 复制筛选器
 
-You can copy a constructed filter to share it with colleagues, reuse it later, or query runs programmatically in the [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) or [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs).
+您可以复制一个已构建的筛选器，以便与同事共享、稍后重用，或在 [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) 或 [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs) 中以编程方式查询运行记录。
 
-In order to copy the filter, you can first create it in the UI. From there, you can click the copy button in the upper right hand corner. If you have constructed tree or trace filters, you can also copy those.
+要复制筛选器，您可以先在 UI 中创建它。然后，您可以点击右上角的复制按钮。如果您构建了树形（tree）或追踪记录（trace）筛选器，您也可以复制它们。
 
-This will give you a string representing the filter in the LangSmith query language. For example: `and(eq(is_root, true), and(eq(feedback_key, "user_score"), eq(feedback_score, 1)))`. For more information on the query language syntax, please refer to [this reference](/langsmith/trace-query-syntax#filter-query-language).
+这将为您提供一个代表该筛选器的字符串，使用的是 LangSmith 查询语言。例如：`and(eq(is_root, true), and(eq(feedback_key, "user_score"), eq(feedback_score, 1)))`。有关查询语言语法的更多信息，请参阅 [本参考资料](/langsmith/trace-query-syntax#filter-query-language)。
 
 ![Copy Filter](/langsmith/images/copy-filter.png)
 
-## Filtering runs within the trace view
+## 在追踪视图中筛选运行记录
 
-You can also apply filters directly within the trace view, which is useful for sifting through traces with a large number of runs. The same filters available in the main runs table view can be applied here.
+您也可以直接在追踪视图（trace view）中应用筛选器，这在筛选包含大量运行记录的追踪记录时非常有用。主运行记录表视图中可用的相同筛选器也可以在此处应用。
 
-By default, only the runs that match the filters will be shown. To see the matched runs within the broader context of the trace tree, switch the view option from "Filtered Only" to "Show All" or "Most relevant".
+默认情况下，只显示匹配筛选条件的运行记录。要查看这些匹配的运行记录在整个追踪树中的更广阔上下文，请将视图选项从“Filtered Only”（仅筛选）切换到“Show All”（显示全部）或“Most relevant”（最相关）。
 
 ![Filtering within trace view](/langsmith/images/filter-runs-in-trace-view.png)
 
-## Manually specify a raw query in LangSmith query language
+## 手动指定原始查询（LangSmith 查询语言）
 
-If you have [copied a previously constructed filter](/langsmith/filter-traces-in-application#copy-the-filter), you may want to manually apply this raw query in a future session.
+如果您 [复制了先前构建的筛选器](/langsmith/filter-traces-in-application#copy-the-filter)，您可能希望在将来的会话中手动应用该原始查询。
 
-In order to do this, you can click on **Advanced filters** on the bottom of the filters popover. From there you can paste a raw query into the text box.
+要执行此操作，您可以点击筛选器弹出窗口底部的 **Advanced filters**（高级筛选器）。然后，您可以将原始查询粘贴到文本框中。
 
-Note that this will add that query to the existing queries, not overwrite it.
+请注意，这将把该查询**添加**到现有查询中，而不是覆盖它们。
 
 ![Raw Query](/langsmith/images/raw-query.png)
 
-## Use an AI Query to auto-generate a query (Experimental)
+## 使用 AI 查询自动生成查询（实验性）
 
-Sometimes figuring out the exact query to specify can be difficult! In order to make it easier, we've added an `AI Query` functionality. With this, you can type in the filter you want to construct in natural language and it will convert it into a valid query.
+有时要确定要指定的精确查询可能很困难！为了简化此过程，我们添加了 `AI Query` 功能。通过此功能，您可以用自然语言输入要构建的筛选条件，系统将将其转换为有效的查询。
 
-For example: "All runs longer than 10 seconds"
+例如：“所有运行时间超过 10 秒的记录”
 
 ![AI Query](/langsmith/images/ai-query.png)
 
-## Advanced filters
+## 高级筛选器
 
-### Filter for intermediate runs (spans) on properties of the root
+### 按根节点的属性筛选中间运行记录（跨度）
 
-A common concept is to filter for intermediate runs which are part of a trace whose root run has some attribute. An example is filtering for intermediate runs of a particular type whose root run has positive (or negative) feedback associated with it.
+一个常见需求是筛选那些属于某个追踪记录，并且该追踪记录的根运行记录具有某些属性的中间运行记录。一个例子是筛选特定类型的中间运行记录，而其根运行记录关联了正面（或负面）反馈。
 
-In order to do this, first set up a filter for intermediate runs (per the above section). After that, you can then add another filter rule. You can then click the `Advanced Filters` link all the way at the bottom of the filter. This will open up a new modal where you can add `Trace filters`. These filters will apply to the traces of all the parent runs of the individual runs you've already filtered for.
+要实现这一点，首先根据上述部分设置中间运行记录的筛选条件。然后，您可以添加另一个筛选规则。接着，您可以点击筛选器最底部的 `Advanced Filters` 链接。这将打开一个新的模态框，您可以在其中添加“Trace filters”（追踪筛选器）。这些筛选器将应用于您已经筛选出的单个运行记录的所有父级追踪记录。
 
 ![Filtering](/langsmith/images/trace-filter.png)
 
-### Filter for runs (spans) whose child runs have some attribute
+### 筛选其子运行记录具有某些属性的运行记录（跨度）
 
-This is the opposite of the above. You may want to search for runs who have specific types of sub runs. An example of this could be searching for all traces that had a sub run with name `Foo`. This is useful when `Foo` is not always called, but you want to analyze the cases where it is.
+这是上述情况的反向操作。您可能想要搜索具有特定类型子运行记录的运行记录。一个例子是搜索所有子运行记录名称为 `Foo` 的追踪记录。当 `Foo` 不总是被调用时，此功能非常有用，但您希望分析那些被调用的情况。
 
-In order to do this, you can click on the `Advanced Filters` link all the way at the bottom of the filter. This will open up a new modal where you can add `Tree filters`. This will make the rule you specify apply to all child runs of the individual runs you've already filtered for.
+要实现这一点，您可以点击筛选器最底部的 `Advanced Filters` 链接。这将打开一个新的模态框，您可以在其中添加“Tree filters”（树形筛选器）。这将使您指定的规则应用于您已经筛选出的单个运行记录的所有子运行记录。
 
 ![Filtering](/langsmith/images/child-runs.png)
 
-### Example: Filtering on all runs whose tree contains the tool call filter
+### 示例：筛选包含工具调用筛选的整个树结构的所有运行记录
 
-Extending the [tool call filtering example](/langsmith/filter-traces-in-application#example-filtering-for-tool-calls) from above, if you would like to filter for all runs _whose tree contains_ the tool filter call, you can use the tree filter in the [advanced filters](/langsmith/filter-traces-in-application#advanced-filters) setting:
+扩展以上关于工具调用的筛选示例（[Example: Filtering for tool calls](/langsmith/filter-traces-in-application#example-filtering-for-tool-calls)），如果您希望筛选出**其树结构中包含**特定工具调用筛选的所有运行记录，您可以在 [高级筛选器](/langsmith/filter-traces-in-application#advanced-filters) 设置中使用树形筛选器：
 
 ![Filtering](/langsmith/images/search-kv-tool-tree.png)

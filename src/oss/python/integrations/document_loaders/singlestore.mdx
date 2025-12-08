@@ -2,66 +2,66 @@
 title: SingleStoreLoader
 ---
 
-The `SingleStoreLoader` allows you to load documents directly from a SingleStore database table. It is part of the `langchain-singlestore` integration package.
+`SingleStoreLoader` 允许你直接从 SingleStore 数据库表中加载文档。它属于 `langchain-singlestore` 集成包的一部分。
 
-## Overview
+## 概述
 
-### Integration Details
+### 集成详情
 
-| Class | Package | JS Support |
+| 类名 | 包名 | JS 支持 |
 | :--- | :--- | :---: |
 | `SingleStoreLoader` | `langchain_singlestore` | ❌ |
 
-### Features
+### 特性
 
-- Load documents lazily to handle large datasets efficiently.
-- Supports native asynchronous operations.
-- Easily configurable to work with different database schemas.
+- 惰性（Lazy）加载文档，以高效处理大型数据集。
+- 支持原生的异步操作。
+- 易于配置，可用于连接不同的数据库 Schema。
 
-## Setup
+## 设置
 
-To use the `SingleStoreLoader`, you need to install the `langchain-singlestore` package. Follow the installation instructions below.
+要使用 `SingleStoreLoader`，你需要安装 `langchain-singlestore` 包。请遵循以下安装说明。
 
-### Installation
+### 安装
 
-Install **langchain_singlestore**.
+安装 **langchain_singlestore**。
 
 ```python
 pip install -qU langchain_singlestore
 ```
 
-## Initialization
+## 初始化
 
-To initialize `SingleStoreLoader`, you need to provide connection parameters for the SingleStore database and specify the table and fields to load documents from.
+初始化 `SingleStoreLoader` 时，你需要提供 SingleStore 数据库的连接参数，并指定要从中加载文档的表和字段。
 
-### Required Parameters
+### 必需参数
 
-- **host** (`str`): Hostname, IP address, or URL for the database.
-- **table_name** (`str`): Name of the table to query. Defaults to `embeddings`.
-- **content_field** (`str`): Field containing document content. Defaults to `content`.
-- **metadata_field** (`str`): Field containing document metadata. Defaults to `metadata`.
+- **host** (`str`): 数据库的主机名、IP 地址或 URL。
+- **table_name** (`str`): 要查询的表的名称。默认为 `embeddings`。
+- **content_field** (`str`): 包含文档内容的字段。默认为 `content`。
+- **metadata_field** (`str`): 包含文档元数据的字段。默认为 `metadata`。
 
-### Optional Parameters
+### 可选参数
 
-- **id_field** (`str`): Field containing document IDs. Defaults to `id`.
+- **id_field** (`str`): 包含文档 ID 的字段。默认为 `id`。
 
-### Connection Pool Parameters
+### 连接池参数
 
-- **pool_size** (`int`): Number of active connections in the pool. Defaults to `5`.
-- **max_overflow** (`int`): Maximum connections beyond `pool_size`. Defaults to `10`.
-- **timeout** (`float`): Connection timeout in seconds. Defaults to `30`.
+- **pool_size** (`int`): 连接池中活跃连接的数量。默认为 `5`。
+- **max_overflow** (`int`): 超过 `pool_size` 的最大连接数。默认为 `10`。
+- **timeout** (`float`): 连接超时时间（秒）。默认为 `30`。
 
-### Additional Options
+### 额外选项
 
-- **pure_python** (`bool`): Enables pure Python mode.
-- **local_infile** (`bool`): Allows local file uploads.
-- **charset** (`str`): Character set for string values.
-- **ssl_key**, **ssl_cert**, **ssl_ca** (`str`): Paths to SSL files.
-- **ssl_disabled** (`bool`): Disables SSL.
-- **ssl_verify_cert** (`bool`): Verifies server's certificate.
-- **ssl_verify_identity** (`bool`): Verifies server's identity.
-- **autocommit** (`bool`): Enables autocommits.
-- **results_type** (`str`): Structure of query results (e.g., `tuples`, `dicts`).
+- **pure_python** (`bool`): 启用纯 Python 模式。
+- **local_infile** (`bool`): 允许本地文件上传。
+- **charset** (`str`): 字符串值的字符集。
+- **ssl_key**, **ssl_cert**, **ssl_ca** (`str`): SSL 文件的路径。
+- **ssl_disabled** (`bool`): 禁用 SSL。
+- **ssl_verify_cert** (`bool`): 验证服务器的证书。
+- **ssl_verify_identity** (`bool`): 验证服务器的身份。
+- **autocommit** (`bool`): 启用自动提交。
+- **results_type** (`str`): 查询结果的结构（例如：`tuples`, `dicts`）。
 
 ```python
 from langchain_singlestore.document_loaders import SingleStoreLoader
@@ -75,7 +75,7 @@ loader = SingleStoreLoader(
 )
 ```
 
-## Load
+## 加载 (Load)
 
 ```python
 docs = loader.load()
@@ -86,14 +86,16 @@ docs[0]
 print(docs[0].metadata)
 ```
 
-## Lazy Load
+## 惰性加载 (Lazy Load)
+
+惰性加载允许你分批处理数据，避免一次性将所有内容加载到内存中，这对于大型数据集非常有用。
 
 ```python
 page = []
 for doc in loader.lazy_load():
     page.append(doc)
     if len(page) >= 10:
-        # do some paged operation, e.g.
+        # 执行分页操作，例如：
         # index.upsert(page)
 
         page = []
@@ -101,6 +103,6 @@ for doc in loader.lazy_load():
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all SingleStore Document Loader features and configurations head to the github page: [https://github.com/singlestore-labs/langchain-singlestore/](https://github.com/singlestore-labs/langchain-singlestore/)
+有关 SingleStore 文档加载器的所有功能和配置的详细文档，请访问其 GitHub 页面：[https://github.com/singlestore-labs/langchain-singlestore/](https://github.com/singlestore-labs/langchain-singlestore/)

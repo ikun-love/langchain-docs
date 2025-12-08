@@ -2,13 +2,13 @@
 title: Snowflake Cortex
 ---
 
-[Snowflake Cortex](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions) gives you instant access to industry-leading Large Language Models (LLMs) trained by researchers at companies like Mistral, Reka, Meta, and Google, including [Snowflake Arctic](https://www.snowflake.com/en/data-cloud/arctic/), an open enterprise-grade model developed by Snowflake.
+[Snowflake Cortex](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions) 提供了即时访问行业领先的大型语言模型（LLM）的能力，这些模型由 Mistral、Reka、Meta 和 Google 等公司的研究人员训练而成，其中就包括 Snowflake 开发的开源企业级模型 [Snowflake Arctic](https://www.snowflake.com/en/data-cloud/arctic/)。
 
-This example goes over how to use LangChain to interact with Snowflake Cortex.
+本示例将介绍如何使用 LangChain 来与 Snowflake Cortex 进行交互。
 
-### Installation and setup
+### 安装与设置
 
-We start by installing the `snowflake-snowpark-python` library, using the command below. Then we configure the credentials for connecting to Snowflake, as environment variables or pass them directly.
+我们首先使用下面的命令安装 `snowflake-snowpark-python` 库。然后，您可以将连接到 Snowflake 的凭证配置为环境变量，或者直接传入。
 
 ```python
 pip install -qU snowflake-snowpark-python
@@ -18,8 +18,8 @@ pip install -qU snowflake-snowpark-python
 import getpass
 import os
 
-# First step is to set up the environment variables, to connect to Snowflake,
-# you can also pass these snowflake credentials while instantiating the model
+# 第一步是设置环境变量，以便连接到 Snowflake；
+# 您也可以在实例化模型时直接传入这些 Snowflake 凭证
 
 if os.environ.get("SNOWFLAKE_ACCOUNT") is None:
     os.environ["SNOWFLAKE_ACCOUNT"] = getpass.getpass("Account: ")
@@ -47,24 +47,24 @@ if os.environ.get("SNOWFLAKE_ROLE") is None:
 from langchain_community.chat_models import ChatSnowflakeCortex
 from langchain.messages import HumanMessage, SystemMessage
 
-# By default, we'll be using the cortex provided model: `mistral-large`, with function: `complete`
+# 默认情况下，我们将使用 Cortex 提供的模型：`mistral-large`，以及函数：`complete`
 chat = ChatSnowflakeCortex()
 ```
 
-The above cell assumes that your Snowflake credentials are set in your environment variables. If you would rather manually specify them, use the following code:
+上面的代码块假设您的 Snowflake 凭证已在环境变量中设置。如果您更愿意手动指定它们，请使用以下代码：
 
 ```python
 chat = ChatSnowflakeCortex(
-    # Change the default cortex model and function
+    # 更改默认的 cortex 模型和函数
     model="mistral-large",
     cortex_function="complete",
 
-    # Change the default generation parameters
+    # 更改默认的生成参数
     temperature=0,
     max_tokens=10,
     top_p=0.95,
 
-    # Specify your Snowflake Credentials
+    # 指定您的 Snowflake 凭证
     account="YOUR_SNOWFLAKE_ACCOUNT",
     username="YOUR_SNOWFLAKE_USERNAME",
     password="YOUR_SNOWFLAKE_PASSWORD",
@@ -75,9 +75,9 @@ chat = ChatSnowflakeCortex(
 )
 ```
 
-### Calling the chat model
+### 调用聊天模型
 
-We can now call the chat model using the `invoke` or `stream` methods.
+我们现在可以使用 `invoke` 或 `stream` 方法来调用聊天模型。
 
 messages = [
         SystemMessage(content="You are a friendly assistant."),
@@ -85,16 +85,16 @@ messages = [
 ]
 chat.invoke(messages)
 
-### Stream
+### 流式传输 (Stream)
 
 ```python
-# Sample input prompt
+# 示例输入提示
 messages = [
     SystemMessage(content="You are a friendly assistant."),
     HumanMessage(content="What are large language models?"),
 ]
 
-# Invoke the stream method and print each chunk as it arrives
+# 调用流式传输方法，并在接收到每一块数据时打印出来
 print("Stream Method Response:")
 for chunk in chat._stream(messages):
     print(chunk.message.content)

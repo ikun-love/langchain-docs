@@ -1,37 +1,37 @@
 ---
-title: Kinetica Vectorstore API
+title: Kinetica 向量存储 API
 ---
 
->[Kinetica](https://www.kinetica.com/) is a database with integrated support for vector similarity search
+[Kinetica](https://www.kinetica.com/) 是一个内置了向量相似性搜索功能的数据库。
 
-It supports:
+它支持：
 
-- exact and approximate nearest neighbor search
-- L2 distance, inner product, and cosine distance
+- 精确近邻搜索和近似近邻搜索
+- L2 距离、内积（Inner Product）和余弦距离
 
-This notebook shows how to use the Kinetica vector store (`Kinetica`).
+本教程（Notebook）展示了如何使用 Kinetica 向量存储（`Kinetica`）。
 
-This needs an instance of Kinetica which can easily be setup using the instructions given here - [installation instruction](https://www.kinetica.com/developer-edition/).
+要使用此功能，你需要一个 Kinetica 实例。可以通过参考[安装指南](https://www.kinetica.com/developer-edition/)轻松设置。
 
 ```python
-# Pip install necessary package
+# Pip 安装必要的包
 pip install -qU  langchain-openai langchain-community
 pip install "gpudb>=7.2.2.0"
 pip install -qU  tiktoken
 ```
 
-We want to use `OpenAIEmbeddings` so we have to get the OpenAI API Key.
+我们希望使用 `OpenAIEmbeddings`，因此需要获取 OpenAI API 密钥。
 
 ```python
 import getpass
 import os
 
 if "OPENAI_API_KEY" not in os.environ:
-    os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API Key:")
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API 密钥:")
 ```
 
 ```python
-## Loading environment variables
+## 加载环境变量
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -55,8 +55,8 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 ```
 
 ```python
-# Kinetica needs the connection to the database.
-# This is how to set it up.
+# Kinetica 需要连接到数据库。
+# 下面是设置连接的方式。
 HOST = os.getenv("KINETICA_HOST", "http://127.0.0.1:9191")
 USERNAME = os.getenv("KINETICA_USERNAME", "")
 PASSWORD = os.getenv("KINETICA_PASSWORD", "")
@@ -137,11 +137,11 @@ documents = [
 uuids = [str(uuid4()) for _ in range(len(documents))]
 ```
 
-## Similarity Search with Euclidean Distance (Default)
+## 使用欧几里得距离进行相似性搜索（默认）
 
 ```python
-# The Kinetica Module will try to create a table with the name of the collection.
-# So, make sure that the collection name is unique and the user has the permission to create a table.
+# Kinetica 模块将尝试创建一个与 collection 同名的表。
+# 因此，请确保 collection 名称是唯一的，并且用户有权限创建表。
 
 COLLECTION_NAME = "langchain_example"
 connection = create_config()
@@ -175,7 +175,7 @@ db.add_documents(documents=documents, ids=uuids)
 
 ```python
 print()
-print("Similarity Search")
+print("相似性搜索")
 results = db.similarity_search(
     "LangChain provides abstractions to make working with LLMs easy",
     k=2,
@@ -185,7 +185,7 @@ for res in results:
     print(f"* {res.page_content} [{res.metadata}]")
 
 print()
-print("Similarity search with score")
+print("带分数的相似性搜索")
 results = db.similarity_search_with_score(
     "Will it be hot tomorrow?", k=1, filter={"source": "news"}
 )
@@ -202,10 +202,10 @@ Similarity search with score
 * [SIM=0.945397] The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees. [{'source': 'news'}]
 ```
 
-## Working with vectorstore
+## 使用向量存储
 
-Above, we created a vectorstore from scratch. However, often times we want to work with an existing vectorstore.
-In order to do that, we can initialize it directly.
+在上面，我们从头创建了一个向量存储。但是，很多时候我们希望使用一个已存在的向量存储。
+要做到这一点，可以直接初始化它。
 
 ```python
 store = Kinetica(
@@ -215,9 +215,9 @@ store = Kinetica(
 )
 ```
 
-### Add documents
+### 添加文档
 
-We can add documents to the existing vectorstore.
+我们可以向现有的向量存储中添加文档。
 
 ```python
 store.add_documents([Document(page_content="foo")])
@@ -248,9 +248,9 @@ docs_with_score[1]
  1.2609431743621826)
 ```
 
-### Overriding a vectorstore
+### 覆盖向量存储
 
-If you have an existing collection, you override it by doing `from_documents` and setting `pre_delete_collection` = True
+如果你有一个现有的 collection，可以通过调用 `from_documents` 并设置 `pre_delete_collection` = True 来覆盖它。
 
 ```python
 db = Kinetica.from_documents(
@@ -275,7 +275,7 @@ docs_with_score[0]
  1.260920763015747)
 ```
 
-### Using a VectorStore as a Retriever
+### 将 VectorStore 用作检索器（Retriever）
 
 ```python
 retriever = store.as_retriever()

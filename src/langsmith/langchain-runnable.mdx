@@ -1,18 +1,18 @@
 ---
-title: How to evaluate a runnable
-sidebarTitle: Evaluate a runnable
+title: 如何评估一个可运行对象 (Runnable)
+sidebarTitle: 评估 Runnable
 ---
 
 <Info>
-* `langchain`: [Python](https://python.langchain.com) and [JS/TS](https://js.langchain.com)
-* Runnable: [Python](https://python.langchain.com/docs/concepts/runnables/) and [JS/TS](https://js.langchain.com/docs/concepts/runnables/)
+* `langchain`: [Python](https://python.langchain.com) 和 [JS/TS](https://js.langchain.com)
+* Runnable: [Python](https://python.langchain.com/docs/concepts/runnables/) 和 [JS/TS](https://js.langchain.com/docs/concepts/runnables/)
 </Info>
 
-`langchain` [Runnable](https://python.langchain.com/docs/concepts/runnables/) objects (such as chat models, retrievers, chains, etc.) can be passed directly into `evaluate()` / `aevaluate()`.
+`langchain` 的 [Runnable](https://python.langchain.com/docs/concepts/runnables/) 对象（例如聊天模型、检索器、链等）可以直接传递给 `evaluate()` / `aevaluate()` 函数进行评估。
 
-## Setup
+## 设置 (Setup)
 
-Let's define a simple chain to evaluate. First, install all the required packages:
+让我们定义一个简单的链 (chain) 来进行评估。首先，安装所有必需的包：
 
 <CodeGroup>
 
@@ -26,7 +26,7 @@ yarn add langsmith @langchain/openai
 
 </CodeGroup>
 
-Now define a chain:
+然后定义这个链：
 
 <CodeGroup>
 
@@ -36,9 +36,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 instructions = (
-    "Please review the user query below and determine if it contains any form "
-    "of toxic behavior, such as insults, threats, or highly negative comments. "
-    "Respond with 'Toxic' if it does, and 'Not toxic' if it doesn't."
+    "请审核以下用户查询，判断其中是否包含任何形式的有毒行为，例如侮辱、威胁或严重负面的评论。如果包含，请回复 'Toxic'；如果不包含，请回复 'Not toxic'。"
 )
 
 prompt = ChatPromptTemplate(
@@ -66,9 +64,9 @@ const chain = prompt.pipe(chatModel).pipe(outputParser);
 
 </CodeGroup>
 
-## Evaluate
+## 评估 (Evaluate)
 
-To evaluate our chain we can pass it directly to the `evaluate()` / `aevaluate()` method. Note that the input variables of the chain must match the keys of the example inputs. In this case, the example inputs should have the form `{"text": "..."}`.
+为了评估我们的链，我们可以直接将其传递给 `evaluate()` / `aevaluate()` 方法。请注意，链的输入变量名必须与示例输入数据的键 (keys) 相匹配。在这种情况下，示例输入数据应具有 `{"text": "..."}` 的形式。
 
 <CodeGroup>
 
@@ -77,15 +75,14 @@ from langsmith import aevaluate, Client
 
 client = Client()
 
-# Clone a dataset of texts with toxicity labels.
-# Each example input has a "text" key and each output has a "label" key.
+# 克隆一个包含文本及其毒性标签的数据集。
+# 每个示例输入都有一个 "text" 键，每个输出（期望值）都有一个 "label" 键。
 dataset = client.clone_public_dataset(
     "https://smith.langchain.com/public/3d6831e6-1680-4c88-94df-618c8e01fc55/d"
 )
 
 def correct(outputs: dict, reference_outputs: dict) -> bool:
-    # Since our chain outputs a string not a dict, this string
-    # gets stored under the default "output" key in the outputs dict:
+    # 由于我们的链输出的是一个字符串而不是字典，这个字符串会存储在 outputs 字典的默认 "output" 键下：
     actual = outputs["output"]
     expected = reference_outputs["label"]
     return actual == expected
@@ -117,10 +114,10 @@ await evaluate(chain, {
 
 </CodeGroup>
 
-The runnable is traced appropriately for each output.
+Runnable 会针对每个输出进行适当的跟踪 (trace)。
 
 ![Runnable Evaluation](/langsmith/images/runnable-eval.png)
 
-## Related
+## 相关 (Related)
 
-* [How to evaluate a `langgraph` graph](/langsmith/evaluate-on-intermediate-steps)
+* [如何评估 `langgraph` 图](/langsmith/evaluate-on-intermediate-steps)

@@ -2,30 +2,30 @@
 title: IBM watsonx.ai
 ---
 
-This example shows how to use `langchain-ibm` `watsonx.ai` SQL Database Toolkit that uses Flight service.
+此示例展示了如何使用 `langchain-ibm` 中的 `watsonx.ai` SQL 数据库工具包（Toolkit），该工具包使用了 Flight 服务。
 
 <Warning>
-Building Q&A systems of SQL databases requires executing model-generated SQL queries, which carries inherent security risks. Make sure that your database connection permissions are always scoped as narrowly as possible for your agent's needs. This will mitigate, though not eliminate, the risks of building a model-driven system.
+构建 SQL 数据库的问答系统需要执行模型生成的 SQL 查询，这带有固有的安全风险。请确保您的数据库连接权限始终根据您 Agent 的需求进行尽可能严格的范围限制。这将有助于减轻（但不能完全消除）构建模型驱动的系统的风险。
 </Warning>
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Serializable | [JS support](https://js.langchain.com/docs/integrations/toolkits/ibm/) | Downloads | Version |
+| 类 (Class) | 包 (Package) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/toolkits/ibm/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | [`WatsonxSQLDatabaseToolkit`](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxToolkit/) | [`langchain-ibm`](https://reference.langchain.com/python/integrations/langchain_ibm/) | ❌ | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-ibm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-ibm?style=flat-square&label=%20) |
 
-## Setup
+## 设置
 
-To access `langchain-ibm` SQL Database toolkit you'll need to create an IBM watsonx.ai account, get an API key, and install the `langchain-ibm` integration package.
+要访问 `langchain-ibm` SQL 数据库工具包，您需要创建一个 IBM watsonx.ai 账户，获取 API 密钥，并安装 `langchain-ibm` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-This cell defines the WML credentials required to work with watsonx SQL Database Toolkit.
+此单元格定义了使用 watsonx SQL 数据库工具包所需的 WML 凭证。
 
-**Action:** Provide the IBM Cloud user API key. For details, see
-[documentation](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui).
+**操作:** 提供 IBM Cloud 用户 API 密钥。详情请参见
+[文档](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)。
 
 ```python
 import os
@@ -35,7 +35,7 @@ watsonx_api_key = getpass()
 os.environ["WATSONX_APIKEY"] = watsonx_api_key
 ```
 
-Additionaly you are able to pass additional secrets as an environment variable.
+此外，您还能够通过环境变量传递额外的密钥信息。
 
 ```python
 import os
@@ -47,17 +47,17 @@ os.environ["WATSONX_USERNAME"] = "your username for accessing the CPD cluster"
 os.environ["WATSONX_INSTANCE_ID"] = "your instance_id for accessing the CPD cluster"
 ```
 
-### Installation
+### 安装
 
-The LangChain IBM integration lives in the `langchain-ibm` package:
+LangChain IBM 集成位于 `langchain-ibm` 包中：
 
 ```python
 pip install -qU "langchain-ibm[sql-toolkit]"
 ```
 
-## Instantiation
+## 实例化
 
-To set up the SQL Database toolkit, you must first instantiate the `WatsonxSQLDatabase` class, which retrieves necessary information from IBM watsonx.ai database connection assets via the Flight SQL client. For more details on creating the Database connection Asset programmatically see a watsonx.ai Python SDK [documentation](https://ibm.github.io/watsonx-ai-python-sdk/v1.4.7/autoai_working_with_dataconnection.html#connection-asset-databaselocation).
+要设置 SQL 数据库工具包，您必须首先实例化 `WatsonxSQLDatabase` 类。该类通过 Flight SQL 客户端从 IBM watsonx.ai 数据库连接资产中检索必要的信息。有关以编程方式创建数据库连接资产的更多详细信息，请参阅 watsonx.ai Python SDK 的 [文档](https://ibm.github.io/watsonx-ai-python-sdk/v1.4.7/autoai_working_with_dataconnection.html#connection-asset-databaselocation)。
 
 ```python
 from langchain_ibm.utilities.sql_database import WatsonxSQLDatabase
@@ -69,9 +69,9 @@ wx_sql_database = WatsonxSQLDatabase(
     )
 ```
 
-Alternatively, you can use Cloud Pak for Data credentials. For details, see [watsonx.ai software setup](https://ibm.github.io/watsonx-ai-python-sdk/setup_cpd.html).
+另外，您也可以使用 Cloud Pak for Data 凭证。详情请参阅 [watsonx.ai 软件设置](https://ibm.github.io/watsonx-ai-python-sdk/setup_cpd.html)。
 
-For certain requirements, there is an option to pass the IBM's [`APIClient`](https://ibm.github.io/watsonx-ai-python-sdk/base.html#apiclient) object into the `WatsonxSQLDatabase` class.
+对于某些特定需求，可以选择将 IBM 的 [`APIClient`](https://ibm.github.io/watsonx-ai-python-sdk/base.html#apiclient) 对象传递给 `WatsonxSQLDatabase` 类。
 
 ```python
 from ibm_watsonx_ai import APIClient
@@ -85,7 +85,7 @@ wx_sql_database = WatsonxSQLDatabse(
 )
 ```
 
-Finally, initialize the `WatsonxSQLDatabaseToolkit`.
+最后，初始化 `WatsonxSQLDatabaseToolkit`。
 
 ```python
 from langchain_ibm import ChatWatsonx
@@ -100,11 +100,11 @@ wx_sql_toolkit = WatsonxSQLDatabaseToolkit(
 )
 ```
 
-## Tools
+## 工具 (Tools)
 
-### Get all tools
+### 获取所有工具
 
-Running `.get_tools` method, one can get all available tools as a list.
+通过运行 `.get_tools` 方法，可以获取一个包含所有可用工具的列表。
 
 ```python
 wx_sql_toolkit.get_tools()
@@ -117,7 +117,7 @@ wx_sql_toolkit.get_tools()
  QuerySQLCheckerTool(description='Use this tool to double check if your query is correct before executing it. Always use this tool before executing a query with sql_db_query!', db=<langchain_ibm.utilities.sql_database.WatsonxSQLDatabase object at 0x111c03810>, llm=ChatWatsonx(model_id='ibm/granite-3-3-8b-instruct', apikey=SecretStr('**********'), params={}, watsonx_model=<ibm_watsonx_ai.foundation_models.inference.model_inference.ModelInference object at 0x12aa12ed0>, watsonx_client=<ibm_watsonx_ai.client.APIClient object at 0x12aa12ad0>), llm_chain=PromptTemplate(input_variables=['query', 'schema'], input_types={}, partial_variables={}, template='\n{query}\nDouble check the query above for common mistakes, including:\n- Using NOT IN with NULL values\n- Using UNION when UNION ALL should have been used\n- Using BETWEEN for exclusive ranges\n- Data type mismatch in predicates\n- Properly quoting identifiers\n- Using the correct number of arguments for functions\n- Casting to the correct data type\n- Using the proper columns for joins\n- Make sure that schema name `{schema}` is added to the table name, e.g. {schema}.table1\n\nIf there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.\n\nOutput the final SQL query only.\n\nSQL Query: ')
  | ChatWatsonx(model_id='ibm/granite-3-3-8b-instruct', apikey=SecretStr('**********'), params={}, watsonx_model=<ibm_watsonx_ai.foundation_models.inference.model_inference.ModelInference object at 0x12aa12ed0>, watsonx_client=<ibm_watsonx_ai.client.APIClient object at 0x12aa12ad0>))]
 ```
-You can use the individual tools directly:
+您可以直接使用各个工具：
 
 ```python
 from langchain_ibm.agent_toolkits.sql.tool import (
@@ -128,7 +128,7 @@ from langchain_ibm.agent_toolkits.sql.tool import (
 )
 ```
 
-## Use within an agent
+## 在 Agent 中使用
 
 ```python
 from langchain_ibm import ChatWatsonx
@@ -143,19 +143,22 @@ llm = ChatWatsonx(
 ```python
 from langgraph.prebuilt import create_react_agent
 
-# Use one of the prompt from langchain hub
+# 从 langchain hub 中拉取一个提示模板
 from langchain import hub
 
 prompt_template = hub.pull("langchain-ai/sql-agent-system-prompt")
+# 格式化系统消息，指定方言和返回前 K 个结果
 system_message = prompt_template.format(dialect="PostgreSQL", top_k=5)
 
+# 创建 Agent 执行器
 agent_executor = create_react_agent(llm, wx_sql_toolkit.get_tools(), prompt=system_message, debug=True)
 ```
 
 ```python
 example_query = "What city has the highest population?"
 
-events = agent.stream(
+# 假设 agent 变量已定义，这里使用 agent 变量进行 streaming
+events = agent_executor.stream(
     {"messages": [("user", example_query)]},
     stream_mode="values",
 )
@@ -227,6 +230,6 @@ The city with the largest population is Warsaw.
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `WatsonxSQLDatabaseToolkit` features and configurations head to the [API reference](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxSQLDatabaseToolkit/).
+有关 `WatsonxSQLDatabaseToolkit` 所有功能和配置的详细文档，请查阅 [API 参考](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxSQLDatabaseToolkit/)。

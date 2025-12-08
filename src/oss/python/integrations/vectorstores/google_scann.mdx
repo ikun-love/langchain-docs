@@ -2,23 +2,23 @@
 title: ScaNN
 ---
 
-ScaNN (Scalable Nearest Neighbors) is a method for efficient vector similarity search at scale.
+ScaNN（Scalable Nearest Neighbors，可扩展的最近邻）是一种用于大规模、高效向量相似性搜索的方法。
 
-ScaNN includes search space pruning and quantization for Maximum Inner Product Search and also supports other distance functions such as Euclidean distance. The implementation is optimized for x86 processors with AVX2 support. See its [Google Research github](https://github.com/google-research/google-research/tree/master/scann) for more details.
+ScaNN 包含用于最大内积搜索（Maximum Inner Product Search, MIPS）的空间剪枝和量化技术，同时也支持欧几里得距离等其他距离函数。该实现针对支持 AVX2 的 x86 处理器进行了优化。更多详情请参阅其 [Google Research github](https://github.com/google-research/google-research/tree/master/scann)。
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+您需要使用 `pip install -qU langchain-community` 安装 `langchain-community` 才能使用此集成。
 
-## Installation
+## 安装
 
-Install ScaNN through pip. Alternatively, you can follow instructions on the [ScaNN Website](https://github.com/google-research/google-research/tree/master/scann#building-from-source) to install from source.
+通过 pip 安装 ScaNN。或者，您可以按照 [ScaNN 网站](https://github.com/google-research/google-research/tree/master/scann#building-from-source) 上的说明从源代码安装。
 
 ```python
 pip install -qU  scann
 ```
 
-## Retrieval Demo
+## 检索演示 (Retrieval Demo)
 
-Below we show how to use ScaNN in conjunction with Huggingface Embeddings.
+下面我们展示如何将 ScaNN 与 Huggingface Embeddings 结合使用。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -42,11 +42,11 @@ docs = db.similarity_search(query)
 docs[0]
 ```
 
-## RetrievalQA Demo
+## 检索 QA 演示 (RetrievalQA Demo)
 
-Next, we demonstrate using ScaNN in conjunction with Google PaLM API.
+接下来，我们演示将 ScaNN 与 Google PaLM API 结合使用。
 
-You can obtain an API key from [developers.generativeai.google/tutorials/setup](https://developers.generativeai.google/tutorials/setup)
+您可以在 [developers.generativeai.google/tutorials/setup](https://developers.generativeai.google/tutorials/setup) 获取 API 密钥。
 
 ```python
 from langchain.chains import RetrievalQA
@@ -77,7 +77,7 @@ print(qa.run("What did the president say about Michael Phelps?"))
 The president did not mention Michael Phelps in his speech.
 ```
 
-## Save and loading local retrieval index
+## 保存和加载本地检索索引
 
 ```python
 db.save_local("/tmp/db", "state_of_union")

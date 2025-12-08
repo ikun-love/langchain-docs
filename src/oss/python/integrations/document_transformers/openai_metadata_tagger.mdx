@@ -1,14 +1,14 @@
 ---
-title: OpenAI metadata tagger
+title: OpenAI 元数据标签器
 ---
 
-It can often be useful to tag ingested documents with structured metadata, such as the title, tone, or length of a document, to allow for a more targeted similarity search later. However, for large numbers of documents, performing this labelling process manually can be tedious.
+在摄取文档时，通常需要用结构化的元数据（例如文档的标题、语气或长度）对其进行标记，以便后续进行更有针对性的相似性搜索。然而，对于大量的文档来说，手动完成标记过程可能会非常繁琐。
 
-The `OpenAIMetadataTagger` document transformer automates this process by extracting metadata from each provided document according to a provided schema. It uses a configurable `OpenAI Functions`-powered chain under the hood, so if you pass a custom LLM instance, it must be an OpenAI model with functions support.
+`OpenAIMetadataTagger` 文档转换器通过根据提供的 Schema 从每个文档中提取元数据来自动执行此过程。它在底层使用可配置的 `OpenAI Functions` 驱动的链，因此如果您传入一个自定义的 LLM 实例，它必须是一个支持函数调用的 OpenAI 模型。
 
-**Note:** This document transformer works best with complete documents, so it's best to run it first with whole documents before doing any other splitting or processing!
+**注意：** 此文档转换器最适用于完整的文档，因此最好先用完整文档运行它，然后再进行任何其他分割或处理！
 
-For example, let's say you wanted to index a set of movie reviews. You could initialize the document transformer with a valid `JSON Schema` object as follows:
+例如，假设您想要索引一组电影评论。您可以像下面这样，使用一个有效的 `JSON Schema` 对象来初始化文档转换器：
 
 ```python
 from langchain_community.document_transformers.openai_functions import (
@@ -26,19 +26,19 @@ schema = {
         "tone": {"type": "string", "enum": ["positive", "negative"]},
         "rating": {
             "type": "integer",
-            "description": "The number of stars the critic rated the movie",
+            "description": "影评人给电影打的星级数",
         },
     },
     "required": ["movie_title", "critic", "tone"],
 }
 
-# Must be an OpenAI model that supports functions
+# 必须是支持函数调用的 OpenAI 模型
 llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613")
 
 document_transformer = create_metadata_tagger(metadata_schema=schema, llm=llm)
 ```
 
-You can then simply pass the document transformer a list of documents, and it will extract metadata from the contents:
+然后，您可以简单地将文档列表传递给文档转换器，它就会从内容中提取元数据：
 
 ```python
 original_documents = [
@@ -81,9 +81,9 @@ This movie was super boring. 1 out of 5 stars.
 {"movie_title": "The Godfather", "critic": "Anonymous", "tone": "negative", "rating": 1, "reliable": false}
 ```
 
-The new documents can then be further processed by a text splitter before being loaded into a vector store. Extracted fields will not overwrite existing metadata.
+新的文档随后可以由文本分割器进一步处理，然后再加载到向量存储中。提取的字段不会覆盖现有的元数据。
 
-You can also initialize the document transformer with a Pydantic schema:
+您也可以使用 Pydantic Schema 来初始化文档转换器：
 
 ```python
 from typing import Literal
@@ -95,7 +95,7 @@ class Properties(BaseModel):
     movie_title: str
     critic: str
     tone: Literal["positive", "negative"]
-    rating: int = Field(description="Rating out of 5 stars")
+    rating: int = Field(description="5 星制评分")
 
 
 document_transformer = create_metadata_tagger(Properties, llm)
@@ -125,16 +125,16 @@ This movie was super boring. 1 out of 5 stars.
 {"movie_title": "The Godfather", "critic": "Anonymous", "tone": "negative", "rating": 1, "reliable": false}
 ```
 
-## Customization
+## 定制化 (Customization)
 
-You can pass the underlying tagging chain the standard LLMChain arguments in the document transformer constructor. For example, if you wanted to ask the LLM to focus specific details in the input documents, or extract metadata in a certain style, you could pass in a custom prompt:
+您可以将标准的 LLMChain 参数传递给文档转换器构造函数中的底层标记链。例如，如果您想让 LLM 关注输入文档中的特定细节，或者以某种特定风格提取元数据，您可以传入一个自定义提示词：
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 
 prompt = ChatPromptTemplate.from_template(
-    """Extract relevant information from the following text.
-Anonymous critics are actually Roger Ebert.
+    """请从以下文本中提取相关信息。
+匿名影评人实际上是 Roger Ebert。
 
 {input}
 """

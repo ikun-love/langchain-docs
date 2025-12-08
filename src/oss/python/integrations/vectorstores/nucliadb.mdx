@@ -2,15 +2,15 @@
 title: NucliaDB
 ---
 
-You can use a local NucliaDB instance or use [Nuclia Cloud](https://nuclia.cloud).
+您可以使用本地的 NucliaDB 实例，也可以使用 [Nuclia Cloud](https://nuclia.cloud)。
 
-When using a local instance, you need a Nuclia Understanding API key, so your texts are properly vectorized and indexed. You can get a key by creating a free account at [https://nuclia.cloud](https://nuclia.cloud), and then [create a NUA key](https://docs.nuclia.dev/docs/docs/using/understanding/intro).
+在使用本地实例时，您需要一个 Nuclia 知识理解 API 密钥（Nuclia Understanding API key），这样您的文本才能被正确地向量化和索引。您可以通过在 [https://nuclia.cloud](https://nuclia.cloud) 创建一个免费账户来获取密钥，然后 [创建一个 NUA 密钥](https://docs.nuclia.dev/docs/docs/using/understanding/intro)。
 
-```python
+```bash
 pip install -qU  langchain langchain-community nuclia
 ```
 
-## Usage with nuclia.cloud
+## 在 nuclia.cloud 上使用
 
 ```python
 from langchain_community.vectorstores.nucliadb import NucliaDB
@@ -20,9 +20,9 @@ API_KEY = "YOUR_API_KEY"
 ndb = NucliaDB(knowledge_box="YOUR_KB_ID", local=False, api_key=API_KEY)
 ```
 
-## Usage with a local instance
+## 在本地实例上使用
 
-Note: By default `backend` is set to `http://localhost:8080`.
+注意：默认情况下，`backend` 设置为 `http://localhost:8080`。
 
 ```python
 from langchain_community.vectorstores.nucliadb import NucliaDB
@@ -30,7 +30,7 @@ from langchain_community.vectorstores.nucliadb import NucliaDB
 ndb = NucliaDB(knowledge_box="YOUR_KB_ID", local=True, backend="http://my-local-server")
 ```
 
-## Add and delete texts to your Knowledge Box
+## 向知识库添加和删除文本
 
 ```python
 ids = ndb.add_texts(["This is a new test", "This is a second test"])
@@ -40,7 +40,7 @@ ids = ndb.add_texts(["This is a new test", "This is a second test"])
 ndb.delete(ids=ids)
 ```
 
-## Search in your Knowledge Box
+## 在知识库中搜索
 
 ```python
 results = ndb.similarity_search("Who was inspired by Ada Lovelace?")

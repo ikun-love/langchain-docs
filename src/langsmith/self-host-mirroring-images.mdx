@@ -1,59 +1,59 @@
 ---
-title: Mirror images for your LangSmith installation
-sidebarTitle: Mirror images for your installation
+title: LangSmith 安装的镜像
+sidebarTitle: 安装镜像
 ---
 
-By default, LangSmith will pull images from our public Docker registry. However, if you are running LangSmith in an environment that does not have internet access, or if you would like to use a private Docker registry, you can mirror the images to your own registry and then configure your LangSmith installation to use those images.
+默认情况下，LangSmith 会从我们的公共 Docker 注册表拉取（pull）镜像。但是，如果您在没有互联网访问的环境中运行 LangSmith，或者您希望使用私有 Docker 注册表，您可以将这些镜像[镜像（mirror）]到您自己的注册表中，然后配置您的 LangSmith 安装以使用这些镜像。
 
-## Requirements
+## 要求
 
-* Authenticated access to a Docker registry that your Kubernetes cluster/machine has access to.
-* Docker installed on your local machine or a machine that has access to the Docker registry.
-* A Kubernetes cluster or a machine where you can run LangSmith.
+* 能够访问一个您的 Kubernetes 集群/机器可以访问的、经过身份验证的 Docker 注册表。
+* 在您的本地机器或有权访问 Docker 注册表的机器上安装了 Docker。
+* 一个可以运行 LangSmith 的 Kubernetes 集群或机器。
 
-## Mirroring the Images
+## 镜像化镜像
 
-For your convenience, we have provided a script that will mirror the images for you. You can find the script in the [LangSmith Helm Chart repository](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/mirror_langsmith_images.sh)
+为了方便您操作，我们提供了一个脚本来为您镜像（mirror）这些镜像。您可以在 [LangSmith Helm Chart 仓库](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/mirror_langsmith_images.sh) 中找到该脚本。
 
-To use the script, you will need to run the script with the following command specifying your registry and platform:
+要使用该脚本，您需要使用以下命令运行它，并指定您的注册表（registry）和平台（platform）：
 
 ```bash
 bash mirror_images.sh <your-registry> [<platform>]
 ```
 
-Where `<your-registry>` is the URL of your Docker registry (e.g. `myregistry.com`) and `<platform>` is the platform you are using (e.g. `linux/amd64`, `linux/arm64`, etc.). If you do not specify a platform, it will default to `linux/amd64`.
+其中 `<your-registry>` 是您的 Docker 注册表的 URL（例如 `myregistry.com`），而 `<platform>` 是您正在使用的平台（例如 `linux/amd64`，`linux/arm64` 等）。如果您没有指定平台，它将默认为 `linux/amd64`。
 
-For example, if your registry is `myregistry.com`, your platform is `linux/arm64`, and you want to use the latest version of the images, you would run:
+例如，如果您的注册表是 `myregistry.com`，您的平台是 `linux/arm64`，并且您想使用最新版本的镜像，您将运行：
 
 ```bash
 bash mirror_langsmith_images.sh --registry myregistry --platform linux/arm64 --version 0.10.66
 ```
 
-Note that this script will assume that you have Docker installed and that you are authenticated to your registry. It will also push the images to the specified registry with the same repository/tag as the original images.
+请注意，此脚本会假定您已经安装了 Docker 并且已对您的注册表进行了身份验证。它还将使用与原始镜像相同的仓库/标签（repository/tag）将镜像推送到指定的注册表。
 
-Alternatively, you can pull, mirror, and push the images manually. The images that you will need to mirror are found in the `values.yaml` file of the LangSmith Helm Chart. These can be found here: [LangSmith Helm Chart values.yaml](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/values.yaml#L14)
+或者，您可以手动拉取、镜像和推送这些镜像。您需要镜像的镜像位于 LangSmith Helm Chart 的 `values.yaml` 文件中。您可以在 [LangSmith Helm Chart values.yaml](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/values.yaml#L14) 中找到它们。
 
-Here is an example of how to mirror the images using Docker:
+下面是一个使用 Docker 镜像这些镜像的示例：
 
 ```bash
-# Pull the images from the public registry
+# 从公共注册表拉取镜像
 docker pull langchain/langsmith-backend:latest
 docker tag langchain/langsmith-backend:latest <your-registry>/langsmith-backend:latest
 docker push <your-registry>/langsmith-backend:latest
 ```
 
-You will need to repeat this for each image that you want to mirror.
+您需要对每个您想要镜像的镜像重复此操作。
 
-## Configuration
+## 配置
 
-Once the images are mirrored, you will need to configure your LangSmith installation to use the mirrored images. You can do this by modifying the `values.yaml` file for your LangSmith Helm Chart installation or the `.env` file for your Docker installation. Replace tag with the version you want to use, e.g. `0.10.66` for the latest version at the time of writing.
+一旦镜像被镜像完成，您需要配置您的 LangSmith 安装以使用这些镜像。您可以通过修改 LangSmith Helm Chart 安装的 `values.yaml` 文件，或修改 Docker 安装的 `.env` 文件来实现。将标签（tag）替换为您想要使用的版本，例如，在撰写本文时使用 `0.10.66` 代表最新版本。
 
 <CodeGroup>
 
 ```yaml Helm
 images:
-  imagePullSecrets: [] # Add your image pull secrets here if needed
-  registry: "" # Set this to your registry URL if you mirrored all images to the same registry using our script. Then you can remove the repository prefix from the images below.
+  imagePullSecrets: [] # 如果需要，请在此处添加您的镜像拉取密钥
+  registry: "" # 如果您使用我们的脚本将所有镜像镜像到同一个注册表，请将此设置为您的注册表 URL。然后您可以从下面的镜像中移除仓库前缀。
   aceBackendImage:
     repository: "(your-registry)/langchain/langsmith-ace-backend"
     pullPolicy: IfNotPresent
@@ -97,10 +97,10 @@ images:
 ```
 
 ```bash Docker
-# In your .env file
-_REGISTRY=your-registry # Set this to your registry URL if you mirrored all images to the same registry using our script. Otherwise you will need to manually set the repository for each image in the compose file.
+# 在您的 .env 文件中
+_REGISTRY=your-registry # 如果您使用我们的脚本将所有镜像镜像到同一个注册表，请将此设置为您的注册表 URL。否则，您需要在 compose 文件中为每个镜像手动设置仓库。
 ```
 
 </CodeGroup>
 
-Once configured, you will need to update your LangSmith installation. You can follow our upgrade guide here: [Upgrading LangSmith](/langsmith/self-host-upgrades).If your upgrade is successful, your LangSmith instance should now be using the mirrored images from your Docker registry.
+配置完成后，您需要更新您的 LangSmith 安装。您可以在此处遵循我们的升级指南：[升级 LangSmith](/langsmith/self-host-upgrades)。如果您的升级成功，您的 LangSmith 实例现在应该正在使用来自您的 Docker 注册表的镜像了。

@@ -1,19 +1,18 @@
 ---
-title: JSON Toolkit
+title: JSON 工具包
 ---
 
-This notebook showcases an agent interacting with large `JSON/dict` objects.
-This is useful when you want to answer questions about a JSON blob that's too large to fit in the context window of an LLM. The agent is able to iteratively explore the blob to find what it needs to answer the user's question.
+本 Notebook 展示了一个智能体（agent）如何与大型 `JSON/dict` 对象进行交互。当你想回答关于某个 JSON 数据块的问题，但该数据块太大而无法完全放入 LLM 的上下文窗口时，这一点非常有用。该智能体能够迭代地探索数据块，以找到回答用户问题所需的信息。
 
-In the below example, we are using the OpenAPI spec for the OpenAI API, which you can find [here](https://github.com/openai/openai-openapi/blob/master/openapi.yaml).
+在下面的示例中，我们将使用 OpenAI API 的 OpenAPI 规范文件，你可以在 [此处](https://github.com/openai/openai-openapi/blob/master/openapi.yaml) 找到该文件。
 
-We will use the JSON agent to answer some questions about the API spec.
+我们将使用 JSON 智能体来回答关于 API 规范的一些问题。
 
 ```python
 pip install -qU langchain-community
 ```
 
-## Initialization
+## 初始化
 
 ```python
 import yaml
@@ -33,9 +32,9 @@ json_agent_executor = create_json_agent(
 )
 ```
 
-## Individual tools
+## 单个工具
 
-Let's see what individual tools are inside the Jira toolkit.
+让我们看看 Jira 工具包中包含的单个工具。
 
 ```python
 [(el.name, el.description) for el in json_toolkit.get_tools()]
@@ -43,12 +42,12 @@ Let's see what individual tools are inside the Jira toolkit.
 
 ```output
 [('json_spec_list_keys',
-  '\n    Can be used to list all keys at a given path. \n    Before calling this you should be SURE that the path to this exists.\n    The input is a text representation of the path to the dict in Python syntax (e.g. data["key1"][0]["key2"]).\n    '),
+  '\n    可用于列出给定路径下的所有键。 \n    在调用此工具前，你应该确保该路径存在。\n    输入是该字典路径的文本表示（例如 data["key1"][0]["key2"]）。\n    '),
  ('json_spec_get_value',
-  '\n    Can be used to see value in string format at a given path.\n    Before calling this you should be SURE that the path to this exists.\n    The input is a text representation of the path to the dict in Python syntax (e.g. data["key1"][0]["key2"]).\n    ')]
+  '\n    可用于以字符串格式查看给定路径下的值。\n    在调用此工具前，你应该确保该路径存在。\n    输入是该字典路径的文本表示（例如 data["key1"][0]["key2"]）。\n    ')]
 ```
 
-## Example: getting the required POST parameters for a request
+## 示例：获取请求所需的 POST 参数
 
 ```python
 json_agent_executor.run(
@@ -61,51 +60,51 @@ json_agent_executor.run(
 Action: json_spec_list_keys
 Action Input: data
 Observation: ['openapi', 'info', 'servers', 'tags', 'paths', 'components', 'x-oaiMeta']
-Thought: I should look at the paths key to see what endpoints exist
+Thought: 我应该查看 paths 键以了解存在哪些端点
 Action: json_spec_list_keys
 Action Input: data["paths"]
 Observation: ['/engines', '/engines/{engine_id}', '/completions', '/edits', '/images/generations', '/images/edits', '/images/variations', '/embeddings', '/engines/{engine_id}/search', '/files', '/files/{file_id}', '/files/{file_id}/content', '/answers', '/classifications', '/fine-tunes', '/fine-tunes/{fine_tune_id}', '/fine-tunes/{fine_tune_id}/cancel', '/fine-tunes/{fine_tune_id}/events', '/models', '/models/{model}', '/moderations']
-Thought: I should look at the /completions endpoint to see what parameters are required
+Thought: 我应该查看 /completions 端点以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]
 Observation: ['post']
-Thought: I should look at the post key to see what parameters are required
+Thought: 我应该查看 post 键以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]["post"]
 Observation: ['operationId', 'tags', 'summary', 'requestBody', 'responses', 'x-oaiMeta']
-Thought: I should look at the requestBody key to see what parameters are required
+Thought: 我应该查看 requestBody 键以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]
 Observation: ['required', 'content']
-Thought: I should look at the required key to see what parameters are required
+Thought: 我应该查看 required 键以确定需要哪些参数
 Action: json_spec_get_value
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]["required"]
 Observation: True
-Thought: I should look at the content key to see what parameters are required
+Thought: 我应该查看 content 键以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]["content"]
 Observation: ['application/json']
-Thought: I should look at the application/json key to see what parameters are required
+Thought: 我应该查看 application/json 键以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]["content"]["application/json"]
 Observation: ['schema']
-Thought: I should look at the schema key to see what parameters are required
+Thought: 我应该查看 schema 键以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]["content"]["application/json"]["schema"]
 Observation: ['$ref']
-Thought: I should look at the $ref key to see what parameters are required
+Thought: 我应该查看 $ref 键以确定需要哪些参数
 Action: json_spec_get_value
 Action Input: data["paths"]["/completions"]["post"]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
 Observation: #/components/schemas/CreateCompletionRequest
-Thought: I should look at the CreateCompletionRequest schema to see what parameters are required
+Thought: 我应该查看 CreateCompletionRequest schema 以确定需要哪些参数
 Action: json_spec_list_keys
 Action Input: data["components"]["schemas"]["CreateCompletionRequest"]
 Observation: ['type', 'properties', 'required']
-Thought: I should look at the required key to see what parameters are required
+Thought: 我应该查看 required 键以确定需要哪些参数
 Action: json_spec_get_value
 Action Input: data["components"]["schemas"]["CreateCompletionRequest"]["required"]
 Observation: ['model']
-Thought: I now know the final answer
+Thought: 我现在知道了最终答案
 Final Answer: The required parameters in the request body to the /completions endpoint are 'model'.
 
 > Finished chain.

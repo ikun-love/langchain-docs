@@ -1,22 +1,22 @@
 ---
-title: How to evaluate an application's intermediate steps
-sidebarTitle: Evaluate intermediate steps
+title: 如何评估应用程序的中间步骤
+sidebarTitle: 评估中间步骤
 ---
 
-While, in many scenarios, it is sufficient to evaluate the final output of your task, in some cases you might want to evaluate the intermediate steps of your pipeline.
+虽然在许多场景下，评估任务的最终输出就足够了，但在某些情况下，您可能希望评估管道（pipeline）的中间步骤。
 
-For example, for retrieval-augmented generation (RAG), you might want to
+例如，对于检索增强生成（RAG）任务，您可能希望：
 
-1. Evaluate the retrieval step to ensure that the correct documents are retrieved w\.r.t the input query.
-2. Evaluate the generation step to ensure that the correct answer is generated w\.r.t the retrieved documents.
+1. 评估检索（retrieval）步骤，以确保相对于输入查询检索到了正确的文档。
+2. 评估生成（generation）步骤，以确保相对于检索到的文档生成了正确的答案。
 
-In this guide, we will use a simple, fully-custom evaluator for evaluating criteria 1 and an LLM-based evaluator for evaluating criteria 2 to highlight both scenarios.
+在本指南中，我们将使用一个简单的、完全自定义的评估器来评估标准 1，并使用一个基于 LLM 的评估器来评估标准 2，以突出这两种场景。
 
-In order to evaluate the intermediate steps of your pipeline, your evaluator function should traverse and process the `run`/`rootRun` argument, which is a `Run` object that contains the intermediate steps of your pipeline.
+为了评估管道的中间步骤，您的评估函数需要遍历并处理 `[run](https://docs.smith.langsmith.com/docs/concepts/run) / rootRun` 参数。该参数是一个 `Run` 对象，其中包含了管道的中间步骤信息。
 
-## 1. Define your LLM pipeline
+## 1. 定义您的 LLM 管道
 
-The below RAG pipeline consists of 1) generating a Wikipedia query given the input question, 2) retrieving relevant documents from Wikipedia, and 3) generating an answer given the retrieved documents.
+下面的 RAG 管道包括 1) 根据输入问题生成维基百科查询，2) 从维基百科检索相关文档，以及 3) 根据检索到的文档生成答案。
 
 <CodeGroup>
 
@@ -30,7 +30,7 @@ yarn add langsmith langchain @langchain/openai wikipedia
 
 </CodeGroup>
 
-Requires `langsmith>=0.3.13`
+需要 `langsmith>=0.3.13`
 
 <CodeGroup>
 
@@ -43,11 +43,11 @@ oai_client = wrappers.wrap_openai(OpenAI())
 
 @traceable
 def generate_wiki_search(question: str) -> str:
-    """Generate the query to search in wikipedia."""
+    """根据问题生成要在维基百科中搜索的查询。"""
     instructions = (
-        "Generate a search query to pass into wikipedia to answer the user's question. "
-        "Return only the search query and nothing more. "
-        "This will passed in directly to the wikipedia search engine."
+        "请生成一个搜索查询以传递给维基百科来回答用户的问题。 "
+        "只返回搜索查询，不要返回任何其他内容。 "
+        "这将直接传递给维基百科搜索引擎。"
     )
     messages = [
         {"role": "system", "content": instructions},
@@ -62,7 +62,7 @@ def generate_wiki_search(question: str) -> str:
 
 @traceable(run_type="retriever")
 def retrieve(query: str) -> list:
-    """Get up to two search wikipedia results."""
+    """获取最多两个维基百科搜索结果。"""
     results = []
     for term in wp.search(query, results = 10):
         try:
@@ -79,8 +79,8 @@ def retrieve(query: str) -> list:
 
 @traceable
 def generate_answer(question: str, context: str) -> str:
-    """Answer the question based on the retrieved information."""
-    instructions = f"Answer the user's question based ONLY on the content below:\n\n{context}"
+    """根据检索到的信息回答问题。"""
+    instructions = f"请仅根据以下内容回答用户的问题：\n\n{context}"
     messages = [
         {"role": "system", "content": instructions},
         {"role": "user", "content": question}
@@ -94,7 +94,7 @@ def generate_answer(question: str, context: str) -> str:
 
 @traceable
 def qa_pipeline(question: str) -> str:
-    """The full pipeline."""
+    """完整的管道流程。"""
     query = generate_wiki_search(question)
     context = "\n\n".join([doc["page_content"] for doc in retrieve(query)])
     return generate_answer(question, context)
@@ -115,7 +115,7 @@ const generateWikiSearch = traceable(
       {
         role: "system" as const,
         content:
-          "Generate a search query to pass into Wikipedia to answer the user's question. Return only the search query and nothing more. This will be passed in directly to the Wikipedia search engine.",
+          "请生成一个搜索查询以传递给 Wikipedia 来回答用户的问题。只返回搜索查询，不要返回任何其他内容。这将直接传递给 Wikipedia 搜索引擎。",
       },
       { role: "user" as const, content: input.question },
     ];
@@ -139,7 +139,7 @@ const retrieve = traceable(
     }> = [];
     for (const result of results) {
       if (finalResults.length >= input.numDocuments) {
-        // Just return the top 2 pages for now
+        // 目前只返回前 2 个页面
         break;
       }
       const page = await wiki.page(result.title, { autoSuggest: false });
@@ -160,7 +160,7 @@ const generateAnswer = traceable(
     const messages = [
       {
         role: "system" as const,
-        content: `Answer the user's question based only on the content below:\n\n${input.context}`,
+        content: `请仅根据以下内容回答用户的问题：\n\n${input.context}`,
       },
       { role: "user" as const, content: input.question },
     ];
@@ -190,13 +190,13 @@ const ragPipeline = traceable(
 
 </CodeGroup>
 
-This pipeline will produce a trace that looks something like: ![evaluation_intermediate_trace.png](/langsmith/images/evaluation-intermediate-trace.png)
+此管道将产生一个执行追踪，其外观类似于：![evaluation\_intermediate\_trace.png](/langsmith/images/evaluation-intermediate-trace.png)
 
-## 2. Create a dataset and examples to evaluate the pipeline
+## 2. 创建数据集和示例以评估管道
 
-We are building a very simple dataset with a couple of examples to evaluate the pipeline.
+我们正在构建一个非常简单的数据集，其中包含几个示例来评估此管道。
 
-Requires `langsmith>=0.3.13`
+需要 `langsmith>=0.3.13`
 
 <CodeGroup>
 
@@ -241,13 +241,13 @@ await client.createExamples({ datasetId: dataset.id, inputs, outputs });
 
 </CodeGroup>
 
-## 3. Define your custom evaluators
+## 3. 定义您的自定义评估器
 
-As mentioned above, we will define two evaluators: one that evaluates the relevance of the retrieved documents w\.r.t the input query and another that evaluates the hallucination of the generated answer w\.r.t the retrieved documents. We will be using LangChain LLM wrappers, along with [`with_structured_output`](https://python.langchain.com/v0.1/docs/modules/model_io/chat/structured_output/) to define the evaluator for hallucination.
+如上所述，我们将定义两个评估器：一个评估检索文档相对于输入查询的相关性，另一个评估生成答案相对于检索文档的幻觉（hallucination）。我们将使用 LangChain LLM 包装器以及 [`with_structured_output`](https://python.langchain.com/v0.1/docs/modules/model_io/chat/structured_output/) 来定义幻觉评估器。
 
-The key here is that the evaluator function should traverse the `run` / `rootRun` argument to access the intermediate steps of the pipeline. The evaluator can then process the inputs and outputs of the intermediate steps to evaluate according to the desired criteria.
+这里的关键是评估函数应该遍历 `run` / `rootRun` 参数，以访问管道的中间步骤。然后，评估器可以根据所需的标准处理中间步骤的输入和输出。
 
-Example uses `langchain` for convenience, this is not required.
+示例使用 `langchain` 方便起见，这不是必需的。
 
 <CodeGroup>
 
@@ -257,25 +257,25 @@ from langsmith.schemas import Run
 from pydantic import BaseModel, Field
 
 def document_relevance(run: Run) -> bool:
-    """Checks if retriever input exists in the retrieved docs."""
+    """检查检索输入是否存在于检索到的文档中。"""
     qa_pipeline_run = next(
         r for run in run.child_runs if r.name == "qa_pipeline"
     )
     retrieve_run = next(
-        r for run in qa_pipeline_run.child_runs if r.name == "retrieve"
+        r for r in qa_pipeline_run.child_runs if r.name == "retrieve"
     )
     page_contents = "\n\n".join(
         doc["page_content"] for doc in retrieve_run.outputs["output"]
     )
     return retrieve_run.inputs["query"] in page_contents
 
-# Data model
+# 数据模型
 class GradeHallucinations(BaseModel):
-    """Binary score for hallucination present in generation answer."""
-    is_grounded: bool = Field(..., description="True if the answer is grounded in the facts, False otherwise.")
+    """关于生成答案中是否存在幻觉的二元评分。"""
+    is_grounded: bool = Field(..., description="如果答案基于事实，则为 True，否则为 False。")
 
-# LLM with structured output for grading hallucinations
-# For more see: https://python.langchain.com/docs/how_to/structured_output/
+# 用于评估幻觉的结构化输出 LLM
+# 更多信息请参阅：https://python.langchain.com/docs/how_to/structured_output/
 grader_llm= init_chat_model("gpt-4o-mini", temperature=0).with_structured_output(
     GradeHallucinations,
     method="json_schema",
@@ -283,10 +283,10 @@ grader_llm= init_chat_model("gpt-4o-mini", temperature=0).with_structured_output
 )
 
 def no_hallucination(run: Run) -> bool:
-    """Check if the answer is grounded in the documents.
-    Return True if there is no hallucination, False otherwise.
+    """检查答案是否基于文档。
+    如果没有幻觉，则返回 True，否则返回 False。
     """
-    # Get documents and answer
+    # 获取文档和答案
     qa_pipeline_run = next(
         r for r in run.child_runs if r.name == "qa_pipeline"
     )
@@ -297,15 +297,14 @@ def no_hallucination(run: Run) -> bool:
         doc["page_content"] for doc in retrieve_run.outputs["output"]
     )
 
-    # Construct prompt
+    # 构建提示
     instructions = (
-        "You are a grader assessing whether an LLM generation is grounded in / "
-        "supported by a set of retrieved facts. Give a binary score 1 or 0, "
-        "where 1 means that the answer is grounded in / supported by the set of facts."
+        "您是一名评估员，负责评估 LLM 生成的内容是否基于/得到一组检索到的事实的支持。 "
+        "给出二进制分数 1 或 0，其中 1 表示答案基于/得到事实集支持。"
     )
     messages = [
         {"role": "system", "content": instructions},
-        {"role": "user", "content": f"Set of facts:\n{retrieved_content}\n\nLLM generation: {run.outputs['answer']}"},
+        {"role": "user", "content": f"事实集：\n{retrieved_content}\n\nLLM 生成内容：{run.outputs['answer']}"},
     ]
     grade = grader_llm.invoke(messages)
     return grade.is_grounded
@@ -328,8 +327,7 @@ function findNestedRun(run: Run, search: (run: Run) => boolean): Run | null {
   return null;
 }
 
-// A very simple evaluator that checks to see if the input of the retrieval step exists
-// in the retrieved docs.
+// 一个非常简单的评估器，用于检查检索步骤的输入是否存在于检索到的文档中。
 function documentRelevance(rootRun: Run, example: Example): EvaluationResult {
   const retrieveRun = findNestedRun(rootRun, (run) => run.name === "retrieve");
   const docs: Array<{ page_content: string }> | undefined =
@@ -356,13 +354,13 @@ async function hallucination(
     [
       "system",
       [
-        `You are a grader assessing whether an LLM generation is grounded in / supported by a set of retrieved facts. \n`,
-        `Give a binary score 1 or 0, where 1 means that the answer is grounded in / supported by the set of facts.`,
+        `您是一名评估员，负责评估 LLM 生成的内容是否基于/得到一组检索到的事实的支持。 \n`,
+        `给出二进制分数 1 或 0，其中 1 表示答案是基于/得到事实集支持的。`,
       ].join("\n"),
     ],
     [
       "human",
-      "Set of facts: \n\n {documents} \n\n LLM generation: {generation}",
+      "事实集：\n\n {documents} \n\n LLM 生成内容：{generation}",
     ],
   ]);
 
@@ -374,9 +372,9 @@ async function hallucination(
       .object({
         binary_score: z
           .number()
-          .describe("Answer is grounded in the facts, 1 or 0"),
+          .describe("答案基于事实，1 或 0"),
       })
-      .describe("Binary score for hallucination present in generation answer.")
+      .describe("关于生成答案中是否存在幻觉的二元评分。")
   );
 
   const grader = prompt.pipe(llm);
@@ -390,15 +388,15 @@ async function hallucination(
 
 </CodeGroup>
 
-## 4. Evaluate the pipeline
+## 4. 评估管道
 
-Finally, we'll run `evaluate` with the custom evaluators defined above.
+最后，我们将使用上面定义的自定义评估器运行 `evaluate`。
 
 <CodeGroup>
 
 ```python Python
 def qa_wrapper(inputs: dict) -> dict:
-  """Wrap the qa_pipeline so it can accept the Example.inputs dict as input."""
+  """包装 qa_pipeline，使其可以接受 Example.inputs 字典作为输入。"""
   return {"answer": qa_pipeline(inputs["question"])}
 
 experiment_results = ls_client.evaluate(
@@ -421,8 +419,8 @@ await evaluate((inputs) => ragPipeline({ question: inputs.input }), {
 
 </CodeGroup>
 
-The experiment will contain the results of the evaluation, including the scores and comments from the evaluators: ![evaluation_intermediate_experiment.png](/langsmith/images/evaluation-intermediate-experiment.png)
+实验将包含评估结果，包括评估器的分数和评论：![evaluation\_intermediate\_experiment.png](/langsmith/images/evaluation-intermediate-experiment.png)
 
-## Related
+## 相关
 
-* [Evaluate a `langgraph` graph](/langsmith/evaluate-on-intermediate-steps)
+* [评估 `langgraph` 图](/langsmith/evaluate-on-intermediate-steps)

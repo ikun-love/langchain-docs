@@ -1,71 +1,71 @@
 ---
-title: Robocorp Toolkit
+title: Robocorp 工具包
 ---
 
-This notebook covers how to get started with [Robocorp Action Server](https://github.com/robocorp/robocorp) action toolkit and LangChain.
+本指南介绍了如何开始使用 [Robocorp Action Server](https://github.com/robocorp/robocorp) Action Toolkit 和 LangChain。
 
-Robocorp is the easiest way to extend the capabilities of AI agents, assistants and copilots with custom actions.
+Robocorp 是扩展 AI 智能体（Agents）、助手（Assistants）和副驾驶（Copilots）功能，以集成自定义操作（Actions）的最简便方法。
 
-## Installation
+## 安装
 
-First, see the [Robocorp Quickstart](https://github.com/robocorp/robocorp#quickstart) on how to setup `Action Server` and create your Actions.
+首先，请参考 [Robocorp 快速入门](https://github.com/robocorp/robocorp#quickstart) 了解如何设置 `Action Server` 并创建您的 Actions。
 
-In your LangChain application, install the `langchain-robocorp` package:
+在您的 LangChain 应用程序中，安装 `langchain-robocorp` 包：
 
 ```python
-# Install package
+# 安装包
 pip install -qU langchain-robocorp
 ```
 
-When you create the new `Action Server` following the above quickstart.
+当您按照上述快速入门指南创建新的 `Action Server` 时。
 
-It will create a directory with files, including `action.py`.
+它会创建一个包含文件的目录，其中包括 `action.py`。
 
-We can add python function as actions as shown [here](https://github.com/robocorp/robocorp/tree/master/actions#describe-your-action).
+我们可以像 [此处](https://github.com/robocorp/robocorp/tree/master/actions#describe-your-action) 所示那样，将 Python 函数添加为操作。
 
-Let's add a dummy function to `action.py`.
+让我们向 `action.py` 中添加一个虚拟函数。
 
 ```python
 @action
 def get_weather_forecast(city: str, days: int, scale: str = "celsius") -> str:
     """
-    Returns weather conditions forecast for a given city.
+    返回给定城市的天气预报。
 
     Args:
-        city (str): Target city to get the weather conditions for
-        days: How many day forecast to return
-        scale (str): Temperature scale to use, should be one of "celsius" or "fahrenheit"
+        city (str): 获取天气状况的目标城市
+        days: 需要返回的天气预报天数
+        scale (str): 要使用的温度单位，应为 "celsius" 或 "fahrenheit" 之一
 
     Returns:
-        str: The requested weather conditions forecast
+        str: 所请求的天气状况预报
     """
     return "75F and sunny :)"
 ```
 
-We then start the server:
+然后我们启动服务器：
 
 ```bash
 action-server start
 ```
 
-And we can see:
+您将看到：
 
 ```
 Found new action: get_weather_forecast
 
 ```
 
-Test locally by going to the server running at `http://localhost:8080` and use the UI to run the function.
+在本地测试：访问正在运行的服务器 `http://localhost:8080`，并使用 UI 来运行该函数。
 
-## Environment Setup
+## 环境设置
 
-Optionally you can set the following environment variables:
+您可以选择设置以下环境变量：
 
-- `LANGSMITH_TRACING=true`: To enable LangSmith log run tracing that can also be bind to respective Action Server action run logs. See [LangSmith documentation](https://docs.smith.langchain.com/tracing#log-runs) for more.
+- `LANGSMITH_TRACING=true`：启用 LangSmith 运行追踪日志，此日志也可以绑定到相应的 Action Server 操作运行日志。更多信息请参阅 [LangSmith 文档](https://docs.smith.langchain.com/tracing#log-runs)。
 
-## Usage
+## 使用方法
 
-We started the local action server, above, running on `http://localhost:8080`.
+如上所示，我们启动了本地 action server，它运行在 `http://localhost:8080`。
 
 ```python
 from langchain.agents import AgentExecutor, OpenAIFunctionsAgent
@@ -73,14 +73,14 @@ from langchain.messages import SystemMessage
 from langchain_openai import ChatOpenAI
 from langchain_robocorp import ActionServerToolkit
 
-# Initialize LLM chat model
+# 初始化 LLM（大语言模型）聊天模型
 llm = ChatOpenAI(model="gpt-4", temperature=0)
 
-# Initialize Action Server Toolkit
+# 初始化 Action Server 工具包
 toolkit = ActionServerToolkit(url="http://localhost:8080", report_trace=True)
 tools = toolkit.get_tools()
 
-# Initialize Agent
+# 初始化 Agent
 system_message = SystemMessage(content="You are a helpful assistant")
 prompt = OpenAIFunctionsAgent.create_prompt(system_message)
 agent = OpenAIFunctionsAgent(llm=llm, prompt=prompt, tools=tools)
@@ -106,14 +106,14 @@ Invoking: `robocorp_action_server_get_weather_forecast` with `{'city': 'San Fran
  'output': 'The current weather today in San Francisco is 75F and sunny.'}
 ```
 
-### Single input tools
+### 单输入工具 (Single input tools)
 
-By default `toolkit.get_tools()` will return the actions as Structured Tools.
+默认情况下，`toolkit.get_tools()` 会返回结构化工具（Structured Tools）形式的操作。
 
-To return single input tools, pass a Chat model to be used for processing the inputs.
+要返回单输入工具，请向 `get_tools()` 方法中传递一个 Chat 模型以用于处理输入。
 
 ```python
-# Initialize single input Action Server Toolkit
+# 初始化单输入 Action Server 工具包
 toolkit = ActionServerToolkit(url="http://localhost:8080")
 tools = toolkit.get_tools(llm=llm)
 ```

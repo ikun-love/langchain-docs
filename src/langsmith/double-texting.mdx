@@ -1,48 +1,48 @@
 ---
-title: Double texting
-sidebarTitle: Overview
+title: 双重发送消息
+sidebarTitle: 概述
 ---
 
 <Info>
-**Prerequisites**
+**先决条件**
 * [Agent Server](/langsmith/agent-server)
 </Info>
 
-Many times users might interact with your graph in unintended ways.
-For instance, a user may send one message and before the graph has finished running send a second message.
-More generally, users may invoke the graph a second time before the first run has finished.
-We call this "double texting".
+很多时候，用户可能以非预期的​​方式与你的图（Graph）进行交互。
+例如，用户可能发送一条消息，但在图完成运行之前又发送了第二条消息。
+更一般地说，用户可能在第一次运行完成之前就第二次调用该图。
+我们将这种情况称为“双重发送消息”（double texting）。
 
-[Enqueue](#enqueue-default) is the default double texting (multi-tasking) strategy when creating runs in the [Agent Server](/langsmith/agent-server).
+在 [Agent Server](/langsmith/agent-server) 中创建运行时，`[Enqueue](#enqueue-default)` 是默认的双重发送消息（多任务处理）策略。
 
 <Note>
-Double texting is a feature of LangSmith Deployment. It is not available in the [LangGraph open source framework](/oss/langgraph/overview).
+双重发送消息是 LangSmith **部署**的一个特性。它不适用于 [LangGraph 开源框架](/oss/langgraph/overview)。
 </Note>
 
-![Double-text strategies across first vs. second run: Reject keeps only the first; Enqueue runs the second afterward; Interrupt halts the first to run the second; Rollback reverts the first and reruns with the second.](/langsmith/images/double-texting.png)
+![第一次运行与第二次运行之间的双重发送策略：拒绝（Reject）只保留第一个；排队（Enqueue）在第一个完成后再运行第二个；中断（Interrupt）停止第一个以运行第二个；回滚（Rollback）撤销第一个并用第二个重新运行。](/langsmith/images/double-texting.png)
 
-## Enqueue (default)
+## Enqueue（排队）（默认）
 
-This option allows the current run to finish before processing any new input. Incoming requests are queued and executed sequentially once prior runs complete.
+此选项允许当前运行完成，然后才处理任何新输入。传入的请求会被排队，并在先前的运行完成后按顺序执行。
 
-For configuring the enqueue double text option, refer to the [how-to guide](/langsmith/enqueue-concurrent).
+要配置排队（enqueue）双重发送选项，请参阅 [操作指南](/langsmith/enqueue-concurrent)。
 
-## Reject
+## Reject（拒绝）
 
-This option rejects any additional incoming runs while a current run is in progress and prevents concurrent execution or double texting.
+此选项会在当前运行进行中时拒绝任何额外的传入运行，并防止并发执行或双重发送消息。
 
-For configuring the reject double text option, refer to the [how-to guide](/langsmith/reject-concurrent).
+要配置拒绝（reject）双重发送选项，请参阅 [操作指南](/langsmith/reject-concurrent)。
 
-## Interrupt
+## Interrupt（中断）
 
-This option halts the current execution and preserves the progress made up to the interruption point. The new user input is then inserted, and execution continues from that state.
+此选项会暂停当前的执行，并保留中断点之前所做的进度。然后会插入新的用户输入，并在该状态下继续执行。
 
-When using this option, your graph must account for potential edge cases. For example, a tool call may have been initiated but not yet completed at the time of interruption. In these cases, handling or removing partial tool calls may be necessary to avoid unresolved operations.
+使用此选项时，你的图必须考虑潜在的边缘情况。例如，工具调用可能在中断时已经被发起但尚未完成。在这些情况下，可能需要处理或移除部分工具调用，以避免未解决的操作。
 
-For configuring the interrupt double text option, refer to the [how-to guide](/langsmith/interrupt-concurrent).
+要配置中断（interrupt）双重发送选项，请参阅 [操作指南](/langsmith/interrupt-concurrent)。
 
-## Rollback
+## Rollback（回滚）
 
-This option halts the current execution and reverts all progress—including the initial run input—before processing the new user input. The new input is treated as a fresh run, starting from the initial state.
+此选项会停止当前的执行，并**回滚所有进度**（包括初始运行输入），然后再处理新的用户输入。新的输入将被视为一次全新的运行，从初始状态开始。
 
-For configuring the rollback double text option, refer to the [how-to guide](/langsmith/rollback-concurrent).
+要配置回滚（rollback）双重发送选项，请参阅 [操作指南](/langsmith/rollback-concurrent)。

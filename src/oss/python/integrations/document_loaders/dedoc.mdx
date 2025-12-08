@@ -2,54 +2,50 @@
 title: Dedoc
 ---
 
-This sample demonstrates the use of `Dedoc` in combination with `LangChain` as a `DocumentLoader`.
+此示例演示了如何将 `Dedoc` 与 `LangChain` 结合用作 `DocumentLoader`。
 
-## Overview
+## 概述
 
-[Dedoc](https://dedoc.readthedocs.io) is an [open-source](https://github.com/ispras/dedoc)
-library/service that extracts texts, tables, attached files and document structure
-(e.g., titles, list items, etc.) from files of various formats.
+[Dedoc](https://dedoc.readthedocs.io) 是一个开源的库/服务，它可以从各种格式的文件中提取文本、表格、附件以及文档结构（例如标题、列表项等）。
 
-`Dedoc` supports `DOCX`, `XLSX`, `PPTX`, `EML`, `HTML`, `PDF`, images and more.
-Full list of supported formats can be found [here](https://dedoc.readthedocs.io/en/latest/#id1).
+`Dedoc` 支持 `DOCX`, `XLSX`, `PPTX`, `EML`, `HTML`, `PDF`、图像等多种格式。支持的格式完整列表可以在[这里](https://dedoc.readthedocs.io/en/latest/#id1)找到。
 
-### Integration details
+### 集成细节
 
-| Class                                                                                                                                                | Package                                                                                        | Local | Serializable | JS support |
-|:-----------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------|:-----:|:------------:|:----------:|
-| [DedocFileLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocFileLoader.html)       | [langchain_community](https://python.langchain.com/api_reference/community/index.html) |   ❌   |     beta     |     ❌      |
-| [DedocPDFLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.DedocPDFLoader.html)           | [langchain_community](https://python.langchain.com/api_reference/community/index.html) |   ❌   |     beta     |     ❌      |
-| [DedocAPIFileLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocAPIFileLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) |   ❌   |     beta     |     ❌      |
+| 类 | 包 | 本地 | 可序列化 | JS 支持 |
+|:---|:---|:---:|:---|:---|
+| [DedocFileLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocFileLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ❌ | beta | ❌ |
+| [DedocPDFLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.DedocPDFLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ❌ | beta | ❌ |
+| [DedocAPIFileLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocAPIFileLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ❌ | beta | ❌ |
 
-### Loader features
+### 加载器特性
 
-Methods for lazy loading and async loading are available, but in fact, document loading is executed synchronously.
+提供了用于惰性加载（lazy loading）和异步加载的方法，但实际上文档加载是同步执行的。
 
-|       Source       | Document Lazy Loading | Async Support |
-|:------------------:|:---------------------:|:-------------:|
-|  DedocFileLoader   |           ❌           |       ❌       |
-|   DedocPDFLoader   |           ❌           |       ❌       |
-| DedocAPIFileLoader |           ❌           |       ❌       |
+| 源 | 文档惰性加载 | 异步支持 |
+|:---:|:---:|:---:|
+| DedocFileLoader | ❌ | ❌ |
+| DedocPDFLoader | ❌ | ❌ |
+| DedocAPIFileLoader | ❌ | ❌ |
 
-## Setup
+## 设置
 
-* To access `DedocFileLoader` and `DedocPDFLoader` document loaders, you'll need to install the `dedoc` integration package.
-* To access `DedocAPIFileLoader`, you'll need to run the `Dedoc` service, e.g. `Docker` container (please see [the documentation](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html#install-and-run-dedoc-using-docker)
-for more details):
+* 要访问 `DedocFileLoader` 和 `DedocPDFLoader` 文档加载器，你需要安装 `dedoc` 集成包。
+* 要访问 `DedocAPIFileLoader`，你需要运行 `Dedoc` 服务，例如 `Docker` 容器（更多细节请参阅[文档](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html#install-and-run-dedoc-using-docker)）：
 
 ```bash
 docker pull dedocproject/dedoc
 docker run -p 1231:1231
 ```
 
-`Dedoc` installation instruction is given [here](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html).
+`Dedoc` 的安装说明在[这里](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html)。
 
 ```python
-# Install package
+# 安装包
 pip install --quiet "dedoc[torch]"
 ```
 
-## Instantiation
+## 实例化
 
 ```python
 from langchain_community.document_loaders import DedocFileLoader
@@ -57,7 +53,7 @@ from langchain_community.document_loaders import DedocFileLoader
 loader = DedocFileLoader("./example_data/state_of_the_union.txt")
 ```
 
-## Load
+## 加载
 
 ```python
 docs = loader.load()
@@ -68,7 +64,7 @@ docs[0].page_content[:100]
 '\nMadam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and t'
 ```
 
-## Lazy Load
+## 惰性加载
 
 ```python
 docs = loader.lazy_load()
@@ -82,27 +78,23 @@ for doc in docs:
 Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and t
 ```
 
-## API reference
+## API 参考
 
-For detailed information on configuring and calling `Dedoc` loaders, please see the API references:
+有关配置和调用 `Dedoc` 加载器的详细信息，请参阅 API 参考：
 
 * [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocFileLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocFileLoader.html)
 * [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.DedocPDFLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.DedocPDFLoader.html)
 * [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocAPIFileLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.dedoc.DedocAPIFileLoader.html)
 
-## Loading any file
+## 加载任意文件
 
-For automatic handling of any file in a [supported format](https://dedoc.readthedocs.io/en/latest/#id1),
-`DedocFileLoader` can be useful.
-The file loader automatically detects the file type with a correct extension.
+对于任何[支持的格式](https://dedoc.readthedocs.io/en/latest/#id1)文件，`DedocFileLoader` 可以自动处理。
+该文件加载器会自动检测具有正确扩展名的文件类型。
 
-File parsing process can be configured through `dedoc_kwargs` during the `DedocFileLoader` class initialization.
-Here the basic examples of some options usage are given,
-please see the documentation of `DedocFileLoader` and
-[dedoc documentation](https://dedoc.readthedocs.io/en/latest/parameters/parameters.html)
-to get more details about configuration parameters.
+文件解析过程可以通过在初始化 `DedocFileLoader` 类时使用 `dedoc_kwargs` 进行配置。
+下面给出了一些选项用法的基本示例，请参阅 `DedocFileLoader` 的文档和 [dedoc 文档](https://dedoc.readthedocs.io/en/latest/parameters/parameters.html)以获取有关配置参数的更多详细信息。
 
-### Basic example
+### 基本示例
 
 ```python
 from langchain_community.document_loaders import DedocFileLoader
@@ -118,15 +110,15 @@ docs[0].page_content[:400]
 '\nMadam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.  \n\n\n\nLast year COVID-19 kept us apart. This year we are finally together again. \n\n\n\nTonight, we meet as Democrats Republicans and Independents. But most importantly as Americans. \n\n\n\nWith a duty to one another to the American people to '
 ```
 
-### Modes of split
+### 分割模式
 
-`DedocFileLoader` supports different types of document splitting into parts (each part is returned separately).
-For this purpose, `split` parameter is used with the following options:
+`DedocFileLoader` 支持将文档分割成不同部分（每个部分单独返回）的不同类型。
+为此，使用 `split` 参数，可选值如下：
 
-* `document` (default value): document text is returned as a single langchain @[`Document`] object (don't split);
-* `page`: split document text into pages (works for `PDF`, `DJVU`, `PPTX`, `PPT`, `ODP`);
-* `node`: split document text into `Dedoc` tree nodes (title nodes, list item nodes, raw text nodes);
-* `line`: split document text into textual lines.
+* `document` (默认值)：文档文本作为单个 langchain @[`Document`] 对象返回（不分割）；
+* `page`：将文档文本分割成页面（适用于 `PDF`, `DJVU`, `PPTX`, `PPT`, `ODP`）；
+* `node`：将文档文本分割成 `Dedoc` 树节点（标题节点、列表项节点、纯文本节点）；
+* `line`：将文档文本分割成文本行。
 
 ```python
 loader = DedocFileLoader(
@@ -144,14 +136,12 @@ len(docs)
 2
 ```
 
-### Handling tables
+### 处理表格
 
-`DedocFileLoader` supports tables handling when `with_tables` parameter is
-set to `True` during loader initialization (`with_tables=True` by default).
+当在加载器初始化时将 `with_tables` 参数设置为 `True` 时 (`with_tables=True` 为默认值)，`DedocFileLoader` 支持表格处理。
 
-Tables are not split - each table corresponds to one langchain @[`Document`] object.
-For tables, @[`Document`] object has additional `metadata` fields `type="table"`
-and `text_as_html` with table `HTML` representation.
+表格不进行分割——每个表格对应一个 langchain @[`Document`] 对象。
+对于表格，@[`Document`] 对象具有额外的 `metadata` 字段 `type="table"` 和 `text_as_html`，其中包含表格的 `HTML` 表示形式。
 
 ```python
 loader = DedocFileLoader("./example_data/mlb_teams_2012.csv")
@@ -166,14 +156,12 @@ docs[1].metadata["type"], docs[1].metadata["text_as_html"][:200]
  '<table border="1" style="border-collapse: collapse; width: 100%;">\n<tbody>\n<tr>\n<td colspan="1" rowspan="1">Team</td>\n<td colspan="1" rowspan="1"> &quot;Payroll (millions)&quot;</td>\n<td colspan="1" r')
 ```
 
-### Handling attached files
+### 处理附件
 
-`DedocFileLoader` supports attached files handling when `with_attachments` is set
-to `True` during loader initialization (`with_attachments=False` by default).
+当在加载器初始化时将 `with_attachments` 设置为 `True` 时 (`with_attachments=False` 为默认值)，`DedocFileLoader` 支持附件处理。
 
-Attachments are split according to the `split` parameter.
-For attachments, langchain @[`Document`] object has an additional metadata
-field `type="attachment"`.
+附件根据 `split` 参数进行分割。
+对于附件，langchain @[`Document`] 对象有一个额外的元数据字段 `type="attachment"`。
 
 ```python
 loader = DedocFileLoader(
@@ -191,20 +179,17 @@ docs[1].metadata["type"], docs[1].page_content
  '\nContent-Type\nmultipart/mixed; boundary="0000000000005d654405f082adb7"\nDate\nFri, 23 Dec 2022 12:08:48 -0600\nFrom\nMallori Harrell [mallori@unstructured.io](mailto:mallori@unstructured.io)\nMIME-Version\n1.0\nMessage-ID\n[CAPgNNXSzLVJ-d1OCX_TjFgJU7ugtQrjFybPtAMmmYZzphxNFYg@mail.gmail.com](mailto:CAPgNNXSzLVJ-d1OCX_TjFgJU7ugtQrjFybPtAMmmYZzphxNFYg@mail.gmail.com)\nSubject\nFake email with attachment\nTo\nMallori Harrell [mallori@unstructured.io](mailto:mallori@unstructured.io)')
 ```
 
-## Loading PDF file
+## 加载 PDF 文件
 
-If you want to handle only `PDF` documents, you can use `DedocPDFLoader` with only `PDF` support.
-The loader supports the same parameters for document split, tables and attachments extraction.
+如果你只想处理 `PDF` 文档，可以使用 `DedocPDFLoader`，它只支持 `PDF`。
+该加载器支持用于文档分割、表格和附件提取的相同参数。
 
-`Dedoc` can extract `PDF` with or without a textual layer,
-as well as automatically detect its presence and correctness.
-Several `PDF` handlers are available, you can use `pdf_with_text_layer`
-parameter to choose one of them.
-Please see [parameters description](https://dedoc.readthedocs.io/en/latest/parameters/pdf_handling.html)
-to get more details.
+`Dedoc` 可以提取带文字层或不带文字层的 `PDF`，并且可以自动检测其是否存在和正确性。
+有几种 `PDF` 处理程序可用，你可以使用 `pdf_with_text_layer` 参数来选择其中一个。
+有关参数的更多详细信息，请参阅[参数描述](https://dedoc.readthedocs.io/en/latest/parameters/pdf_handling.html)。
 
-For `PDF` without a textual layer, `Tesseract OCR` and its language packages should be installed.
-In this case, [the instruction](https://dedoc.readthedocs.io/en/latest/tutorials/add_new_language.html) can be useful.
+对于不带文字层的 `PDF`，应安装 `Tesseract OCR` 及其语言包。
+在这种情况下，[此说明](https://dedoc.readthedocs.io/en/latest/tutorials/add_new_language.html)可能会有所帮助。
 
 ```python
 from langchain_community.document_loaders import DedocPDFLoader
@@ -224,20 +209,18 @@ docs[0].page_content[:400]
 
 ## Dedoc API
 
-If you want to get up and running with less set up, you can use `Dedoc` as a service.
-**`DedocAPIFileLoader` can be used without installation of `dedoc` library.**
-The loader supports the same parameters as `DedocFileLoader` and
-also automatically detects input file types.
+如果你想以更少的配置快速上手，可以将 `Dedoc` 用作服务。
+**使用 `DedocAPIFileLoader` 时，无需安装 `dedoc` 库。**
+该加载器支持与 `DedocFileLoader` 相同的参数，并且还会自动检测输入文件类型。
 
-To use `DedocAPIFileLoader`, you should run the `Dedoc` service, e.g. `Docker` container (please see [the documentation](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html#install-and-run-dedoc-using-docker)
-for more details):
+要使用 `DedocAPIFileLoader`，你应该运行 `Dedoc` 服务，例如 `Docker` 容器（更多细节请参阅[文档](https://dedoc.readthedocs.io/en/latest/getting_started/installation.html#install-and-run-dedoc-using-docker)）：
 
 ```bash
 docker pull dedocproject/dedoc
 docker run -p 1231:1231
 ```
 
-Please do not use our demo URL `https://dedoc-readme.hf.space` in your code.
+请不要在代码中使用我们的演示 URL `https://dedoc-readme.hf.space`。
 
 ```python
 from langchain_community.document_loaders import DedocAPIFileLoader

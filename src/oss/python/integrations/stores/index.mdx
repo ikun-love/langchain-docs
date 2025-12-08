@@ -1,41 +1,41 @@
 ---
-title: "Key-value stores"
+title: "键值存储"
 ---
 
-## Overview
+## 概述
 
-LangChain provides a key-value store interface for storing and retrieving data by key. The key-value store interface in LangChain is primarily used for caching [embeddings](/oss/integrations/text_embedding).
+LangChain 提供了一个键值存储接口，用于通过键存储和检索数据。LangChain 中的键值存储接口主要用于缓存 [嵌入向量](/oss/integrations/text_embedding)。
 
-## Interface
+## 接口
 
-All [`BaseStores`](https://python.langchain.com/api_reference/core/stores/langchain_core.stores.BaseStore.html) support the following interface:
+所有 [`BaseStores`](https://python.langchain.com/api_reference/core/stores/langchain_core.stores.BaseStore.html) 都支持以下接口：
 
-- `mget(key: Sequence[str]) -> List[Optional[bytes]]`: get the contents of multiple keys, returning `None` if the key does not exist
-- `mset(key_value_pairs: Sequence[Tuple[str, bytes]]) -> None`: set the contents of multiple keys
-- `mdelete(key: Sequence[str]) -> None`: delete multiple keys
-- `yield_keys(prefix: Optional[str] = None) -> Iterator[str]`: yield all keys in the store, optionally filtering by a prefix
+- `mget(key: Sequence[str]) -> List[Optional[bytes]]`: 获取多个键的内容，如果键不存在则返回 `None`
+- `mset(key_value_pairs: Sequence[Tuple[str, bytes]]) -> None`: 设置多个键的内容
+- `mdelete(key: Sequence[str]) -> None`: 删除多个键
+- `yield_keys(prefix: Optional[str] = None) -> Iterator[str]`: 迭代存储中的所有键，可选地通过前缀进行过滤
 
 <Note>
-Base stores are designed to work **multiple** key-value pairs at once for efficiency. This saves on network round-trips and may allow for more efficient batch operations in the underlying store.
+Base store（基础存储）的设计目的是为了**批量**处理多个键值对，以提高效率。这可以减少网络往返次数，并可能允许底层存储执行更高效的批处理操作。
 </Note>
 
-## Built-in stores for local development
+## 用于本地开发的内置存储
 
 <Columns cols={2}>
-    <Card title="InMemoryByteStore" icon="link" href="/oss/integrations/stores/in_memory" arrow="true" cta="View guide" />
-    <Card title="LocalFileStore" icon="link" href="/oss/integrations/stores/file_system" arrow="true" cta="View guide" />
+    <Card title="InMemoryByteStore" icon="link" href="/oss/integrations/stores/in_memory" arrow="true" cta="查看指南" />
+    <Card title="LocalFileStore" icon="link" href="/oss/integrations/stores/file_system" arrow="true" cta="查看指南" />
 </Columns>
 
-## Custom stores
+## 自定义存储
 
-You can also implement your own custom store by extending the @[`BaseStore`] class. See the [store interface documentation](https://python.langchain.com/api_reference/core/stores/langchain_core.stores.BaseStore.html) for more details.
+您也可以通过继承 @[`BaseStore`] 类来实现自己的自定义存储。有关更多详细信息，请参阅 [存储接口文档](https://python.langchain.com/api_reference/core/stores/langchain_core.stores.BaseStore.html)。
 
-## All key-value stores
+## 所有键值存储
 
 <Columns cols={3}>
-    <Card title="AstraDBByteStore" icon="link" href="/oss/integrations/stores/astradb" arrow="true" cta="View guide" />
-    <Card title="CassandraByteStore" icon="link" href="/oss/integrations/stores/cassandra" arrow="true" cta="View guide" />
-    <Card title="ElasticsearchEmbeddingsCache" icon="link" href="/oss/integrations/stores/elasticsearch" arrow="true" cta="View guide" />
-    <Card title="RedisStore" icon="link" href="/oss/integrations/stores/redis" arrow="true" cta="View guide" />
-    <Card title="UpstashRedisByteStore" icon="link" href="/oss/integrations/stores/upstash_redis" arrow="true" cta="View guide" />
+    <Card title="AstraDBByteStore" icon="link" href="/oss/integrations/stores/astradb" arrow="true" cta="查看指南" />
+    <Card title="CassandraByteStore" icon="link" href="/oss/integrations/stores/cassandra" arrow="true" cta="查看指南" />
+    <Card title="ElasticsearchEmbeddingsCache" icon="link" href="/oss/integrations/stores/elasticsearch" arrow="true" cta="查看指南" />
+    <Card title="RedisStore" icon="link" href="/oss/integrations/stores/redis" arrow="true" cta="查看指南" />
+    <Card title="UpstashRedisByteStore" icon="link" href="/oss/integrations/stores/upstash_redis" arrow="true" cta="查看指南" />
 </Columns>

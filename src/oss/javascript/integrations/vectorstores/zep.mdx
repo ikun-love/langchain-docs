@@ -1,46 +1,46 @@
 ---
-title: Zep Open Source
+title: Zep 开源
 ---
 
-> [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
-> With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
-> while also reducing hallucinations, latency, and cost.
+> [Zep](https://www.getzep.com) 是一个为 AI 助手应用提供的长期记忆服务。
+> 使用 Zep，你可以让 AI 助手具备回忆过去对话的能力，无论这些对话有多久远，
+> 同时还能减少幻觉（hallucinations）、延迟（latency）和成本。
 
-> Interested in Zep Cloud? See [Zep Cloud Installation Guide](https://help.getzep.com/sdks)
+> 对 Zep Cloud 感兴趣？请参阅 [Zep Cloud 安装指南](https://help.getzep.com/sdks)
 
-**Note:** The `ZepVectorStore` works with `Documents` and is intended to be used as a `Retriever`.
-It offers separate functionality to Zep's `ZepMemory` class, which is designed for persisting, enriching
-and searching your user's chat history.
+**注意：** `ZepVectorStore` 与 `Document`s 协同工作，并被设计用作一个 `Retriever`（检索器）。
+它的功能与 Zep 的 `ZepMemory` 类是分开的，后者是用于持久化、富集
+和搜索用户聊天历史记录的。
 
-## Why Zep's VectorStore?
+## 为什么选择 Zep 的 VectorStore？
 
-Zep automatically embeds documents added to the Zep Vector Store using low-latency models local to the Zep server.
-The Zep TS/JS client can be used in non-Node edge environments. These two together with Zep's chat memory functionality
-make Zep ideal for building conversational LLM apps where latency and performance are important.
+Zep 会自动使用 Zep 服务器本地的低延迟模型，对添加到 Zep 向量存储中的文档进行嵌入（embedding）。
+Zep 的 TS/JS 客户端可以在非 Node 环境（如 Edge 环境）中使用。这两点结合 Zep 的聊天记忆功能，
+使得 Zep 非常适合构建对延迟和性能有要求的对话式 LLM 应用。
 
-### Supported Search Types
+### 支持的搜索类型
 
-Zep supports both similarity search and Maximal Marginal Relevance (MMR) search. MMR search is particularly useful
-for Retrieval Augmented Generation applications as it re-ranks results to ensure diversity in the returned documents.
+Zep 支持相似度搜索（similarity search）和最大边际相关性搜索（Maximal Marginal Relevance, MMR）搜索。MMR 搜索对于
+检索增强生成（Retrieval Augmented Generation, RAG）应用尤其有用，因为它会对结果进行重新排序（re-ranks），以确保返回文档的多样性。
 
-## Installation
+## 安装
 
-Follow the [Zep Open Source Quickstart Guide](https://help.getzep.com/quickstart) to install and get started with Zep.
+请遵循 [Zep 开源快速入门指南](https://help.getzep.com/quickstart) 来安装和开始使用 Zep。
 
-## Usage
+## 用法
 
-You'll need your Zep API URL and optionally an API key to use the Zep VectorStore. See the [Zep docs](https://help.getzep.com/welcome) for more information.
+你需要 Zep API URL，或者可选地需要 API 密钥才能使用 Zep VectorStore。有关更多信息，请参阅 [Zep 文档](https://help.getzep.com/welcome)。
 
-In the examples below, we're using Zep's auto-embedding feature which automatically embed documents on the Zep server using
-low-latency embedding models. Since LangChain requires passing in a @[`Embeddings`] instance, we pass in `FakeEmbeddings`.
+在下面的示例中，我们使用了 Zep 的自动嵌入功能，该功能会在 Zep 服务器上使用
+低延迟嵌入模型自动嵌入文档。由于 LangChain 要求传入一个 @[`Embeddings`] 实例，我们传入了 `FakeEmbeddings`。
 
-**Note:** If you pass in an @[`Embeddings`] instance other than `FakeEmbeddings`, this class will be used to embed documents.
-You must also set your document collection to `isAutoEmbedded === false`. See the `OpenAIEmbeddings` example below.
+**注意：** 如果你传入的 @[`Embeddings`] 实例不是 `FakeEmbeddings`，那么这个类将被用于嵌入文档。
+你还必须将你的文档集合设置为 `isAutoEmbedded === false`。请参阅下面的 `OpenAIEmbeddings` 示例。
 
-### Example: Creating a ZepVectorStore from Documents & Querying
+### 示例：从 Documents 创建 ZepVectorStore 并进行查询
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅 [本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -59,10 +59,10 @@ export const run = async () => {
   const collectionName = `collection${randomUUID().split("-")[0]}`;
 
   const zepConfig = {
-    apiUrl: "http://localhost:8000", // this should be the URL of your Zep implementation
+    apiUrl: "http://localhost:8000", // 这应该是你的 Zep 实现的 URL
     collectionName,
-    embeddingDimensions: 1536, // this much match the width of the embeddings you're using
-    isAutoEmbedded: true, // If true, the vector store will automatically embed documents when they are added
+    embeddingDimensions: 1536, // 这必须与你使用的嵌入的维度相匹配
+    isAutoEmbedded: true, // 如果为 true，则在添加文档时向量存储会自动对其进行嵌入
   };
 
   const embeddings = new FakeEmbeddings();
@@ -73,12 +73,12 @@ export const run = async () => {
     zepConfig
   );
 
-  // Wait for the documents to be embedded
+  // 等待文档被嵌入
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const c = await vectorStore.client.document.getCollection(collectionName);
     console.log(
-      `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`
+      `嵌入状态: ${c.document_embedded_count}/${c.document_count} 个文档已嵌入`
     );
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -89,19 +89,19 @@ export const run = async () => {
 
   const results = await vectorStore.similaritySearchWithScore("bar", 3);
 
-  console.log("Similarity Results:");
+  console.log("相似度搜索结果:");
   console.log(JSON.stringify(results));
 
   const results2 = await vectorStore.maxMarginalRelevanceSearch("bar", {
     k: 3,
   });
 
-  console.log("MMR Results:");
+  console.log("MMR 搜索结果:");
   console.log(JSON.stringify(results2));
 };
 ```
 
-### Example: Querying a ZepVectorStore using a metadata filter
+### 示例：使用元数据过滤器查询 ZepVectorStore
 
 ```typescript
 import { ZepVectorStore } from "@langchain/community/vectorstores/zep";
@@ -160,10 +160,10 @@ export const run = async () => {
   const collectionName = `collection${randomUUID().split("-")[0]}`;
 
   const zepConfig = {
-    apiUrl: "http://localhost:8000", // this should be the URL of your Zep implementation
+    apiUrl: "http://localhost:8000", // 这应该是你的 Zep 实现的 URL
     collectionName,
-    embeddingDimensions: 1536, // this much match the width of the embeddings you're using
-    isAutoEmbedded: true, // If true, the vector store will automatically embed documents when they are added
+    embeddingDimensions: 1536, // 这必须与你使用的嵌入的维度相匹配
+    isAutoEmbedded: true, // 如果为 true，则在添加文档时向量存储会自动对其进行嵌入
   };
 
   const embeddings = new FakeEmbeddings();
@@ -174,12 +174,12 @@ export const run = async () => {
     zepConfig
   );
 
-  // Wait for the documents to be embedded
+  // 等待文档被嵌入
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const c = await vectorStore.client.document.getCollection(collectionName);
     console.log(
-      `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`
+      `嵌入状态: ${c.document_embedded_count}/${c.document_count} 个文档已嵌入`
     );
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -190,31 +190,31 @@ export const run = async () => {
 
   vectorStore
     .similaritySearchWithScore("sad music", 3, {
-      where: { jsonpath: "$[*] ? (@.year == 1973)" }, // We should see a single result: The Rain Song
+      where: { jsonpath: "$[*] ? (@.year == 1973)" }, // 我们应该看到一个结果：The Rain Song
     })
     .then((results) => {
-      console.log(`\n\nSimilarity Results:\n${JSON.stringify(results)}`);
+      console.log(`\n\n相似度搜索结果:\n${JSON.stringify(results)}`);
     })
     .catch((e) => {
       if (e.name === "NotFoundError") {
-        console.log("No results found");
+        console.log("未找到结果");
       } else {
         throw e;
       }
     });
 
-  // We're not filtering here, but rather demonstrating MMR at work.
-  // We could also add a filter to the MMR search, as we did with the similarity search above.
+  // 我们不在这里过滤，而是演示 MMR 的工作原理。
+  // 如下面的相似度搜索一样，我们也可以向 MMR 搜索添加一个过滤器。
   vectorStore
     .maxMarginalRelevanceSearch("sad music", {
       k: 3,
     })
     .then((results) => {
-      console.log(`\n\nMMR Results:\n${JSON.stringify(results)}`);
+      console.log(`\n\nMMR 搜索结果:\n${JSON.stringify(results)}`);
     })
     .catch((e) => {
       if (e.name === "NotFoundError") {
-        console.log("No results found");
+        console.log("未找到结果");
       } else {
         throw e;
       }
@@ -222,7 +222,7 @@ export const run = async () => {
 };
 ```
 
-### Example: Using a LangChain Embedding Class such as `OpenAIEmbeddings`
+### 示例：使用 LangChain 嵌入类，例如 `OpenAIEmbeddings`
 
 ```typescript
 import { ZepVectorStore } from "@langchain/community/vectorstores/zep";
@@ -236,10 +236,10 @@ export const run = async () => {
   const collectionName = `collection${randomUUID().split("-")[0]}`;
 
   const zepConfig = {
-    apiUrl: "http://localhost:8000", // this should be the URL of your Zep implementation
+    apiUrl: "http://localhost:8000", // 这应该是你的 Zep 实现的 URL
     collectionName,
-    embeddingDimensions: 1536, // this much match the width of the embeddings you're using
-    isAutoEmbedded: false, // set to false to disable auto-embedding
+    embeddingDimensions: 1536, // 这必须与你使用的嵌入的维度相匹配
+    isAutoEmbedded: false, // 设置为 false 以禁用自动嵌入
   };
 
   const embeddings = new OpenAIEmbeddings();
@@ -252,19 +252,19 @@ export const run = async () => {
 
   const results = await vectorStore.similaritySearchWithScore("bar", 3);
 
-  console.log("Similarity Results:");
+  console.log("相似度搜索结果:");
   console.log(JSON.stringify(results));
 
   const results2 = await vectorStore.maxMarginalRelevanceSearch("bar", {
     k: 3,
   });
 
-  console.log("MMR Results:");
+  console.log("MMR 搜索结果:");
   console.log(JSON.stringify(results2));
 };
 ```
 
-## Related
+## 相关内容
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储 [概念指南](/oss/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/integrations/vectorstores)

@@ -2,22 +2,22 @@
 title: Lantern
 ---
 
->[Lantern](https://github.com/lanterndata/lantern) is an open-source vector similarity search for `Postgres`
+>[Lantern](https://github.com/lanterndata/lantern) 是一个开源的向量相似性搜索工具，用于 `Postgres` 数据库。
 
-It supports:
+它支持：
 
-- Exact and approximate nearest neighbor search
-- L2 squared distance, hamming distance, and cosine distance
+- 精确和近似最近邻搜索
+- L2 距离（平方）、汉明距离和余弦距离
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+你需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
 
-This notebook shows how to use the Postgres vector database (`Lantern`).
+本 Notebook 展示了如何使用 Postgres 向量数据库（`Lantern`）。
 
-See the [installation instruction](https://github.com/lanterndata/lantern#-quick-install).
+请参阅 [安装说明](https://github.com/lanterndata/lantern#-quick-install)。
 
-We want to use `OpenAIEmbeddings` so we have to get the OpenAI API Key.
+我们希望使用 `OpenAIEmbeddings`，因此需要获取 OpenAI API 密钥。
 
-# Pip install necessary package
+# 安装必要的包
 
 !pip install openai
 !pip install psycopg2-binary
@@ -36,7 +36,7 @@ OpenAI API Key: ········
 ```
 
 ```python
-## Loading environment variables
+## 加载环境变量
 from typing import List, Tuple
 
 from dotenv import load_dotenv
@@ -66,11 +66,11 @@ embeddings = OpenAIEmbeddings()
 ```
 
 ```python
-# Lantern needs the connection string to the database.
-# Example postgresql://postgres:postgres@localhost:5432/postgres
+# Lantern 需要连接到数据库的连接字符串。
+# 示例 postgresql://postgres:postgres@localhost:5432/postgres
 CONNECTION_STRING = getpass.getpass("DB Connection String:")
 
-# # Alternatively, you can create it from environment variables.
+# # 或者，你可以从环境变量创建它。
 # import os
 
 # CONNECTION_STRING = Lantern.connection_string_from_db_params(
@@ -82,18 +82,18 @@ CONNECTION_STRING = getpass.getpass("DB Connection String:")
 #     password=os.environ.get("LANTERN_PASSWORD", "postgres"),
 # )
 
-# or you can pass it via `LANTERN_CONNECTION_STRING` env variable
+# 或者你可以通过 `LANTERN_CONNECTION_STRING` 环境变量传递它
 ```
 
 ```output
 DB Connection String: ········
 ```
 
-## Similarity Search with Cosine Distance (Default)
+## 使用余弦距离进行相似性搜索（默认）
 
 ```python
-# The Lantern Module will try to create a table with the name of the collection.
-# So, make sure that the collection name is unique and the user has the permission to create a table.
+# Lantern 模块将尝试创建一个与集合同名的表。
+# 因此，请确保集合名称是唯一的，并且用户有权限创建表。
 
 COLLECTION_NAME = "state_of_the_union_test"
 
@@ -178,9 +178,9 @@ Let’s increase Pell Grants and increase our historic support of HBCUs, and inv
 --------------------------------------------------------------------------------
 ```
 
-## Maximal Marginal Relevance Search (MMR)
+## 最大边际相关性搜索 (MMR)
 
-Maximal marginal relevance optimizes for similarity to query AND diversity among selected documents.
+最大边际相关性搜索优化了与查询的相似性 **以及** 所选文档之间的多样性。
 
 ```python
 docs_with_score = db.max_marginal_relevance_search_with_score(query)
@@ -271,10 +271,10 @@ While it shouldn’t have taken something so terrible for people around the worl
 --------------------------------------------------------------------------------
 ```
 
-## Working with vectorstore
+## 使用向量存储 (VectorStore)
 
-Above, we created a vectorstore from scratch. However, often times we want to work with an existing vectorstore.
-In order to do that, we can initialize it directly.
+上面，我们从头创建了一个向量存储。然而，我们通常想要使用一个现有的向量存储。
+要做到这一点，我们可以直接初始化它。
 
 ```python
 store = Lantern(
@@ -284,9 +284,9 @@ store = Lantern(
 )
 ```
 
-### Add documents
+### 添加文档
 
-We can add documents to the existing vectorstore.
+我们可以向现有的向量存储中添加文档。
 
 ```python
 store.add_documents([Document(page_content="foo")])
@@ -317,10 +317,10 @@ docs_with_score[1]
  0.24038416)
 ```
 
-### Overriding a vectorstore
+### 覆盖向量存储
 
-If you have an existing collection, you override it by doing `from_documents` and setting `pre_delete_collection` = True
-This will delete the collection before re-populating it
+如果你有一个现有的集合，可以通过设置 `pre_delete_collection=True` 来使用 `from_documents` 来覆盖它。
+这将删除集合，然后再重新填充它。
 
 ```python
 db = Lantern.from_documents(
@@ -345,7 +345,7 @@ docs_with_score[0]
  0.2403456)
 ```
 
-### Using a VectorStore as a Retriever
+### 将向量存储用作检索器
 
 ```python
 retriever = store.as_retriever()

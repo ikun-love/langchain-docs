@@ -1,11 +1,11 @@
 ---
-title: LangGraph v1 migration guide
-sidebarTitle: Migration guide
+title: LangGraph v1 迁移指南
+sidebarTitle: LangGraph v1
 ---
 
-This guide outlines changes in LangGraph v1 and how to migrate from previous versions. For a high-level overview of changes, see the [what's new](/oss/releases/langgraph-v1) page.
+本指南概述了 LangGraph v1 中的变化以及如何从早期版本进行迁移。有关更改的高级别概述，请参阅 [最新消息](/oss/releases/langgraph-v1) 页面。
 
-To upgrade:
+要升级：
 
 <CodeGroup>
 ```bash pip
@@ -16,38 +16,38 @@ uv add langgraph langchain-core
 ```
 </CodeGroup>
 
-## Summary of changes
+## 更改摘要
 
-LangGraph v1 is largely backwards compatible with previous versions. The main change is the deprecation of @[`create_react_agent`] in favor of LangChain's new @[`create_agent`] function.
+LangGraph v1 与早期版本基本向后兼容。主要变化是弃用了 @[`create_react_agent`]，转而使用 LangChain 新的 @[`create_agent`] 函数。
 
-## Deprecations
+## 弃用项
 
-The following table lists all items deprecated in LangGraph v1:
+下表列出了 LangGraph v1 中所有被弃用的项目：
 
-| Deprecated item | Alternative |
+| 被弃用的项 | 替代方案 |
 |----------------|-------------|
 | `create_react_agent` | @[`langchain.agents.create_agent`][create_agent] |
 | `AgentState` | @[`langchain.agents.AgentState`][AgentState] |
-| `AgentStatePydantic` | `langchain.agents.AgentState` (no more pydantic state) |
+| `AgentStatePydantic` | `langchain.agents.AgentState` (不再支持 pydantic 状态) |
 | `AgentStateWithStructuredResponse` | `langchain.agents.AgentState` |
-| `AgentStateWithStructuredResponsePydantic` | `langchain.agents.AgentState` (no more pydantic state) |
+| `AgentStateWithStructuredResponsePydantic` | `langchain.agents.AgentState` (不再支持 pydantic 状态) |
 | `HumanInterruptConfig` | `langchain.agents.middleware.human_in_the_loop.InterruptOnConfig` |
 | `ActionRequest` | `langchain.agents.middleware.human_in_the_loop.InterruptOnConfig` |
 | `HumanInterrupt` | `langchain.agents.middleware.human_in_the_loop.HITLRequest` |
-| `ValidationNode` | Tools automatically validate input with @[`create_agent`] |
-| `MessageGraph` | @[`StateGraph`] with a `messages` key, like @[`create_agent`] provides |
+| `ValidationNode` | 工具现在使用 @[`create_agent`] 自动验证输入 |
+| `MessageGraph` | 使用带有 `messages` 键的 @[`StateGraph`]，类似于 @[`create_agent`] 提供的结构 |
 
 ## `create_react_agent` → `create_agent`
 
-LangGraph v1 deprecates the @[`create_react_agent`] prebuilt. Use LangChain's @[`create_agent`], which runs on LangGraph and adds a flexible middleware system.
+LangGraph v1 弃用了 @[`create_react_agent`] 预置函数。请使用 LangChain 的 @[`create_agent`]，它运行在 LangGraph 之上，并增加了一个灵活的中间件系统。
 
-See the LangChain v1 docs for details:
+有关详细信息，请参阅 LangChain v1 文档：
 
-- [Release notes](/oss/releases/langchain-v1#createagent)
-- [Migration guide](/oss/migrate/langchain-v1#migrate-to-create_agent)
+- [发布说明](/oss/releases/langchain-v1#createagent)
+- [迁移指南](/oss/migrate/langchain-v1#migrate-to-create_agent)
 
 <CodeGroup>
-```python v1 (new)
+```python v1 (新)
 from langchain.agents import create_agent
 
 agent = create_agent(  # [!code highlight]
@@ -56,7 +56,7 @@ agent = create_agent(  # [!code highlight]
     system_prompt="You are a helpful assistant.",
 )
 ```
-```python v0 (old)
+```python v0 (旧)
 from langgraph.prebuilt import create_react_agent
 
 agent = create_react_agent(  # [!code highlight]
@@ -67,8 +67,8 @@ agent = create_react_agent(  # [!code highlight]
 ```
 </CodeGroup>
 
-## Breaking changes
+## 破坏性变更
 
-### Dropped Python 3.9 support
+### 移除了对 Python 3.9 的支持
 
-All LangChain packages now require **Python 3.10 or higher**. Python 3.9 reached [end of life](https://devguide.python.org/versions/) in October 2025.
+所有 LangChain 包现在要求 **Python 3.10 或更高版本**。Python 3.9 已于 2025 年 10 月达到[生命周期结束](https://devguide.python.org/versions/)。

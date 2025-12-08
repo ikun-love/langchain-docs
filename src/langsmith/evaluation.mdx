@@ -1,80 +1,84 @@
 ---
-title: LangSmith Evaluation
-sidebarTitle: Overview
+title: LangSmith 评估
+sidebarTitle: 概览
 mode: wide
 ---
 
 import HostingSetup from '/snippets/langsmith/platform-setup-note.mdx';
 
-LangSmith supports two types of evaluations based on when and where they run:
+LangSmith 支持两种类型的评估，这取决于它们运行的时间和地点：
 
 <CardGroup cols={2}>
   <Card
-    title="Offline Evaluation"
+    title="离线评估"
     icon="flask"
   >
-    **Test before you ship**
+    **在发布前进行测试**
 
-    Run evaluations on curated datasets during development to compare versions, benchmark performance, and catch regressions.
+    在开发过程中对精心策划的数据集运行评估，以便比较不同版本、衡量性能基准并捕获回归问题。
   </Card>
 
   <Card
-    title="Online Evaluation"
+    title="在线评估"
     icon="radar"
   >
-    **Monitor in production**
+    **在生产环境中进行监控**
 
-    Evaluate real user interactions in real-time to detect issues and measure quality on live traffic.
+    实时评估真实用户交互，以便发现问题并衡量线上流量的质量。
   </Card>
 </CardGroup>
 
 
-## Evaluation workflow
+## 评估工作流程
 
 <Tabs>
-<Tab title="Offline evaluation flow">
+<Tab title="离线评估流程">
 
 <Steps>
-  <Step title="Create a dataset">
-    Create a [dataset](/langsmith/manage-datasets) with <Tooltip tip="Individual test cases with inputs and reference outputs">[examples](/langsmith/evaluation-concepts#examples)</Tooltip> from manually curated test cases, historical production traces, or synthetic data generation.
+  <Step title="创建数据集">
+    使用 [示例](/langsmith/evaluation-concepts#examples) 创建一个 [数据集](/langsmith/manage-datasets)。这些示例可以来源于手动整理的测试用例、历史生产追踪记录，或是通过合成数据生成。
+    <Tooltip tip="带有输入和参考输出的单个测试用例">示例</Tooltip>
   </Step>
 
-  <Step title="Define evaluators">
-    Create <Tooltip tip="Functions that score how well your application performs">[evaluators](/langsmith/evaluation-concepts#evaluators)</Tooltip> to score performance:
-    - [Human](/langsmith/evaluation-concepts#human) review
-    - [Code](/langsmith/evaluation-concepts#code) rules
-    - [LLM-as-judge](/langsmith/llm-as-judge)
-    - [Pairwise](/langsmith/evaluate-pairwise) comparison
+  <Step title="定义评估器">
+    创建 [评估器](/langsmith/evaluation-concepts#evaluators) 来对性能进行评分：
+    <Tooltip tip="用于衡量应用程序性能的函数">评估器</Tooltip>
+    - [人工](/langsmith/evaluation-concepts#human) 审查
+    - [代码](/langsmith/evaluation-concepts#code) 规则
+    - [基于 LLM 的裁判](/langsmith/llm-as-judge)
+    - [成对](/langsmith/evaluate-pairwise) 比较
   </Step>
 
-  <Step title="Run an experiment">
-    Execute your application on the dataset to create an <Tooltip tip="Results of evaluating a specific application version on a dataset">[experiment](/langsmith/evaluation-concepts#experiment)</Tooltip>. Configure [repetitions, concurrency, and caching](/langsmith/experiment-configuration) to optimize runs.
+  <Step title="运行实验">
+    在数据集上执行您的应用程序，以创建一个 [实验](/langsmith/evaluation-concepts#experiment)。您可以配置 [重复次数、并发性和缓存](/langsmith/experiment-configuration) 来优化运行。
+    <Tooltip tip="在特定应用版本上评估数据集的结果">实验</Tooltip>
   </Step>
 
-  <Step title="Analyze results">
-    Compare experiments for [benchmarking](/langsmith/evaluation-types#benchmarking), [unit tests](/langsmith/evaluation-types#unit-tests), [regression tests](/langsmith/evaluation-types#regression-tests), or [backtesting](/langsmith/evaluation-types#backtesting).
+  <Step title="分析结果">
+    比较不同的实验，用于 [基准测试](/langsmith/evaluation-types#benchmarking)、[单元测试](/langsmith/evaluation-types#unit-tests)、[回归测试](/langsmith/evaluation-types#regression-tests) 或 [回溯测试](/langsmith/evaluation-types#backtesting)。
   </Step>
 </Steps>
 
 </Tab>
 
-<Tab title="Online evaluation flow">
+<Tab title="在线评估流程">
 
 <Steps>
-  <Step title="Deploy your application">
-    Each interaction creates a <Tooltip tip="A single execution trace including inputs, outputs, and intermediate steps">[run](/langsmith/evaluation-concepts#runs)</Tooltip> without reference outputs.
+  <Step title="部署应用程序">
+    每一次交互都会创建一个 [运行](/langsmith/evaluation-concepts#runs)，其中包含输入、输出和中间步骤，但没有参考输出。
+    <Tooltip tip="单个执行追踪，包括输入、输出和中间步骤">运行</Tooltip>
   </Step>
 
-  <Step title="Configure online evaluators">
-    Set up [evaluators](/langsmith/online-evaluations) to run automatically on production traces: safety checks, format validation, quality heuristics, and reference-free LLM-as-judge. Apply [filters and sampling rates](/langsmith/online-evaluations#4-optional-configure-a-sampling-rate) to control costs.
+  <Step title="配置在线评估器">
+    设置 [评估器](/langsmith/online-evaluations) 以自动在生产追踪上运行：包括安全检查、格式验证、质量启发式规则以及无需参考的 LLM 裁判评估。应用 [筛选器和采样率](/langsmith/online-evaluations#4-optional-configure-a-sampling-rate) 来控制成本。
   </Step>
 
-  <Step title="Monitor in real-time">
-    Evaluators run automatically on [runs](/langsmith/evaluation-concepts#runs) or <Tooltip tip="Collections of related runs forming multi-turn conversations">[threads](/langsmith/online-evaluations#configure-multi-turn-online-evaluators)</Tooltip>, providing real-time monitoring, anomaly detection, and alerting.
+  <Step title="实时监控">
+    评估器会自动在 [运行](/langsmith/evaluation-concepts#runs) 或 <Tooltip tip="形成多轮对话的相关运行集合">线程</Tooltip> 上运行，从而提供实时监控、异常检测和警报功能。
   </Step>
 
-  <Step title="Establish a feedback loop">
-    Add failing production traces to your [dataset](/langsmith/manage-datasets), create targeted evaluators, validate fixes with offline experiments, and redeploy.
+  <Step title="建立反馈循环">
+    将失败的生产追踪添加到您的 [数据集](/langsmith/manage-datasets) 中，创建有针对性的评估器，使用离线实验验证修复，然后重新部署。
   </Step>
 </Steps>
 
@@ -82,65 +86,65 @@ LangSmith supports two types of evaluations based on when and where they run:
 </Tabs>
 
 <Tip>
-For more on the differences between offline and online evaluation, refer to the [Evaluation concepts](/langsmith/evaluation-concepts#quick-reference-offline-vs-online-evaluation) page.
+关于离线评估和在线评估之间更多差异的细节，请参阅 [评估概念](/langsmith/evaluation-concepts#quick-reference-offline-vs-online-evaluation) 页面。
 </Tip>
 
-## Get started
+## 开始
 
 <Columns cols={3}>
 
   <Card
-    title="Evaluation quickstart"
+    title="评估快速开始"
     icon="rocket"
     href="/langsmith/evaluation-quickstart"
     arrow="true"
   >
-    Get started with offline evaluation.
+    开始使用离线评估。
   </Card>
 
   <Card
-    title="Manage datasets"
+    title="管理数据集"
     icon="database"
     href="/langsmith/manage-datasets"
     arrow="true"
   >
-    Create and manage datasets for evaluation through the UI or SDK.
+    通过 UI 或 SDK 创建和管理用于评估的数据集。
   </Card>
 
   <Card
-    title="Run offline evaluations"
+    title="运行离线评估"
     icon="microscope"
     href="/langsmith/evaluate-llm-application"
     arrow="true"
   >
-    Explore evaluation types, techniques, and frameworks for comprehensive testing.
+    探索评估类型、技术和框架，以便进行全面的测试。
   </Card>
 
   <Card
-    title="Analyze results"
+    title="分析结果"
     icon="chart-bar"
     href="/langsmith/analyze-an-experiment"
     arrow="true"
   >
-    View and analyze evaluation results, compare experiments, filter data, and export findings.
+    查看和分析评估结果，比较实验，筛选数据，并导出发现。
   </Card>
 
   <Card
-    title="Run online evaluations"
+    title="运行在线评估"
     icon="radar"
     href="/langsmith/online-evaluations"
     arrow="true"
   >
-    Monitor production quality in real-time from the Observability tab.
+    从“可观测性”选项卡实时监控生产质量。
   </Card>
 
   <Card
-    title="Follow tutorials"
+    title="关注教程"
     icon="book"
     href="/langsmith/evaluate-chatbot-tutorial"
     arrow="true"
   >
-    Learn by following step-by-step tutorials, from simple chatbots to complex agent evaluations.
+    通过分步教程进行学习，内容涵盖从简单的聊天机器人到复杂的代理评估。
   </Card>
 
 </Columns>

@@ -1,19 +1,19 @@
 ---
-title: Overview
+title: 概览
 ---
 
-Functionality related to [Google Cloud Platform](https://cloud.google.com/)
-and [AI Studio](https://aistudio.google.com/)
+与 [Google Cloud Platform](https://cloud.google.com/) 和 [AI Studio](https://aistudio.google.com/) 相关的
+功能。
 
-## Chat models
+## 聊天模型 (Chat models)
 
-### Gemini Models
+### Gemini 模型
 
-Access Gemini models such as `gemini-2.5-pro` and `gemini-2.0-flex` through the [`ChatGoogleGenerativeAI`](/oss/integrations/chat/google_generative_ai),
-or if using VertexAI, via the [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai) class.
+通过 [`ChatGoogleGenerativeAI`](/oss/integrations/chat/google_generative_ai) 访问 `gemini-2.5-pro`、`gemini-2.0-flex` 等 Gemini
+模型，或者在使用 VertexAI 时，通过 [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai) 类来访问。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+关于安装 LangChain 软件包的通用说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 <Tabs>
@@ -22,7 +22,7 @@ See [this section for general instructions on installing LangChain packages](/os
 ```bash npm
 npm install @langchain/google-genai @langchain/core
 ```
-Configure your API key.
+配置您的 API 密钥。
 
 ```
 export GOOGLE_API_KEY=your-api-key
@@ -35,7 +35,7 @@ const model = new ChatGoogleGenerativeAI({
   maxOutputTokens: 2048,
 });
 
-// Batch and stream are also supported
+// 也支持批量处理 (Batch) 和流式 (stream) 传输
 const res = await model.invoke([
   [
     "human",
@@ -44,7 +44,7 @@ const res = await model.invoke([
 ]);
 ```
 
-More recent Gemini models support image inputs:
+较新的 Gemini 模型支持图像输入：
 
 ```typescript
 const visionModel = new ChatGoogleGenerativeAI({
@@ -71,7 +71,7 @@ const res = await visionModel.invoke(input2);
 ```
 
 <Tip>
-**Click [here](/oss/integrations/chat/google_generative_ai) for the `@langchain/google-genai` specific integration docs**
+**点击[此处](/oss/integrations/chat/google_generative_ai)查看 `@langchain/google-genai` 集成特定的文档**
 </Tip>
 
 </Tab>
@@ -81,19 +81,21 @@ const res = await visionModel.invoke(input2);
 ```bash npm
 npm install @langchain/google-vertexai @langchain/core
 ```
-Then, you'll need to add your service account credentials, either directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
+然后，您需要添加您的服务账号凭证（Service Account Credentials），可以通过以下两种方式之一：
+
+1. 直接作为 `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` 环境变量：
 
 ```
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
 ```
-or as a file path:
+2. 或作为文件路径：
 
 ```
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS_FILE=/path/to/your/credentials.json
 ```
 ```typescript
 import { ChatVertexAI } from "@langchain/google-vertexai";
-// Or, if using the web entrypoint:
+// 或者，如果您使用的是 Web 入口点：
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
 
 const model = new ChatVertexAI({
@@ -101,7 +103,7 @@ const model = new ChatVertexAI({
   maxOutputTokens: 2048,
 });
 
-// Batch and stream are also supported
+// 也支持批量处理 (Batch) 和流式 (stream) 传输
 const res = await model.invoke([
   [
     "human",
@@ -110,7 +112,7 @@ const res = await model.invoke([
 ]);
 ```
 
-Gemini vision models support image inputs when providing a single human message. For example:
+当提供单个 Human 消息时，Gemini 视觉模型支持图像输入。例如：
 
 ```typescript
 const visionModel = new ChatVertexAI({
@@ -137,28 +139,27 @@ const res = await visionModel.invoke(input2);
 ```
 
 <Tip>
-Click [here](/oss/integrations/chat/google_vertex_ai) for the `@langchain/google-vertexai` specific integration docs
+点击[此处](/oss/integrations/chat/google_vertex_ai)查看 `@langchain/google-vertexai` 集成特定的文档
 </Tip>
 
 </Tab>
 </Tabs>
 
-The value of `image_url` must be a base64 encoded image (e.g., `data:image/png;base64,abcd124`).
+`image_url` 的值必须是 base64 编码的图像（例如：`data:image/png;base64,abcd124`）。
 
 ### Gemma
 
-Access the `gemma-3-27b-it` model through AI Studio using the `ChatGoogle` class.
-(This class is a superclass of the [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai)
-class that works with both Vertex AI and the AI Studio APIs.)
+通过 AI Studio 使用 `ChatGoogle` 类访问 `gemma-3-27b-it` 模型。
+（此类是 [`ChatVertexAI`](/oss/integrations/chat/google_vertex_ai) 类的超类，可同时用于 Vertex AI 和 AI Studio API。）
 
 <Tip>
-**Since Gemma is an open model, it may also be available from other platforms** including [Ollama](/oss/integrations/chat/ollama/).
+**由于 Gemma 是一个开放模型，它可能也可以从其他平台获得**，包括 [Ollama](/oss/integrations/chat/ollama/)。
 </Tip>
 
 ```bash npm
 npm install @langchain/google-gauth @langchain/core
 ```
-Configure your API key.
+配置您的 API 密钥。
 
 ```
 export GOOGLE_API_KEY=your-api-key
@@ -179,41 +180,38 @@ const res = await model.invoke([
 ]);
 ```
 
-### Third Party Models
+### 第三方模型 (Third Party Models)
 
-See above for setting up authentication through Vertex AI to use these models.
+请参阅上文，了解如何通过 Vertex AI 设置身份验证以使用这些模型。
 
-[Anthropic](/oss/integrations/chat/anthropic) Claude models are also available through
-the [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
-platform. See [here](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
-for more information about enabling access to the models and the model names to use.
+[Anthropic](/oss/integrations/chat/anthropic) Claude 模型也可以通过 [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
+平台使用。有关启用模型访问和使用模型名称的更多信息，请参阅[此处](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)。
 
-PaLM models are no longer supported.
+PaLM 模型已不再受支持。
 
-## Vector Store
+## 向量存储 (Vector Store)
 
 ### Vertex AI Vector Search
 
-> [Vertex AI Vector Search](https://cloud.google.com/vertex-ai/docs/matching-engine/overview),
-> formerly known as Vertex AI Matching Engine, provides the industry's leading high-scale
-> low latency vector database. These vector databases are commonly
-> referred to as vector similarity-matching or an approximate nearest neighbor (ANN) service.
+> [Vertex AI Vector Search](https://cloud.google.com/vertex-ai/docs/matching-engine/overview)，
+> 前身为 Vertex AI Matching Engine，提供了业界领先的高扩展性、低延迟的向量数据库。
+> 这些向量数据库通常被称为向量相似性匹配或近似最近邻 (ANN) 服务。
 
 ```typescript
 import { MatchingEngine } from "@langchain/community/vectorstores/googlevertexai";
 ```
 
-### Postgres Vector Store
+### Postgres 向量存储 (Postgres Vector Store)
 
-The [PostgresVectorStore](/oss/integrations/vectorstores/google_cloudsql_pg) module from the
-[`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) package provides a way to use the CloudSQL for PostgresSQL to store
-vector embeddings using the class.
+来自 [`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) 包的
+[PostgresVectorStore](/oss/integrations/vectorstores/google_cloudsql_pg) 模块提供了一种使用 CloudSQL for
+PostgresSQL 的方法，通过该类来存储向量嵌入（vector embeddings）。
 
 ```bash
 $ yarn add @langchain/google-cloud-sql-pg
 ```
 
-Set your environment variables:
+设置您的环境变量：
 
 ```bash
 PROJECT_ID="your-project-id"
@@ -224,7 +222,7 @@ DB_USER="your-database-user"
 PASSWORD="your-database-password"
 ```
 
-Create a DB connection through the PostgresEngine class:
+通过 PostgresEngine 类创建数据库连接：
 
 ```typescript
 const engine: PostgresEngine = await PostgresEngine.fromInstance(
@@ -236,7 +234,7 @@ const engine: PostgresEngine = await PostgresEngine.fromInstance(
 );
 ```
 
-Initialize the vector store table:
+初始化向量存储表：
 
 ```typescript
 await engine.initVectorstoreTable(
@@ -246,7 +244,7 @@ await engine.initVectorstoreTable(
 );
 ```
 
-Create a vector store instance:
+创建向量存储实例：
 
 ```typescript
 const vectorStore = await PostgresVectorStore.initialize(
@@ -257,22 +255,22 @@ const vectorStore = await PostgresVectorStore.initialize(
 );
 ```
 
-## Tools
+## 工具 (Tools)
 
-### Google Search
+### Google 搜索 (Google Search)
 
-- Set up a Custom Search Engine, following [these instructions](https://stackoverflow.com/questions/37083058/programmatically-searching-google-in-python-using-custom-search)
-- Get an API Key and Custom Search Engine ID from the previous step, and set them as environment variables `GOOGLE_API_KEY` and `GOOGLE_CSE_ID` respectively
+- 按照[这些说明](https://stackoverflow.com/questions/37083058/programmatically-searching-google-in-python-using-custom-search)设置自定义搜索引擎 (Custom Search Engine)。
+- 从上一步获取 API 密钥和自定义搜索引擎 ID，并将它们分别设置为环境变量 `GOOGLE_API_KEY` 和 `GOOGLE_CSE_ID`。
 
-There exists a `GoogleCustomSearch` utility which wraps this API. To import this utility:
+存在一个 `GoogleCustomSearch` 工具，它封装了这个 API。导入此工具：
 
 ```typescript
 import { GoogleCustomSearch } from "@langchain/community/tools/google_custom_search";
 ```
 
-We can easily load this wrapper as a Tool (to use with an Agent). We can do this with:
+我们可以很容易地将此封装加载为一个工具（Tool）（供 Agent 使用）。方法如下：
 
 ```typescript
 const tools = [new GoogleCustomSearch({})];
-// Pass this variable into your agent.
+// 将此变量传递给您的 Agent。
 ```

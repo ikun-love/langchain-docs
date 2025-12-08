@@ -2,22 +2,22 @@
 title: DocArray HnswSearch
 ---
 
->[DocArrayHnswSearch](https://docs.docarray.org/user_guide/storing/index_hnswlib/) is a lightweight Document Index implementation provided by [Docarray](https://github.com/docarray/docarray) that runs fully locally and is best suited for small- to medium-sized datasets. It stores vectors on disk in [hnswlib](https://github.com/nmslib/hnswlib), and stores all other data in [SQLite](https://www.sqlite.org/index.html).
+>[DocArrayHnswSearch](https://docs.docarray.org/user_guide/storing/index_hnswlib/) 是 [Docarray](https://github.com/docarray/docarray) 提供的一个轻量级的文档索引实现，它可以完全在本地运行，最适合用于小型到中型数据集。它使用 [hnswlib](https://github.com/nmslib/hnswlib) 在磁盘上存储向量，并使用 [SQLite](https://www.sqlite.org/index.html) 存储所有其他数据。
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+你需要通过运行 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
 
-This notebook shows how to use functionality related to the `DocArrayHnswSearch`.
+本 Notebook 展示了如何使用与 `DocArrayHnswSearch` 相关的各项功能。
 
-## Setup
+## 设置 (Setup)
 
-Uncomment the below cells to install docarray and get/set your OpenAI api key if you haven't already done so.
+如果你尚未安装 docarray 或获取/设置 OpenAI api 密钥，请取消注释以下单元格进行安装。
 
 ```python
 pip install -qU  "docarray[hnswlib]"
 ```
 
 ```python
-# Get an OpenAI token: https://platform.openai.com/account/api-keys
+# 获取 OpenAI 令牌: https://platform.openai.com/account/api-keys
 
 # import os
 # from getpass import getpass
@@ -27,7 +27,7 @@ pip install -qU  "docarray[hnswlib]"
 # os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 ```
 
-## Using DocArrayHnswSearch
+## 使用 DocArrayHnswSearch
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -48,7 +48,7 @@ db = DocArrayHnswSearch.from_documents(
 )
 ```
 
-### Similarity search
+### 相似度搜索 (Similarity search)
 
 ```python
 query = "What did the president say about Ketanji Brown Jackson"
@@ -69,9 +69,9 @@ One of the most serious constitutional responsibilities a President has is nomin
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ```
 
-### Similarity search with score
+### 相似度搜索并带得分 (Similarity search with score)
 
-The returned distance score is cosine distance. Therefore, a lower score is better.
+返回的距离得分是余弦距离 (cosine distance)。因此，分数越低越好。
 
 ```python
 docs = db.similarity_search_with_score(query)
@@ -89,6 +89,6 @@ docs[0]
 ```python
 import shutil
 
-# delete the dir
+# 删除该目录
 shutil.rmtree("hnswlib_store")
 ```

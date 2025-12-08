@@ -1,39 +1,40 @@
+```markdown
 ---
 title: PineconeEmbeddings
 ---
 
-This will help you get started with PineconeEmbeddings [embedding models](/oss/integrations/text_embedding) using LangChain. For detailed documentation on `PineconeEmbeddings` features and configuration options, please refer to the [API reference](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeEmbeddings.html).
+这将帮助您使用 LangChain 入门 `PineconeEmbeddings` [嵌入模型](/oss/integrations/text_embedding)。有关 `PineconeEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeEmbeddings.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | [Py support](https://python.langchain.com/docs/integrations/text_embedding/pinecone/) | Downloads | Version |
+| 类 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/text_embedding/pinecone/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [PineconeEmbeddings](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeEmbeddings.html) | [@langchain/pinecone](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeEmbeddings.html) | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/pinecone?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/pinecone?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-To access Pinecone embedding models you'll need to create a Pinecone account, get an API key, and install the `@langchain/pinecone` integration package.
+要访问 Pinecone 嵌入模型，您需要创建一个 Pinecone 账户，获取一个 API 密钥，并安装 `@langchain/pinecone` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-Sign up for a [Pinecone](https://www.pinecone.io/) account, retrieve your API key, and set it as an environment variable named `PINECONE_API_KEY`:
+请注册一个 [Pinecone](https://www.pinecone.io/) 账户，获取您的 API 密钥，并将其设置为名为 `PINECONE_API_KEY` 的环境变量：
 
 ```typescript
 process.env.PINECONE_API_KEY = "your-pinecone-api-key";
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您想对模型调用进行自动追踪，您还可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### Installation
+### 安装 (Installation)
 
-The LangChain PineconeEmbeddings integration lives in the `@langchain/pinecone` package:
+LangChain PineconeEmbeddings 集成位于 `@langchain/pinecone` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -47,9 +48,9 @@ pnpm add @langchain/pinecone @langchain/core @pinecone-database/pinecone@5
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化 (Instantiation)
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化我们的模型对象并生成聊天补全内容：
 
 ```typescript
 import { PineconeEmbeddings } from "@langchain/pinecone";
@@ -59,45 +60,45 @@ const embeddings = new PineconeEmbeddings({
 });
 ```
 
-## Indexing and Retrieval
+## 索引和检索 (Indexing and Retrieval)
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our RAG tutorials under the [**Learn** tab](/oss/learn/).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡](/oss/learn/) 下的 RAG 教程。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document using the demo [`MemoryVectorStore`](/oss/integrations/vectorstores/memory).
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在这个例子中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
-// Create a vector store with a sample text
+// 使用一个示例文本创建一个向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
-const text = "LangChain is the framework for building context-aware reasoning applications";
+const text = "LangChain 是用于构建上下文感知推理应用程序的框架";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: text, metadata: {} }],
   embeddings,
 );
 
-// Use the vector store as a retriever that returns a single document
+// 使用向量存储作为检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
-// Retrieve the most similar text
-const retrievedDocuments = await retriever.invoke("What is LangChain?");
+// 检索最相似的文本
+const retrievedDocuments = await retriever.invoke("什么是 LangChain?");
 
 retrievedDocuments[0].pageContent;
 ```
 
 ```output
-LangChain is the framework for building context-aware reasoning applications
+LangChain 是用于构建上下文感知推理应用程序的框架
 ```
 
-## Direct Usage
+## 直接使用 (Direct Usage)
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embedDocument(...)` and `embeddings.embedQuery(...)` to create embeddings for the text(s) used in `fromDocuments` and the retriever's `invoke` operations, respectively.
+在底层，向量存储 (vectorstore) 和检索器 (retriever) 的实现会分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 方法，为 `fromDocuments` 中使用的文本和检索器的 `invoke` 操作创建嵌入向量。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
-### Embed single texts
+### 嵌入单个文本 (Embed single texts)
 
-You can embed queries for search with `embedQuery`. This generates a vector representation specific to the query:
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -144,12 +145,12 @@ console.log(singleVector.slice(0, 100));
 ]
 ```
 
-### Embed multiple texts
+### 嵌入多个文本 (Embed multiple texts)
 
-You can embed multiple texts for indexing with `embedDocuments`. The internals used for this method may (but do not have to) differ from embedding queries:
+您可以使用 `embedDocuments` 来嵌入多个用于索引的文本。此方法的内部机制可能（但不一定）与嵌入查询所使用的机制不同：
 
 ```typescript
-const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
+const text2 = "LangGraph 是一个用于使用 LLM 构建有状态、多代理应用程序的库";
 
 const vectors = await embeddings.embedDocuments([text, text2]);
 
@@ -224,16 +225,4 @@ console.log(vectors[1].slice(0, 100));
       0.009735107421875,   0.000682830810546875,       0.05792236328125,
        -0.0145263671875,       0.03643798828125,  0.0018339157104492188,
       0.047210693359375,  0.0017986297607421875,     0.0300140380859375,
-      0.027923583984375,      0.044708251953125,      0.027618408203125,
-    0.00104522705078125,       0.05987548828125,       0.06304931640625,
-     -0.039703369140625,       -0.0386962890625,    0.00797271728515625,
-     0.0254974365234375,     0.0245819091796875,      0.010467529296875,
-    -0.0080413818359375
-]
-```
-
----
-
-## API reference
-
-For detailed documentation of all PineconeEmbeddings features and configurations head to the [API reference](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeEmbeddings.html).
+      0.027923583984375,      0.0447082519531

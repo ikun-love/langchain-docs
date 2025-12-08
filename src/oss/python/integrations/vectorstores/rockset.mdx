@@ -2,19 +2,19 @@
 title: Rockset
 ---
 
->[Rockset](https://rockset.com/) is a real-time search and analytics database built for the cloud. Rockset uses a [Converged Index™](https://rockset.com/blog/converged-indexing-the-secret-sauce-behind-rocksets-fast-queries/) with an efficient store for vector embeddings to serve low latency, high concurrency search queries at scale. Rockset has full support for metadata filtering and  handles real-time ingestion for constantly updating, streaming data.
+>[Rockset](https://rockset.com/) 是一个专为云构建的实时搜索和分析数据库。Rockset 使用 [Converged Index™](https://rockset.com/blog/converged-indexing-the-secret-sauce-behind-rocksets-fast-queries/)（融合索引）技术，并配备高效的向量嵌入存储，能够在保持低延迟和高并发性的同时，大规模地服务搜索查询。Rockset 完全支持元数据过滤，并能实时处理不断更新的流式数据的摄取。
 
-This notebook demonstrates how to use `Rockset` as a vector store in LangChain. Before getting started, make sure you have access to a `Rockset` account and an API key available. [Start your free trial today.](https://rockset.com/create/)
+本教程演示了如何使用 `Rockset` 作为 LangChain 中的向量存储。在开始之前，请确保您拥有一个 `Rockset` 账户和一个可用的 API 密钥。[立即开始免费试用。](https://rockset.com/create/)
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+你需要使用 `pip install -qU langchain-community` 安装 `langchain-community` 才能使用此集成。
 
-## Setting Up Your Environment
+## 设置环境
 
-1. Leverage the `Rockset` console to create a [collection](https://rockset.com/docs/collections/) with the Write API as your source. In this walkthrough, we create a collection named `langchain_demo`.
+1. 登录 `Rockset` 控制台，创建一个源为 [Write API](https://rockset.com/docs/collections/) 的[集合 (collection)](https://rockset.com/docs/collections/)。在本示例中，我们创建一个名为 `langchain_demo` 的集合。
 
-    Configure the following [ingest transformation](https://rockset.com/docs/ingest-transformation/) to mark your embeddings field and take advantage of performance and storage optimizations:
+    配置以下[摄取转换 (ingest transformation)](https://rockset.com/docs/ingest-transformation/) 来标记您的嵌入字段，从而利用性能和存储优化：
 
-   (We used OpenAI `text-embedding-ada-002` for this example, where #length_of_vector_embedding = 1536)
+   （在这个例子中，我们使用了 OpenAI 的 `text-embedding-ada-002` 模型，其中 \#length_of_vector_embedding = 1536）
 
 ```
 SELECT _input.* EXCEPT(_meta),
@@ -22,20 +22,20 @@ VECTOR_ENFORCE(_input.description_embedding, #length_of_vector_embedding, 'float
 FROM _input
 ```
 
-2. After creating your collection, use the console to retrieve an [API key](https://rockset.com/docs/iam/#users-api-keys-and-roles). For the purpose of this notebook, we assume you are using the `Oregon(us-west-2)` region.
+2. 创建集合后，使用控制台检索一个[API 密钥](https://rockset.com/docs/iam/#users-api-keys-and-roles)。在本教程中，我们假设您使用的是 `Oregon(us-west-2)` 区域。
 
-3. Install the [rockset-python-client](https://github.com/rockset/rockset-python-client) to enable LangChain to communicate directly with `Rockset`.
+3. 安装 [rockset-python-client](https://github.com/rockset/rockset-python-client) 库，以便 LangChain 能够直接与 `Rockset` 通信。
 
 ```python
 pip install -qU  rockset
 ```
 
-## LangChain Tutorial
+## LangChain 教程
 
-Follow along in your own Python notebook to generate and store vector embeddings in Rockset.
-Start using Rockset to search for documents similar to your search queries.
+请在您自己的 Python 笔记本中进行操作，以便在 Rockset 中生成和存储向量嵌入。
+开始使用 Rockset 来搜索与您的搜索查询相似的文档。
 
-### 1. Define Key Variables
+### 1. 定义关键变量
 
 ```python
 import os
@@ -44,8 +44,8 @@ import rockset
 
 ROCKSET_API_KEY = os.environ.get(
     "ROCKSET_API_KEY"
-)  # Verify ROCKSET_API_KEY environment variable
-ROCKSET_API_SERVER = rockset.Regions.usw2a1  # Verify Rockset region
+)  # 验证 ROCKSET_API_KEY 环境变量
+ROCKSET_API_SERVER = rockset.Regions.usw2a1  # 验证 Rockset 区域
 rockset_client = rockset.RocksetClient(ROCKSET_API_SERVER, ROCKSET_API_KEY)
 
 COLLECTION_NAME = "langchain_demo"
@@ -53,7 +53,7 @@ TEXT_KEY = "description"
 EMBEDDING_KEY = "description_embedding"
 ```
 
-### 2. Prepare Documents
+### 2. 准备文档
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -67,10 +67,10 @@ text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
 ```
 
-### 3. Insert Documents
+### 3. 插入文档
 
 ```python
-embeddings = OpenAIEmbeddings()  # Verify OPENAI_API_KEY environment variable
+embeddings = OpenAIEmbeddings()  # 验证 OPENAI_API_KEY 环境变量
 
 docsearch = Rockset(
     client=rockset_client,
@@ -86,7 +86,7 @@ ids = docsearch.add_texts(
 )
 ```
 
-### 4. Search for Similar Documents
+### 4. 搜索相似文档
 
 ```python
 query = "What did the president say about Ketanji Brown Jackson"
@@ -105,7 +105,7 @@ for d, dist in output:
 # 0.7436231261419488 {'source': '../../../state_of_the_union.txt'} Groups of citizens b...
 ```
 
-### 5. Search for Similar Documents with Filtering
+### 5. 附带过滤条件搜索相似文档
 
 ```python
 output = docsearch.similarity_search_with_relevance_scores(
@@ -126,19 +126,19 @@ for d, dist in output:
 # 0.7344177777547739 {'source': '../../../state_of_the_union.txt'} We see the unity amo...
 ```
 
-### 6. [Optional] Delete Inserted Documents
+### 6. [可选] 删除已插入的文档
 
-You must have the unique ID associated with each document to delete them from your collection.
-Define IDs when inserting documents with `Rockset.add_texts()`. Rockset will otherwise generate a unique ID for each document. Regardless, `Rockset.add_texts()` returns the IDs of inserted documents.
+您必须使用每个文档的唯一 ID 才能将它们从集合中删除。
+在通过 `Rockset.add_texts()` 插入文档时定义 ID。否则，Rockset 将为每个文档生成一个唯一的 ID。无论如何，`Rockset.add_texts()` 都会返回已插入文档的 ID。
 
-To delete these docs, simply use the `Rockset.delete_texts()` function.
+要删除这些文档，只需使用 `Rockset.delete_texts()` 函数即可。
 
 ```python
 docsearch.delete_texts(ids)
 ```
 
-## Summary
+## 总结
 
-In this tutorial, we successfully created a `Rockset` collection, `inserted` documents with  OpenAI embeddings, and searched for similar documents with and without metadata filters.
+在本教程中，我们成功创建了一个 `Rockset` 集合，使用 OpenAI 嵌入`插入`了文档，并成功搜索了带有和不带元数据过滤条件的相似文档。
 
-Keep an eye on [rockset.com/](https://rockset.com/) for future updates in this space.
+请持续关注 [rockset.com/](https://rockset.com/) 以获取此领域的未来更新。

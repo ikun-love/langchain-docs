@@ -1,13 +1,14 @@
+```markdown
 ---
-title: How to evaluate with repetitions
-sidebarTitle: Evaluate with repetitions
+title: 如何进行重复评估
+sidebarTitle: 重复评估
 ---
 
-Running multiple repetitions can give a more accurate estimate of the performance of your system since LLM outputs are not deterministic. Outputs can differ from one repetition to the next. Repetitions are a way to reduce noise in systems prone to high variability, such as agents.
+运行多次重复评估可以更准确地估算系统的性能，因为大型语言模型（LLM）的输出并不是确定性的。不同重复运行的输出可能会有所不同。对于那些容易出现高变异性的系统（例如智能体/Agents），多次重复是降低噪声的一种有效方法。
 
-## Configuring repetitions on an experiment
+## 在实验中配置重复次数
 
-Add the optional `num_repetitions` param to the `evaluate` / `aevaluate` function ([Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)) to specify how many times to evaluate over each example in your dataset. For instance, if you have 5 examples in the dataset and set `num_repetitions=5`, each example will be run 5 times, for a total of 25 runs.
+向可选的 `evaluate` / `aevaluate` 函数中添加 `num_repetitions` 参数（[Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)），以指定对数据集中每个示例进行评估的次数。例如，如果您的数据集中有 5 个示例，并将 `num_repetitions=5`，那么每个示例将被运行 5 次，总共进行 25 次运行。
 
 <CodeGroup>
 
@@ -36,10 +37,9 @@ await evaluate((inputs) => labelText(inputs["input"]), {
 
 </CodeGroup>
 
-## Viewing results of experiments run with repetitions
+## 查看使用重复次数运行的实验结果
 
-If you've run your experiment with [repetitions](/langsmith/evaluation-concepts#repetitions), there will be arrows in the output results column so you can view outputs in the table. To view each run from the repetition, hover over the output cell and click the expanded view. When you run an experiment with repetitions, LangSmith displays the average for each feedback score in the table. Click on the feedback score to view the feedback scores from individual runs, or to view the standard deviation across repetitions.
+如果您使用[重复次数](/langsmith/evaluation-concepts#repetitions)运行了实验，输出结果列中将出现箭头，方便您在表格中查看不同的输出结果。要查看重复运行中的每一次具体运行情况，请将鼠标悬停在输出单元格上，然后点击展开视图。当您使用重复次数运行实验时，LangSmith 会在表格中显示每个反馈得分的**平均值**。点击反馈得分，可以查看来自**单个运行**的反馈得分，或者查看**重复次数之间的标准差**。
 
 ![Repetitions](/langsmith/images/repetitions.png)
-
-
+```

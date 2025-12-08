@@ -2,19 +2,19 @@
 title: Graphsignal
 ---
 
-This page covers how to use [Graphsignal](https://app.graphsignal.com) to trace and monitor LangChain. Graphsignal enables full visibility into your application. It provides latency breakdowns by chains and tools, exceptions with full context, data monitoring, compute/GPU utilization, OpenAI cost analytics, and more.
+本文档介绍如何使用 [Graphsignal](https://app.graphsignal.com) 来跟踪和监控 LangChain 应用。Graphsignal 能够为您的应用程序提供完全的可视性，包括按链 (Chains) 和工具 (Tools) 划分的延迟细分、带有完整上下文的异常信息、数据监控、计算/GPU 利用率、OpenAI 成本分析等功能。
 
-## Installation and Setup
+## 安装与设置 (Installation and Setup)
 
-- Install the Python library with `pip install graphsignal`
-- Create free Graphsignal account [here](https://graphsignal.com)
-- Get an API key and set it as an environment variable (`GRAPHSIGNAL_API_KEY`)
+- 使用 `pip install graphsignal` 安装 Python 库
+- [在此处](https://graphsignal.com) 创建免费的 Graphsignal 账户
+- 获取 API 密钥并将其设置为环境变量 (`GRAPHSIGNAL_API_KEY`)
 
-## Tracing and Monitoring
+## 跟踪与监控 (Tracing and Monitoring)
 
-Graphsignal automatically instruments and starts tracing and monitoring chains. Traces and metrics are then available in your [Graphsignal dashboards](https://app.graphsignal.com).
+Graphsignal 会自动对您的链进行检测 (instrumentation)，并开始跟踪和监控这些链。跟踪记录 (Traces) 和指标 (Metrics) 随后将可以在您的 [Graphsignal 控制面板](https://app.graphsignal.com) 中查看。
 
-Initialize the tracer by providing a deployment name:
+通过提供一个部署名称来初始化追踪器：
 
 ```python
 import graphsignal
@@ -22,7 +22,7 @@ import graphsignal
 graphsignal.configure(deployment='my-langchain-app-prod')
 ```
 
-To additionally trace any function or code, you can use a decorator or a context manager:
+要额外跟踪任何函数或代码，您可以使用装饰器或上下文管理器：
 
 ```python
 @graphsignal.trace_function
@@ -35,7 +35,7 @@ with graphsignal.start_trace('my-chain'):
     chain.run("some initial text")
 ```
 
-Optionally, enable profiling to record function-level statistics for each trace.
+可以选择启用性能分析 (profiling)，为每次跟踪记录函数级别的统计信息。
 
 ```python
 with graphsignal.start_trace(
@@ -43,4 +43,4 @@ with graphsignal.start_trace(
     chain.run("some initial text")
 ```
 
-See the [Quick Start](https://graphsignal.com/docs/guides/quick-start/) guide for complete setup instructions.
+请参阅 [快速入门](https://graphsignal.com/docs/guides/quick-start/) 指南以获取完整的设置说明。

@@ -2,18 +2,18 @@
 title: SQLite-VSS
 ---
 
->[SQLite-VSS](https://alexgarcia.xyz/sqlite-vss/) is an `SQLite` extension designed for vector search, emphasizing local-first operations and easy integration into applications without external servers. Leveraging the `Faiss` library, it offers efficient similarity search and clustering capabilities.
+> [SQLite-VSS](https://alexgarcia.xyz/sqlite-vss/) 是一个专为**向量搜索**设计的 `SQLite` 扩展，它强调**本地优先**操作，并易于集成到应用程序中，无需依赖外部服务器。它利用了 `Faiss` 库，提供了高效的相似性搜索和聚类功能。
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+您需要使用 `pip install -qU langchain-community` 安装 `langchain-community` 才能使用此集成。
 
-This notebook shows how to use the `SQLiteVSS` vector database.
+本示例 Notebook 展示了如何使用 `SQLiteVSS` 向量数据库。
 
 ```python
-# You need to install sqlite-vss as a dependency.
+# 您需要将 sqlite-vss 作为依赖项安装。
 pip install -qU  sqlite-vss
 ```
 
-## Quickstart
+## 快速上手 (Quickstart)
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -23,23 +23,22 @@ from langchain_community.embeddings.sentence_transformer import (
 from langchain_community.vectorstores import SQLiteVSS
 from langchain_text_splitters import CharacterTextSplitter
 
-# load the document and split it into chunks
+# 加载文档并将其分割成块
 loader = TextLoader("../../how_to/state_of_the_union.txt")
 documents = loader.load()
 
-# split it into chunks
+# 将其分割成块
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
 texts = [doc.page_content for doc in docs]
 
 
-# create the open-source embedding function
+# 创建开源的嵌入函数 (embedding function)
 embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
-# load it in sqlite-vss in a table named state_union.
-# the db_file parameter is the name of the file you want
-# as your sqlite database.
+# 在一个名为 state_union 的表中，使用 sqlite-vss 加载数据。
+# db_file 参数是您希望作为 SQLite 数据库的文件名。
 db = SQLiteVSS.from_texts(
     texts=texts,
     embedding=embedding_function,
@@ -47,11 +46,11 @@ db = SQLiteVSS.from_texts(
     db_file="/tmp/vss.db",
 )
 
-# query it
+# 进行查询
 query = "What did the president say about Ketanji Brown Jackson"
 data = db.similarity_search(query)
 
-# print results
+# 打印结果
 data[0].page_content
 ```
 
@@ -59,7 +58,7 @@ data[0].page_content
 'Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. \n\nTonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. \n\nOne of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. \n\nAnd I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.'
 ```
 
-## Using existing SQLite connection
+## 使用现有的 SQLite 连接 (Using existing SQLite connection)
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -69,17 +68,17 @@ from langchain_community.embeddings.sentence_transformer import (
 from langchain_community.vectorstores import SQLiteVSS
 from langchain_text_splitters import CharacterTextSplitter
 
-# load the document and split it into chunks
+# 加载文档并将其分割成块
 loader = TextLoader("../../how_to/state_of_the_union.txt")
 documents = loader.load()
 
-# split it into chunks
+# 将其分割成块
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
 texts = [doc.page_content for doc in docs]
 
 
-# create the open-source embedding function
+# 创建开源的嵌入函数 (embedding function)
 embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 connection = SQLiteVSS.create_connection(db_file="/tmp/vss.db")
 
@@ -88,11 +87,11 @@ db1 = SQLiteVSS(
 )
 
 db1.add_texts(["Ketanji Brown Jackson is awesome"])
-# query it again
+# 再次查询
 query = "What did the president say about Ketanji Brown Jackson"
 data = db1.similarity_search(query)
 
-# print results
+# 打印结果
 data[0].page_content
 ```
 
@@ -101,12 +100,12 @@ data[0].page_content
 ```
 
 ```python
-# Cleaning up
+# 清理操作
 import os
 
 os.remove("/tmp/vss.db")
 ```
 
-```python
+```
 
 ```

@@ -1,43 +1,43 @@
 ---
-title: Trace Claude Code
+title: 跟踪 Claude Code
 sidebarTitle: Claude Code
 ---
 
-[Claude Code](https://code.claude.com/docs/en/overview) is one of the most impressive and useful AI coding tools to date. Claude code emits events for monitoring and observability. LangSmith can collect and display these events to give you a full detailed log on what Claude Code does under the hood.
+[Claude Code](https://code.claude.com/docs/en/overview) 是迄今为止最令人印象深刻且实用的 AI 编程工具之一。Claude Code 会发出事件用于监控和可观测性。LangSmith 可以收集并展示这些事件，从而为您提供 Claude Code 内部运行情况的完整详细日志。
 
-## Quick Start
+## 快速开始
 
-You can integrate LangSmith tracing with Claude Code by setting the following environment variables in the environment in which you run Claude Code.
+您可以通过在运行 Claude Code 的环境中设置以下环境变量，将 LangSmith 跟踪与 Claude Code 集成。
 
 ```bash
-# Enables Claude Code to emit OTEL events
+# 启用 Claude Code 以发出 OTEL 事件
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 
-# Sets the output format to use Open Telemetry Protocol
+# 设置输出格式使用 Open Telemetry 协议
 export OTEL_LOGS_EXPORTER=otlp
 
-# LangSmith ingests JSON format events
+# LangSmith 会摄取 JSON 格式的事件
 export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=http/json
 
-# Claude Code Logs are translated to Spans by LangSmith
+# Claude Code 的日志将由 LangSmith 转换为 Span
 export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=https://api.smith.langchain.com/otel/v1/claude_code
 
-# Pass your API key and desired tracing project through headers
+# 通过 Header 传递您的 API 密钥和期望的跟踪项目
 export OTEL_EXPORTER_OTLP_HEADERS="x-api-key=<api-key>,Langsmith-Project=<project-name>"
 
-# Set this to true in order to log the input user prompts
+# 设置此项为 true 以记录输入的 Prompts（用户提示）
 export OTEL_LOG_USER_PROMPTS=1
 
-# Once these are set, start Claude Code, and events will be traced to LangSmith
+# 设置完这些变量后，启动 Claude Code，事件就会被跟踪到 LangSmith
 claude
 ```
 
 <Note>
-Claude Code emits [open telemetry standard events](https://code.claude.com/docs/en/monitoring-usage#events) for monitoring usage, but this does not include the actual prompts and messages that go to the LLM.
+Claude Code 会为监控使用情况发出 [Open Telemetry 标准事件](https://code.claude.com/docs/en/monitoring-usage#events)，但这不包括发送给 LLM 的实际提示和消息内容。
 </Note>
 
 <Note>
-If you're self-hosting LangSmith, replace the base endpoint with your LangSmith api endpoint and append `/api/v1`. For example: `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=https://ai-company.com/api/v1/otel/v1/claude_code`
+如果您是自托管（Self-hosting）LangSmith 实例，请将基础端点替换为您自己的 LangSmith API 端点，并在末尾追加 `/api/v1`。例如：`OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=https://ai-company.com/api/v1/otel/v1/claude_code`
 </Note>
 
 ![Claude Code Trace](/langsmith/images/claude-code-trace.png)

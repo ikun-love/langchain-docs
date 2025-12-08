@@ -1,32 +1,31 @@
 ---
-title: Zep Cloud Retriever
+title: Zep Cloud 检索器
 ---
 
-> [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
-> With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
-> while also reducing hallucinations, latency, and cost.
+> [Zep](https://www.getzep.com) 是用于 AI 助手应用的长期记忆服务。
+> 通过 Zep，您可以让 AI 助手具备回忆过去对话（无论时间多远）的能力，同时还能减少幻觉（Hallucinations）、延迟（Latency）和成本。
 
-This example shows how to use the Zep Retriever in a retrieval chain to retrieve documents from Zep Open Source memory store.
+本示例展示了如何在检索链（retrieval chain）中使用 Zep 检索器（Retriever），从 Zep 开源（Open Source）的记忆存储中检索文档。
 
-## Installation
+## 安装
 
-Sign up for [Zep Cloud](https://app.getzep.com/) and create a project.
+注册 [Zep Cloud](https://app.getzep.com/) 并创建一个项目。
 
-Follow the [Zep Cloud Typescript SDK Installation Guide](https://help.getzep.com/sdks) to install and get started with Zep.
+按照 [Zep Cloud TypeScript SDK 安装指南](https://help.getzep.com/sdks) 来安装并开始使用 Zep。
 
-You'll need your Zep Cloud Project API Key to use the ZepCloudRetriever. See the [Zep Cloud docs](https://help.getzep.com/projects) for more information.
+您需要您的 Zep Cloud 项目 API 密钥才能使用 `ZepCloudRetriever`。有关更多信息，请参阅 [Zep Cloud 文档](https://help.getzep.com/projects)。
 
-## Setup
+## 设置
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+请参阅 [此部分](/oss/langchain/install) 获取有关安装 LangChain 包的通用说明。
 </Tip>
 
 ```bash npm
 npm i @getzep/zep-cloud @langchain/community @langchain/core
 ```
 
-## Usage
+## 用法
 
 ```typescript
 import { ZepCloudRetriever } from "@langchain/community/retrievers/zep_cloud";
@@ -39,18 +38,18 @@ function sleep(ms: number) {
 }
 
 const zepConfig = {
-  // Your Zep Cloud Project API key https://help.getzep.com/projects
+  // 您的 Zep Cloud 项目 API 密钥 https://help.getzep.com/projects
   apiKey: "<Zep Api Key>",
   sessionId: `session_${randomUUID()}`,
 };
 
 console.log(`Zep Config: ${JSON.stringify(zepConfig)}`);
 
-// Generate chat messages about traveling to France
+// 生成关于前往法国旅行的聊天消息
 const chatMessages = [
   {
     role: "AI",
-    message: "Bonjour! How can I assist you with your travel plans today?",
+    message: "Bonjour! How can I assist you with your travel plans today?", // 法语：“你好！今天我能如何协助您规划旅行？”
   },
   { role: "User", message: "I'm planning a trip to France." },
   {
@@ -98,7 +97,7 @@ const zepClient = new ZepClient({
   apiKey: zepConfig.apiKey,
 });
 
-// Add chat messages to memory
+// 将聊天消息添加到内存中
 for (const chatMessage of chatMessages) {
   let m: Zep.Message;
   if (chatMessage.role === "AI") {
@@ -110,17 +109,17 @@ for (const chatMessage of chatMessages) {
   await zepClient.memory.add(zepConfig.sessionId, { messages: [m] });
 }
 
-// Wait for messages to be summarized, enriched, embedded and indexed.
+// 等待消息被总结、富集、嵌入和索引。
 await sleep(10000);
 
-// Simple similarity search
+// 简单的相似性搜索
 const query = "Can I drive red cars in France?";
 const retriever = new ZepCloudRetriever({ ...zepConfig, topK: 3 });
 const docs = await retriever.invoke(query);
 console.log("Simple similarity search");
 console.log(JSON.stringify(docs, null, 2));
 
-// mmr reranking search
+// MMR 重排序搜索
 const mmrRetriever = new ZepCloudRetriever({
   ...zepConfig,
   topK: 3,
@@ -131,7 +130,7 @@ const mmrDocs = await mmrRetriever.invoke(query);
 console.log("MMR reranking search");
 console.log(JSON.stringify(mmrDocs, null, 2));
 
-// summary search with mmr reranking
+// 带 MMR 重排序的摘要搜索
 const mmrSummaryRetriever = new ZepCloudRetriever({
   ...zepConfig,
   topK: 3,
@@ -143,7 +142,7 @@ const mmrSummaryDocs = await mmrSummaryRetriever.invoke(query);
 console.log("Summary search with MMR reranking");
 console.log(JSON.stringify(mmrSummaryDocs, null, 2));
 
-// Filtered search
+// 过滤搜索
 const filteredRetriever = new ZepCloudRetriever({
   ...zepConfig,
   topK: 3,
@@ -156,6 +155,6 @@ console.log("Filtered search");
 console.log(JSON.stringify(filteredDocs, null, 2));
 ```
 
-## Related
+## 相关
 
-- [Retrieval guide](/oss/langchain/retrieval)
+- [检索指南](/oss/langchain/retrieval)

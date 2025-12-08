@@ -1,55 +1,55 @@
 ---
-title: Scrapeless Universal Scraping
+title: Scrapeless 通用抓取
 ---
 
-**Scrapeless** offers flexible and feature-rich data acquisition services with extensive parameter customization and multi-format export support. These capabilities empower LangChain to integrate and leverage external data more effectively. The core functional modules include:
+**Scrapeless** 提供灵活且功能丰富的**数据采集服务**，支持广泛的参数自定义和多格式导出。这些功能使得 LangChain 能够更有效地集成和利用外部数据。其核心功能模块包括：
 
 **DeepSerp**
 
-- **Google Search**: Enables comprehensive extraction of Google SERP data across all result types.
-  - Supports selection of localized Google domains (e.g., `google.com`, `google.ad`) to retrieve region-specific search results.
-  - Pagination supported for retrieving results beyond the first page.
-  - Supports a search result filtering toggle to control whether to exclude duplicate or similar content.
-- **Google Trends**: Retrieves keyword trend data from Google, including popularity over time, regional interest, and related searches.
-  - Supports multi-keyword comparison.
-  - Supports multiple data types: `interest_over_time`, `interest_by_region`, `related_queries`, and `related_topics`.
-  - Allows filtering by specific Google properties (Web, YouTube, News, Shopping) for source-specific trend analysis.
+- **Google 搜索**: 支持跨所有结果类型，对 Google SERP（搜索引擎结果页面）数据进行全面提取。
+  - 支持选择本地化的 Google 域名（例如：`google.com`, `google.ad`），以检索特定区域的搜索结果。
+  - 支持**分页**功能，用于获取第一页之后的更多结果。
+  - 支持**搜索结果过滤**开关，用于控制是否排除重复或相似的内容。
+- **Google Trends**: 从 Google 检索关键词趋势数据，包括随时间变化的流行度、区域兴趣和相关搜索。
+  - 支持**多关键词对比**。
+  - 支持多种数据类型：`interest_over_time`（随时间变化的兴趣度）、`interest_by_region`（按区域划分的兴趣度）、`related_queries`（相关查询）和 `related_topics`（相关主题）。
+  - 允许按特定的 Google 属性（网页、YouTube、新闻、购物）进行过滤，以进行特定来源的趋势分析。
 
-**Universal Scraping**
+**通用抓取 (Universal Scraping)**
 
-- Designed for modern, JavaScript-heavy websites, allowing dynamic content extraction.
-  - Global premium proxy support for bypassing geo-restrictions and improving reliability.
+- 专为现代、大量使用 JavaScript 的网站设计，支持动态内容提取。
+  - 全局**高级代理**支持，用于绕过地理限制并提高抓取可靠性。
 
-**Crawler**
+**爬虫 (Crawler)**
 
-- **Crawl**: Recursively crawl a website and its linked pages to extract site-wide content.
-  - Supports configurable crawl depth and scoped URL targeting.
-- **Scrape**: Extract content from a single webpage with high precision.
-  - Supports "main content only" extraction to exclude ads, footers, and other non-essential elements.
-  - Allows batch scraping of multiple standalone URLs.
+- **爬取 (Crawl)**: 递归地爬取一个网站及其链接的页面，以提取全站内容。
+  - 支持**配置爬取深度**和**限定的 URL 目标范围**。
+- **抓取 (Scrape)**: 从单个网页中提取内容，具有高精度。
+  - 支持“仅提取主要内容”，以排除广告、页脚和其他非必要元素。
+  - 支持对多个独立 URL 进行**批量抓取**。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Serializable | JS support |  Version |
+| 类名 | 包名 | 可序列化 | JS 支持 | 版本 |
 | :--- | :--- | :---: | :---: | :---: |
 | [ScrapelessUniversalScrapingTool](https://pypi.org/project/langchain-scrapeless/) | [langchain-scrapeless](https://pypi.org/project/langchain-scrapeless/) | ✅ | ❌ |  ![PyPI - Version](https://img.shields.io/pypi/v/langchain-scrapeless?style=flat-square&label=%20) |
 
-### Tool features
+### 工具特性
 
-|Native async|Returns artifact|Return data|
-|:-:|:-:|:-:|
-|✅|✅|html, markdown, links, metadata, structured content|
+| 原生异步 | 返回工件 | 返回数据 |
+| :-: | :-: | :--- |
+| ✅ | ✅ | html, markdown, links, metadata, structured content |
 
-## Setup
+## 设置
 
-The integration lives in the `langchain-scrapeless` package.
+该集成位于 `langchain-scrapeless` 包中。
 !pip install langchain-scrapeless
 
-### Credentials
+### 凭证
 
-You'll need a Scrapeless API key to use this tool. You can set it as an environment variable:
+您需要一个 Scrapeless API 密钥才能使用此工具。您可以将其设置为环境变量：
 
 ```python
 import os
@@ -57,53 +57,53 @@ import os
 os.environ["SCRAPELESS_API_KEY"] = "your-api-key"
 ```
 
-## Instantiation
+## 实例化
 
-Here we show how to instantiate an instance of the Scrapeless Universal Scraping Tool. This tool allows you to scrape any website using a headless browser with JavaScript rendering capabilities, customizable output types, and geo-specific proxy support.
+此处展示了如何实例化 `ScrapelessUniversalScrapingTool` 的实例。此工具允许您使用具有 JavaScript 渲染能力的**无头浏览器**来抓取任何网站，并支持自定义的输出类型和地理位置特定的代理。
 
-The tool accepts the following parameters during instantiation:
+实例化时，该工具接受以下参数：
 
-- `url` (required, str): The URL of the website to scrape.
-- `headless` (optional, bool): Whether to use a headless browser. Default is True.
-- `js_render` (optional, bool): Whether to enable JavaScript rendering. Default is True.
-- `js_wait_until` (optional, str): Defines when to consider the JavaScript-rendered page ready. Default is `'domcontentloaded'`. Options include:
-  - `load`: Wait until the page is fully loaded.
-  - `domcontentloaded`: Wait until the DOM is fully loaded.
-  - `networkidle0`: Wait until the network is idle.
-  - `networkidle2`: Wait until the network is idle for 2 seconds.
-- `outputs` (optional, str): The specific type of data to extract from the page. Options include:
-  - `phone_numbers`
-  - `headings`
-  - `images`
-  - `audios`
-  - `videos`
-  - `links`
-  - `menus`
-  - `hashtags`
-  - `emails`
-  - `metadata`
-  - `tables`
-  - `favicon`
-- `response_type` (optional, str): Defines the format of the response. Default is `'html'`. Options include:
-  - `html`: Return the raw HTML of the page.
-  - `plaintext`: Return the plain text content.
-  - `markdown`: Return a Markdown version of the page.
-  - `png`: Return a PNG screenshot.
-  - `jpeg`: Return a JPEG screenshot.
-- `response_image_full_page` (optional, bool): Whether to capture and return a full-page image when using screenshot output (png or jpeg). Default is False.
-- `selector` (optional, str): A specific CSS selector to scope scraping within a part of the page. Default is `None`.
-- `proxy_country` (optional, str): Two-letter country code for geo-specific proxy access (e.g., `'us'`, `'gb'`, `'de'`, `'jp'`). Default is `'ANY'`.
+- `url` (必填，str): 要抓取的网站的 URL。
+- `headless` (可选，bool): 是否使用无头浏览器。默认为 `True`。
+- `js_render` (可选，bool): 是否启用 JavaScript 渲染。默认为 `True`。
+- `js_wait_until` (可选，str): 定义何时认为 JavaScript 渲染的页面已准备就绪。默认为 `'domcontentloaded'`。选项包括：
+  - `load`: 等待页面完全加载。
+  - `domcontentloaded`: 等待 DOM 完全加载。
+  - `networkidle0`: 等待网络空闲（0个活动连接）。
+  - `networkidle2`: 等待网络空闲 2 秒。
+- `outputs` (可选，str): 要从页面提取的具体数据类型。选项包括：
+  - `phone_numbers` (电话号码)
+  - `headings` (标题)
+  - `images` (图片)
+  - `audios` (音频)
+  - `videos` (视频)
+  - `links` (链接)
+  - `menus` (菜单)
+  - `hashtags` (标签)
+  - `emails` (电子邮件)
+  - `metadata` (元数据)
+  - `tables` (表格)
+  - `favicon` (网站图标)
+- `response_type` (可选，str): 定义响应的格式。默认为 `'html'`。选项包括：
+  - `html`: 返回页面的原始 HTML。
+  - `plaintext`: 返回纯文本内容。
+  - `markdown`: 返回页面的 Markdown 版本。
+  - `png`: 返回 PNG 截图。
+  - `jpeg`: 返回 JPEG 截图。
+- `response_image_full_page` (可选，bool): 使用截图输出（png 或 jpeg）时，是否捕获并返回**全页**图像。默认为 `False`。
+- `selector` (可选，str): 用于将抓取范围限定在页面某个部分的**特定 CSS 选择器**。默认为 `None`。
+- `proxy_country` (可选，str): 用于地理位置特定代理访问的**两位国家代码**（例如：`'us'`, `'gb'`, `'de'`, `'jp'`）。默认为 `'ANY'`。
 
-## Invocation
+## 调用
 
-### Basic Usage
+### 基本用法
 
 ```python
 from langchain_scrapeless import ScrapelessUniversalScrapingTool
 
 tool = ScrapelessUniversalScrapingTool()
 
-# Basic usage
+# 基本用法
 result = tool.invoke("https://example.com")
 print(result)
 ```
@@ -156,7 +156,7 @@ print(result)
 </body></html>
 ```
 
-### Advanced Usage with Parameters
+### 使用参数的高级用法
 
 ```python
 from langchain_scrapeless import ScrapelessUniversalScrapingTool
@@ -174,7 +174,7 @@ Welcome to exmaple.com.
 Chances are you got here by mistake (example.com, anyone?)
 ```
 
-### Use within an agent
+### 在 Agent 中使用
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -186,7 +186,7 @@ model = ChatOpenAI()
 
 tool = ScrapelessUniversalScrapingTool()
 
-# Use the tool with an agent
+# 将工具与 Agent 一起使用
 tools = [tool]
 agent = create_agent(model, tools)
 
@@ -195,7 +195,7 @@ for chunk in agent.stream(
         "messages": [
             (
                 "human",
-                "Use the scrapeless scraping tool to fetch https://www.scrapeless.com/en and extract the h1 tag.",
+                "使用 scrapeless 抓取工具获取 https://www.scrapeless.com/en 并提取 h1 标签。",
             )
         ]
     },
@@ -207,7 +207,7 @@ for chunk in agent.stream(
 ```output
 ================================ Human Message =================================
 
-Use the scrapeless scraping tool to fetch https://www.scrapeless.com/en and extract the h1 tag.
+使用 scrapeless 抓取工具获取 https://www.scrapeless.com/en 并提取 h1 标签。
 ================================== Ai Message ==================================
 Tool Calls:
   scrapeless_universal_scraping (call_jBrvMVL2ixhvf6gklhi7Gqtb)
@@ -221,12 +221,12 @@ Name: scrapeless_universal_scraping
 {"headings":["Effortless Web Scraping Toolkitfor Business and Developers","4.8","4.5","8.5","A Flexible Toolkit for Accessing Public Web Data","Deep SerpApi","Scraping Browser","Universal Scraping API","Customized Services","From Simple Data Scraping to Complex Anti-Bot Challenges, Scrapeless Has You Covered.","Fully Compatible with Key Programming Languages and Tools","Enterprise-level Data Scraping Solution","Customized Data Scraping Solutions","High Concurrency and High-Performance Scraping","Data Cleaning and Transformation","Real-Time Data Push and API Integration","Data Security and Privacy Protection","Enterprise-level SLA","Why Scrapeless: Simplify Your Data Flow Effortlessly.","Articles","Organized Fresh Data","Prices","No need to hassle with browser maintenance","Reviews","Only pay for successful requests","Products","Fully scalable","Unleash Your Competitive Edgein Data within the Industry","Regulate Compliance for All Users","Web Scraping Blog","Scrapeless MCP Server Is Officially Live! Build Your Ultimate AI-Web Connector","Product Updates | New Profile Feature","How to Track Your Ranking on ChatGPT?","For Scraping","For Data","For AI","Top Scraper API","Learning Center","Legal"]}
 ================================== Ai Message ==================================
 
-The h1 tag extracted from the website https://www.scrapeless.com/en is "Effortless Web Scraping Toolkit for Business and Developers".
+从网站 https://www.scrapeless.com/en 提取的 h1 标签是 "Effortless Web Scraping Toolkit for Business and Developers"。
 ```
 
 ---
 
-## API reference
+## API 参考
 
-- [Scrapeless Documentation](https://docs.scrapeless.com/en/universal-scraping-api/quickstart/introduction/)
-- [Scrapeless API Reference](https://apidocs.scrapeless.com/api-12948840)
+- [Scrapeless 文档](https://docs.scrapeless.com/en/universal-scraping-api/quickstart/introduction/)
+- [Scrapeless API 参考](https://apidocs.scrapeless.com/api-12948840)

@@ -1,36 +1,36 @@
 ---
-title: LLM Sherpa
+title: LLM Sherpa 指南
 ---
 
-This notebook covers how to use `LLM Sherpa` to load files of many types. `LLM Sherpa` supports different file formats including DOCX, PPTX, HTML, TXT, and XML.
+本教程介绍了如何使用 `LLM Sherpa` 来加载多种类型的文件。`LLM Sherpa` 支持的文档格式包括 DOCX、PPTX、HTML、TXT 和 XML。
 
-`LLMSherpaFileLoader` use LayoutPDFReader, which is part of the LLMSherpa library. This tool is designed to parse PDFs while preserving their layout information, which is often lost when using most PDF to text parsers.
+`LLMSherpaFileLoader` 使用了 `LayoutPDFReader`，它是 LLMSherpa 库的一部分。这个工具旨在解析 PDF 文件，同时保留其布局信息，而布局信息通常在大多数 PDF 文本解析器中会丢失。
 
-Here are some key features of LayoutPDFReader:
+以下是 `LayoutPDFReader` 的一些关键特性：
 
-* It can identify and extract sections and subsections along with their levels.
-* It combines lines to form paragraphs.
-* It can identify links between sections and paragraphs.
-* It can extract tables along with the section the tables are found in.
-* It can identify and extract lists and nested lists.
-* It can join content spread across pages.
-* It can remove repeating headers and footers.
-* It can remove watermarks.
+* 它可以识别并提取带有层级信息的章节和小节内容。
+* 它可以将多行文本合并成段落。
+* 它可以识别章节和段落之间的链接关系。
+* 它可以提取表格，并标明表格所在的部分。
+* 它可以识别并提取列表和嵌套列表。
+* 它可以将跨页的内容连接起来。
+* 它可以移除重复的页眉和页脚。
+* 它可以移除水印。
 
-check [llmsherpa](https://llmsherpa.readthedocs.io/en/latest/) documentation.
+请参阅 [llmsherpa](https://llmsherpa.readthedocs.io/en/latest/) 文档。
 
-`INFO: this library fail with some pdf files so use it with caution.`
+`INFO: 此库对某些 PDF 文件可能存在解析失败的情况，请谨慎使用。`
 
 ```python
-# Install package
+# 安装包
 # !pip install -qU llmsherpa
 ```
 
 ## LLMSherpaFileLoader
 
-Under the hood LLMSherpaFileLoader defined some strategist to load file content: ["sections", "chunks", "html", "text"], setup [nlm-ingestor](https://github.com/nlmatics/nlm-ingestor) to get `llmsherpa_api_url` or use the default.
+`LLMSherpaFileLoader` 在底层定义了若干策略（strategist）来加载文件内容：["sections", "chunks", "html", "text"]。您可以设置 [nlm-ingestor](https://github.com/nlmatics/nlm-ingestor) 以获取 `llmsherpa_api_url`，或者使用默认值。
 
-### sections strategy: return the file parsed into sections
+### sections 策略：将文件解析为章节结构返回
 
 ```python
 from langchain_community.document_loaders.llmsherpa import LLMSherpaFileLoader
@@ -61,7 +61,7 @@ len(docs)
 79
 ```
 
-### chunks strategy: return the file parsed into chunks
+### chunks 策略：将文件解析为分块（chunks）返回
 
 ```python
 from langchain_community.document_loaders.llmsherpa import LLMSherpaFileLoader
@@ -92,7 +92,7 @@ len(docs)
 306
 ```
 
-### html strategy: return the file as one html document
+### html 策略：将文件作为单个 HTML 文档返回
 
 ```python
 from langchain_community.document_loaders.llmsherpa import LLMSherpaFileLoader
@@ -123,7 +123,7 @@ len(docs)
 1
 ```
 
-### text strategy: return the file as one text document
+### text 策略：将文件作为单个纯文本文档返回
 
 ```python
 from langchain_community.document_loaders.llmsherpa import LLMSherpaFileLoader

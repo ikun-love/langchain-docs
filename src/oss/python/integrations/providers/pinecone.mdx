@@ -2,12 +2,12 @@
 title: Pinecone
 ---
 
->[Pinecone](https://docs.pinecone.io/docs/overview) is a vector database with broad functionality.
+> [Pinecone](https://docs.pinecone.io/docs/overview) 是一个功能强大的向量数据库。
 
 
-## Installation and Setup
+## 安装与设置
 
-Install the Python SDK:
+安装 Python SDK：
 
 <CodeGroup>
 ```bash pip
@@ -20,62 +20,61 @@ uv add langchain-pinecone
 </CodeGroup>
 
 
-## Vector store
+## 向量存储 (Vector Store)
 
-There exists a wrapper around Pinecone indexes, allowing you to use it as a vectorstore,
-whether for semantic search or example selection.
+LangChain 封装了 Pinecone 索引，允许您将其用作向量存储（Vectorstore），无论是用于语义搜索还是示例选择。
 
 ```python
 from langchain_pinecone import PineconeVectorStore
 ```
 
-For a more detailed walkthrough of the Pinecone vectorstore, see [this notebook](/oss/integrations/vectorstores/pinecone)
+有关 Pinecone 向量存储的更详细演练，请参阅[本教程](/oss/integrations/vectorstores/pinecone)。
 
-### Sparse Vector store
+### 稀疏向量存储 (Sparse Vector Store)
 
-LangChain's `PineconeSparseVectorStore` enables sparse retrieval using Pinecone's sparse English model. It maps text to sparse vectors and supports adding documents and similarity search.
+LangChain 的 ``PineconeSparseVectorStore`` 借助 Pinecone 的稀疏英文模型实现了稀疏检索。它负责将文本映射到稀疏向量，并支持文档添加和相似性搜索功能。
 
 ```python
 from langchain_pinecone import PineconeSparseVectorStore
 
-# Initialize sparse vector store
+# 初始化稀疏向量存储
 vector_store = PineconeSparseVectorStore(
     index=my_index,
     embedding_model="pinecone-sparse-english-v0"
 )
-# Add documents
+# 添加文档
 vector_store.add_documents(documents)
-# Query
+# 查询
 results = vector_store.similarity_search("your query", k=3)
 ```
 
-For a more detailed walkthrough, see the [Pinecone Sparse Vector Store notebook](/oss/integrations/vectorstores/pinecone_sparse).
+有关更详细的演练，请参阅[Pinecone 稀疏向量存储教程](/oss/integrations/vectorstores/pinecone_sparse)。
 
-### Sparse Embedding
+### 稀疏嵌入 (Sparse Embedding)
 
-LangChain's `PineconeSparseEmbeddings` provides sparse embedding generation using Pinecone's `pinecone-sparse-english-v0` model.
+LangChain 的 ``PineconeSparseEmbeddings`` 使用 Pinecone 的 ``pinecone-sparse-english-v0`` 模型来生成稀疏嵌入。
 
 ```python
 from langchain_pinecone.embeddings import PineconeSparseEmbeddings
 
-# Initialize sparse embeddings
+# 初始化稀疏嵌入
 sparse_embeddings = PineconeSparseEmbeddings(
     model="pinecone-sparse-english-v0"
 )
-# Embed a single query (returns SparseValues)
+# 嵌入单个查询（返回 SparseValues 对象）
 query_embedding = sparse_embeddings.embed_query("sample text")
 
-# Embed multiple documents (returns list of SparseValues)
+# 嵌入多个文档（返回 SparseValues 对象列表）
 docs = ["Document 1 content", "Document 2 content"]
 doc_embeddings = sparse_embeddings.embed_documents(docs)
 ```
 
-For more detailed usage, see the [Pinecone Sparse Embeddings notebook](/oss/integrations/vectorstores/pinecone_sparse).
+有关更详细的使用方法，请参阅[Pinecone 稀疏嵌入教程](/oss/integrations/vectorstores/pinecone_sparse)。
 
 
-## Retrievers
+## 检索器 (Retrievers)
 
-### Pinecone Hybrid Search
+### Pinecone 混合搜索 (Hybrid Search)
 
 <CodeGroup>
 ```bash pip
@@ -93,9 +92,9 @@ from langchain_community.retrievers import (
 )
 ```
 
-For more detailed information, see [this notebook](/oss/integrations/retrievers/pinecone_hybrid_search).
+有关更详细的信息，请参阅[本教程](/oss/integrations/retrievers/pinecone_hybrid_search)。
 
 
-### Self Query retriever
+### 自我查询检索器 (Self Query Retriever)
 
-Pinecone vector store can be used as a retriever for self-querying.
+Pinecone 向量存储可以用作执行“自我查询”的检索器。

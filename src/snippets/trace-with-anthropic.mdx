@@ -1,13 +1,15 @@
-The `wrap_anthropic` methods in Python allows you to wrap your Anthropic client in order to automatically log traces -- no decorator or function wrapping required! Using the wrapper ensures that messages, including tool calls and multimodal content blocks will be rendered nicely in LangSmith. The wrapper works seamlessly with the `@traceable` decorator or `traceable` function and you can use both in the same application.
+Python 中的 `wrap_anthropic` 方法允许您将 Anthropic 客户端包装起来，以便**自动记录追踪信息（traces）**——无需使用装饰器或函数包裹！使用该包装器可以确保消息（包括工具调用和多模态内容块）在 LangSmith 中得到美观的渲染。
+
+此包装器可以无缝地与 `@traceable` 装饰器或 `traceable` 函数协同工作，您可以在同一个应用程序中同时使用它们。
 
 <Note>
-The `LANGSMITH_TRACING` environment variable must be set to `'true'` in order for traces to be logged to LangSmith, even when using `wrap_anthropic`. This allows you to toggle tracing on and off without changing your code.
+为了能将追踪信息记录到 LangSmith，**`LANGSMITH_TRACING` 环境变量必须设置为 `'true'`**，即使在使用 `wrap_anthropic` 时也是如此。这样做的好处是，您无需修改代码就能随时开启或关闭追踪功能。
 
-Additionally, you will need to set the `LANGSMITH_API_KEY` environment variable to your API key (see [Setup](/) for more information).
+此外，您还需要设置 `LANGSMITH_API_KEY` 环境变量为您的 API 密钥（更多信息请参阅 [Setup](/])）。
 
-If your LangSmith API key is linked to multiple workspaces, set the `LANGSMITH_WORKSPACE_ID` environment variable to specify which workspace to use.
+如果您的 LangSmith API 密钥关联了多个工作区，请设置 `LANGSMITH_WORKSPACE_ID` 环境变量来指定要使用的工作区。
 
-By default, the traces will be logged to a project named `default`. To log traces to a different project, see [this section](/langsmith/log-traces-to-project).
+默认情况下，追踪信息将记录到一个名为 `default` 的项目中。如需将追踪信息记录到其他项目，请参阅 [本节](/langsmith/log-traces-to-project)。
 </Note>
 
 ```python
@@ -17,7 +19,7 @@ from langsmith.wrappers import wrap_anthropic
 
 client = wrap_anthropic(anthropic.Anthropic())
 
-# You can also wrap the async client as well
+# 您也可以包装异步客户端
 # async_client = wrap_anthropic(anthropic.AsyncAnthropic())
 
 @traceable(run_type="tool", name="Retrieve Context")

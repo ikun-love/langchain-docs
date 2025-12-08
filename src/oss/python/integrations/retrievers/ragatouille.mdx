@@ -2,27 +2,27 @@
 title: RAGatouille
 ---
 
->[RAGatouille](https://github.com/bclavie/RAGatouille) makes it as simple as can be to use `ColBERT`!
+>[RAGatouille](https://github.com/bclavie/RAGatouille) 使使用 `ColBERT` 变得尽可能简单！
 >
->[ColBERT](https://github.com/stanford-futuredata/ColBERT) is a fast and accurate retrieval model, enabling scalable BERT-based search over large text collections in tens of milliseconds.
+>[ColBERT](https://github.com/stanford-futuredata/ColBERT) 是一个快速且准确的检索模型，能够在数十毫秒内对大型文本集合实现可扩展的基于 BERT 的搜索。
 >
->See the [ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction](https://arxiv.org/abs/2112.01488) paper.
+>请参阅论文 [ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction](https://arxiv.org/abs/2112.01488)。
 
-We can use this as a [retriever](/oss/langchain/retrieval). It will show functionality specific to this integration. After going through, it may be useful to explore [relevant use-case pages](/oss/langchain/rag) to learn how to use this vector store as part of a larger chain.
+我们可以将此用作 [检索器](/oss/langchain/retrieval)。它将展示此集成特有的功能。在阅读完本页内容后，探索 [相关用例页面](/oss/langchain/rag) 来了解如何将此向量存储作为更大链条的一部分会很有帮助。
 
-This page covers how to use [RAGatouille](https://github.com/bclavie/RAGatouille) as a retriever in a LangChain chain.
+本页面介绍如何在 LangChain 链中使用 [RAGatouille](https://github.com/bclavie/RAGatouille) 作为检索器。
 
-## Setup
+## 设置 (Setup)
 
-The integration lives in the `ragatouille` package.
+该集成位于 `ragatouille` 包中。
 
 ```bash
 pip install -U ragatouille
 ```
 
-## Usage
+## 用法 (Usage)
 
-This example is taken from their documentation
+此示例取自其官方文档
 
 ```python
 from ragatouille import RAGPretrainedModel
@@ -36,15 +36,15 @@ import requests
 
 def get_wikipedia_page(title: str):
     """
-    Retrieve the full text content of a Wikipedia page.
+    检索维基百科页面的完整文本内容。
 
-    :param title: str - Title of the Wikipedia page.
-    :return: str - Full text content of the page as raw string.
+    :param title: str - 维基百科页面的标题。
+    :return: str - 页面的完整文本内容，以原始字符串形式返回。
     """
-    # Wikipedia API endpoint
+    # 维基百科 API 端点
     URL = "https://en.wikipedia.org/w/api.php"
 
-    # Parameters for the API request
+    # API 请求参数
     params = {
         "action": "query",
         "format": "json",
@@ -53,13 +53,13 @@ def get_wikipedia_page(title: str):
         "explaintext": True,
     }
 
-    # Custom User-Agent header to comply with Wikipedia's best practices
+    # 自定义 User-Agent 标头，以遵守维基百科的最佳实践
     headers = {"User-Agent": "RAGatouille_tutorial/0.0.1 (ben@clavie.eu)"}
 
     response = requests.get(URL, params=params, headers=headers)
     data = response.json()
 
-    # Extracting page content
+    # 提取页面内容
     page = next(iter(data["query"]["pages"].values()))
     return page["extract"] if "extract" in page else None
 ```
@@ -213,7 +213,7 @@ results
   'rank': 3}]
 ```
 
-We can then convert easily to a LangChain retriever! We can pass in any kwargs we want when creating (like `k`)
+我们可以轻松地将 `retriever` 转换为 LangChain 的检索器！创建时可以传递任何 kwargs（例如 `k`）。
 
 ```python
 retriever = RAG.as_langchain_retriever(k=3)
@@ -234,9 +234,9 @@ retriever.invoke("What animation studio did Miyazaki found?")
  Document(page_content='Glen Keane said Miyazaki is a "huge influence" on Walt Disney Animation Studios and has been "part of our heritage" ever since The Rescuers Down Under (1990). The Disney Renaissance era was also prompted by competition with the development of Miyazaki\'s films. Artists from Pixar and Aardman Studios signed a tribute stating, "You\'re our inspiration, Miyazaki-san!"')]
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-We can easily combine this retriever in to a chain.
+我们可以轻松地将此检索器组合到链条中。
 
 ```python
 from langchain.chains import create_retrieval_chain
@@ -245,13 +245,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 prompt = ChatPromptTemplate.from_template(
-    """Answer the following question based only on the provided context:
+    """仅根据提供的上下文回答以下问题：
 
 <context>
 {context}
 </context>
 
-Question: {input}"""
+问题: {input}"""
 )
 
 llm = ChatOpenAI()

@@ -2,21 +2,21 @@
 title: DingoDB
 ---
 
->[DingoDB](https://dingodb.readthedocs.io/en/latest/) is a distributed multi-mode vector database, which combines the characteristics of data lakes and vector databases, and can store data of any type and size (Key-Value, PDF, audio, video, etc.). It has real-time low-latency processing capabilities to achieve rapid insight and response, and can efficiently conduct instant analysis and process multi-modal data.
+>[DingoDB](https://dingodb.readthedocs.io/en/latest/) 是一个分布式的多模态向量数据库，它结合了数据湖和向量数据库的特性，可以存储任何类型和大小的数据（如 Key-Value、PDF、音频、视频等）。它具备实时低延迟的处理能力，以实现快速洞察和响应，并能高效地对多模态数据进行即时分析和处理。
 
-You'll need to install `langchain-community` with `pip install -qU langchain-community` to use this integration
+你需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
 
-This notebook shows how to use functionality related to the DingoDB vector database.
+本教程演示了如何使用与 DingoDB 向量数据库相关的各项功能。
 
-To run, you should have a [DingoDB instance up and running](https://github.com/dingodb/dingo-deploy/blob/main/README.md).
+要运行此示例，你需要确保 [DingoDB 实例已启动并正在运行](https://github.com/dingodb/dingo-deploy/blob/main/README.md)。
 
 ```python
 pip install -qU  dingodb
-# or install latest:
+# 或者安装最新版本：
 pip install -qU  git+https://git@github.com/dingodb/pydingo.git
 ```
 
-We want to use @[`OpenAIEmbeddings`] so we have to get the OpenAI API Key.
+我们希望使用 @[`OpenAIEmbeddings`]，因此需要获取 OpenAI API 密钥。
 
 ```python
 import getpass
@@ -54,17 +54,17 @@ from dingodb import DingoDB
 index_name = "langchain_demo"
 
 dingo_client = DingoDB(user="", password="", host=["127.0.0.1:13000"])
-# First, check if our index already exists. If it doesn't, we create it
+# 首先，检查我们的索引是否已经存在。如果不存在，则创建它
 if (
     index_name not in dingo_client.get_index()
     and index_name.upper() not in dingo_client.get_index()
 ):
-    # we create a new index, modify to your own
+    # 创建一个新索引，请根据您的需要修改参数
     dingo_client.create_index(
         index_name=index_name, dimension=1536, metric_type="cosine", auto_id=False
     )
 
-# The OpenAI embedding model `text-embedding-ada-002 uses 1536 dimensions`
+# OpenAI 的嵌入模型 `text-embedding-ada-002 使用 1536 维`
 docsearch = Dingo.from_documents(
     docs, embeddings, client=dingo_client, index_name=index_name
 )
@@ -86,9 +86,9 @@ docs = docsearch.similarity_search(query)
 print(docs[0].page_content)
 ```
 
-### Adding More Text to an Existing Index
+### 向现有索引添加更多文本
 
-More text can embedded and upserted to an existing Dingo index using the `add_texts` function
+可以使用 `add_texts` 函数将更多文本嵌入并上载（upsert）到现有的 Dingo 索引中。
 
 ```python
 vectorstore = Dingo(embeddings, "text", client=dingo_client, index_name=index_name)
@@ -96,9 +96,9 @@ vectorstore = Dingo(embeddings, "text", client=dingo_client, index_name=index_na
 vectorstore.add_texts(["More text!"])
 ```
 
-### Maximal Marginal Relevance Searches
+### 最大边际相关性（MMR）搜索
 
-In addition to using similarity search in the retriever object, you can also use `mmr` as retriever.
+除了在检索器对象中使用相似性搜索外，您还可以使用 `mmr` 作为检索器。
 
 ```python
 retriever = docsearch.as_retriever(search_type="mmr")
@@ -108,7 +108,7 @@ for i, d in enumerate(matched_docs):
     print(d.page_content)
 ```
 
-Or use `max_marginal_relevance_search` directly:
+或者直接使用 `max_marginal_relevance_search`：
 
 ```python
 found_docs = docsearch.max_marginal_relevance_search(query, k=2, fetch_k=10)

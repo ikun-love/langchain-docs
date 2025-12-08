@@ -1,32 +1,34 @@
+```yaml
 ---
-title: Workspace vs private agents
-description: Understand visibility, auth, and secrets for personal and workspace agents in Agent Builder.
-sidebarTitle: Agent Visibility
+title: 工作区代用程序与私有代用程序
+description: 了解 Agent Builder 中个人代用程序和工作区代用程序的可见性、身份验证和密钥管理。
+sidebarTitle: Agent 可见性
 mode: wide
 ---
 
-Agent Builder supports two visibility modes:
+Agent Builder 支持两种可见性模式：
 
-- Private agents: private to the creator. Useful for personal workflows and experiments.
-- Workspace agents: shared within the workspace. Good for team workflows, or agents you want to share with others.
+- **私有代用程序 (Private agents)**：仅对创建者可见。适用于个人工作流和实验。
+- **工作区代用程序 (Workspace agents)**：在工作区内共享。适用于团队工作流，或希望与其他用户共享的代用程序。
 
-## Differences
+## 差异点
 
-- Ownership and access: private agents are only visible to you; workspace agents are visible to anyone else within the same LangSmith workspace.
-- Tool Authentication:
-    - **OAuth**: Both modes support OAuth and secret-based tools. OAuth credentials are always scoped to a user, so workspace agents can not share OAuth tokens, and new users cloning workspace agents must re-authenticate with the selected tools.
-    - **Secrets**: Since secrets are scoped to a workspace, workspace agents & private agents will both use the same LangSmith secret.
+- **所有权和访问权限**：私有代用程序仅对您可见；工作区代用程序对同一 LangSmith 工作区中的任何其他成员都可见。
+- **工具身份验证 (Tool Authentication)**：
+    - **OAuth**：这两种模式都支持基于 OAuth 和基于密钥 (secret-based) 的工具。OAuth 凭据始终以用户为作用域 (scoped to a user)，因此工作区代用程序无法共享 OAuth 令牌。新用户克隆工作区代用程序时，必须针对所选工具重新进行身份验证。
+    - **密钥 (Secrets)**：由于密钥是按工作区作用域的，工作区代用程序和私有代用程序都将使用相同的 LangSmith 密钥。
 
-## What's public vs private
+## 公开内容与私有内容对比
 
-### Threads/chat history
+### 对话/聊天历史记录 (Threads/chat history)
 
-Threads are always user scoped, so even if an agent is workspace scoped, the chat history created within that agent will always be private, and only accessible to the specific user who created them.
+对话始终以用户为作用域。因此，即使代用程序是按工作区作用域的，在该代用程序内创建的聊天历史记录也始终是私有的，只有创建它的特定用户才能访问。
 
-### System prompt, tools, sub-agents
+### 系统提示、工具和子代用程序 (System prompt, tools, sub-agents)
 
-The system prompt, selected tools, and sub-agents will be public on workspace scoped agents. Users will not be able to modify these fields on the original workspace scoped agent, but can make changes once they've cloned the agent.
+在按工作区作用域的代用程序中，系统提示、所选工具和子代用程序将是公开的。用户无法修改原始工作区作用域代用程序上的这些字段，但在克隆该代用程序后，他们可以进行修改。
 
-### Triggers
+### 触发器 (Triggers)
 
-The trigger type on workspace scoped agents is public (e.g., Slack message received), but the specific connection with the trigger (e.g. the Slack channel, or Gmail address) is not shared. This way, users know what trigger to use when cloning an agent, but can't gain unauthorized access to any connections the original user has set up.
+按工作区作用域的代用程序上的触发器类型是公开的（例如，收到的 Slack 消息），但触发器的具体连接（例如，Slack 频道或 Gmail 地址）不会共享。这样做的目的是让用户在克隆代用程序时知道应使用哪种触发器类型，但又无法未经授权访问原始用户设置的任何连接。
+```

@@ -1,30 +1,31 @@
+```markdown
 ---
 title: PDFLoader
 ---
 
 <Tip>
-**Compatibility**: Only available on Node.js.
+**兼容性**: 仅在 Node.js 环境中可用。
 </Tip>
 
-This notebook provides a quick overview for getting started with `PDFLoader` [document loaders](/oss/integrations/document_loaders). For detailed documentation of all `PDFLoader` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html).
+本 Notebook 提供了关于如何开始使用 `PDFLoader` 文档加载器的快速指南，该加载器属于 [文档加载器](/oss/integrations/document_loaders) 系列。如需了解 `PDFLoader` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Compatibility | Local | PY support |
+| 类 (Class) | 包 (Package) | 兼容性 | 本地 (Local) | PY 支持 |
 | :--- | :--- | :---: | :---: |  :---: |
-| [PDFLoader](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_document_loaders_fs_pdf.html) | Node-only | ✅ | 🟠 (See note below) |
+| [PDFLoader](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_document_loaders_fs_pdf.html) | 仅限 Node | ✅ | 🟠 (见下注) |
 
-## Setup
+## 设置
 
-To access `PDFLoader` document loader you'll need to install the `@langchain/community` integration, along with the `pdf-parse` package.
+要使用 `PDFLoader` 文档加载器，您需要安装 `@langchain/community` 集成包，以及 `pdf-parse` 包。
 
-### Credentials
+### 凭证
 
-### Installation
+### 安装
 
-The LangChain PDFLoader integration lives in the `@langchain/community` package:
+LangChain PDFLoader 集成位于 `@langchain/community` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -38,9 +39,9 @@ pnpm add @langchain/community @langchain/core pdf-parse
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and load documents:
+现在我们可以实例化模型对象并加载文档了：
 
 ```typescript
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
@@ -50,7 +51,7 @@ const nike10kPdfPath = "../../../../data/nke-10k-2023.pdf"
 const loader = new PDFLoader(nike10kPdfPath)
 ```
 
-## Load
+## 加载
 
 ```typescript
 const docs = await loader.load()
@@ -159,7 +160,7 @@ console.log(docs[0].metadata)
 }
 ```
 
-## Usage, one document per file
+## 用法：每个文件一个文档
 
 ```typescript
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
@@ -180,11 +181,11 @@ Washington, D.C. 20549
 FORM 10-K
 ```
 
-## Usage, custom `pdfjs` build
+## 用法：自定义 `pdfjs` 构建
 
-By default we use the `pdfjs` build bundled with `pdf-parse`, which is compatible with most environments, including Node.js and modern browsers. If you want to use a more recent version of `pdfjs-dist` or if you want to use a custom build of `pdfjs-dist`, you can do so by providing a custom `pdfjs` function that returns a promise that resolves to the `PDFJS` object.
+默认情况下，我们使用 `pdf-parse` 中捆绑的 `pdfjs` 构建，它与包括 Node.js 和现代浏览器在内的大多数环境兼容。如果您想使用更新版本的 `pdfjs-dist`，或者想使用自定义的 `pdfjs-dist` 构建，可以通过提供一个自定义的 `pdfjs` 函数来实现，该函数返回一个解析到 `PDFJS` 对象的 Promise。
 
-In the following example we use the "legacy" (see [pdfjs docs](https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported)) build of `pdfjs-dist`, which includes several polyfills not included in the default build.
+在以下示例中，我们使用了 `pdfjs-dist` 的“旧版”（参见 [pdfjs 文档](https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported)）构建，其中包含默认构建中不包含的多个 Polyfill（垫片）。
 
 
 <CodeGroup>
@@ -204,16 +205,15 @@ pnpm add pdfjs-dist
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 
 const customBuildLoader = new PDFLoader(nike10kPdfPath, {
-  // you may need to add `.then(m => m.default)` to the end of the import
+  // 您可能需要在导入末尾添加 `.then(m => m.default)`
   // @lc-ts-ignore
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
 });
 ```
 
-## Eliminating extra spaces
+## 消除额外空格
 
-PDFs come in many varieties, which makes reading them a challenge. The loader parses individual text elements and joins them together with a space by default, but
-if you are seeing excessive spaces, this may not be the desired behavior. In that case, you can override the separator with an empty string like this:
+PDF 文件种类繁多，这使得阅读成为一项挑战。该加载器默认解析单个文本元素并将它们用一个空格连接起来。但是，如果您看到的空格过多，这可能不是您期望的行为。在这种情况下，您可以将分隔符覆盖为空字符串，如下所示：
 
 ```typescript
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
@@ -234,7 +234,7 @@ OR
 ☐ TRANSITI
 ```
 
-## Loading directories
+## 加载目录
 
 ```typescript
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
@@ -243,7 +243,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const exampleDataPath = "../../../../../../examples/src/document_loaders/example_data/";
 
-/* Load all PDFs within the specified directory */
+/* 加载指定目录中的所有 PDF 文件 */
 const directoryLoader = new DirectoryLoader(
   exampleDataPath,
   {
@@ -255,7 +255,7 @@ const directoryDocs = await directoryLoader.load();
 
 console.log(directoryDocs[0]);
 
-/* Additional steps : Split text into chunks with any TextSplitter. You can then use it as context or save it to memory afterwards. */
+/* 附加步骤：使用任何 TextSplitter 将文本分割成块。然后您可以将其用作上下文或保存到内存中。 */
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1000,
   chunkOverlap: 200,
@@ -297,6 +297,27 @@ Document {
     'network itself requires minimal structure.   Messages are broadcast on a best effort \n' +
     'basis,   and   nodes   can   leave   and   rejoin   the   network   at   will,   accepting   the   longest \n' +
     'proof-of-work chain as proof of what happened while they were gone.\n' +
+    '1.Introduction\n' +
+    'Commerce on the Internet has come to rely almost exclusively on financial institutions serving as \n' +
+    'trusted third  parties  to process electronic payments.   While the  system works  well enough for \n' +
+    'most   transactions,   it   still   suffers   from   the   inherent   weaknesses   of   the   trust   based   model. \n' +
+    'Completely non-reversible transactions are not really possible, since financial institutions cannot \n' +
+    'avoid   mediating   disputes.     The   cost   of   mediation   increases   transaction   costs,   limiting   the \n' +
+    'minimum practical transaction size and cutting off the possibility for small casual transactions, \n' +
+    'and   there   is   a   broader   cost   in   the   loss   of   ability   to   make   non-reversible   payments   for   non-\n' +
+    'reversible services.  With the possibility of reversal, the need for trust spreads.  Merchants must \n' +
+    'be wary of their customers, hassling them for more information than they would otherwise need. \n' +
+    'A certain percentage of fraud is accepted as unavoidable.  These costs and payment uncertainties \n' +
+    'can be avoided in person by using physical currency, but no mechanism exists to make payments \n' +
+    'over a communications channel without a trusted party.\n' +
+    'What is needed is an electronic payment system based on cryptographic proof instead of trust, \n' +
+    'allowing any two willing parties to transact directly with each other without the need for a trusted \n' +
+    'third  party.    Transactions  that  are  computationally  impractical  to   reverse   would  protect  sellers \n' +
+    'from fraud, and routine escrow mechanisms could easily be implemented to protect buyers.   In \n' +
+    'this paper, we propose a solution to the double-spending problem using a peer-to-peer distributed \n' +
+    'timestamp server to generate computational proof of the chronological order of transactions.  The \n' +
+    'system   is   secure   as   long   as   honest   nodes   collectively   control   more   CPU   power   than   any \n' +
+    'cooperating group of attacker nodes.\n' +
     '1.Introduction\n' +
     'Commerce on the Internet has come to rely almost exclusively on financial institutions serving as \n' +
     'trusted third  parties  to process electronic payments.   While the  system works  well enough for \n' +
@@ -362,6 +383,7 @@ Document {
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all PDFLoader features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html).
+如需了解 `PDFLoader` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_pdf.PDFLoader.html)。
+```

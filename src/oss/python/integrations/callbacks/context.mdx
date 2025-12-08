@@ -1,32 +1,32 @@
 ---
-title: Context
+title: 上下文 (Context)
 ---
 
->[Context](https://context.ai/) provides user analytics for LLM-powered products and features.
+>[Context](https://context.ai/) 为基于 LLM（大型语言模型）的产品和功能提供用户分析服务。
 
-With `Context`, you can start understanding your users and improving their experiences in less than 30 minutes.
+使用 `Context`，您可以在不到 30 分钟内开始了解您的用户并改善他们的体验。
 
-In this guide we will show you how to integrate with Context.
+本指南将向您展示如何与 Context 进行集成。
 
-## Installation and Setup
+## 安装和设置 (Installation and Setup)
 
 ```python
 pip install -qU  langchain langchain-openai langchain-community context-python
 ```
 
-### Getting API Credentials
+### 获取 API 凭证 (Getting API Credentials)
 
-To get your Context API token:
+要获取您的 Context API 令牌：
 
-1. Go to the settings page within your Context account ([with.context.ai/settings](https://with.context.ai/settings)).
-2. Generate a new API Token.
-3. Store this token somewhere secure.
+1. 登录您的 Context 账户后，前往设置页面（[with.context.ai/settings](https://with.context.ai/settings)）。
+2. 生成一个新的 API 令牌 (API Token)。
+3. 将此令牌安全地保存起来。
 
-### Setup Context
+### 设置 Context (Setup Context)
 
-To use the `ContextCallbackHandler`, import the handler from LangChain and instantiate it with your Context API token.
+要使用 `ContextCallbackHandler`，请从 LangChain 中导入该处理器 (handler)，并使用您的 Context API 令牌对其进行实例化。
 
-Ensure you have installed the `context-python` package before using the handler.
+在使用该处理器之前，请确保已安装 `context-python` 包。
 
 ```python
 from langchain_community.callbacks.context_callback import ContextCallbackHandler
@@ -40,11 +40,11 @@ token = os.environ["CONTEXT_API_TOKEN"]
 context_callback = ContextCallbackHandler(token)
 ```
 
-## Usage
+## 使用方法 (Usage)
 
-### Context callback within a chat model
+### 在聊天模型中集成 Context 回调 (Context callback within a chat model)
 
-The Context callback handler can be used to directly record transcripts between users and AI assistants.
+Context 回调处理器可用于直接记录用户与 AI 助手之间的对话记录 (transcripts)。
 
 ```python
 import os
@@ -68,20 +68,20 @@ messages = [
 print(chat(messages))
 ```
 
-### Context callback within Chains
+### 在链 (Chains) 中集成 Context 回调 (Context callback within Chains)
 
-The Context callback handler can also be used to record the inputs and outputs of chains. Note that intermediate steps of the chain are not recorded - only the starting inputs and final outputs.
+Context 回调处理器也可用于记录链的输入和输出。请注意，链的中间步骤 (intermediate steps) 不会被记录——只记录起始输入和最终输出。
 
-__Note:__ Ensure that you pass the same context object to the chat model and the chain.
+__注意：__ 确保将**同一个** Context 对象传递给聊天模型和链。
 
-Wrong:
+错误示例 (Wrong):
 >
 > ```python
 > chat = ChatOpenAI(temperature=0.9, callbacks=[ContextCallbackHandler(token)])
 > chain = LLMChain(llm=chat, prompt=chat_prompt_template, callbacks=[ContextCallbackHandler(token)])
 > ```
 
-Correct:
+正确示例 (Correct):
 >
 >```python
 >handler = ContextCallbackHandler(token)

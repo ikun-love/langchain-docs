@@ -1,31 +1,31 @@
 ---
-title: INVALID_TOOL_RESULTS
+title: INVALID_TOOL_RESULTS 错误
 ---
 
 <Note>
-    Currently only used in `langchainjs` (JavaScript/TypeScript).
+    目前仅在 `langchainjs`（JavaScript/TypeScript）中使用。
 </Note>
 
-This error occurs when passing mismatched, insufficient, or excessive @[`ToolMessage`] objects to a model during tool calling operations.
+当在工具调用操作中，向模型传递不匹配、不足或过多的 @[`ToolMessage`] 对象时，会发生此错误。
 
-The error stems from a fundamental requirement: an assistant message with `tool_calls` must be followed by tool messages responding to each `tool_call_id`.
+该错误源于一个基本要求：带有 `tool_calls` 的助手消息（`assistant` message）之后，必须紧接着提供相应的工具消息（`tool` messages），以响应每一个 `tool_call_id`。
 
-When a model returns an @[`AIMessage`] with tool calls, you must provide exactly one corresponding @[`ToolMessage`] for each tool call, with matching `tool_call_id` values.
+当模型返回带有工具调用的 @[`AIMessage`] 时，您**必须**为每个工具调用提供**恰好一个**对应的 @[`ToolMessage`]，并且 `tool_call_id` 值必须匹配。
 
-## Common causes
+## 常见原因
 
-* **Insufficient responses**: If a model requests two tool executions but you only provide one response message, the model rejects the incomplete message chain
-* **Duplicate responses**: Providing multiple @[`ToolMessage`] objects for the same tool call ID results in rejection, as does having unmatched IDs
-* **Orphaned tool messages**: Sending a @[`ToolMessage`] without a preceding @[`AIMessage`] containing tool calls violates protocol requirements
+*   **响应不足**：如果模型请求了两次工具执行，但您只提供了一次响应消息，模型将拒绝接收这种不完整的消息链。
+*   **重复响应**：为同一个工具调用 ID 提供了多个 @[`ToolMessage`] 对象，或者存在不匹配的 ID，都会导致被拒绝。
+*   **孤立的工具消息**：发送了一个 @[`ToolMessage`]，但前面没有对应的、包含工具调用的 @[`AIMessage__] 来指示该消息是响应谁的，这违反了协议要求。
 
 :::python
-Here's an example of a problematic pattern:
+下面是一个有问题模式的示例：
 
 ```python
-# Model requests two tool calls
-response_message.tool_calls  # Returns 2 calls
+# 模型请求了两个工具调用
+response_message.tool_calls  # 返回 2 个调用
 
-# But only one ToolMessage provided
+# 但只提供了一个 ToolMessage
 chat_history.append(ToolMessage(
     content=str(tool_response),
     tool_call_id=tool_call.get("id")
@@ -36,26 +36,26 @@ model_with_tools.invoke(chat_history)
 :::
 
 :::js
-Here's an example of a problematic pattern:
+下面是一个有问题模式的示例：
 
 ```javascript
-// Model requests two tool calls
-responseMessage.tool_calls // Returns 2 calls
+// 模型请求了两个工具调用
+responseMessage.tool_calls // 返回 2 个调用
 
-// But only one ToolMessage provided
+// 但只提供了一个 ToolMessage
 chatHistory.push({
   role: "tool",
   content: toolResponse,
   tool_call_id: responseMessage.tool_calls[0].id
 });
 
-await modelWithTools.invoke(chatHistory); // Fails with INVALID_TOOL_RESULTS
+await modelWithTools.invoke(chatHistory); // 会以 INVALID_TOOL_RESULTS 错误失败
 ```
 :::
 
-## Troubleshooting
+## 故障排除
 
-To resolve this error:
+要解决此错误：
 
-* **Count matching pairs**: Ensure one @[`ToolMessage`] exists per tool call in the preceding @[`AIMessage`]
-* **Verify IDs**: Confirm each `ToolMessage.tool_call_id` matches an actual tool call identifier
+*   **计算匹配对**：确保前一个 @[`AIMessage__] 中有多少个工具调用，当前就有多少个对应的 @[`ToolMessage__]`。
+*   **验证 ID**：确认每个 `ToolMessage.tool_call_id` 都与实际的工具调用标识符相匹配。

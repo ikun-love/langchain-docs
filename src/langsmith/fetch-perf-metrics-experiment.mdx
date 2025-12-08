@@ -1,19 +1,19 @@
 ---
-title: How to fetch performance metrics for an experiment
-sidebarTitle: Fetch performance metrics for an experiment
+title: 如何获取实验的性能指标
+sidebarTitle: 获取实验性能指标
 ---
 
 <Check>
-Tracing projects and experiments use the same underlying data structure in our backend, which is called a "session."
+Tracing 项目和实验在我们的后端使用相同的底层数据结构，该结构被称为“会话”（"session"）。
 
-You might see these terms interchangeably in our documentation, but they all refer to the same underlying data structure.
+您可能会在我们的文档中看到这些术语交替使用，但它们都指向同一个底层数据结构。
 
-We are working on unifying the terminology across our documentation and APIs.
+我们正在努力统一文档和 API 中的术语。
 </Check>
 
-When you run an experiment using `evaluate` with the Python or TypeScript SDK, you can fetch the performance metrics for the experiment using the `read_project`/`readProject` methods.
+当您使用 Python 或 TypeScript SDK 通过 `evaluate` 运行实验时，您可以使用 `read_project`/`readProject` 方法来获取该实验的性能指标。
 
-The payload for experiment details includes the following values:
+实验详情的有效载荷（Payload）包含以下值：
 
 ```json
 {
@@ -75,31 +75,31 @@ The payload for experiment details includes the following values:
 }
 ```
 
-From here, you can extract performance metrics such as:
+您可以从中提取性能指标，例如：
 
-* `latency_p50`: The 50th percentile latency in seconds.
-* `latency_p99`: The 99th percentile latency in seconds.
-* `total_tokens`: The total number of tokens used.
-* `prompt_tokens`: The number of prompt tokens used.
-* `completion_tokens`: The number of completion tokens used.
-* `total_cost`: The total cost of the experiment.
-* `prompt_cost`: The cost of the prompt tokens.
-* `completion_cost`: The cost of the completion tokens.
-* `feedback_stats`: The feedback statistics for the experiment.
-* `error_rate`: The error rate for the experiment.
-* `first_token_p50`: The 50th percentile latency for the time to generate the first token (if using streaming).
-* `first_token_p99`: The 99th percentile latency for the time to generate the first token (if using streaming).
+* `latency_p50`: 第 50 百分位的延迟（单位为秒）。
+* `latency_p99`: 第 99 百分位的延迟（单位为秒）。
+* `total_tokens`: 使用的总 Token 数量。
+* `prompt_tokens`: 使用的 Prompt Token 数量。
+* `completion_tokens`: 使用的 Completion Token 数量。
+* `total_cost`: 实验的总成本。
+* `prompt_cost`: Prompt Token 的成本。
+* `completion_cost`: Completion Token 的成本。
+* `feedback_stats`: 实验的反馈统计数据。
+* `error_rate`: 错误率。
+* `first_token_p50`: 生成第一个 Token 的第 50 百分位延迟（如果使用流式传输）。
+* `first_token_p99`: 生成第一个 Token 的第 99 百分位延迟（如果使用流式传输）。
 
-Here is an example of how you can fetch the performance metrics for an experiment using the Python and TypeScript SDKs.
+以下是如何使用 Python 和 TypeScript SDK 获取实验性能指标的示例。
 
-First, as a prerequisite, we will create a trivial dataset. Here, we only demonstrate this in Python, but you can do the same in TypeScript. Please view the [how-to guide](/langsmith/evaluate-llm-application) on evaluation for more details.
+首先，作为先决条件，我们将创建一个微型（trivial）数据集。这里我们仅用 Python 进行演示，但您可以使用 TypeScript 做同样的事情。有关评估的更多详细信息，请参阅 [如何操作指南](/langsmith/evaluate-llm-application)。
 
 ```python
 from langsmith import Client
 
 client = Client()
 
-# Create a dataset
+# 创建一个数据集
 dataset_name = "HelloDataset"
 dataset = client.create_dataset(dataset_name=dataset_name)
 
@@ -117,7 +117,7 @@ examples = [
 client.create_examples(dataset_id=dataset.id, examples=examples)
 ```
 
-Next, we will create an experiment, retrieve the experiment name from the result of `evaluate`, then fetch the performance metrics for the experiment.
+接下来，我们将创建一个实验，从 `evaluate` 的结果中检索实验名称，然后获取该实验的性能指标。
 
 <CodeGroup>
 
@@ -147,7 +147,7 @@ import { evaluate } from "langsmith/evaluation";
 import type { EvaluationResult } from "langsmith/evaluation";
 import type { Run, Example } from "langsmith/schemas";
 
-// Row-level evaluator
+// 行级评估器
 function fooLabel(rootRun: Run, example: Example): EvaluationResult {
     return {score: 1, key: "foo"};
 }
@@ -173,5 +173,3 @@ console.log(JSON.stringify(resp, null, 2))
 ```
 
 </CodeGroup>
-
-

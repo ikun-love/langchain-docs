@@ -1,17 +1,17 @@
 ---
-title: Enqueue concurrent
-sidebarTitle: Enqueue
+title: 队列并发执行
+sidebarTitle: 队列
 ---
 
-This guide assumes knowledge of what double-texting is, which you can learn about in the [double-texting conceptual guide](/langsmith/double-texting).
+本指南假定您已经了解什么是“双重文本（double-texting）”，相关的概念可以在[双重文本概念指南](/langsmith/double-texting)中学习。
 
-The guide covers the `enqueue` option for double texting, which adds the interruptions to a queue and executes them in the order they are received by the client. Below is a quick example of using the `enqueue` option.
+本指南将介绍双重文本的 `enqueue` 选项，该选项会将中断操作加入一个队列，并按照客户端接收到的顺序执行它们。下面是使用 `enqueue` 选项的一个快速示例。
 
-Enqueue is the default double texting (multi-tasking) strategy when creating runs in the [Agent Server](/langsmith/agent-server).
+在 LanguSmith Agent Server 中创建运行实例时，`enqueue` 是默认的双重文本（多任务处理）策略。
 
-## Setup
+## 设置
 
-First, we will define a quick helper function for printing out JS and CURL model outputs (you can skip this if using Python):
+首先，我们将定义一个快速的辅助函数，用于打印 JavaScript 和 CURL 模型输出（如果使用 Python，则可以跳过此步骤）：
 
 <Tabs>
     <Tab title="Javascript">
@@ -30,7 +30,7 @@ First, we will define a quick helper function for printing out JS and CURL model
     </Tab>
     <Tab title="CURL">
     ```bash
-    # PLACE THIS IN A FILE CALLED pretty_print.sh
+    # 将此内容放入名为 pretty_print.sh 的文件中
     pretty_print() {
       local type="$1"
       local content="$2"
@@ -51,7 +51,7 @@ First, we will define a quick helper function for printing out JS and CURL model
     </Tab>
 </Tabs>
 
-Then, let's import our required packages and instantiate our client, assistant, and thread.
+接下来，我们导入所需的包并实例化客户端（client）、助手（assistant）和线程（thread）。
 
 <Tabs>
     <Tab title="Python">
@@ -63,7 +63,7 @@ Then, let's import our required packages and instantiate our client, assistant, 
     from langgraph_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
-    # Using the graph deployed with the name "agent"
+    # 使用名称为 "agent" 部署的图
     assistant_id = "agent"
     thread = await client.threads.create()
     ```
@@ -74,7 +74,7 @@ Then, let's import our required packages and instantiate our client, assistant, 
 
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
-    // Using the graph deployed with the name "agent"
+    // 使用名称为 "agent" 部署的图
     const assistantId = "agent";
     const thread = await client.threads.create();
     ```
@@ -89,9 +89,9 @@ Then, let's import our required packages and instantiate our client, assistant, 
     </Tab>
 </Tabs>
 
-## Create runs
+## 创建运行实例 (Create runs)
 
-Now let's start two runs, with the second interrupting the first one with a multitask strategy of "enqueue":
+现在让我们启动两个运行实例，第二个实例将使用 "enqueue" 的多任务策略来中断第一个实例：
 
 <Tabs>
     <Tab title="Python">
@@ -145,14 +145,14 @@ Now let's start two runs, with the second interrupting the first one with a mult
     </Tab>
 </Tabs>
 
-## View run results
+## 查看运行结果 (View run results)
 
-Verify that the thread has data from both runs:
+验证线程中是否包含来自两个运行实例的数据：
 
 <Tabs>
     <Tab title="Python">
     ```python
-    # wait until the second run completes
+    # 等待第二个运行实例完成
     await client.runs.join(thread["thread_id"], second_run["run_id"])
 
     state = await client.threads.get_state(thread["thread_id"])
@@ -186,7 +186,7 @@ Verify that the thread has data from both runs:
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 ================================ Human Message =================================

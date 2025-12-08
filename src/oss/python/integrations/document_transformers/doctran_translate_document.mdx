@@ -1,12 +1,13 @@
+```markdown
 ---
-title: Doctran language translation
+title: Doctran 语言翻译
 ---
 
-Comparing documents through embeddings has the benefit of working across multiple languages. "Harrison says hello" and "Harrison dice hola" will occupy similar positions in the vector space because they have the same meaning semantically.
+通过嵌入（embeddings）进行文档比较的一个好处是它可以跨多种语言工作。"Harrison says hello" 和 "Harrison dice hola" 因为具有相同的语义，在向量空间中会占据相似的位置。
 
-However, it can still be useful to use an LLM to **translate documents into other languages** before vectorizing them. This is especially helpful when users are expected to query the knowledge base in different languages, or when state-of-the-art embedding models are not available for a given language.
+然而，使用 LLM **将文档翻译成其他语言**后再进行向量化仍然非常有用。当预期用户将使用不同语言查询知识库，或者对于特定语言尚未提供最先进的嵌入模型时，这一点尤其有帮助。
 
-We can accomplish this using the [Doctran](https://github.com/psychic-api/doctran) library, which uses OpenAI's function calling feature to translate documents between languages.
+我们可以使用 [Doctran](https://github.com/psychic-api/doctran) 库来实现这一点，该库利用 OpenAI 的函数调用（function calling）功能在不同语言之间进行文档翻译。
 
 ```python
 pip install -qU  doctran
@@ -27,9 +28,9 @@ load_dotenv()
 True
 ```
 
-## Input
+## 输入 (Input)
 
-This is the document we'll translate
+这是我们将要翻译的文档
 
 ```python
 sample_text = """[Generated with ChatGPT]
@@ -74,9 +75,9 @@ documents = [Document(page_content=sample_text)]
 qa_translator = DoctranTextTranslator(language="spanish")
 ```
 
-## Output using Sync version
+## 使用同步版本 (Sync version) 输出
 
-After translating a document, the result will be returned as a new document with the page_content translated into the target language
+在翻译文档后，结果将作为一个新的 `Document` 对象返回，其 `page_content` 已被翻译成目标语言。
 
 ```python
 translated_document = qa_translator.transform_documents(documents)
@@ -121,9 +122,9 @@ Psychic
 jason@psychic.dev
 ```
 
-## Output using the Async version
+## 使用异步版本 (Async version) 输出
 
-After translating a document, the result will be returned as a new document with the page_content translated into the target language. The async version will improve performance when the documents are chunked in multiple parts. It will also make sure to return the output in the correct order.
+在翻译文档后，结果将作为一个新的 `Document` 对象返回，其 `page_content` 已被翻译成目标语言。异步版本在文档被分块处理时可以提高性能。它还将确保以正确的顺序返回输出。
 
 ```python
 import asyncio

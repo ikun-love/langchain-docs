@@ -3,28 +3,28 @@ title: MariaDB
 ---
 
 <Tip>
-**Compatibility**: Only available on Node.js.
+**兼容性**: 仅在 Node.js 环境中可用。
 </Tip>
 
-This requires MariaDB 11.7 or later version
+这要求 MariaDB 版本为 11.7 或更高版本。
 
-This guide provides a quick overview for getting started with mariadb [vector stores](/oss/integrations/vectorstores). For detailed documentation of all `MariaDB store` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_mariadb.MariaDBStore.html).
+本指南快速概述了如何开始使用 mariadb [向量存储](/oss/integrations/vectorstores)。有关所有 `MariaDB store` 功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_mariadb.MariaDBStore.html)。
 
-## Overview
+## 概述 (Overview)
 
-### Integration details
+### 集成详情 (Integration details)
 
-| Class | Package | [PY support](https://python.langchain.com/docs/integrations/vectorstores/mariadb/) | Version |
+| 类名 (Class) | 包名 (Package) | [Python 支持](https://python.langchain.com/docs/integrations/vectorstores/mariadb/) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |
 | [`MariaDBStore`](https://api.js.langchain.com/classes/langchain_community_vectorstores_mariadb.MariaDBStore.html) | [`@langchain/community`](https://npmjs.com/@langchain/community) | ✅ | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## Setup
+## 设置 (Setup)
 
-To use MariaDBVector vector stores, you'll need to set up a MariaDB 11.7 version or later with the [`mariadb`](https://www.npmjs.com/package/mariadb) connector as a peer dependency.
+要使用 MariaDBVector 向量存储，您需要设置 MariaDB 11.7 或更高版本，并将 [`mariadb`](https://www.npmjs.com/package/mariadb) 连接器作为对等依赖项安装。
 
-This guide will also use [OpenAI embeddings](/oss/integrations/text_embedding/openai), which require you to install the `@langchain/openai` integration package. You can also use [other supported embeddings models](/oss/integrations/text_embedding) if you wish.
+本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果您愿意，也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
-We'll also use the [`uuid`](https://www.npmjs.com/package/uuid) package to generate ids in the required format.
+我们还将使用 [`uuid`](https://www.npmjs.com/package/uuid) 包来生成所需格式的 ID。
 
 <CodeGroup>
 ```bash npm
@@ -38,12 +38,12 @@ pnpm add @langchain/community @langchain/openai @langchain/core mariadb uuid
 ```
 </CodeGroup>
 
-### Setting up an instance
+### 实例设置 (Setting up an instance)
 
-Create a file with the below content named docker-compose.yml:
+创建一个名为 `docker-compose.yml` 的文件，内容如下：
 
 ```yaml
-# Run this command to start the database:
+# 运行此命令启动数据库：
 # docker-compose up --build
 version: "3"
 services:
@@ -62,28 +62,28 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 ```
 
-And then in the same directory, run docker compose up to start the container.
+然后，在同一目录下，运行 `docker compose up` 来启动容器。
 
-### Credentials
+### 凭证 (Credentials)
 
-To connect to you MariaDB instance, you'll need corresponding credentials. For a full list of supported options, see the [`mariadb` docs](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#connection-options).
+要连接到您的 MariaDB 实例，您需要相应的凭证。有关支持的选项的完整列表，请参阅 [`mariadb` 文档](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#connection-options)。
 
-If you are using OpenAI embeddings for this guide, you'll need to set your OpenAI key as well:
+如果本指南中使用 OpenAI embeddings，您还需要设置您的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您想获取模型调用的自动化跟踪，您可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```typescript
 // process.env.LANGCHAIN_TRACING_V2="true"
 // process.env.LANGCHAIN_API_KEY="your-api-key"
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-To instantiate the vector store, call the `.initialize()` static method. This will automatically check for the presence of a table, given by `tableName` in the passed `config`. If it is not there, it will create it with the required columns.
+要实例化向量存储，请调用 `.initialize()` 静态方法。这将自动检查传递给 `config` 的 `tableName` 指定的表是否存在。如果不存在，它将使用所需的列创建该表。
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -111,9 +111,9 @@ const vectorStore = await MariaDBStore.initialize(
 );
 ```
 
-## Manage vector store
+## 管理向量存储 (Manage vector store)
 
-### Add items to vector store
+### 向向量存储添加项目 (Add items to vector store)
 
 ```typescript
 import { v4 as uuidv4 } from "uuid";
@@ -143,11 +143,11 @@ const documents = [document1, document2, document3, document4];
 
 const ids = [uuidv4(), uuidv4(), uuidv4(), uuidv4()]
 
-// ids are not mandatory, but that's for the example
+// ids 不是必需的，但这是示例
 await vectorStore.addDocuments(documents, { ids: ids });
 ```
 
-### Delete items from vector store
+### 从向量存储中删除项目 (Delete items from vector store)
 
 ```typescript
 const id4 = ids[ids.length - 1];
@@ -155,13 +155,13 @@ const id4 = ids[ids.length - 1];
 await vectorStore.delete({ ids: [id4] });
 ```
 
-## Query vector store
+## 查询向量存储 (Query vector store)
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+一旦创建了向量存储并将相关文档添加进去，您最有可能希望在链或代理运行时查询它。
 
-### Query directly
+### 直接查询 (Query directly)
 
-Performing a simple similarity search can be done as follows:
+可以执行简单的相似性搜索，如下所示：
 
 ```typescript
 const similaritySearchResults = await vectorStore.similaritySearch("biology", 2, { "year": 2021 });
@@ -175,14 +175,14 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"year": 2022}]
 ```
 
-The above filter syntax use be more complex:
+上述过滤器的语法可以更复杂：
 
 ```json
 # name = 'martin' OR firstname = 'john'
 let res = await vectorStore.similaritySearch("biology", 2, {"$or": [{"name":"martin"}, {"firstname", "john"}] });
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似性搜索并接收相应的分数，您可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2)
@@ -197,13 +197,13 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.852] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### Query by turning into retriever
+### 通过转换为检索器查询 (Query by turning into retriever)
 
-You can also transform the vector store into a [retriever](/oss/langchain/retrieval) for easier usage in your chains.
+您还可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
-  // Optional filter
+  // 可选过滤器
   // filter: filter,
   k: 2,
 });
@@ -225,26 +225,26 @@ await retriever.invoke("biology");
 ]
 ```
 
-### Usage for retrieval-augmented generation
+### 用于检索增强生成 (RAG) 的用法
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag).
-- [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
+- [代理式 RAG](/oss/langgraph/agentic-rag)
+- [检索文档](/oss/langchain/retrieval)
 
-## Advanced: reusing connections
+## 高级功能：重用连接 (Advanced: reusing connections)
 
-You can reuse connections by creating a pool, then creating new `MariaDBStore` instances directly via the constructor.
+您可以通过创建连接池，然后直接通过构造函数创建新的 `MariaDBStore` 实例来重用连接。
 
-Note that you should call `.initialize()` to set up your database at least once to set up your tables properly before using the constructor.
+注意：在通过构造函数使用之前，您应该至少调用一次 `.initialize()` 来正确设置数据库及其表。
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MariaDBStore } from "@langchain/community/vectorstores/mariadb";
 import mariadb from "mariadb";
 
-// First, follow set-up instructions at
+// 首先，请遵循设置说明
 // https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/mariadb
 
 const reusablePool = mariadb.createPool({
@@ -268,8 +268,8 @@ const originalConfig = {
   },
 };
 
-// Set up the DB.
-// Can skip this step if you've already initialized the DB.
+// 设置数据库。
+// 如果数据库已经初始化，可以跳过此步骤。
 // await MariaDBStore.initialize(new OpenAIEmbeddings(), originalConfig);
 const mariadbStore = new MariaDBStore(new OpenAIEmbeddings(), originalConfig);
 
@@ -310,9 +310,9 @@ console.log(results2);
 await reusablePool.end();
 ```
 
-## Closing connections
+## 关闭连接 (Closing connections)
 
-Make sure you close the connection when you are finished to avoid excessive resource consumption:
+确保在完成操作后关闭连接，以避免资源过度消耗：
 
 ```typescript
 await vectorStore.end();
@@ -320,6 +320,6 @@ await vectorStore.end();
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all `MariaDBStore` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_mariadb.MariaDBStore.html).
+有关所有 `MariaDBStore` 功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_mariadb.MariaDBStore.html)。

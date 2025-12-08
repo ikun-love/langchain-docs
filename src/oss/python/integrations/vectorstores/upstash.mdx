@@ -2,25 +2,25 @@
 title: Upstash Vector
 ---
 
-> [Upstash Vector](https://upstash.com/docs/vector/overall/whatisvector) is a serverless vector database designed for working with vector embeddings.
+> [Upstash Vector](https://upstash.com/docs/vector/overall/whatisvector) 是一个无服务器（serverless）的向量数据库，专为处理向量嵌入（vector embeddings）而设计。
 >
-> The vector langchain integration is a wrapper around the [upstash-vector](https://github.com/upstash/vector-py) package.
+> LangChain 的 `vector` 集成是对 [upstash-vector](https://github.com/upstash/vector-py) Python 包的封装。
 >
-> The python package uses the [vector rest api](https://upstash.com/docs/vector/api/get-started) behind the scenes.
+> 该 Python 包在后台使用了 [vector rest api](https://upstash.com/docs/vector/api/get-started)。
 
-## Installation
+## 安装 (Installation)
 
-Create a free vector database from [upstash console](https://console.upstash.com/vector) with the desired dimensions and distance metric.
+从 [upstash console](https://console.upstash.com/vector) 创建一个免费的向量数据库实例，并配置所需的维度（dimensions）和距离度量（distance metric）。
 
-You can then create an `UpstashVectorStore` instance by:
+接下来，您可以通过以下几种方式创建 `UpstashVectorStore` 实例：
 
-- Providing the environment variables `UPSTASH_VECTOR_URL` and `UPSTASH_VECTOR_TOKEN`
+- 提供环境变量 `UPSTASH_VECTOR_URL` 和 `UPSTASH_VECTOR_TOKEN`
 
-- Giving them as parameters to the constructor
+- 将它们作为参数传递给构造函数
 
-- Passing an Upstash Vector `Index` instance to the constructor
+- 将一个 Upstash Vector `Index` 实例传递给构造函数
 
-Also, an @[`Embeddings`] instance is required to turn given texts into embeddings. Here we use `OpenAIEmbeddings` as an example
+此外，还需要一个 @[`Embeddings`] 实例来将给定的文本转换为向量嵌入。这里我们以 `OpenAIEmbeddings` 为例：
 
 ```python
 pip install langchain-openai langchain langchain-community upstash-vector
@@ -36,24 +36,24 @@ os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_KEY>"
 os.environ["UPSTASH_VECTOR_REST_URL"] = "<YOUR_UPSTASH_VECTOR_URL>"
 os.environ["UPSTASH_VECTOR_REST_TOKEN"] = "<YOUR_UPSTASH_VECTOR_TOKEN>"
 
-# Create an embeddings instance
+# 创建一个 embeddings 实例
 embeddings = OpenAIEmbeddings()
 
-# Create a vector store instance
+# 创建一个向量存储实例
 store = UpstashVectorStore(embedding=embeddings)
 ```
 
-An alternative way of creating `UpstashVectorStore` is to [create an Upstash Vector index by selecting a model](https://upstash.com/docs/vector/features/embeddingmodels#using-a-model) and passing `embedding=True`. In this configuration, documents or queries will be sent to Upstash as text and embedded there.
+创建 `UpstashVectorStore` 的另一种方式是 [通过选择一个模型来创建 Upstash Vector 索引](https://upstash.com/docs/vector/features/embeddingmodels#using-a-model)，并将 `embedding=True` 传递给构造函数。在这种配置下，文档或查询将以文本形式发送到 Upstash，并在那里进行嵌入处理。
 
 ```python
 store = UpstashVectorStore(embedding=True)
 ```
 
-If you are interested in trying out this approach, you can update the initialization of `store` like above and run the rest of the tutorial.
+如果您有兴趣尝试这种方法，可以像上面那样更新 `store` 的初始化代码，然后运行本教程的其余部分。
 
-## Load documents
+## 加载文档 (Load documents)
 
-Load an example text file and split it into chunks which can be turned into vector embeddings.
+加载一个示例文本文件，并将其分割成可以转换为向量嵌入的块（chunks）。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -73,9 +73,9 @@ docs[:3]
  Document(metadata={'source': '../../how_to/state_of_the_union.txt'}, page_content='Putin’s latest attack on Ukraine was premeditated and unprovoked. \n\nHe rejected repeated efforts at diplomacy. \n\nHe thought the West and NATO wouldn’t respond. And he thought he could divide us at home. Putin was wrong. We were ready.  Here is what we did.   \n\nWe prepared extensively and carefully. \n\nWe spent months building a coalition of other freedom-loving nations from Europe and the Americas to Asia and Africa to confront Putin. \n\nI spent countless hours unifying our European allies. We shared with the world in advance what we knew Putin was planning and precisely how he would try to falsely justify his aggression.  \n\nWe countered Russia’s lies with truth.   \n\nAnd now that he has acted the free world is holding him accountable. \n\nAlong with twenty-seven members of the European Union including France, Germany, Italy, as well as countries like the United Kingdom, Canada, Japan, Korea, Australia, New Zealand, and many others, even Switzerland.')]
 ```
 
-## Inserting documents
+## 插入文档 (Inserting documents)
 
-The vectorstore embeds text chunks using the embedding object and batch inserts them into the database. This returns an id array of the inserted vectors.
+向量存储使用嵌入对象来嵌入文本块，并将它们批量插入到数据库中。此操作会返回已插入向量的 ID 数组。
 
 ```python
 inserted_vectors = store.add_documents(docs)
@@ -91,12 +91,12 @@ inserted_vectors[:5]
  '28875612-c672-4de4-b40a-3b658c72036a']
 ```
 
-## Querying
+## 查询 (Querying)
 
-The database can be queried using a vector or a text prompt.
-If a text prompt is used, it's first converted into embedding and then queried.
+数据库可以使用向量或文本提示进行查询。
+如果使用文本提示，它会首先被转换为嵌入向量，然后用于查询。
 
-The `k` parameter specifies how many results to return from the query.
+参数 `k` 指定了查询应返回的结果数量。
 
 ```python
 result = store.similarity_search("technology", k=5)
@@ -111,11 +111,11 @@ result
  Document(metadata={'source': '../../how_to/state_of_the_union.txt'}, page_content='And based on the projections, more of the country will reach that point across the next couple of weeks. \n\nThanks to the progress we have made this past year, COVID-19 need no longer control our lives.  \n\nI know some are talking about “living with COVID-19”. Tonight – I say that we will never just accept living with COVID-19. \n\nWe will continue to combat the virus as we do other diseases. And because this is a virus that mutates and spreads, we will stay on guard. \n\nHere are four common sense steps as we move forward safely.  \n\nFirst, stay protected with vaccines and treatments. We know how incredibly effective vaccines are. If you’re vaccinated and boosted you have the highest degree of protection. \n\nWe will never give up on vaccinating more Americans. Now, I know parents with kids under 5 are eager to see a vaccine authorized for their children. \n\nThe scientists are working hard to get that done and we’ll be ready with plenty of vaccines when they do.')]
 ```
 
-## Querying with score
+## 带分数查询 (Querying with score)
 
-The score of the query can be included for every result.
+查询结果可以包含每个结果的相似度分数（score）。
 
-> The score returned in the query requests is a normalized value between 0 and 1, where 1 indicates the highest similarity and 0 the lowest regardless of the similarity function used. For more information look at the [docs](https://upstash.com/docs/vector/overall/features#vector-similarity-functions).
+> 查询返回的分数是一个在 0 到 1 之间的归一化值，其中 1 表示最高相似度，0 表示最低相似度，这与所使用的相似性函数无关。有关更多信息，请参阅 [文档](https://upstash.com/docs/vector/overall/features#vector-similarity-functions)。
 
 ```python
 result = store.similarity_search_with_score("technology", k=5)
@@ -132,9 +132,9 @@ for doc, score in result:
 {'source': '../../how_to/state_of_the_union.txt'} - 0.88432854
 ```
 
-## Namespaces
+## 命名空间 (Namespaces)
 
-Namespaces can be used to separate different types of documents. This can increase the efficiency of the queries since the search space is reduced. When no namespace is provided, the default namespace is used.
+命名空间（Namespaces）可用于分隔不同类型的文档。这可以通过减少搜索空间来提高查询效率。如果未提供命名空间，则使用默认命名空间。
 
 ```python
 store_books = UpstashVectorStore(embedding=embeddings, namespace="books")
@@ -184,9 +184,9 @@ result
  Document(metadata={'title': 'Brave New World', 'author': 'Aldous Huxley', 'year': 1932}, page_content='In a society where emotion is suppressed and individuality is forbidden, one man dares to defy the oppressive regime. Through acts of rebellion and forbidden love, he discovers the power of human connection and the importance of free will.')]
 ```
 
-## Metadata Filtering
+## 元数据过滤 (Metadata Filtering)
 
-Metadata can be used to filter the results of a query. You can refer to the [docs](https://upstash.com/docs/vector/features/filtering) to see more complex ways of filtering.
+可以在查询结果中通过元数据（Metadata）进行过滤。您可以在 [文档](https://upstash.com/docs/vector/features/filtering) 中查看更复杂的过滤方法。
 
 ```python
 result = store_books.similarity_search("dystopia", k=3, filter="year < 2000")
@@ -199,11 +199,11 @@ result
  Document(metadata={'title': 'The Catcher in the Rye', 'author': 'J.D. Salinger', 'year': 1951}, page_content='Narrated by a disillusioned teenager, this novel follows his journey of self-discovery and rebellion against the phoniness of the adult world. Through a series of encounters and reflections, it explores themes of alienation, identity, and the search for authenticity in a society marked by conformity and hypocrisy.')]
 ```
 
-## Getting info about vector database
+## 获取向量数据库信息 (Getting info about vector database)
 
-You can get information about your database like the distance metric dimension using the info function.
+您可以使用 `info` 函数获取有关数据库的信息，例如距离度量和维度。
 
-> When an insert happens, the database an indexing takes place. While this is happening new vectors can not be queried. `pendingVectorCount` represents the number of vector that are currently being indexed.
+> 当发生插入操作时，数据库会进行索引。在此期间，新的向量无法被查询。`pendingVectorCount` 表示当前正在索引中的向量数量。
 
 ```python
 store.info()
@@ -213,17 +213,17 @@ store.info()
 InfoResult(vector_count=49, pending_vector_count=0, index_size=2978163, dimension=1536, similarity_function='COSINE', namespaces={'': NamespaceInfo(vector_count=42, pending_vector_count=0), 'books': NamespaceInfo(vector_count=7, pending_vector_count=0)})
 ```
 
-## Deleting vectors
+## 删除向量 (Deleting vectors)
 
-Vectors can be deleted by their ids
+可以通过 ID 删除向量。
 
 ```python
 store.delete(inserted_vectors)
 ```
 
-## Clearing the vector database
+## 清空向量数据库 (Clearing the vector database)
 
-This will clear the vector database
+这将清空向量数据库。
 
 ```python
 store.delete(delete_all=True)

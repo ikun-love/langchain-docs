@@ -3,24 +3,24 @@ title: Confluence
 ---
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 环境中可用。
 </Tip>
 
-This covers how to load document objects from pages in a Confluence space.
+本指南介绍如何从 Confluence 空间中的页面加载文档对象。
 
-## Credentials
+## 凭据
 
-- You'll need to set up an access token and provide it along with your confluence username in order to authenticate the request
-- You'll also need the `space key` for the space containing the pages to load as documents. This can be found in the url when navigating to your space e.g. `https://example.atlassian.net/wiki/spaces/{SPACE_KEY}`
-- And you'll need to install `html-to-text` to parse the pages into plain text
+- 您需要设置一个访问令牌（access token），并在请求认证时提供该令牌以及您的 Confluence 用户名。
+- 您还需要目标空间（space）的 `space key`，该空间包含要加载为文档的页面。您可以在导航到空间时的 URL 中找到它，例如：`https://example.atlassian.net/wiki/spaces/{SPACE_KEY}`。
+- 并且您需要安装 `html-to-text` 包，以便将页面解析为纯文本。
 
 ```bash npm
 npm install @langchain/community @langchain/core html-to-text
 ```
 
-## Usage
+## 用法
 
 ```typescript
 import { ConfluencePagesLoader } from "@langchain/community/document_loaders/web/confluence";
@@ -49,7 +49,7 @@ if (username && accessToken) {
   console.log(documents);
 } else {
   console.log(
-    "You need either a username and access token, or a personal access token (PAT), to use this example."
+    "您需要提供用户名和访问令牌，或者个人访问令牌（PAT），才能使用此示例。"
   );
 }
 ```

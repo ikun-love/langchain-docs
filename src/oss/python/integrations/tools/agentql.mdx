@@ -2,54 +2,54 @@
 title: AgentQL
 ---
 
-[AgentQL](https://www.agentql.com/) tools provides web interaction and structured data extraction from any web page using an [AgentQL query](https://docs.agentql.com/agentql-query) or a Natural Language prompt. AgentQL can be used across multiple languages and web pages without breaking over time and change.
+[AgentQL](https://www.agentql.com/) 工具提供使用 AgentQL 查询或自然语言提示与任何网页进行交互，并从中提取结构化数据的功能。AgentQL 可以在多种语言和网页上使用，且不易因时间或页面变化而失效。
 
-## Overview
+## 概述
 
-AgentQL provides the following three tools:
+AgentQL 提供了以下三种工具：
 
-- **`ExtractWebDataTool`** extracts structured data as JSON from a web page given a URL using either an [AgentQL query](https://docs.agentql.com/agentql-query/query-intro) or a Natural Language description of the data.
+- **`ExtractWebDataTool`**：根据提供的 URL，使用 [AgentQL 查询](https://docs.agentql.com/agentql-query/query-intro) 或对所需数据的自然语言描述，从网页中提取结构化数据（JSON 格式）。
 
-The following two tools are also bundled as `AgentQLBrowserToolkit` and must be used with a `Playwright` browser or a remote browser instance via Chrome DevTools Protocal (CDP):
+以下两种工具已捆绑为 `AgentQLBrowserToolkit`，必须与 `Playwright` 浏览器或通过 Chrome 开发者工具协议 (CDP) 连接的远程浏览器实例配合使用：
 
-- **`ExtractWebDataBrowserTool`** extracts structured data as JSON from the active web page in a browser using either an [AgentQL query](https://docs.agentql.com/agentql-query/query-intro) or a Natural Language description.
+- **`ExtractWebDataBrowserTool`**：使用 [AgentQL 查询](https://docs.agentql.com/agentql-query/query-intro) 或对所需数据的自然语言描述，从浏览器中活动网页提取结构化数据（JSON 格式）。
 
-- **`GetWebElementBrowserTool`** finds a web element on the active web page in a browser using a Natural Language description and returns its CSS selector for further interaction.
+- **`GetWebElementBrowserTool`**：使用自然语言描述在浏览器中查找活动网页上的一个网页元素，并返回其 CSS 选择器，以便进行进一步交互。
 
-### Integration details
+### 集成详情
 
-| Class | Package | Serializable | [JS support](https://js.langchain.com/docs/integrations/tools/langchain_agentql) |  Version |
+| 类名 | 包名 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/tools/langchain_agentql) | 版本 |
 | :--- | :--- | :---: | :---: | :---: |
-| AgentQL | langchain-agentql | ❌ | ❌ |  1.0.0 |
+| AgentQL | langchain-agentql | ❌ | ❌ | 1.0.0 |
 
-### Tool features
+### 工具特性
 
-| Tool | Web Data Extraction | Web Element Extraction | Use With Local Browser |
+| 工具 | 网页数据提取 | 网页元素提取 | 可与本地浏览器一起使用 |
 | :--- | :---: | :---: | :---: |
 | ExtractWebDataTool | ✅ | ❌ | ❌
 | ExtractWebDataBrowserTool | ✅ | ❌ | ✅
 | GetWebElementBrowserTool | ❌ | ✅ | ✅
 
-## Setup
+## 设置
 
 ```python
 pip install --quiet -U langchain-agentql
 ```
 
-To run this notebook, install `Playwright` browser and configure Jupyter Notebook's `asyncio` loop.
+要运行此 Notebook，需要安装 `Playwright` 浏览器并配置 Jupyter Notebook 的 `asyncio` 事件循环。
 
 ```python
 !playwright install
 
-# This import is required only for jupyter notebooks, since they have their own eventloop
+# 仅在 Jupyter Notebooks 中需要此导入，因为它们有自己的事件循环
 import nest_asyncio
 
 nest_asyncio.apply()
 ```
 
-### Credentials
+### 凭证
 
-To use the AgentQL tools, you will need to get your own API key from the [AgentQL Dev Portal](https://dev.agentql.com/) and set the AgentQL environment variable.
+要使用 AgentQL 工具，您需要从 [AgentQL 开发者门户](https://dev.agentql.com/) 获取自己的 API 密钥，并设置 AgentQL 环境变量。
 
 ```python
 import os
@@ -57,21 +57,21 @@ import os
 os.environ["AGENTQL_API_KEY"] = "YOUR_AGENTQL_API_KEY"
 ```
 
-## Instantiation
+## 实例化
 
 ### `ExtractWebDataTool`
 
-You can instantiate `ExtractWebDataTool` with the following params:
+您可以使用以下参数实例化 `ExtractWebDataTool`：
 
-- `api_key`: Your AgentQL API key from [dev.agentql.com](https://dev.agentql.com). **`Optional`.**
-- `timeout`: The number of seconds to wait for a request before timing out. Increase if data extraction times out. **Defaults to `900`.**
-- `is_stealth_mode_enabled`: Whether to enable experimental anti-bot evasion strategies. This feature may not work for all websites at all times. Data extraction may take longer to complete with this mode enabled. **Defaults to `False`.**
-- `wait_for`: The number of seconds to wait for the page to load before extracting data. **Defaults to `0`.**
-- `is_scroll_to_bottom_enabled`: Whether to scroll to bottom of the page before extracting data. **Defaults to `False`.**
-- `mode`: `"standard"` uses deep data analysis, while `"fast"` trades some depth of analysis for speed and is adequate for most usecases. [Learn more about the modes in this guide.](https://docs.agentql.com/accuracy/standard-mode) **Defaults to `"fast"`.**
-- `is_screenshot_enabled`: Whether to take a screenshot before extracting data. Returned in 'metadata' as a Base64 string. **Defaults to `False`.**
+- `api_key`: 您在 [dev.agentql.com](https://dev.agentql.com) 获得的 AgentQL API 密钥。**可选**。
+- `timeout`: 等待请求超时的时间（秒）。如果数据提取超时，请增加此值。**默认为 `900`**。
+- `is_stealth_mode_enabled`: 是否启用实验性的反机器人规避策略。此功能可能并非在所有网站上始终有效。启用此模式可能会延长数据提取的完成时间。**默认为 `False`**。
+- `wait_for`: 在提取数据之前等待页面加载的时间（秒）。**默认为 `0`**。
+- `is_scroll_to_bottom_enabled`: 在提取数据之前是否滚动到页面底部。**默认为 `False`**。
+- `mode`: `"standard"` 使用深度数据分析，而 `"fast"` 则以速度换取部分分析深度，适用于大多数用例。[请在此指南中了解关于模式的更多信息](https://docs.agentql.com/accuracy/standard-mode)。**默认为 `"fast"`**。
+- `is_screenshot_enabled`: 在提取数据前是否截取屏幕截图。截图将作为 Base64 字符串返回在 'metadata' 字段中。**默认为 `False`**。
 
-`ExtractWebDataTool` is implemented with AgentQL's REST API, you can view more details about the parameters in the [API Reference docs](https://docs.agentql.com/rest-api/api-reference).
+`ExtractWebDataTool` 是使用 AgentQL 的 REST API 实现的，您可以在 [API 参考文档](https://docs.agentql.com/rest-api/api-reference) 中查看有关参数的更多详细信息。
 
 ```python
 from langchain_agentql.tools import ExtractWebDataTool
@@ -81,16 +81,16 @@ extract_web_data_tool = ExtractWebDataTool()
 
 ### `ExtractWebDataBrowserTool`
 
-To instantiate **ExtractWebDataBrowserTool**, you need to connect the tool with a browser instance.
+要实例化 **ExtractWebDataBrowserTool**，您需要将该工具与浏览器实例连接。
 
-You can set the following params:
+您可以设置以下参数：
 
-- `timeout`: The number of seconds to wait for a request before timing out. Increase if data extraction times out. **Defaults to `900`.**
-- `wait_for_network_idle`: Whether to wait until the network reaches a full idle state before executing. **Defaults to `True`.**
-- `include_hidden`: Whether to take into account visually hidden elements on the page. **Defaults to `True`.**
-- `mode`: `"standard"` uses deep data analysis, while `"fast"` trades some depth of analysis for speed and is adequate for most usecases. [Learn more about the modes in this guide.](https://docs.agentql.com/accuracy/standard-mode) **Defaults to `"fast"`.**
+- `timeout`: 等待请求超时的时间（秒）。如果数据提取超时，请增加此值。**默认为 `900`**。
+- `wait_for_network_idle`: 在执行前是否等待网络完全空闲。**默认为 `True`**。
+- `include_hidden`: 在提取时是否考虑视觉上隐藏的元素。**默认为 `True`**。
+- `mode`: `"standard"` 使用深度数据分析，而 `"fast"` 则以速度换取部分分析深度，适用于大多数用例。[请在此指南中了解关于模式的更多信息](https://docs.agentql.com/accuracy/standard-mode)。**默认为 `"fast"`**。
 
-`ExtractWebDataBrowserTool` is implemented with AgentQL's SDK. You can find more details about the parameters and the functions in AgentQL's [API References](https://docs.agentql.com/python-sdk/api-references/agentql-page#querydata).
+`ExtractWebDataBrowserTool` 是使用 AgentQL 的 SDK 实现的。您可以在 AgentQL 的 [API 参考](https://docs.agentql.com/python-sdk/api-references/agentql-page#querydata) 中找到有关参数和函数的更多详细信息。
 
 ```python
 from langchain_agentql.tools import ExtractWebDataBrowserTool
@@ -103,16 +103,16 @@ extract_web_data_browser_tool = ExtractWebDataBrowserTool(async_browser=async_br
 
 ### `GetWebElementBrowserTool`
 
-To instantiate **GetWebElementBrowserTool**, you need to connect the tool with a browser instance.
+要实例化 **GetWebElementBrowserTool**，您需要将该工具与浏览器实例连接。
 
-You can set the following params:
+您可以设置以下参数：
 
-- `timeout`: The number of seconds to wait for a request before timing out. Increase if data extraction times out. **Defaults to `900`.**
-- `wait_for_network_idle`: Whether to wait until the network reaches a full idle state before executing. **Defaults to `True`.**
-- `include_hidden`: Whether to take into account visually hidden elements on the page. **Defaults to `False`.**
-- `mode`: `"standard"` uses deep data analysis, while `"fast"` trades some depth of analysis for speed and is adequate for most usecases. [Learn more about the modes in this guide.](https://docs.agentql.com/accuracy/standard-mode) **Defaults to `"fast"`.**
+- `timeout`: 等待请求超时的时间（秒）。如果数据提取超时，请增加此值。**默认为 `900`**。
+- `wait_for_network_idle`: 在执行前是否等待网络完全空闲。**默认为 `True`**。
+- `include_hidden`: 在提取时是否考虑视觉上隐藏的元素。**默认为 `False`**。
+- `mode`: `"standard"` 使用深度数据分析，而 `"fast"` 则以速度换取部分分析深度，适用于大多数用例。[请在此指南中了解关于模式的更多信息](https://docs.agentql.com/accuracy/standard-mode)。**默认为 `"fast"`**。
 
-`GetWebElementBrowserTool` is implemented with AgentQL's SDK. You can find more details about the parameters and the functions in AgentQL's [API References](https://docs.agentql.com/python-sdk/api-references/agentql-page#queryelements).`
+`GetWebElementBrowserTool` 是使用 AgentQL 的 SDK 实现的。您可以在 AgentQL 的 [API 参考](https://docs.agentql.com/python-sdk/api-references/agentql-page#queryelements) 中找到有关参数和函数的更多详细信息。
 
 ```python
 from langchain_agentql.tools import GetWebElementBrowserTool
@@ -120,20 +120,20 @@ from langchain_agentql.tools import GetWebElementBrowserTool
 extract_web_element_tool = GetWebElementBrowserTool(async_browser=async_browser)
 ```
 
-## Invocation
+## 调用
 
 ### `ExtractWebDataTool`
 
-This tool uses AgentQL's REST API under the hood, sending the publically available web page's URL to AgentQL's endpoint. This will not work with private pages or logged in sessions. Use `ExtractWebDataBrowserTool` for those usecases.
+此工具在底层使用 AgentQL 的 REST API，将公开网页的 URL 发送到 AgentQL 端点。这不适用于私有页面或已登录的会话。对于此类用例，请使用 `ExtractWebDataBrowserTool`。
 
-- `url`: The URL of the web page you want to extract data from.
-- `query`: The AgentQL query to execute. Use AgentQL query if you want to extract precisely structured data. Learn more about [how to write an AgentQL query in the docs](https://docs.agentql.com/agentql-query) or test one out in the [AgentQL Playground](https://dev.agentql.com/playground).
-- `prompt`: A Natural Language description of the data to extract from the page. AgentQL will infer the data’s structure from your prompt. Use `prompt` if you want to extract data defined by free-form language without defining a particular structure.
+- `url`: 要从中提取数据的网页的 URL。
+- `query`: 要执行的 AgentQL 查询。如果您想提取精确的结构化数据，请使用 AgentQL 查询。了解有关[如何在文档中编写 AgentQL 查询](https://docs.agentql.com/agentql-query)或在 [AgentQL Playground](https://dev.agentql.com/playground) 中测试查询的更多信息。
+- `prompt`: 对要从页面中提取的数据的自然语言描述。AgentQL 将从您的提示中推断出数据的结构。如果您想提取由自由文本描述的数据而无需定义特定结构，请使用 `prompt`。
 
-**Note:** You must define either a `query` or a `prompt` to use AgentQL.
+**注意：** 使用 AgentQL 时，您必须定义 `query` 或 `prompt` 之一。
 
 ```python
-# You can invoke the tool with either a query or a prompt
+# 您可以使用 query 或 prompt 来调用此工具
 
 # extract_web_data_tool.invoke(
 #     {
@@ -178,12 +178,12 @@ extract_web_data_tool.invoke(
 
 ### `ExtractWebDataBrowserTool`
 
-- `query`: The AgentQL query to execute. Use AgentQL query if you want to extract precisely structured data. Learn more about [how to write an AgentQL query in the docs](https://docs.agentql.com/agentql-query) or test one out in the [AgentQL Playground](https://dev.agentql.com/playground).
-- `prompt`: A Natural Language description of the data to extract from the page. AgentQL will infer the data’s structure from your prompt. Use `prompt` if you want to extract data defined by free-form language without defining a particular structure.
+- `query`: 要执行的 AgentQL 查询。如果您想提取精确的结构化数据，请使用 AgentQL 查询。了解有关[如何在文档中编写 AgentQL 查询](https://docs.agentql.com/agentql-query)或在 [AgentQL Playground](https://dev.agentql.com/playground) 中测试查询的更多信息。
+- `prompt`: 对要从页面中提取的数据的自然语言描述。AgentQL 将从您的提示中推断出数据的结构。如果您想提取由自由文本描述的数据而无需定义特定结构，请使用 `prompt`。
 
-**Note:** You must define either a `query` or a `prompt` to use AgentQL.
+**注意：** 使用 AgentQL 时，您必须定义 `query` 或 `prompt` 之一。
 
-To extract data, first you must navigate to a web page using LangChain's [Playwright](https://python.langchain.com/docs/integrations/tools/playwright/) tool.
+要提取数据，您必须首先使用 LangChain 的 [Playwright](https://python.langchain.com/docs/integrations/tools/playwright/) 工具导航到网页。
 
 ```python
 from langchain_community.tools.playwright import NavigateTool
@@ -197,7 +197,7 @@ await navigate_tool.ainvoke({"url": "https://www.agentql.com/blog"})
 ```
 
 ```python
-# You can invoke the tool with either a query or a prompt
+# 您可以使用 query 或 prompt 来调用此工具
 
 # await extract_web_data_browser_tool.ainvoke(
 #     {'query': '{ blogs[] { title url date author } }'}
@@ -238,7 +238,7 @@ await extract_web_data_browser_tool.ainvoke(
 
 ### `GetWebElementBrowserTool`
 
-- `prompt`: A Natural Language description of the web element to find on the page.
+- `prompt`: 要在页面上查找的网页元素的自然语言描述。
 
 ```python
 selector = await extract_web_element_tool.ainvoke({"prompt": "Next page button"})
@@ -252,7 +252,7 @@ selector
 ```python
 from langchain_community.tools.playwright import ClickTool
 
-# Disabling 'visible_only' will allow us to click on elements that are not visible on the page
+# 禁用 'visible_only' 将允许我们点击页面上不可见的元素
 await ClickTool(async_browser=async_browser, visible_only=False).ainvoke(
     {"selector": selector}
 )
@@ -272,11 +272,11 @@ await CurrentWebPageTool(async_browser=async_browser).ainvoke({})
 'https://www.agentql.com/blog/page/2'
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-You can use AgentQL tools in a chain by first binding one to a [tool-calling model](/oss/langchain/tools/) and then calling it:
+您可以通过首先将 AgentQL 工具绑定到 [工具调用模型](/oss/langchain/tools/)，然后调用它，在链中（chain）使用 AgentQL 工具：
 
-### Instantiate LLM
+### 实例化 LLM
 
 ```python
 import os
@@ -290,7 +290,7 @@ from langchain.chat_models import init_chat_model
 model = init_chat_model(model="gpt-4o", model_provider="openai")
 ```
 
-### Execute Tool Chain
+### 执行工具链
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -304,7 +304,7 @@ prompt = ChatPromptTemplate(
     ]
 )
 
-# specifying tool_choice will force the model to call this tool.
+# 指定 tool_choice 将强制模型调用此工具。
 model_with_tools = model.bind_tools(
     [extract_web_data_tool], tool_choice="extract_web_data_with_rest_api"
 )
@@ -329,11 +329,11 @@ tool_chain.invoke(
 {'messages': [ToolMessage(content='{"data": {"posts": [{"title": "Launch Week Recap—make the web AI-ready", "url": "https://www.agentql.com/blog/2024-launch-week-recap", "date": "Nov 18, 2024", "author": "Rachel-Lee Nabors"}, {"title": "Accurate data extraction from PDFs and images with AgentQL", "url": "https://www.agentql.com/blog/accurate-data-extraction-pdfs-images", "date": "Feb 1, 2025", "author": "Rachel-Lee Nabors"}, {"title": "Introducing Scheduled Scraping Workflows", "url": "https://www.agentql.com/blog/scheduling", "date": "Dec 2, 2024", "author": "Rachel-Lee Nabors"}, {"title": "Updates to Our Pricing Model", "url": "https://www.agentql.com/blog/2024-pricing-update", "date": "Nov 19, 2024", "author": "Rachel-Lee Nabors"}, {"title": "Get data from any page: AgentQL’s REST API Endpoint—Launch week day 5", "url": "https://www.agentql.com/blog/data-rest-api", "date": "Nov 15, 2024", "author": "Rachel-Lee Nabors"}]}, "metadata": {"request_id": "1a84ed12-d02a-497d-b09d-21fe49342fa3", "generated_query": null, "screenshot": null}}', name='extract_web_data_with_rest_api', tool_call_id='call_z4Rl1MpjJZNcbLlq1OCneoMF')]}
 ```
 
-## Use within an agent
+## 在 Agent 中使用
 
-You can use AgentQL tools with an AI Agent using the `AgentQLBrowserToolkit` . This toolkit includes `ExtractDataBrowserTool` and `GetWebElementBrowserTool`. Here's an example of agentic browser actions that combine AgentQL's toolkit with the Playwright tools.
+您可以使用 `AgentQLBrowserToolkit` 将 AgentQL 工具与 AI 代理（Agent）一起使用。此工具包包含 `ExtractDataBrowserTool` 和 `GetWebElementBrowserTool`。下面是一个将 AgentQL 工具包与 Playwright 工具相结合的代理浏览器操作示例。
 
-### Instantiate Toolkit
+### 实例化工具包
 
 ```python
 from langchain_agentql.utils import create_async_playwright_browser
@@ -356,7 +356,7 @@ agentql_toolkit.get_tools()
 ```python
 from langchain_community.tools.playwright import ClickTool, NavigateTool
 
-# we hand pick the following tools to allow more precise agentic browser actions
+# 我们挑选以下工具以允许更精确的代理浏览器操作
 playwright_toolkit = [
     NavigateTool(async_browser=async_agent_browser),
     ClickTool(async_browser=async_agent_browser, visible_only=False),
@@ -369,7 +369,7 @@ playwright_toolkit
  ClickTool(async_browser=<Browser type=<BrowserType name=chromium executable_path=/root/.cache/ms-playwright/chromium-1155/chrome-linux/chrome> version=133.0.6943.16>, visible_only=False)]
 ```
 
-### Use with a ReAct Agent
+### 与 ReAct Agent 结合使用
 
 ```python
 pip install --quiet -U langgraph
@@ -379,7 +379,7 @@ pip install --quiet -U langgraph
 from langchain.agents import create_agent
 
 
-# You need to set up an llm, please refer to the chaining section
+# 您需要设置一个 llm，请参考链式调用部分
 agent_executor = create_agent(
     model, agentql_toolkit.get_tools() + playwright_toolkit
 )
@@ -387,14 +387,14 @@ agent_executor = create_agent(
 
 ```python
 prompt = """
-Navigate to https://news.ycombinator.com/,
-extract the news titles on the current page,
-show the current page url,
-find the button on the webpage that direct to the next page,
-click on the button,
-show the current page url,
-extract the news title on the current page
-extract the news titles that mention "AI" from the two pages.
+导航到 https://news.ycombinator.com/，
+提取当前页面的新闻标题，
+显示当前页面 URL，
+找到网页上指向下一页的按钮，
+点击该按钮，
+显示当前页面 URL，
+提取当前页面的新闻标题
+提取两个页面中提及“AI”的新闻标题。
 """
 
 events = agent_executor.astream(
@@ -510,9 +510,9 @@ Name: extract_web_data_from_browser
 
 Here's a summary of the actions and results:
 
-### Page 1
+### 第 1 页 (Page 1)
 - **URL:** [https://news.ycombinator.com/news](https://news.ycombinator.com/news)
-- **News Titles:**
+- **新闻标题 (News Titles):**
   1. I Went to SQL Injection Court
   2. Framework's first desktop is a strange-but unique-mini ITX gaming PC
   3. Hyperspace
@@ -544,9 +544,9 @@ Here's a summary of the actions and results:
   29. Show HN: Txtl - Fast static website of text utilities
   30. Have we been wrong about why Mars is red?
 
-### Page 2
+### 第 2 页 (Page 2)
 - **URL:** [https://news.ycombinator.com/news?p=2](https://news.ycombinator.com/news?p=2)
-- **News Titles:**
+- **新闻标题 (News Titles):**
   1. 'Hey Number 17'
   2. Building and operating a pretty big storage system called S3 (2023)
   3. Ghost House - software for automatic inbetweens
@@ -578,9 +578,9 @@ Here's a summary of the actions and results:
   29. Closing the “green gap”: energy savings from the math of the landscape function
   30. Larry Ellison's half-billion-dollar quest to change farming
 
-### News Titles Mentioning "AI":
-1. Page 1: **AI is blurring the line between PMs and engineers?**
-2. Page 2:
+### 提及 “AI” 的新闻标题 (News Titles Mentioning "AI"):
+1. 第 1 页：**AI is blurring the line between PMs and engineers?**
+2. 第 2 页：
    - **Show HN: While the world builds AI Agents, I'm just building calculators**
    - **GibberLink [AI-AI Communication]**
    - **It’s still worth blogging in the age of AI**
@@ -588,6 +588,6 @@ Here's a summary of the actions and results:
 
 ---
 
-## API reference
+## API 参考
 
-For more information on how to use this integration, please refer to the [git repo](https://github.com/tinyfish-io/agentql-integrations/tree/main/langchain) or the [langchain integration documentation](https://docs.agentql.com/integrations/langchain)
+有关如何使用此集成的更多信息，请参阅 [git 仓库](https://github.com/tinyfish-io/agentql-integrations/tree/main/langchain) 或 [LangChain 集成文档](https://docs.agentql.com/integrations/langchain)

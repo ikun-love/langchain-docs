@@ -1,14 +1,14 @@
 ---
-title: Tencent Cloud VectorDB
+title: 腾讯云 VectorDB
 ---
 
->[Tencent Cloud VectorDB](https://cloud.tencent.com/document/product/1709) is a fully managed, self-developed, enterprise-level distributed database service designed for storing, retrieving, and analyzing multi-dimensional vector data. The database supports multiple index types and similarity calculation methods. A single index can support a vector scale of up to 1 billion and can support millions of QPS and millisecond-level query latency. Tencent Cloud Vector Database can not only provide an external knowledge base for large models to improve the accuracy of large model responses but can also be widely used in AI fields such as recommendation systems, NLP services, computer vision, and intelligent customer service.
+>[腾讯云 VectorDB](https://cloud.tencent.com/document/product/1709) 是一项全托管、自研的企业级分布式数据库服务，专为多维向量数据存储、检索和分析而设计。该数据库支持多种索引类型和相似度计算方法。单个索引可支持高达 10 亿的向量规模，并能支持数百万 QPS 和毫秒级的查询延迟。腾讯云向量数据库不仅能为大模型提供外部知识库以提高响应准确性，还广泛应用于推荐系统、自然语言处理（NLP）服务、计算机视觉和智能客服等 AI 领域。
 
-This notebook shows how to use functionality related to the Tencent vector database.
+本 Notebook 展示了如何使用与腾讯向量数据库相关的各种功能。
 
-To run, you should have a [Database instance.](https://cloud.tencent.com/document/product/1709/95101).
+要运行此代码，您需要拥有一个 [数据库实例](https://cloud.tencent.com/document/product/1709/95101)。
 
-## Basic Usage
+## 基本用法
 
 ```python
 !pip3 install tcvectordb langchain-community
@@ -22,7 +22,7 @@ from langchain_community.vectorstores.tencentvectordb import ConnectionParams
 from langchain_text_splitters import CharacterTextSplitter
 ```
 
-load the documents, split them into chunks.
+加载文档，并将它们分割成块（chunks）。
 
 ```python
 loader = TextLoader("../../how_to/state_of_the_union.txt")
@@ -31,33 +31,33 @@ text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
 ```
 
-we support two ways to embed the documents:
+我们支持两种方式来嵌入（Embed）文档：
 
-- Use any Embeddings models compatible with LangChain Embeddings.
-- Specify the Embedding model name of the Tencent VectorStore DB, choices are:
-  - `bge-base-zh`, dimension: 768
-  - `m3e-base`, dimension: 768
-  - `text2vec-large-chinese`, dimension: 1024
-  - `e5-large-v2`, dimension: 1024
-  - `multilingual-e5-base`, dimension: 768
+- 使用任何与 LangChain Embeddings 兼容的 Embedding 模型。
+- 指定 Tencent VectorStore DB 的 Embedding 模型名称，可选值包括：
+  - `bge-base-zh`, 维度: 768
+  - `m3e-base`, 维度: 768
+  - `text2vec-large-chinese`, 维度: 1024
+  - `e5-large-v2`, 维度: 1024
+  - `multilingual-e5-base`, 维度: 768
 
-flowing code shows both ways to embed the documents, you can choose one of them by commenting the other:
+以下代码展示了两种文档嵌入方式，您可以通过注释掉其中一种来选择：
 
 ```python
-##  you can use a LangChain Embeddings model, like OpenAIEmbeddings:
+##  您可以使用 LangChain Embedding 模型，例如 OpenAIEmbeddings：
 
 # from langchain_community.embeddings.openai import OpenAIEmbeddings
 #
 # embeddings = OpenAIEmbeddings()
 # t_vdb_embedding = None
 
-## Or you can use a Tencent Embedding model, like `bge-base-zh`:
+## 或者您可以使用腾讯云 Embedding 模型，例如 `bge-base-zh`：
 
-t_vdb_embedding = "bge-base-zh"  # bge-base-zh is the default model
+t_vdb_embedding = "bge-base-zh"  # bge-base-zh 是默认模型
 embeddings = None
 ```
 
-now we can create a TencentVectorDB instance, you must provide at least one of the `embeddings` or `t_vdb_embedding` parameters. if both are provided, the `embeddings` parameter will be used:
+现在我们可以创建一个 TencentVectorDB 实例，**必须**提供 `embeddings` 或 `t_vdb_embedding` 中的至少一个参数。如果两者都提供了，则会使用 `embeddings` 参数：
 
 ```python
 conn_params = ConnectionParams(
@@ -95,11 +95,11 @@ docs[0].page_content
 'Ankush went to Princeton'
 ```
 
-## Metadata and filtering
+## 元数据和过滤（Metadata and filtering）
 
-Tencent VectorDB supports metadata and [filtering](https://cloud.tencent.com/document/product/1709/95099#c6f6d3a3-02c5-4891-b0a1-30fe4daf18d8). You can add metadata to the documents and filter the search results based on the metadata.
+Tencent VectorDB 支持元数据（metadata）和 [过滤](https://cloud.tencent.com/document/product/1709/95099#c6f6d3a3-02c5-4891-b0a1-30fe4daf18d8)功能。您可以向文档添加元数据，并根据这些元数据来过滤搜索结果。
 
-now we will create a new TencentVectorDB collection with metadata and demonstrate how to filter the search results based on the metadata:
+现在我们将创建一个带有元数据的 TencerVectorDB 集合，并演示如何根据元数据过滤搜索结果：
 
 ```python
 from langchain_community.vectorstores.tencentvectordb import (
@@ -172,10 +172,10 @@ vector_db = TencentVectorDB.from_documents(
 
 query = "film about dream by Christopher Nolan"
 
-# you can use the tencentvectordb filtering syntax with the `expr` parameter:
+# 您可以使用 `expr` 参数来使用腾讯云向量数据库的过滤语法：
 result = vector_db.similarity_search(query, expr='director="Christopher Nolan"')
 
-# you can either use the langchain filtering syntax with the `filter` parameter:
+# 您也可以使用 LangChain 的过滤语法，通过 `filter` 参数：
 # result = vector_db.similarity_search(query, filter='eq("director", "Christopher Nolan")')
 
 result

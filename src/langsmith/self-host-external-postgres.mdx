@@ -1,62 +1,62 @@
 ---
-title: Connect to an external PostgreSQL database
-sidebarTitle: Connect to an external PostgreSQL database
+title: 连接到外部 PostgreSQL 数据库
+sidebarTitle: 连接到外部 PostgreSQL 数据库
 ---
 
-LangSmith uses a PostgreSQL database as the primary data store for transactional workloads and operational data (almost everything besides runs). By default, LangSmith Self-Hosted will use an internal PostgreSQL database. However, you can configure LangSmith to use an external PostgreSQL database (). By configuring an external PostgreSQL database, you can more easily manage backups, scaling, and other operational tasks for your database.
+LangSmith 使用 PostgreSQL 数据库作为事务性工作负载和操作数据（几乎所有除了运行记录 Run 之外的数据）的主要数据存储。默认情况下，LangSmith 自托管（Self-Hosted）会使用一个内部的 PostgreSQL 数据库。然而，您可以配置 LangSmith 以使用外部 PostgreSQL 数据库。通过配置外部 PostgreSQL 数据库，您可以更轻松地管理数据库的备份、扩展和其他操作任务。
 
-## Requirements
+## 要求 (Requirements)
 
-* A provisioned PostgreSQL database that your LangSmith instance will have network access to. We recommend using a managed PostgreSQL service like:
+*   一个已预配的 PostgreSQL 数据库，您的 LangSmith 实例能够通过网络访问该数据库。我们推荐使用托管的 PostgreSQL 服务，例如：
 
-  * [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
-  * [Google Cloud SQL](https://cloud.google.com/curated-resources/cloud-sql#section-1)
-  * [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql#features)
+    *   [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
+    *   [Google Cloud SQL](https://cloud.google.com/curated-resources/cloud-sql#section-1)
+    *   [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql#features)
 
-* Note: We only officially support PostgreSQL versions >= 14.
+*   注意：我们**只官方支持** PostgreSQL 版本 $\ge 14$。
 
-* A user with admin access to the PostgreSQL database. This user will be used to create the necessary tables, indexes, and schemas.
+*   一个对 PostgreSQL 数据库具有管理员权限的用户。该用户将用于创建必要的表、索引和模式（schema）。
 
-* This user will also need to have the ability to create extensions in the database. We use/will try to install the btree\_gin, btree\_gist, pgcrypto, citext, ltree, and pg\_trgm extensions.
+*   该用户还需要具备在数据库中创建扩展（extension）的能力。我们会使用/尝试安装 `btree_gin`、`btree_gist`、`pgcrypto`、`citext`、`ltree` 和 `pg_trgm` 这些扩展。
 
-* If using a schema other than public, ensure that you do not have any other schemas with the extensions enabled, or you must include that in your search path.
+*   如果使用的 schema 不是 `public`，请确保您没有在其他任何 schema 中启用这些扩展，或者您必须将这些扩展包含在您的搜索路径（search path）中。
 
-* Support for pgbouncer and other connection poolers is community-based. Community members have reported that pgbouncer has worked with `pool_mode` = `session` and a suitable setting for `ignore_startup_parameters` (as of writing, `search_path` and `lock_timeout` need to be ignored). Care is needed to avoid polluting connection pools; some level of PostgreSQL expertise is advisable. LangChain Inc currently does not have roadmap plans for formal test coverage or commercial support of pgbouncer or amazon rds proxy or any other poolers, but the community is welcome to discuss and collaborate on support through GitHub issues.
+*   对 `pgbouncer` 和其他连接池器的支持是基于社区的。社区成员报告说，`pgbouncer` 在使用 `pool_mode` = `session` 且 `ignore_startup_parameters` 设置合适时可以正常工作（截至撰写本文时，需要忽略 `search_path` 和 `lock_timeout`）。需要小心以避免污染连接池；因此，建议具备一定级别的 PostgreSQL 专业知识。LangChain Inc 目前没有将 `pgbouncer`、`amazon rds proxy` 或任何其他池器的正式测试覆盖或商业支持纳入路线图的计划，但社区欢迎通过 GitHub Issue 讨论和协作支持事宜。
 
-* By default, we recommend an instance with at least 2 vCPUs and 8GB of memory. However, the actual requirements will depend on your workload and the number of users you have. We recommend monitoring your PostgreSQL instance and scaling up as needed.
+*   默认情况下，我们推荐至少配备 2 个 vCPU 和 8GB 内存的实例。但是，实际要求将取决于您的工作负载和用户数量。我们建议监控您的 PostgreSQL 实例，并根据需要向上扩展。
 
-## Connection String
+## 连接字符串 (Connection String)
 
-You will need to provide a connection string to your PostgreSQL database. This connection string should include the following information:
+您需要提供一个到您的 PostgreSQL 数据库的连接字符串。此连接字符串应包含以下信息：
 
-* Host
-* Port
-* Database
-* Username
-* Password(Make sure to url encode this if there are any special characters)
-* URL params
+*   主机 (Host)
+*   端口 (Port)
+*   数据库 (Database)
+*   用户名 (Username)
+*   密码 (Password) (如果存在特殊字符，请确保对其进行 URL 编码)
+*   URL 参数 (URL params)
 
-This will take the form of:
+其形式如下：
 
 ```
 username:password@host:port/database?<url_params>
 ```
 
-An example connection string might look like:
+一个示例连接字符串可能如下所示：
 
 ```
 myuser:mypassword@myhost:5432/mydatabase?sslmode=disable
 ```
 
-Without url parameters, the connection string would look like:
+如果没有 URL 参数，连接字符串应如下所示：
 
 ```
 myuser:mypassword@myhost:5432/mydatabase
 ```
 
-## Configuration
+## 配置 (Configuration)
 
-With your connection string in hand, you can configure your LangSmith instance to use an external PostgreSQL database. You can do this by modifying the `values` file for your LangSmith Helm Chart installation or the `.env` file for your Docker installation.
+获取连接字符串后，您可以配置 LangSmith 实例以使用外部 PostgreSQL 数据库。您可以通过修改 LangSmith Helm Chart 安装的 `values` 文件或 Docker 安装的 `.env` 文件来完成此操作。
 
 <CodeGroup>
 
@@ -68,10 +68,10 @@ postgres:
 ```
 
 ```bash Docker
-# In your .env file
+# 在您的 .env 文件中
 POSTGRES_DATABASE_URI="Your connection url"
 ```
 
 </CodeGroup>
 
-Once configured, you should be able to reinstall your LangSmith instance. If everything is configured correctly, your LangSmith instance should now be using your external PostgreSQL database.
+配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在应该会使用您的外部 PostgreSQL 数据库了。

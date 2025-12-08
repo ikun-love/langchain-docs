@@ -1,40 +1,40 @@
 ---
-title: HuggingFace Inference
+title: HuggingFace 推理服务
 ---
 
-This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text, using the `BAAI/bge-base-en-v1.5` model by default. You can pass a different model name to the constructor to use a different model.
+这个 Embeddings 集成使用 HuggingFace 推理 API 来为给定文本生成向量嵌入（embeddings），默认使用的是 `BAAI/bge-base-en-v1.5` 模型。你可以在构造函数中传入不同的模型名称以使用其他模型。
 
-## Setup
+## 设置 (Setup)
 
-You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package and the required peer dependency:
+你首先需要安装 [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) 包以及所需的对等依赖项（peer dependency）：
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core @huggingface/inference@4
 ```
-## Usage
+## 用法 (Usage)
 
 ```typescript
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 
 const embeddings = new HuggingFaceInferenceEmbeddings({
-  apiKey: "YOUR-API-KEY", // Defaults to process.env.HUGGINGFACEHUB_API_KEY
-  model: "MODEL-NAME", // Defaults to `BAAI/bge-base-en-v1.5` if not provided
-  provider: "MODEL-PROVIDER", // Falls back to auto selection mechanism within Hugging Face's inference API if not provided
+  apiKey: "YOUR-API-KEY", // 默认为 process.env.HUGGINGFACEHUB_API_KEY
+  model: "MODEL-NAME", // 如果不提供，则默认为 `BAAI/bge-base-en-v1.5`
+  provider: "MODEL-PROVIDER", // 如果不提供，则回退到 Hugging Face 推理 API 内部的自动选择机制
 });
 ```
 
-> **Note:**
-> If you do not provide a `model`, a warning will be logged and the default model `BAAI/bge-base-en-v1.5` will be used.
-> If you do not provide a `provider`, Hugging Face will default to `auto` selection, which will select the first provider available for the model based on your settings at https://hf.co/settings/inference-providers.
+> **注意 (Note):**
+> 如果你不提供 `model` 参数，系统会记录一条警告信息，并使用默认模型 `BAAI/bge-base-en-v1.5`。
+> 如果你不提供 `provider` 参数，Hugging Face 将默认为 `auto` 选择，该选择将根据你在 https://hf.co/settings/inference-providers 上的设置，选择该模型可用的第一个推理提供商。
 
-> **Hint:**
-> `hf-inference` is the provider name for models that are hosted directly by Hugging Face.
+> **提示 (Hint):**
+> `hf-inference` 是 Hugging Face 直接托管的模型的提供商名称。
 
-## Related
+## 相关内容 (Related)
 
-- Embedding model [conceptual guide](/oss/integrations/text_embedding)
-- Embedding model [how-to guides](/oss/integrations/text_embedding)
+- 嵌入模型 [概念指南](/oss/integrations/text_embedding)
+- 嵌入模型 [操作指南](/oss/integrations/text_embedding)

@@ -2,44 +2,43 @@
 title: ChatXinference
 ---
 
-[Xinference](https://github.com/xorbitsai/inference) is a powerful and versatile library designed to serve LLMs,
-speech recognition models, and multimodal models, even on your laptop. It supports a variety of models compatible with GGML, such as chatglm, baichuan, whisper, vicuna, orca, and many others.
+[Xinference](https://github.com/xorbitsai/inference) 是一个功能强大且用途广泛的库，旨在为大型语言模型（LLM）、语音识别模型和多模态模型提供服务，甚至可以在您的笔记本电脑上运行。它支持多种与 GGML 兼容的模型，例如 chatglm、baichuan、whisper、vicuna、orca 等等。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support] | Downloads | Version |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持] | 下载 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | ChatXinference| langchain-xinference | ✅ | ❌ | ✅ | ✅ | ✅ |
 
-### Model features
+### 模型特性
 
-| [Tool calling](/oss/langchain/tools/) | [Structured output](/oss/langchain/structured-output) | JSON mode | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | Native async | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools/) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: |:----------------------------------------------------:| :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ |                          ✅                           | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
 
-## Setup
+## 设置
 
-Install `Xinference` through PyPI:
+通过 PyPI 安装 `Xinference`：
 
 ```python
 pip install -qU  "xinference[all]"
 ```
 
-### Deploy Xinference Locally or in a Distributed Cluster
+### 在本地或分布式集群中部署 Xinference
 
-For local deployment, run `xinference`.
+对于本地部署，运行 `xinference`。
 
-To deploy Xinference in a cluster, first start an Xinference supervisor using the `xinference-supervisor`. You can also use the option -p to specify the port and -H to specify the host. The default port is 8080 and the default host is 0.0.0.0.
+要在集群中部署 Xinference，请首先使用 `xinference-supervisor` 启动一个 Xinference 管理器（supervisor）。您也可以使用 `-p` 选项指定端口（port），使用 `-H` 选项指定主机（host）。默认端口是 `8080`，默认主机是 `0.0.0.0`。
 
-Then, start the Xinference workers using `xinference-worker` on each server you want to run them on.
+然后，在您希望运行工作的每台服务器上，使用 `xinference-worker` 启动 Xinference 工作进程（worker）。
 
-You can consult the README file from [Xinference](https://github.com/xorbitsai/inference) for more information.
+您可以查阅 [Xinference](https://github.com/xorbitsai/inference) 的 README 文件以获取更多信息。
 
-### Wrapper
+### 包装器 (Wrapper)
 
-To use Xinference with LangChain, you need to first launch a model. You can use command line interface (CLI) to do so:
+要将 Xinference 与 LangChain 一起使用，您需要先启动一个模型。您可以使用命令行界面（CLI）来完成此操作：
 
 ```python
 %xinference launch -n vicuna-v1.3 -f ggmlv3 -q q4_0
@@ -49,21 +48,21 @@ To use Xinference with LangChain, you need to first launch a model. You can use 
 Model uid: 7167b2b0-2a04-11ee-83f0-d29396a3f064
 ```
 
-A model UID is returned for you to use. Now you can use Xinference with LangChain:
+系统会返回一个模型唯一标识符（UID）供您使用。现在您就可以在 LangChain 中使用 Xinference 了：
 
-## Installation
+## 安装
 
-The LangChain Xinference integration lives in the `langchain-xinference` package:
+LangChain 的 Xinference 集成位于 `langchain-xinference` 包中：
 
 ```python
 pip install -qU langchain-xinference
 ```
 
-Make sure you're using the latest Xinference version for structured outputs.
+请确保您使用的是最新版本的 Xinference 以支持结构化输出。
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全（chat completions）：
 
 ```python
 from langchain_xinference.chat_models import ChatXinference
@@ -78,7 +77,7 @@ llm.invoke(
 )
 ```
 
-## Invocation
+## 调用 (Invocation)
 
 ```python
 from langchain.messages import HumanMessage, SystemMessage
@@ -96,6 +95,6 @@ llm.invoke([HumanMessage(content=human_message), SystemMessage(content=system_me
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all ChatXinference features and configurations head to the API reference: [github.com/TheSongg/langchain-xinference](https://github.com/TheSongg/langchain-xinference)
+有关 ChatXinference 所有功能和配置的详细文档，请参阅 API 参考：[github.com/TheSongg/langchain-xinference](https://github.com/TheSongg/langchain-xinference)

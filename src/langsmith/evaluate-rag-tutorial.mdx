@@ -1,41 +1,41 @@
 ---
-title: Evaluate a RAG application
-sidebarTitle: Evaluate a RAG application
+title: 评估 RAG 应用
+sidebarTitle: 评估 RAG 应用
 ---
 
 <Info>
-[RAG evaluation](/langsmith/evaluation-concepts#retrieval-augmented-generation-rag) | [Evaluators](/langsmith/evaluation-concepts#evaluators) | [LLM-as-judge evaluators](/langsmith/evaluation-concepts#llm-as-judge)
+[RAG 评估](/langsmith/evaluation-concepts#retrieval-augmented-generation-rag) | [评估器](/langsmith/evaluation-concepts#evaluators) | [LLM 作为判官的评估器](/langsmith/evaluation-concepts#llm-as-judge-evaluators)
 </Info>
 
-Retrieval Augmented Generation (RAG) is a technique that enhances Large Language Models (LLMs) by providing them with relevant external knowledge. It has become one of the most widely used approaches for building LLM applications.
+检索增强生成 (Retrieval Augmented Generation, RAG) 是一种通过为大型语言模型 (LLM) 提供相关的外部知识来增强它们的技术。它已成为构建 LLM 应用最常用的方法之一。
 
-This tutorial will show you how to evaluate your RAG applications using LangSmith. You'll learn:
+本教程将向您展示如何使用 LangSmith 来评估您的 RAG 应用。您将了解到：
 
-1. How to create test datasets
-2. How to run your RAG application on those datasets
-3. How to measure your application's performance using different evaluation metrics
+1. 如何创建测试数据集
+2. 如何在这些数据集上运行您的 RAG 应用
+3. 如何使用不同的评估指标来衡量应用的性能
 
-## Overview
+## 概述
 
-A typical RAG evaluation workflow consists of three main steps:
+一个典型的 RAG 评估工作流程包含三个主要步骤：
 
-1. Creating a dataset with questions and their expected answers
+1. 创建一个包含问题及其预期答案的数据集
 
-2. Running your RAG application on those questions
+2. 在这些问题上运行您的 RAG 应用
 
-3. Using evaluators to measure how well your application performed, looking at factors like:
+3. 使用评估器来衡量应用的表现如何，关注以下因素：
 
-   * Answer relevance
-   * Answer accuracy
-   * Retrieval quality
+   * 答案相关性
+   * 答案准确性
+   * 检索质量
 
-For this tutorial, we'll create and evaluate a bot that answers questions about a few of [Lilian Weng's](https://lilianweng.github.io/) insightful blog posts.
+对于本教程，我们将创建一个针对 Lilian Weng 几篇富有洞察力的博客文章进行问答的机器人，并对其进行评估。[Lilian Weng 的](https://lilianweng.github.io/)
 
-## Setup
+## 设置
 
-### Environment
+### 环境
 
-First, let's set our environment variables:
+首先，我们设置环境变量：
 
 <CodeGroup>
 
@@ -54,7 +54,7 @@ process.env.OPENAI_API_KEY = "YOUR OPENAI API KEY";
 
 </CodeGroup>
 
-And install the dependencies we'll need:
+然后安装我们需要的依赖项：
 
 <CodeGroup>
 
@@ -68,23 +68,23 @@ yarn add langsmith langchain @langchain/community @langchain/openai
 
 </CodeGroup>
 
-### Application
+### 应用
 
 <Info>
-While this tutorial uses LangChain, the evaluation techniques and LangSmith functionality demonstrated here work with any framework. Feel free to use your preferred tools and libraries.
+虽然本教程使用了 LangChain，但这里展示的评估技术和 LangSmith 功能适用于**任何框架**。欢迎使用您首选的工具和库。
 </Info>
 
-In this section, we'll build a basic Retrieval-Augmented Generation (RAG) application.
+在本节中，我们将构建一个基础的检索增强生成 (RAG) 应用。
 
-We'll stick to a simple implementation that:
+我们将坚持一个简单的实现，该实现执行以下操作：
 
-* Indexing: chunks and indexes a few of Lilian Weng's blogs in a vector store
-* Retrieval: retrieves those chunks based on the user question
-* Generation: passes the question and retrieved docs to an LLM.
+* **索引 (Indexing)**：对 Lilian Weng 的几篇博客文章进行分块 (chunking) 并将其索引到向量存储 (vector store) 中
+* **检索 (Retrieval)**：根据用户问题检索相关的块（文档片段）
+* **生成 (Generation)**：将问题和检索到的文档传递给 LLM。
 
-#### Indexing and retrieval
+#### 索引和检索
 
-First, lets load the blog posts we want to build a chatbot for and index them.
+首先，我们加载想要构建聊天机器人的博客文章并对其进行索引。
 
 <CodeGroup>
 
@@ -94,32 +94,32 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# List of URLs to load documents from
+# 要加载文档的 URL 列表
 urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
     "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
     "https://lilianweng.github.io/posts/2023-10-25-adv-attack-llm/",
 ]
 
-# Load documents from the URLs
+# 从 URL 加载文档
 docs = [WebBaseLoader(url).load() for url in urls]
 docs_list = [item for sublist in docs for item in sublist]
 
-# Initialize a text splitter with specified chunk size and overlap
+# 使用指定的块大小和重叠度初始化文本分割器
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size=250, chunk_overlap=0
 )
 
-# Split the documents into chunks
+# 将文档分割成块
 doc_splits = text_splitter.split_documents(docs_list)
 
-# Add the document chunks to the "vector store" using OpenAIEmbeddings
+# 使用 OpenAIEmbeddings 将文档块添加到“向量存储”中
 vectorstore = InMemoryVectorStore.from_documents(
     documents=doc_splits,
     embedding=OpenAIEmbeddings(),
 )
 
-# With langchain we can easily turn any vector store into a retrieval component:
+# 使用 LangChain，我们可以轻松地将任何向量存储转换为检索组件：
 retriever = vectorstore.as_retriever(k=6)
 ```
 
@@ -129,7 +129,7 @@ import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { BrowserbaseLoader } from "@langchain/community/document_loaders/web/browserbase";
 import { RecursiveCharacterTextSplitter } from "@langchain/text_splitters";
 
-// List of URLs to load documents from
+// 要加载文档的 URL 列表
 const urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
     "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
@@ -152,15 +152,15 @@ const embeddings = new OpenAIEmbeddings({
     model: "text-embedding-3-large"
 });
 
-const vectorStore = new MemoryVectorStore(embeddings);  // Index chunks
+const vectorStore = new MemoryVectorStore(embeddings);  // 索引分块
 await vectorStore.addDocuments(allSplits)
 ```
 
 </CodeGroup>
 
-#### Generation
+#### 生成
 
-We can now define the generative pipeline.
+我们现在可以定义生成管道。
 
 <CodeGroup>
 
@@ -170,20 +170,20 @@ from langsmith import traceable
 
 llm = ChatOpenAI(model="gpt-4o", temperature=1)
 
-# Add decorator so this function is traced in LangSmith
+# 添加装饰器，以便此函数在 LangSmith 中被追踪
 @traceable()
 def rag_bot(question: str) -> dict:
-    # LangChain retriever will be automatically traced
+    # LangChain 检索器将自动被追踪
     docs = retriever.invoke(question)
     docs_string = "".join(doc.page_content for doc in docs)
-    instructions = f"""You are a helpful assistant who is good at analyzing source information and answering questions.
-       Use the following source documents to answer the user's questions.
-       If you don't know the answer, just say that you don't know.
-       Use three sentences maximum and keep the answer concise.
+    instructions = f"""你是一个乐于助人、擅长分析源信息并回答问题的助手。
+       请使用以下源文档回答用户的问题。
+       如果你不知道答案，请直接说不知道。
+       最多使用三句话，并保持答案简洁。
 
-Documents:
+文档:
 {docs_string}"""
-    # langchain ChatModel will be automatically traced
+    # LangChain ChatModel 将自动被追踪
     ai_msg = llm.invoke([
             {"role": "system", "content": instructions},
             {"role": "user", "content": question},
@@ -201,18 +201,18 @@ const llm = new ChatOpenAI({
   temperature: 1,
 })
 
-// Add decorator so this function is traced in LangSmith
+// 添加装饰器，以便此函数在 LangSmith 中被追踪
 const ragBot = traceable(
     async (question: string) => {
-        // LangChain retriever will be automatically traced
+        // LangChain 检索器将自动被追踪
         const retrievedDocs = await vectorStore.similaritySearch(question);
         const docsContent = retrievedDocs.map((doc) => doc.pageContent).join("");
 
-        const instructions = `You are a helpful assistant who is good at analyzing source information and answering questions
-        Use the following source documents to answer the user's questions.
-        If you don't know the answer, just say that you don't know.
-        Use three sentences maximum and keep the answer concise.
-        Documents:
+        const instructions = `你是一个乐于助人、擅长分析源信息并回答问题的助手。
+        请使用以下源文档回答用户的问题。
+        如果你不知道答案，请直接说不知道。
+        最多使用三句话，并保持答案简洁。
+        文档:
         ${docsContent}`;
 
         const aiMsg = await llm.invoke([
@@ -233,9 +233,9 @@ const ragBot = traceable(
 
 </CodeGroup>
 
-## Dataset
+## 数据集
 
-Now that we've got our application, let's build a dataset to evaluate it. Our dataset will be very simple in this case: we'll have example questions and reference answers.
+现在我们有了应用，让我们构建一个数据集来进行评估。在这个特定案例中，我们的数据集非常简单：我们将提供示例问题和参考答案。
 
 <CodeGroup>
 
@@ -244,23 +244,23 @@ from langsmith import Client
 
 client = Client()
 
-# Define the examples for the dataset
+# 为数据集定义示例
 examples = [
     {
-        "inputs": {"question": "How does the ReAct agent use self-reflection? "},
-        "outputs": {"answer": "ReAct integrates reasoning and acting, performing actions - such tools like Wikipedia search API - and then observing / reasoning about the tool outputs."},
+        "inputs": {"question": "ReAct 代理如何使用自我反思？ "},
+        "outputs": {"answer": "ReAct 集成了推理和行动，执行操作——例如使用维基百科搜索 API 等工具——然后观察/推理工具的输出。"},
     },
     {
-        "inputs": {"question": "What are the types of biases that can arise with few-shot prompting?"},
-        "outputs": {"answer": "The biases that can arise with few-shot prompting include (1) Majority label bias, (2) Recency bias, and (3) Common token bias."},
+        "inputs": {"question": "小样本提示 (few-shot prompting) 可能出现哪些类型的偏差？"},
+        "outputs": {"answer": "小样本提示可能出现的偏差包括 (1) 多数标签偏差 (Majority label bias)，(2) 近期偏差 (Recency bias) 和 (3) 常见令牌偏差 (Common token bias)。"},
     },
     {
-        "inputs": {"question": "What are five types of adversarial attacks?"},
-        "outputs": {"answer": "Five types of adversarial attacks are (1) Token manipulation, (2) Gradient based attack, (3) Jailbreak prompting, (4) Human red-teaming, (5) Model red-teaming."},
+        "inputs": {"question": "有哪些五种类型的对抗性攻击？"},
+        "outputs": {"answer": "五种类型的对抗性攻击是 (1) 令牌操纵 (Token manipulation)，(2) 基于梯度的攻击 (Gradient based attack)，(3) 越狱提示 (Jailbreak prompting)，(4) 人工红队测试 (Human red-teaming)，(5) 模型红队测试 (Model red-teaming)。"},
     },
 ]
 
-# Create the dataset and examples in LangSmith
+# 在 LangSmith 中创建数据集和示例
 dataset_name = "Lilian Weng Blogs Q&A"
 dataset = client.create_dataset(dataset_name=dataset_name)
 client.create_examples(
@@ -274,7 +274,7 @@ import { Client } from "langsmith";
 
 const client = new Client();
 
-// Define the examples for the dataset
+// 为数据集定义示例
 const examples = [
     [
         "How does the ReAct agent use self-reflection? ",
@@ -305,74 +305,73 @@ await client.createExamples({ inputs, outputs, datasetId: dataset.id })
 
 </CodeGroup>
 
-## Evaluators
+## 评估器
 
-One way to think about different types of RAG evaluators is as a tuple of what is being evaluated X what its being evaluated against:
+思考不同类型的 RAG 评估器的一种方式是将其视为一个元组：正在评估的内容 X 评估标准：
 
-1. **Correctness**: Response vs reference answer
+1. **准确性 (Correctness)**：响应 vs 参考答案
 
-* `Goal`: Measure "*how similar/correct is the RAG chain answer, relative to a ground-truth answer*"
-* `Mode`: Requires a ground truth (reference) answer supplied through a dataset
-* `Evaluator`: Use LLM-as-judge to assess answer correctness.
+* `目标`: 衡量“RAG 链的答案与基准 (ground-truth) 答案相比，有多相似/正确”
+* `模式`: 需要通过数据集中提供的基准 (参考) 答案
+* `评估器`: 使用 LLM 作为判官来评估答案的准确性。
 
-2. **Relevance**: Response vs input
+2. **相关性 (Relevance)**：响应 vs 输入
 
-* `Goal`: Measure "*how well does the generated response address the initial user input*"
-* `Mode`: Does not require reference answer, because it will compare the answer to the input question
-* `Evaluator`: Use LLM-as-judge to assess answer relevance, helpfulness, etc.
+* `目标`: 衡量“生成的响应在多大程度上解决了最初的用户输入”
+* `模式`: 不需要参考答案，因为它会将答案与输入问题进行比较
+* `评估器`: 使用 LLM 作为判官来评估答案的相关性、有用性等。
 
-3. **Groundedness**: Response vs retrieved docs
+3. **根据性/事实基础性 (Groundedness)**：响应 vs 检索到的文档
 
-* `Goal`: Measure "*to what extent does the generated response agree with the retrieved context*"
-* `Mode`: Does not require reference answer, because it will compare the answer to the retrieved context
-* `Evaluator`: Use LLM-as-judge to assess faithfulness, hallucinations, etc.
+* `目标`: 衡量“生成的响应在多大程度上与检索到的上下文一致”
+* `模式`: 不需要参考答案，因为它会将答案与检索到的上下文进行比较
+* `评估器`: 使用 LLM 作为判官来评估事实一致性、幻觉 (hallucination) 等。
 
-4. **Retrieval relevance**: Retrieved docs vs input
+4. **检索相关性 (Retrieval relevance)**：检索到的文档 vs 输入
 
-* `Goal`: Measure "*how relevant are my retrieved results for this query*"
-* `Mode`: Does not require reference answer, because it will compare the question to the retrieved context
-* `Evaluator`: Use LLM-as-judge to assess relevance
+* `目标`: 衡量“我的检索结果对于这个查询有多相关”
+* `模式`: 不需要参考答案，因为它会将查询与检索到的上下文进行比较
+* `评估器`: 使用 LLM 作为判官来评估相关性
 
 ![](/langsmith/images/rag-eval-overview.png)
 
-### Correctness: Response vs reference answer
+### 准确性：响应 vs 参考答案
 
 <CodeGroup>
 
 ```python Python
 from typing_extensions import Annotated, TypedDict
 
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class CorrectnessGrade(TypedDict):
-    # Note that the order in the fields are defined is the order in which the model will generate them.
-    # It is useful to put explanations before responses because it forces the model to think through
-    # its final response before generating it:
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
-    correct: Annotated[bool, ..., "True if the answer is correct, False otherwise."]
+    # 注意：字段定义的顺序是模型生成它们的顺序。
+    # 将解释放在响应之前很有用，因为它会迫使模型在生成最终响应前先思考其推理过程：
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
+    correct: Annotated[bool, ..., "如果答案正确，则为 True，否则为 False。"]
 
-# Grade prompt
-correctness_instructions = """You are a teacher grading a quiz. You will be given a QUESTION, the GROUND TRUTH (correct) ANSWER, and the STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Grade the student answers based ONLY on their factual accuracy relative to the ground truth answer. (2) Ensure that the student answer does not contain any conflicting statements.
-(3) It is OK if the student answer contains more information than the ground truth answer, as long as it is factually accurate relative to the  ground truth answer.
+# 评分提示 (Grade prompt)
+correctness_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION)、基准 (正确) 答案 (GROUND TRUTH ANSWER) 和学生的答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 仅根据学生答案相对于基准答案的事实准确性进行评分。(2) 确保学生答案不包含任何冲突的陈述。
+(3) 如果学生答案包含比基准答案更多的信息，只要其事实准确性相对于基准答案是正确的，也是可以的。
 
-Correctness:
-A correctness value of True means that the student's answer meets all of the criteria.
-A correctness value of False means that the student's answer does not meet all of the criteria.
+准确性 (Correctness):
+准确性值为 True 表示学生的答案满足所有标准。
+准确性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 grader_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     CorrectnessGrade, method="json_schema", strict=True
 )
 
 def correctness(inputs: dict, outputs: dict, reference_outputs: dict) -> bool:
-    """An evaluator for RAG answer accuracy"""
+    """RAG 答案准确性的评估器"""
     answers = f"""\
-QUESTION: {inputs['question']}
-GROUND TRUTH ANSWER: {reference_outputs['answer']}
-STUDENT ANSWER: {outputs['answer']}"""
-    # Run evaluator
+问题: {inputs['question']}
+基准答案: {reference_outputs['answer']}
+学生答案: {outputs['answer']}"""
+    # 运行评估器
     grade = grader_llm.invoke([
         {"role": "system", "content": correctness_instructions},
         {"role": "user", "content": answers}
@@ -384,7 +383,7 @@ STUDENT ANSWER: {outputs['answer']}"""
 import type { EvaluationResult } from "langsmith/evaluation";
 import { z } from "zod";
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const correctnessInstructions = `You are a teacher grading a quiz. You will be given a QUESTION, the GROUND TRUTH (correct) ANSWER, and the STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Grade the student answers based ONLY on their factual accuracy relative to the ground truth answer. (2) Ensure that the student answer does not contain any conflicting statements.
 (3) It is OK if the student answer contains more information than the ground truth answer, as long as it is factually accurate relative to the  ground truth answer.
@@ -424,7 +423,7 @@ async function correctness({
     GROUND TRUTH ANSWER: ${referenceOutputs.answer}
     STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = graderLLM.invoke([{role: "system", content: correctnessInstructions}, {role: "user", content: answer}])
   return grade.score;
 };
@@ -432,40 +431,40 @@ async function correctness({
 
 </CodeGroup>
 
-### Relevance: Response vs input
+### 相关性：响应 vs 输入
 
-The flow is similar to above, but we simply look at the `inputs` and `outputs` without needing the `reference_outputs`. Without a reference answer we can't grade accuracy, but can still grade relevance—as in, did the model address the user's question or not.
+流程与上述类似，但我们只查看 `inputs` 和 `outputs`，而不需要 `reference_outputs`。如果没有参考答案，我们就无法评估准确性，但仍然可以评估相关性——即模型是否解决了用户的问题。
 
 <CodeGroup>
 
 ```python Python
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class RelevanceGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     relevant: Annotated[
-        bool, ..., "Provide the score on whether the answer addresses the question"
+        bool, ..., "提供关于答案是否解决了问题的分数"
     ]
 
-# Grade prompt
-relevance_instructions = """You are a teacher grading a quiz. You will be given a QUESTION and a STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Ensure the STUDENT ANSWER is concise and relevant to the QUESTION
-(2) Ensure the STUDENT ANSWER helps to answer the QUESTION
+# 评分提示 (Grade prompt)
+relevance_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION) 和一个学生答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 确保学生答案简洁并与问题相关
+(2) 确保学生答案有助于回答问题
 
-Relevance:
-A relevance value of True means that the student's answer meets all of the criteria.
-A relevance value of False means that the student's answer does not meet all of the criteria.
+相关性 (Relevance):
+相关性值为 True 表示学生的答案满足所有标准。
+相关性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 relevance_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     RelevanceGrade, method="json_schema", strict=True
 )
 
-# Evaluator
+# 评估器
 def relevance(inputs: dict, outputs: dict) -> bool:
-    """A simple evaluator for RAG answer helpfulness."""
-    answer = f"QUESTION: {inputs['question']}\nSTUDENT ANSWER: {outputs['answer']}"
+    """一个简单的 RAG 答案有用性评估器。"""
+    answer = f"问题: {inputs['question']}\n学生答案: {outputs['answer']}"
     grade = relevance_llm.invoke([
         {"role": "system", "content": relevance_instructions},
         {"role": "user", "content": answer}
@@ -477,7 +476,7 @@ def relevance(inputs: dict, outputs: dict) -> bool:
 import type { EvaluationResult } from "langsmith/evaluation";
 import { z } from "zod";
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const relevanceInstructions = `You are a teacher grading a quiz. You will be given a QUESTION and a STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Ensure the STUDENT ANSWER is concise and relevant to the QUESTION
 (2) Ensure the STUDENT ANSWER helps to answer the QUESTION
@@ -514,7 +513,7 @@ async function relevance({
   const answer = `QUESTION: ${inputs.question}
 STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = relevanceLLM.invoke([{role: "system", content: relevanceInstructions}, {role: "user", content: answer}])
   return grade.relevant;
 };
@@ -522,40 +521,41 @@ STUDENT ANSWER: ${outputs.answer}`
 
 </CodeGroup>
 
-### Groundedness: Response vs retrieved docs
+### 根据性/事实基础性：响应 vs 检索到的文档
 
-Another useful way to evaluate responses without needing reference answers is to check if the response is justified by (or "grounded in") the retrieved documents.
+评估响应的另一种有用方法是在不需要参考答案的情况下，检查响应是否根据检索到的文档得到“支持”（或“基于事实”）。
 
 <CodeGroup>
 
 ```python Python
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class GroundedGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     grounded: Annotated[
-        bool, ..., "Provide the score on if the answer hallucinates from the documents"
+        bool, ..., "提供关于答案是否从文档中产生幻觉的分数"
     ]
 
-# Grade prompt
-grounded_instructions = """You are a teacher grading a quiz. You will be given FACTS and a STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Ensure the STUDENT ANSWER is grounded in the FACTS. (2) Ensure the STUDENT ANSWER does not contain "hallucinated" information outside the scope of the FACTS.
+# 评分提示 (Grade prompt)
+grounded_instructions = """你是一名批改小测验的老师。你将收到事实 (FACTS) 和一个学生答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 确保学生答案基于事实 (FACTS)。(2) 确保学生答案不包含超出事实范围的“幻觉”信息。
 
-Grounded:
-A grounded value of True means that the student's answer meets all of the criteria.
-A grounded value of False means that the student's answer does not meet all of the criteria.
+基于事实性 (Grounded):
+基于事实性值为 True 表示学生的答案满足所有标准。
+基于事实性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 grounded_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     GroundedGrade, method="json_schema", strict=True
 )
 
-# Evaluator
+# 评估器
 def groundedness(inputs: dict, outputs: dict) -> bool:
-    """A simple evaluator for RAG answer groundedness."""
+    """RAG 答案基于事实性的简单评估器。"""
+    # 在 Python 中，outputs["documents"] 应该是 Document 对象的列表，需要提取 page_content
     doc_string = "\n\n".join(doc.page_content for doc in outputs["documents"])
-    answer = f"FACTS: {doc_string}\nSTUDENT ANSWER: {outputs['answer']}"
+    answer = f"事实: {doc_string}\n学生答案: {outputs['answer']}"
     grade = grounded_llm.invoke([
         {"role": "system", "content": grounded_instructions},
         {"role": "user", "content": answer}
@@ -567,7 +567,7 @@ def groundedness(inputs: dict, outputs: dict) -> bool:
 import type { EvaluationResult } from "langsmith/evaluation";
 import { z } from "zod";
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const groundedInstructions = `You are a teacher grading a quiz. You will be given FACTS and a STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Ensure the STUDENT ANSWER is grounded in the FACTS. (2) Ensure the STUDENT ANSWER does not contain "hallucinated" information outside the scope of the FACTS.
 
@@ -604,7 +604,7 @@ async function grounded({
   const answer = `FACTS: ${docString}
     STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = groundedLLM.invoke([{role: "system", content: groundedInstructions}, {role: "user", content: answer}])
   return grade.grounded;
 };
@@ -612,42 +612,42 @@ async function grounded({
 
 </CodeGroup>
 
-### Retrieval relevance: Retrieved docs vs input
+### 检索相关性：检索到的文档 vs 输入
 
 <CodeGroup>
 
 ```python Python
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class RetrievalRelevanceGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     relevant: Annotated[
         bool,
         ...,
-        "True if the retrieved documents are relevant to the question, False otherwise",
+        "如果检索到的文档与问题相关，则为 True，否则为 False",
     ]
 
-# Grade prompt
-retrieval_relevance_instructions = """You are a teacher grading a quiz. You will be given a QUESTION and a set of FACTS provided by the student. Here is the grade criteria to follow:
-(1) You goal is to identify FACTS that are completely unrelated to the QUESTION
-(2) If the facts contain ANY keywords or semantic meaning related to the question, consider them relevant
-(3) It is OK if the facts have SOME information that is unrelated to the question as long as (2) is met
+# 评分提示 (Grade prompt)
+retrieval_relevance_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION) 和学生提供的一组事实 (FACTS)。请遵循以下评分标准：
+(1) 你的目标是找出与问题完全无关的事实
+(2) 如果事实包含与问题相关的任何关键字或语义信息，则认为其相关
+(3) 如果事实包含一些与问题无关的信息，只要满足 (2) 即可，这是可以的
 
-Relevance:
-A relevance value of True means that the FACTS contain ANY keywords or semantic meaning related to the QUESTION and are therefore relevant.
-A relevance value of False means that the FACTS are completely unrelated to the QUESTION.
+相关性 (Relevance):
+相关性值为 True 意味着 FACTS 包含与问题相关的任何关键字或语义信息，因此是相关的。
+相关性值为 False 意味着 FACTS 与问题完全无关。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 retrieval_relevance_llm = ChatOpenAI(
     model="gpt-4o", temperature=0
 ).with_structured_output(RetrievalRelevanceGrade, method="json_schema", strict=True)
 
 def retrieval_relevance(inputs: dict, outputs: dict) -> bool:
-    """An evaluator for document relevance"""
+    """文档相关性的评估器"""
     doc_string = "\n\n".join(doc.page_content for doc in outputs["documents"])
-    answer = f"FACTS: {doc_string}\nQUESTION: {inputs['question']}"
-    # Run evaluator
+    answer = f"事实: {doc_string}\n问题: {inputs['question']}"
+    # 运行评估器
     grade = retrieval_relevance_llm.invoke([
         {"role": "system", "content": retrieval_relevance_instructions},
         {"role": "user", "content": answer}
@@ -659,7 +659,7 @@ def retrieval_relevance(inputs: dict, outputs: dict) -> bool:
 import type { EvaluationResult } from "langsmith/evaluation";
 import { z } from "zod";
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const retrievalRelevanceInstructions = `You are a teacher grading a quiz. You will be given a QUESTION and a set of FACTS provided by the student. Here is the grade criteria to follow:
 (1) You goal is to identify FACTS that are completely unrelated to the QUESTION
 (2) If the facts contain ANY keywords or semantic meaning related to the question, consider them relevant
@@ -698,7 +698,7 @@ async function retrievalRelevance({
   const answer = `FACTS: ${docString}
     QUESTION: ${inputs.question}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = retrievalRelevanceLLM.invoke([{role: "system", content: retrievalRelevanceInstructions}, {role: "user", content: answer}])
   return grade.relevant;
 };
@@ -706,9 +706,9 @@ async function retrievalRelevance({
 
 </CodeGroup>
 
-## Run evaluation
+## 运行评估
 
-We can now kick off our evaluation job with all of our different evaluators.
+我们现在可以使用所有不同的评估器启动我们的评估作业。
 
 <CodeGroup>
 
@@ -724,7 +724,7 @@ experiment_results = client.evaluate(
     metadata={"version": "LCEL context, gpt-4-0125-preview"},
 )
 
-# Explore results locally as a dataframe if you have pandas installed
+# 如果安装了 pandas，可以在本地将其探索为数据框 (dataframe)
 # experiment_results.to_pandas()
 ```
 
@@ -745,11 +745,11 @@ const experimentResults = await evaluate(targetFunc, {
 
 </CodeGroup>
 
-You can see an example of what these results look like here: [LangSmith link](https://smith.langchain.com/public/302573e2-20bf-4f8c-bdad-e97c20f33f1b/d)
+您可以在此处看到这些结果的示例：[LangSmith 链接](https://smith.langchain.com/public/302573e2-20bf-4f8c-bdad-e97c20f33f1b/d)
 
-## Reference code
+## 参考代码
 
-<Accordion title="Here's a consolidated script with all the above code:">
+<Accordion title="以下是一个包含上述所有代码的集成脚本：">
     <CodeGroup>
 
 ```python Python
@@ -760,50 +760,50 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langsmith import Client, traceable
 from typing_extensions import Annotated, TypedDict
 
-# List of URLs to load documents from
+# 要加载文档的 URL 列表
 urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
     "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
     "https://lilianweng.github.io/posts/2023-10-25-adv-attack-llm/",
 ]
 
-# Load documents from the URLs
+# 从 URL 加载文档
 docs = [WebBaseLoader(url).load() for url in urls]
 docs_list = [item for sublist in docs for item in sublist]
 
-# Initialize a text splitter with specified chunk size and overlap
+# 使用指定的块大小和重叠度初始化文本分割器
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size=250, chunk_overlap=0
 )
 
-# Split the documents into chunks
+# 将文档分割成块
 doc_splits = text_splitter.split_documents(docs_list)
 
-# Add the document chunks to the "vector store" using OpenAIEmbeddings
+# 使用 OpenAIEmbeddings 将文档块添加到“向量存储”中
 vectorstore = InMemoryVectorStore.from_documents(
     documents=doc_splits,
     embedding=OpenAIEmbeddings(),
 )
 
-# With langchain we can easily turn any vector store into a retrieval component:
+# 使用 LangChain，我们可以轻松地将任何向量存储转换为检索组件：
 retriever = vectorstore.as_retriever(k=6)
 
 llm = ChatOpenAI(model="gpt-4o", temperature=1)
 
-# Add decorator so this function is traced in LangSmith
+# 添加装饰器，以便此函数在 LangSmith 中被追踪
 @traceable()
 def rag_bot(question: str) -> dict:
-    # langchain Retriever will be automatically traced
+    # LangChain 检索器将自动被追踪
     docs = retriever.invoke(question)
     docs_string = "".join(doc.page_content for doc in docs)
-    instructions = f"""You are a helpful assistant who is good at analyzing source information and answering questions.
-       Use the following source documents to answer the user's questions.
-       If you don't know the answer, just say that you don't know.
-       Use three sentences maximum and keep the answer concise.
+    instructions = f"""你是一个乐于助人、擅长分析源信息并回答问题的助手。
+       请使用以下源文档回答用户的问题。
+       如果你不知道答案，请直接说不知道。
+       最多使用三句话，并保持答案简洁。
 
-Documents:
+文档:
 {docs_string}"""
-    # langchain ChatModel will be automatically traced
+    # LangChain ChatModel 将自动被追踪
     ai_msg = llm.invoke([
             {"role": "system", "content": instructions},
             {"role": "user", "content": question},
@@ -813,23 +813,23 @@ Documents:
 
 client = Client()
 
-# Define the examples for the dataset
+# 为数据集定义示例
 examples = [
     {
-        "inputs": {"question": "How does the ReAct agent use self-reflection? "},
-        "outputs": {"answer": "ReAct integrates reasoning and acting, performing actions - such tools like Wikipedia search API - and then observing / reasoning about the tool outputs."},
+        "inputs": {"question": "ReAct 代理如何使用自我反思？ "},
+        "outputs": {"answer": "ReAct 集成了推理和行动，执行操作——例如使用维基百科搜索 API 等工具——然后观察/推理工具的输出。"},
     },
     {
-        "inputs": {"question": "What are the types of biases that can arise with few-shot prompting?"},
-        "outputs": {"answer": "The biases that can arise with few-shot prompting include (1) Majority label bias, (2) Recency bias, and (3) Common token bias."},
+        "inputs": {"question": "小样本提示 (few-shot prompting) 可能出现哪些类型的偏差？"},
+        "outputs": {"answer": "小样本提示可能出现的偏差包括 (1) 多数标签偏差 (Majority label bias)，(2) 近期偏差 (Recency bias) 和 (3) 常见令牌偏差 (Common token bias)。"},
     },
     {
-        "inputs": {"question": "What are five types of adversarial attacks?"},
-        "outputs": {"answer": "Five types of adversarial attacks are (1) Token manipulation, (2) Gradient based attack, (3) Jailbreak prompting, (4) Human red-teaming, (5) Model red-teaming."},
+        "inputs": {"question": "有哪些五种类型的对抗性攻击？"},
+        "outputs": {"answer": "五种类型的对抗性攻击是 (1) 令牌操纵 (Token manipulation)，(2) 基于梯度的攻击 (Gradient based attack)，(3) 越狱提示 (Jailbreak prompting)，(4) 人工红队测试 (Human red-teaming)，(5) 模型红队测试 (Model red-teaming)。"},
     },
 ]
 
-# Create the dataset and examples in LangSmith
+# 在 LangSmith 中创建数据集和示例
 dataset_name = "Lilian Weng Blogs Q&A"
 if not client.has_dataset(dataset_name=dataset_name):
     dataset = client.create_dataset(dataset_name=dataset_name)
@@ -838,37 +838,36 @@ if not client.has_dataset(dataset_name=dataset_name):
         examples=examples
     )
 
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class CorrectnessGrade(TypedDict):
-    # Note that the order in the fields are defined is the order in which the model will generate them.
-    # It is useful to put explanations before responses because it forces the model to think through
-    # its final response before generating it:
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
-    correct: Annotated[bool, ..., "True if the answer is correct, False otherwise."]
+    # 注意：字段定义的顺序是模型生成它们的顺序。
+    # 将解释放在响应之前很有用，因为它会迫使模型在生成最终响应前先思考其推理过程：
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
+    correct: Annotated[bool, ..., "如果答案正确，则为 True，否则为 False。"]
 
-# Grade prompt
-correctness_instructions = """You are a teacher grading a quiz. You will be given a QUESTION, the GROUND TRUTH (correct) ANSWER, and the STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Grade the student answers based ONLY on their factual accuracy relative to the ground truth answer. (2) Ensure that the student answer does not contain any conflicting statements.
-(3) It is OK if the student answer contains more information than the ground truth answer, as long as it is factually accurate relative to the  ground truth answer.
+# 评分提示 (Grade prompt)
+correctness_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION)、基准 (正确) 答案 (GROUND TRUTH ANSWER) 和学生的答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 仅根据学生答案相对于基准答案的事实准确性进行评分。(2) 确保学生答案不包含任何冲突的陈述。
+(3) 如果学生答案包含比基准答案更多的信息，只要其事实准确性相对于基准答案是正确的，也是可以的。
 
-Correctness:
-A correctness value of True means that the student's answer meets all of the criteria.
-A correctness value of False means that the student's answer does not meet all of the criteria.
+准确性 (Correctness):
+准确性值为 True 表示学生的答案满足所有标准。
+准确性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 grader_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     CorrectnessGrade, method="json_schema", strict=True
 )
 
 def correctness(inputs: dict, outputs: dict, reference_outputs: dict) -> bool:
-    """An evaluator for RAG answer accuracy"""
+    """RAG 答案准确性的评估器"""
     answers = f"""\
-QUESTION: {inputs['question']}
-GROUND TRUTH ANSWER: {reference_outputs['answer']}
-STUDENT ANSWER: {outputs['answer']}"""
-    # Run evaluator
+问题: {inputs['question']}
+基准答案: {reference_outputs['answer']}
+学生答案: {outputs['answer']}"""
+    # 运行评估器
     grade = grader_llm.invoke([
             {"role": "system", "content": correctness_instructions},
             {"role": "user", "content": answers},
@@ -876,33 +875,33 @@ STUDENT ANSWER: {outputs['answer']}"""
     )
     return grade["correct"]
 
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class RelevanceGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     relevant: Annotated[
-        bool, ..., "Provide the score on whether the answer addresses the question"
+        bool, ..., "提供关于答案是否解决了问题的分数"
     ]
 
-# Grade prompt
-relevance_instructions = """You are a teacher grading a quiz. You will be given a QUESTION and a STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Ensure the STUDENT ANSWER is concise and relevant to the QUESTION
-(2) Ensure the STUDENT ANSWER helps to answer the QUESTION
+# 评分提示 (Grade prompt)
+relevance_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION) 和一个学生答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 确保学生答案简洁并与问题相关
+(2) 确保学生答案有助于回答问题
 
-Relevance:
-A relevance value of True means that the student's answer meets all of the criteria.
-A relevance value of False means that the student's answer does not meet all of the criteria.
+相关性 (Relevance):
+相关性值为 True 表示学生的答案满足所有标准。
+相关性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 relevance_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     RelevanceGrade, method="json_schema", strict=True
 )
 
-# Evaluator
+# 评估器
 def relevance(inputs: dict, outputs: dict) -> bool:
-    """A simple evaluator for RAG answer helpfulness."""
-    answer = f"QUESTION: {inputs['question']}\nSTUDENT ANSWER: {outputs['answer']}"
+    """一个简单的 RAG 答案有用性评估器。"""
+    answer = f"问题: {inputs['question']}\n学生答案: {outputs['answer']}"
     grade = relevance_llm.invoke([
             {"role": "system", "content": relevance_instructions},
             {"role": "user", "content": answer},
@@ -910,33 +909,33 @@ def relevance(inputs: dict, outputs: dict) -> bool:
     )
     return grade["relevant"]
 
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class GroundedGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     grounded: Annotated[
-        bool, ..., "Provide the score on if the answer hallucinates from the documents"
+        bool, ..., "提供关于答案是否从文档中产生幻觉的分数"
     ]
 
-# Grade prompt
-grounded_instructions = """You are a teacher grading a quiz. You will be given FACTS and a STUDENT ANSWER. Here is the grade criteria to follow:
-(1) Ensure the STUDENT ANSWER is grounded in the FACTS. (2) Ensure the STUDENT ANSWER does not contain "hallucinated" information outside the scope of the FACTS.
+# 评分提示 (Grade prompt)
+grounded_instructions = """你是一名批改小测验的老师。你将收到事实 (FACTS) 和一个学生答案 (STUDENT ANSWER)。请遵循以下评分标准：
+(1) 确保学生答案基于事实 (FACTS)。(2) 确保学生答案不包含超出事实范围的“幻觉”信息。
 
-Grounded:
-A grounded value of True means that the student's answer meets all of the criteria.
-A grounded value of False means that the student's answer does not meet all of the criteria.
+基于事实性 (Grounded):
+基于事实性值为 True 表示学生的答案满足所有标准。
+基于事实性值为 False 表示学生的答案不满足所有标准。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 grounded_llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(
     GroundedGrade, method="json_schema", strict=True
 )
 
-# Evaluator
+# 评估器
 def groundedness(inputs: dict, outputs: dict) -> bool:
-    """A simple evaluator for RAG answer groundedness."""
+    """RAG 答案基于事实性的简单评估器。"""
     doc_string = "\n\n".join(doc.page_content for doc in outputs["documents"])
-    answer = f"FACTS: {doc_string}\nSTUDENT ANSWER: {outputs['answer']}"
+    answer = f"事实: {doc_string}\n学生答案: {outputs['answer']}"
     grade = grounded_llm.invoke([
             {"role": "system", "content": grounded_instructions},
             {"role": "user", "content": answer},
@@ -944,37 +943,37 @@ def groundedness(inputs: dict, outputs: dict) -> bool:
     )
     return grade["grounded"]
 
-# Grade output schema
+# 评分输出模式 (Grade output schema)
 class RetrievalRelevanceGrade(TypedDict):
-    explanation: Annotated[str, ..., "Explain your reasoning for the score"]
+    explanation: Annotated[str, ..., "解释您对分数的原因"]
     relevant: Annotated[
         bool,
         ...,
-        "True if the retrieved documents are relevant to the question, False otherwise",
+        "如果检索到的文档与问题相关，则为 True，否则为 False",
     ]
 
-# Grade prompt
-retrieval_relevance_instructions = """You are a teacher grading a quiz. You will be given a QUESTION and a set of FACTS provided by the student. Here is the grade criteria to follow:
-(1) You goal is to identify FACTS that are completely unrelated to the QUESTION
-(2) If the facts contain ANY keywords or semantic meaning related to the question, consider them relevant
-(3) It is OK if the facts have SOME information that is unrelated to the question as long as (2) is met
+# 评分提示 (Grade prompt)
+retrieval_relevance_instructions = """你是一名批改小测验的老师。你将收到一个问题 (QUESTION) 和学生提供的一组事实 (FACTS)。请遵循以下评分标准：
+(1) 你的目标是找出与问题完全无关的事实
+(2) 如果事实包含与问题相关的任何关键字或语义信息，则认为其相关
+(3) 如果事实包含一些与问题无关的信息，只要满足 (2) 即可，这是可以的
 
-Relevance:
-A relevance value of True means that the FACTS contain ANY keywords or semantic meaning related to the QUESTION and are therefore relevant.
-A relevance value of False means that the FACTS are completely unrelated to the QUESTION.
+相关性 (Relevance):
+相关性值为 True 意味着 FACTS 包含与问题相关的任何关键字或语义信息，因此是相关的。
+相关性值为 False 意味着 FACTS 与问题完全无关。
 
-Explain your reasoning in a step-by-step manner to ensure your reasoning and conclusion are correct. Avoid simply stating the correct answer at the outset."""
+请逐步解释您的推理，以确保您的推理和结论正确。避免一开始就简单地陈述正确答案。"""
 
-# Grader LLM
+# 判官 LLM (Grader LLM)
 retrieval_relevance_llm = ChatOpenAI(
     model="gpt-4o", temperature=0
 ).with_structured_output(RetrievalRelevanceGrade, method="json_schema", strict=True)
 
 def retrieval_relevance(inputs: dict, outputs: dict) -> bool:
-    """An evaluator for document relevance"""
+    """文档相关性的评估器"""
     doc_string = "\n\n".join(doc.page_content for doc in outputs["documents"])
-    answer = f"FACTS: {doc_string}\nQUESTION: {inputs['question']}"
-    # Run evaluator
+    answer = f"事实: {doc_string}\n问题: {inputs['question']}"
+    # 运行评估器
     grade = retrieval_relevance_llm.invoke([
             {"role": "system", "content": retrieval_relevance_instructions},
             {"role": "user", "content": answer},
@@ -993,7 +992,7 @@ experiment_results = client.evaluate(
     metadata={"version": "LCEL context, gpt-4-0125-preview"},
 )
 
-# Explore results locally as a dataframe if you have pandas installed
+# 如果安装了 pandas，可以在本地将其探索为数据框 (dataframe)
 # experiment_results.to_pandas()
 ```
 
@@ -1006,7 +1005,7 @@ import { Client } from "langsmith";
 import { evaluate, type EvaluationResult } from "langsmith/evaluation";
 import { z } from "zod";
 
-// List of URLs to load documents from
+// 要加载文档的 URL 列表
 const urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
     "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
@@ -1029,7 +1028,7 @@ const embeddings = new OpenAIEmbeddings({
     model: "text-embedding-3-large"
 });
 
-const vectorStore = new MemoryVectorStore(embeddings);  // Index chunks
+const vectorStore = new MemoryVectorStore(embeddings);  // 索引分块
 await vectorStore.addDocuments(allSplits)
 
 const llm = new ChatOpenAI({
@@ -1037,18 +1036,18 @@ const llm = new ChatOpenAI({
   temperature: 1,
 })
 
-// Add decorator so this function is traced in LangSmith
+// 添加装饰器，以便此函数在 LangSmith 中被追踪
 const ragBot = traceable(
     async (question: string) => {
-        // LangChain retriever will be automatically traced
+        // LangChain 检索器将自动被追踪
         const retrievedDocs = await vectorStore.similaritySearch(question);
         const docsContent = retrievedDocs.map((doc) => doc.pageContent).join("");
 
-        const instructions = `You are a helpful assistant who is good at analyzing source information and answering questions
-        Use the following source documents to answer the user's questions.
-        If you don't know the answer, just say that you don't know.
-        Use three sentences maximum and keep the answer concise.
-        Documents:
+        const instructions = `你是一个乐于助人、擅长分析源信息并回答问题的助手。
+        请使用以下源文档回答用户的问题。
+        如果你不知道答案，请直接说不知道。
+        最多使用三句话，并保持答案简洁。
+        文档:
         ${docsContent}`;
 
         const aiMsg = await llm.invoke([
@@ -1068,7 +1067,7 @@ const ragBot = traceable(
 
 const client = new Client();
 
-// Define the examples for the dataset
+// 为数据集定义示例
 const examples = [
     [
         "How does the ReAct agent use self-reflection? ",
@@ -1096,7 +1095,7 @@ const datasetName = "Lilian Weng Blogs Q&A";
 const dataset = await client.createDataset(datasetName);
 await client.createExamples({ inputs, outputs, datasetId: dataset.id })
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const correctnessInstructions = `You are a teacher grading a quiz. You will be given a QUESTION, the GROUND TRUTH (correct) ANSWER, and the STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Grade the student answers based ONLY on their factual accuracy relative to the ground truth answer. (2) Ensure that the student answer does not contain any conflicting statements.
 (3) It is OK if the student answer contains more information than the ground truth answer, as long as it is factually accurate relative to the  ground truth answer.
@@ -1136,12 +1135,12 @@ async function correctness({
     GROUND TRUTH ANSWER: ${referenceOutputs.answer}
     STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = graderLLM.invoke([{role: "system", content: correctnessInstructions}, {role: "user", content: answer}])
   return grade.score;
 };
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const relevanceInstructions = `You are a teacher grading a quiz. You will be given a QUESTION and a STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Ensure the STUDENT ANSWER is concise and relevant to the QUESTION
 (2) Ensure the STUDENT ANSWER helps to answer the QUESTION
@@ -1178,12 +1177,12 @@ async function relevance({
   const answer = `QUESTION: ${inputs.question}
 STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = relevanceLLM.invoke([{role: "system", content: relevanceInstructions}, {role: "user", content: answer}])
   return grade.relevant;
 };
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const groundedInstructions = `You are a teacher grading a quiz. You will be given FACTS and a STUDENT ANSWER. Here is the grade criteria to follow:
 (1) Ensure the STUDENT ANSWER is grounded in the FACTS. (2) Ensure the STUDENT ANSWER does not contain "hallucinated" information outside the scope of the FACTS.
 
@@ -1220,12 +1219,12 @@ async function grounded({
   const answer = `FACTS: ${docString}
     STUDENT ANSWER: ${outputs.answer}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = groundedLLM.invoke([{role: "system", content: groundedInstructions}, {role: "user", content: answer}])
   return grade.grounded;
 };
 
-// Grade prompt
+// 评分提示 (Grade prompt)
 const retrievalRelevanceInstructions = `You are a teacher grading a quiz. You will be given a QUESTION and a set of FACTS provided by the student. Here is the grade criteria to follow:
 (1) You goal is to identify FACTS that are completely unrelated to the QUESTION
 (2) If the facts contain ANY keywords or semantic meaning related to the question, consider them relevant
@@ -1264,7 +1263,7 @@ async function retrievalRelevance({
   const answer = `FACTS: ${docString}
     QUESTION: ${inputs.question}`
 
-  // Run evaluator
+  // 运行评估器
   const grade = retrievalRelevanceLLM.invoke([{role: "system", content: retrievalRelevanceInstructions}, {role: "user", content: answer}])
   return grade.relevant;
 };
@@ -1283,5 +1282,3 @@ const experimentResults = await evaluate(targetFunc, {
 
     </CodeGroup>
 </Accordion>
-
-

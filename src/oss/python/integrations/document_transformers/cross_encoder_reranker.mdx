@@ -1,36 +1,36 @@
 ---
-title: Cross Encoder Reranker
+title: 交叉编码器重排器
 ---
 
-This notebook shows how to implement reranker in a retriever with your own cross encoder from [Hugging Face cross encoder models](https://huggingface.co/cross-encoder) or Hugging Face models that implements cross encoder function ([example: BAAI/bge-reranker-base](https://huggingface.co/BAAI/bge-reranker-base)). `SagemakerEndpointCrossEncoder` enables you to use these HuggingFace models loaded on Sagemaker.
+本示例 Notebook 展示了如何使用您自己的交叉编码器（Cross Encoder）模型（来自 [Hugging Face 交叉编码器模型](https://huggingface.co/cross-encoder)）或实现了交叉编码器功能的 Hugging Face 模型（[示例：BAAI/bge-reranker-base](https://huggingface.co/BAAI/bge-reranker-base)）在检索器中实现重排（reranker）功能。`SagemakerEndpointCrossEncoder` 使您能够使用部署在 SageMaker 上的这些 HuggingFace 模型。
 
-This builds on top of ideas in the ContextualCompressionRetriever. Overall structure of this document came from [Cohere Reranker documentation](/oss/integrations/retrievers/cohere-reranker).
+这建立在 ContextualCompressionRetriever 的思想之上。本文档的整体结构来源于 [Cohere Reranker 文档](/oss/integrations/retrievers/cohere-reranker)。
 
-For more about why cross encoder can be used as reranking mechanism in conjunction with embeddings for better retrieval, refer to [Hugging Face Cross-Encoders documentation](https://www.sbert.net/examples/applications/cross-encoder/README.html).
+关于为什么交叉编码器可以作为重排机制与嵌入（embeddings）结合以实现更好检索的更多信息，请参阅 [Hugging Face 交叉编码器文档](https://www.sbert.net/examples/applications/cross-encoder/README.html)。
 
 ```python
 #!pip install faiss sentence_transformers
 
-# OR  (depending on Python version)
+# 或者 (取决于 Python 版本)
 
 #!pip install faiss-cpu sentence_transformers
 ```
 
 ```python
-# Helper function for printing docs
+# 用于打印文档的辅助函数
 
 
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Set up the base vector store retriever
+## 设置基础向量存储检索器
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+让我们从初始化一个简单的向量存储检索器并存储 2023 年国情咨文（State of the Union speech）的内容（分块后）开始。我们可以将检索器设置为检索较多的文档数量（20 个）。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -53,9 +53,9 @@ docs = retriever.invoke(query)
 pretty_print_docs(docs)
 ```
 
-## Doing reranking with CrossEncoderReranker
+## 使用 CrossEncoderReranker 进行重排
 
-Now let's wrap our base retriever with a `ContextualCompressionRetriever`. `CrossEncoderReranker` uses `HuggingFaceCrossEncoder` to rerank the returned results.
+现在让我们使用 `ContextualCompressionRetriever` 来包装我们的基础检索器。`CrossEncoderReranker` 使用 `HuggingFaceCrossEncoder` 来对返回的结果进行重排。
 
 ```python
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
@@ -73,7 +73,7 @@ pretty_print_docs(compressed_docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 More infrastructure and innovation in America.
 
@@ -89,13 +89,13 @@ I call it building a better America.
 
 My plan to fight inflation will lower your costs and lower the deficit.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 Second – cut energy costs for families an average of $500 a year by combatting climate change.
 
 Let’s provide investments and tax credits to weatherize your homes and businesses to be energy efficient and you get a tax credit; double America’s clean energy production in solar, wind, and so much more;  lower the price of electric vehicles, saving you another $80 a month because you’ll never have to pay at the gas pump again.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 Look at cars.
 
@@ -118,11 +118,11 @@ More infrastructure and innovation in America.
 More goods moving faster and cheaper in America.
 ```
 
-## Uploading Hugging Face model to SageMaker endpoint
+## 将 Hugging Face 模型上传到 SageMaker 端点
 
-Here is a sample `inference.py` for creating an endpoint that works with `SagemakerEndpointCrossEncoder`. For more details with step-by-step guidance, refer to [this article](https://huggingface.co/blog/kchoe/deploy-any-huggingface-model-to-sagemaker).
+下面是一个 `inference.py` 示例，用于创建与 `SagemakerEndpointCrossEncoder` 兼容的端点。有关分步指导的更多详细信息，请参阅 [此文章](https://huggingface.co/blog/kchoe/deploy-any-huggingface-model-to-sagemaker)。
 
-It downloads Hugging Face model on the fly, so you do not need to keep the model artifacts such as `pytorch_model.bin` in your `model.tar.gz`.
+它会在运行时动态下载 Hugging Face 模型，因此您不需要将模型工件（如 `pytorch_model.bin`）保留在 `model.tar.gz` 中。
 
 ```python
 import json
@@ -142,7 +142,7 @@ class CrossEncoder:
         self.device = (
             torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         )
-        logging.info(f"Using device: {self.device}")
+        logging.info(f"使用设备: {self.device}")
         model_name = "BAAI/bge-reranker-base"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -173,7 +173,7 @@ def model_fn(model_dir: str) -> CrossEncoder:
     try:
         return CrossEncoder()
     except Exception:
-        logging.exception(f"Failed to load model from: {model_dir}")
+        logging.exception(f"从: {model_dir} 加载模型失败")
         raise
 
 

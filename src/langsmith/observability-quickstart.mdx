@@ -1,40 +1,41 @@
+```markdown
 ---
-title: Tracing quickstart
-sidebarTitle: Quickstart
+title: 快速入门追踪
+sidebarTitle: 快速入门
 ---
 
-[_Observability_](/langsmith/observability-concepts) is a critical requirement for applications built with Large Language Models (LLMs). LLMs are non-deterministic, which means that the same prompt can produce different responses. This behavior makes debugging and monitoring more challenging than with traditional software.
+[_可观测性_](/langsmith/observability-concepts) (Observability) 是使用大型语言模型 (LLM) 构建应用程序的关键要求。LLM 是非确定性的，这意味着相同的提示可能会产生不同的响应。这种行为使得调试和监控比传统软件更具挑战性。
 
-LangSmith addresses this by providing end-to-end visibility into how your application handles a request. Each request generates a [_trace_](/langsmith/observability-concepts#traces), which captures the full record of what happened. Within a trace are individual [_runs_](/langsmith/observability-concepts#runs), the specific operations your application performed, such as an LLM call or a retrieval step. Tracing runs allows you to inspect, debug, and validate your application’s behavior.
+LangSmith 通过提供对应用程序如何处理请求的端到端可见性来解决此问题。每个请求都会生成一个 [_追踪_](/langsmith/observability-concepts#traces) (trace)，其中捕获了发生的完整记录。在追踪内部是个别的 [_运行_](/langsmith/observability-concepts#runs) (runs)，即应用程序执行的具体操作，例如 LLM 调用或检索步骤。追踪运行后，您可以检查、调试和验证应用程序的行为。
 
-In this quickstart, you will set up a minimal [_Retrieval Augmented Generation (RAG)_](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-retrieval-augmented-generation-rag) application and add tracing with LangSmith. You will:
+在本快速入门中，您将设置一个最小的 [_检索增强生成 (RAG)_](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-retrieval-augmented-generation-rag) 应用程序，并使用 LangSmith 添加追踪。您将：
 
-1. Configure your environment.
-1. Create an application that retrieves context and calls an LLM.
-1. Enable tracing to capture both the retrieval step and the LLM call.
-1. View the resulting traces in the LangSmith UI.
+1. 配置您的环境。
+1. 创建一个检索上下文并调用 LLM 的应用程序。
+1. 启用追踪以捕获检索步骤和 LLM 调用。
+1. 在 LangSmith UI 中查看生成的追踪。
 
 <Tip>
-If you prefer to watch a video on getting started with tracing, refer to the quickstart [Video guide](#video-guide).
+如果您更喜欢观看关于追踪入门的视频，请参阅快速入门 [视频指南](#video-guide)。
 </Tip>
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have:
+在开始之前，请确保您拥有：
 
-- **A LangSmith account**: Sign up or log in at [smith.langchain.com](https://smith.langchain.com).
-- **A LangSmith API key**: Follow the [Create an API key](/langsmith/create-account-api-key#create-an-api-key) guide.
-- **An OpenAI API key**: Generate this from the [OpenAI dashboard](https://platform.openai.com/account/api-keys).
+- **LangSmith 账户**: 在 [smith.langchain.com](https://smith.langchain.com) 注册或登录。
+- **LangSmith API 密钥**: 按照 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南操作。
+- **OpenAI API 密钥**: 从 [OpenAI 仪表板](https://platform.openai.com/account/api-keys) 生成。
 
-The example app in this quickstart will use OpenAI as the LLM provider. You can adapt the example for your app's LLM provider.
+本快速入门中的示例应用将使用 OpenAI 作为 LLM 提供商。您可以将此示例适配到您应用程序所使用的 LLM 提供商。
 
 <Tip>
-If you're building an application with [LangChain](https://python.langchain.com/docs/introduction/) or [LangGraph](https://langchain-ai.github.io/langgraph/), you can enable LangSmith tracing with a single environment variable. Get started by reading the guides for tracing with [LangChain](/langsmith/trace-with-langchain) or tracing with [LangGraph](/langsmith/trace-with-langgraph).
+如果您正在使用 [LangChain](https://python.langchain.com/docs/introduction/) 或 [LangGraph](https://langchain-ai.github.io/langgraph/) 构建应用程序，只需一个环境变量即可启用 LangSmith 追踪。请阅读 [使用 LangChain 进行追踪](/langsmith/trace-with-langchain) 或 [使用 LangGraph 进行追踪](/langsmith/trace-with-langgraph) 指南，了解如何开始。
 </Tip>
 
-## 1. Create a directory and install dependencies
+## 1. 创建目录并安装依赖项
 
-In your terminal, create a directory for your project and install the dependencies in your environment:
+在您的终端中，为您的项目创建一个目录并在环境中安装所需的依赖项：
 
 <CodeGroup>
 
@@ -54,14 +55,14 @@ npx tsc --init
 
 </CodeGroup>
 
-## 2. Set up environment variables
+## 2. 设置环境变量
 
-Set the following environment variables:
+设置以下环境变量：
 
 - `LANGSMITH_TRACING`
 - `LANGSMITH_API_KEY`
-- `OPENAI_API_KEY` (or your LLM provider's API key)
-- (optional) `LANGSMITH_WORKSPACE_ID`: If your LangSmith API key is linked to multiple workspaces, set this variable to specify which workspace to use.
+- `OPENAI_API_KEY`（或您的 LLM 提供商的 API 密钥）
+- (可选) `LANGSMITH_WORKSPACE_ID`: 如果您的 LangSmith API 密钥链接到多个工作区，请设置此变量以指定要使用的工作区。
 
 ``` bash
 export LANGSMITH_TRACING=true
@@ -70,19 +71,19 @@ export OPENAI_API_KEY="<your-openai-api-key>"
 export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
 ```
 
-If you're using Anthropic, use the [Anthropic wrapper](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) to trace your calls. For other providers, use [the traceable wrapper](/langsmith/annotate-code#use-%40traceable-%2F-traceable).
+如果您使用 Anthropic，请使用 [Anthropic 包装器](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) 来追踪您的调用。对于其他提供商，请使用 [可追踪包装器](/langsmith/annotate-code#use-%40traceable-%2F-traceable)。
 
-## 3. Define your application
+## 3. 定义您的应用程序
 
-You can use the example app code outlined in this step to instrument a RAG application. Or, you can use your own application code that includes an LLM call.
+您可以使用本步骤中概述的示例应用代码来工具化一个 RAG 应用程序。或者，您可以使用自己的应用程序代码，只要其中包含 LLM 调用即可。
 
-This is a minimal RAG app that uses the OpenAI SDK directly without any LangSmith tracing added yet. It has three main parts:
+这是一个最小的 RAG 应用，它直接使用 OpenAI SDK，尚未添加任何 LangSmith 追踪。它包含三个主要部分：
 
-- **Retriever function**: Simulates document retrieval that always returns the same string.
-- **OpenAI client**: Instantiates a plain OpenAI client to send a chat completion request.
-- **RAG function**: Combines the retrieved documents with the user’s question to form a system prompt, calls the `chat.completions.create()` endpoint with `gpt-4o-mini`, and returns the assistant’s response.
+- **检索器函数 (Retriever function)**: 模拟文档检索，总是返回相同的字符串。
+- **OpenAI 客户端 (OpenAI client)**: 实例化一个普通的 OpenAI 客户端以发送聊天补全请求。
+- **RAG 函数 (RAG function)**: 将检索到的文档与用户的问题组合成一个系统提示，使用 `gpt-4o-mini` 调用 `chat.completions.create()` 端点，并返回助手的响应。
 
-Add the following code into your app file (e.g., `app.py` or `app.ts`):
+将以下代码添加到您的应用文件（例如 `app.py` 或 `app.ts`）：
 
 <CodeGroup>
 
@@ -154,16 +155,16 @@ async function rag(question: string) {
 
 </CodeGroup>
 
-## 4. Trace LLM calls
+## 4. 追踪 LLM 调用
 
-To start, you’ll trace all your OpenAI calls. LangSmith provides wrappers:
+首先，您将追踪所有的 OpenAI 调用。LangSmith 提供了包装器：
 
 - Python: [`wrap_openai`](https://docs.smith.langchain.com/reference/python/wrappers/langsmith.wrappers._openai.wrap_openai)
 - TypeScript: [`wrapOpenAI`](https://docs.smith.langchain.com/reference/js/functions/wrappers_openai.wrapOpenAI)
 
-This snippet wraps the OpenAI client so that every subsequent model call is logged automatically as a traced child run in LangSmith.
+此代码片段包装了 OpenAI 客户端，以便所有后续的模型调用都会自动记录在 LangSmith 中，成为一个被追踪的子运行 (child run)。
 
-1. Include the highlighted lines in your app file:
+1. 在您的应用文件中包含高亮显示的行：
 
     <CodeGroup>
 
@@ -230,7 +231,7 @@ This snippet wraps the OpenAI client so that every subsequent model call is logg
 
     </CodeGroup>
 
-1. Call your application:
+1. 调用您的应用程序：
 
     <CodeGroup>
 
@@ -245,13 +246,13 @@ This snippet wraps the OpenAI client so that every subsequent model call is logg
     </CodeGroup>
 
 
-    You'll receive the following output:
+    您将收到以下输出：
 
     ```
     Harrison worked at Kensho.
     ```
 
-1. In the [LangSmith UI](https://smith.langchain.com), navigate to the **default** Tracing Project for your workspace (or the workspace you specified in [Step 2](#2-set-up-environment-variables)). You'll see the OpenAI call you just instrumented.
+1. 在 [LangSmith UI](https://smith.langchain.com) 中，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的workspace）。您将看到刚刚注入追踪的 OpenAI 调用。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -267,11 +268,11 @@ This snippet wraps the OpenAI client so that every subsequent model call is logg
 />
 </div>
 
-## 5. Trace an entire application
+## 5. 追踪整个应用程序
 
-You can also use the `traceable` decorator for [Python](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable) or [TypeScript](https://langsmith-docs-bdk0fivr6-langchain.vercel.app/reference/js/functions/traceable.traceable) to trace your entire application instead of just the LLM calls.
+您也可以使用 `traceable` 装饰器（适用于 [Python](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable) 或 [TypeScript](https://langsmith-docs-bdk0fivr6-langchain.vercel.app/reference/js/functions/traceable.traceable)）来追踪整个应用程序，而不是仅追踪 LLM 调用。
 
-1. Include the highlighted code in your app file:
+1. 将高亮显示的代码包含在您的应用文件中：
 
     <CodeGroup>
 
@@ -340,7 +341,7 @@ You can also use the `traceable` decorator for [Python](https://docs.smith.langc
 
     </CodeGroup>
 
-1. Call the application again to create a run:
+1. 再次调用应用程序以创建一次运行：
 
     <CodeGroup>
 
@@ -354,7 +355,7 @@ You can also use the `traceable` decorator for [Python](https://docs.smith.langc
 
     </CodeGroup>
 
-1. Return to the [LangSmith UI](https://smith.langchain.com), navigate to the **default** Tracing Project for your workspace (or the workspace you specified in [Step 2](#2-set-up-environment-variables)). You'll find a trace of the entire app pipeline with the **rag** step and the **ChatOpenAI** LLM call.
+1. 返回 [LangSmith UI](https://smith.langchain.com)，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的 workspace）。您将找到整个应用管道的追踪，其中包含 **rag** 步骤和 **ChatOpenAI** LLM 调用。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -370,16 +371,16 @@ You can also use the `traceable` decorator for [Python](https://docs.smith.langc
 />
 </div>
 
-## Next steps
+## 后续步骤
 
-Here are some topics you might want to explore next:
+以下是一些您可能希望接下来探索的主题：
 
-- [Tracing integrations](/langsmith/trace-with-langchain) provide support for various LLM providers and agent frameworks.
-- [Filtering traces](/langsmith/filter-traces-in-application) can help you effectively navigate and analyze data in tracing projects that contain a significant amount of data.
-- [Trace a RAG application](/langsmith/observability-llm-tutorial) is a full tutorial, which adds observability to an application from development through to production.
-- [Sending traces to a specific project](/langsmith/log-traces-to-project) changes the destination project of your traces.
+- [追踪集成](/langsmith/trace-with-langchain) 为各种 LLM 提供商和智能体框架提供支持。
+- [过滤追踪](/langsmith/filter-traces-in-application) 可以帮助您有效地浏览和分析包含大量数据的追踪项目中。
+- [追踪 RAG 应用程序](/langsmith/observability-llm-tutorial) 是一个完整的教程，它从开发到生产为应用程序添加可观测性。
+- [将追踪发送到特定项目](/langsmith/log-traces-to-project) 将更改追踪的目的地项目。
 
-## Video guide
+## 视频指南
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/fA9b4D8IsPQ?si=0eBb1vzw5AxUtplS"
@@ -388,4 +389,4 @@ Here are some topics you might want to explore next:
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
-
+```

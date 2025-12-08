@@ -2,13 +2,13 @@
 title: Mastodon
 ---
 
->[Mastodon](https://joinmastodon.org/) is a federated social media and social networking service.
+>[Mastodon](https://joinmastodon.org/) 是一个联邦式的社交媒体和社交网络服务。
 
-This loader fetches the text from the "toots" of a list of `Mastodon` accounts, using the `Mastodon.py` Python package.
+这个加载器使用 `Mastodon.py` Python 包，从一系列 `Mastodon` 账户的“toots”（帖子）中获取文本内容。
 
-Public accounts can the queried by default without any authentication. If non-public accounts or instances are queried, you have to register an application for your account which gets you an access token, and set that token and your account's API base URL.
+默认情况下，可以查询公开账户而无需任何身份验证。如果需要查询非公开账户或实例，您必须为您的账户注册一个应用程序，该应用会为您提供一个访问令牌（access token），然后您需要设置该令牌以及您账户的 API 基础 URL。
 
-Then you need to pass in the Mastodon account names you want to extract, in the `@account@instance` format.
+然后，您需要以 `@account@instance` 的格式传入想要提取的 Mastodon 账户名称。
 
 ```python
 from langchain_community.document_loaders import MastodonTootsLoader
@@ -21,17 +21,16 @@ pip install -qU  Mastodon.py
 ```python
 loader = MastodonTootsLoader(
     mastodon_accounts=["@Gargron@mastodon.social"],
-    number_toots=50,  # Default value is 100
+    number_toots=50,  # 默认值是 100
 )
 
-# Or set up access information to use a Mastodon app.
-# Note that the access token can either be passed into
-# constructor or you can set the environment "MASTODON_ACCESS_TOKEN".
+# 或者，设置访问信息以使用 Mastodon 应用。
+# 注意：访问令牌可以传入构造函数，或者您可以设置环境变量 "MASTODON_ACCESS_TOKEN"。
 # loader = MastodonTootsLoader(
 #     access_token="<ACCESS TOKEN OF MASTODON APP>",
 #     api_base_url="<API BASE URL OF MASTODON APP INSTANCE>",
 #     mastodon_accounts=["@Gargron@mastodon.social"],
-#     number_toots=50,  # Default value is 100
+#     number_toots=50,  # 默认值是 100
 # )
 ```
 
@@ -51,4 +50,4 @@ for doc in documents[:3]:
 ================================================================================
 ```
 
-The toot texts (the documents' `page_content`) is by default HTML as returned by the Mastodon API.
+默认情况下，toot 文本（即文档的 `page_content`）是 Mastodon API 返回的 HTML 格式。

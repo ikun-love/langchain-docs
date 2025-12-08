@@ -2,79 +2,79 @@
 title: Perigon
 ---
 
->[Perigon](https://perigon.io/) is a comprehensive news API that provides access to real-time contextual information in news articles, stories, metadata and wikipedia pages from thousands of sources worldwide.
+>[Perigon](https://perigon.io/) 是一个全面的新闻 API，它提供了对来自全球数千个来源的新闻文章、故事、元数据和维基百科页面的实时上下文信息的访问。
 >
 
-## Installation and Setup
+## 安装与设置
 
-`Perigon` integration exists in its own [partner package](https://pypi.org/project/langchain-perigon/). You can install it with:
+`Perigon` 集成存在于其专用的[合作伙伴包](https://pypi.org/project/langchain-perigon/)中。您可以使用以下命令进行安装：
 
 ```python
 pip install -qU langchain-perigon
 ```
 
-In order to use the package, you will also need to set the `PERIGON_API_KEY` environment variable to your Perigon API key.
+为了使用该包，您还需要将 `PERIGON_API_KEY` 环境变量设置为您的 Perigon API 密钥。
 
-## Retrievers
+## 检索器 (Retrievers)
 
-Perigon provides two retrievers:
+Perigon 提供了两个检索器：
 
-### ArticlesRetriever
+### ArticlesRetriever (文章检索器)
 
-This retriever retrieves articles based on a given query and optional filters.
+此检索器根据给定的查询和可选的过滤器检索文章。
 
-See a [full usage example](/oss/integrations/retrievers/perigon#using-articlesretriever).
+请参阅[完整的使用示例](/oss/integrations/retrievers/perigon#using-articlesretriever)。
 
 ```python
-# Make sure PERIGON_API_KEY environment variable is set to your Perigon API key
+# 确保 PERIGON_API_KEY 环境变量已设置为您的 Perigon API 密钥
 from langchain_perigon import ArticlesRetriever, ArticlesFilter
 
-# Create retriever with specific number of results
+# 创建带有特定结果数量的检索器
 retriever = ArticlesRetriever(k=12)
 
-# Configure filter options to exclude reprints and focus on US articles
+# 配置过滤器选项以排除转载内容并专注于美国文章
 options: ArticlesFilter = {
-    "showReprints": False,  # Exclude duplicate/reprint articles
-    "filter": {"country": "us"},  # Only US-based news
+    "showReprints": False,  # 排除重复/转载的文章
+    "filter": {"country": "us"},  # 仅限美国新闻
 }
 
 try:
     documents = retriever.invoke("Recent big tech layoffs", options=options)
 
-    # Check if we got results before accessing
+    # 在访问之前检查是否获得了结果
     if documents:
-        print(f"First document: {documents[0].page_content[:200]}...")
+        print(f"第一份文档: {documents[0].page_content[:200]}...")
     else:
-        print("No articles found for the given query.")
+        print("未找到与给定查询匹配的文章。")
 except Exception as e:
-    print(f"Error retrieving articles: {e}")
+    print(f"检索文章时出错: {e}")
 ```
 
-You can use the `ArticlesRetriever` in a standard retrieval pipeline:
+您可以在标准的检索管道中使用 `ArticlesRetriever`：
 
-### WikipediaRetriever
+### WikipediaRetriever (维基百科检索器)
 
-This retriever retrieves wikipedia pages based on a given query and optional filters.
+此检索器根据给定的查询和可选的过滤器检索维基百科页面。
 
-See a [full usage example](/oss/integrations/retrievers/perigon#using-wikipediaretriever).
+请参阅[完整的使用示例](/oss/integrations/retrievers/perigon#using-wikipediaretriever)。
 
 ```python
-# Make sure PERIGON_API_KEY environment variable is set to your Perigon API key
+# 确保 PERIGON_API_KEY 环境变量已设置为您的 Perigon API 密钥
 from langchain_perigon import WikipediaRetriever
 
-# Create retriever with specific number of results
+# 创建带有特定结果数量的检索器
 retriever = WikipediaRetriever(k=12)
 
 try:
     documents = retriever.invoke("machine learning")
 
-    # Safely access results with error handling
+    # 安全地访问结果并包含错误处理
     if documents:
-        print(f"First document: {documents[0].page_content[:200]}...")
+        print(f"第一份文档: {documents[0].page_content[:200]}...")
     else:
-        print("No Wikipedia articles found for the given query.")
+        print("未找到匹配的维基百科文章。")
 except Exception as e:
-    print(f"Error retrieving Wikipedia articles: {e}")
+    print(f"检索维基百科文章时出错: {e}")
 ```
 
-You can use the `WikipediaRetriever` in a standard retrieval pipeline:
+您可以在标准的检索管道中使用 `WikipediaRetriever`：

@@ -3,27 +3,27 @@ title: OpenSearch
 ---
 
 <Tip>
-**Compatibility**
+**兼容性**
 
-Only available on Node.js.
+仅在 Node.js 上可用。
 </Tip>
 
-[OpenSearch](https://opensearch.org/) is a fork of [Elasticsearch](https://www.elastic.co/elasticsearch/) that is fully compatible with the Elasticsearch API. Read more about their support for Approximate Nearest Neighbors [here](https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/).
+[OpenSearch](https://opensearch.org/) 是 [Elasticsearch](https://www.elastic.co/elasticsearch/) 的一个分支，它完全兼容 Elasticsearch API。有关其对近似最近邻 (Approximate Nearest Neighbors) 支持的更多信息，请点击[此处](https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/)阅读。
 
-LangChain.js accepts [@opensearch-project/opensearch](https://opensearch.org/docs/latest/clients/javascript/index/) as the client for OpenSearch vectorstore.
+LangChain.js 接受 [@opensearch-project/opensearch](https://opensearch.org/docs/latest/clients/javascript/index/) 作为 OpenSearch vectorstore 的客户端。
 
-## Setup
+## 设置 (Setup)
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的常规说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install -S @langchain/openai @langchain/core @opensearch-project/opensearch
 ```
-You'll also need to have an OpenSearch instance running. You can use the [official Docker image](https://opensearch.org/docs/latest/opensearch/install/docker/) to get started. You can also find an example docker-compose file [here](https://github.com/langchain-ai/langchainjs/blob/main/examples/src/indexes/vector_stores/opensearch/docker-compose.yml).
+您还需要有一个正在运行的 OpenSearch 实例。您可以使用[官方 Docker 镜像](https://opensearch.org/docs/latest/opensearch/install/docker/)开始。您还可以在[此处](https://github.com/langchain-ai/langchainjs/blob/main/examples/src/indexes/vector_stores/opensearch/docker-compose.yml)找到一个示例 docker-compose 文件。
 
-## Index docs
+## 索引文档 (Index docs)
 
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
@@ -38,7 +38,7 @@ const client = new Client({
 const docs = [
   new Document({
     metadata: { foo: "bar" },
-    pageContent: "opensearch is also a vector db",
+    pageContent: "opensearch also is a vector db",
   }),
   new Document({
     metadata: { foo: "bar" },
@@ -57,10 +57,10 @@ const docs = [
 
 await OpenSearchVectorStore.fromDocuments(docs, new OpenAIEmbeddings(), {
   client,
-  indexName: process.env.OPENSEARCH_INDEX, // Will default to `documents`
+  indexName: process.env.OPENSEARCH_INDEX, // 默认将使用 `documents`
 });
 ```
-## Query docs
+## 查询文档 (Query docs)
 
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
@@ -77,7 +77,7 @@ const vectorStore = new OpenSearchVectorStore(new OpenAIEmbeddings(), {
   client,
 });
 
-/* Search the vector DB independently with meta filters */
+/* 独立使用向量数据库进行搜索，并支持元数据过滤 */
 const results = await vectorStore.similaritySearch("hello world", 1);
 console.log(JSON.stringify(results, null, 2));
 /* [
@@ -89,7 +89,7 @@ console.log(JSON.stringify(results, null, 2));
     }
   ] */
 
-/* Use as part of a chain (currently no metadata filters) */
+/* 在链中用作一部分（当前不支持元数据过滤器） */
 const model = new OpenAI();
 const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
   k: 1,
@@ -113,7 +113,7 @@ console.log(JSON.stringify(response, null, 2));
   */
 ```
 
-## Related
+## 相关 (Related)
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储概念指南](/oss/integrations/vectorstores)
+- 向量存储操作指南](/oss/integrations/vectorstores)

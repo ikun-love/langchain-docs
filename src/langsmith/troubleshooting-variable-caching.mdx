@@ -1,13 +1,13 @@
 ---
-title: Troubleshoot variable caching
-sidebarTitle: Troubleshoot variable caching
+title: 解决变量缓存问题
+sidebarTitle: 解决变量缓存问题
 ---
 
-If you're not seeing traces in your tracing project or notice traces logged to the wrong project/workspace, the issue might be due to LangSmith's default environment variable caching. This is especially common when running LangSmith within a Jupyter notebook. Follow these steps to diagnose and resolve the issue:
+如果您没有在跟踪项目中看到跟踪记录，或者发现跟踪记录被记录到了错误的**项目/工作区**，那么问题可能出在 LangSmith 的默认**环境变量缓存**机制上。这在您于 Jupyter Notebook 中运行 LangSmith 时尤为常见。请遵循以下步骤来诊断和解决此问题：
 
-## 1. Verify your environment variables
+## 1. 验证您的环境变量
 
-First, check that the environment variables are set correctly by running:
+首先，请运行以下命令，检查环境变量是否已正确设置：
 
 ```python
 import os
@@ -17,19 +17,19 @@ print(os.getenv("LANGSMITH_ENDPOINT"))
 print(os.getenv("LANGSMITH_API_KEY"))
 ```
 
-If the output does not match what's defined in your .env file, it's likely due to environment variable caching.
+如果输出与您在 `.env` 文件中定义的内容不匹配，则很可能是由于环境变量缓存导致的。
 
-## 2. Clear the cache
+## 2. 清除缓存
 
-Clear the cached environment variables with the following command:
+使用以下命令清除缓存的环境变量：
 
 ```python
 utils.get_env_var.cache_clear()
 ```
 
-## 3. Reload the environment variables
+## 3. 重新加载环境变量
 
-Reload your environment variables from the .env file by executing:
+通过执行以下代码，从 `.env` 文件中重新加载您的环境变量：
 
 ```python
 from dotenv import load_dotenv
@@ -37,6 +37,6 @@ import os
 load_dotenv(<path to .env file>, override=True)
 ```
 
-After reloading, your environment variables should be set correctly.
+重新加载后，您的环境变量应该会正确设置。
 
-If you continue to experience issues, please reach out to us via a shared Slack channel or email support (available for Plus and Enterprise plans), or in the [LangChain Forum](https://forum.langchain.com/).
+如果您持续遇到问题，请通过共享的 Slack 频道或电子邮件支持（仅适用于 Plus 和 Enterprise 计划用户）与我们联系，或者在 [LangChain 论坛](https://forum.langchain.com/) 上提问。

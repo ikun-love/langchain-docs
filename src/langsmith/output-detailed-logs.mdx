@@ -1,36 +1,35 @@
 ---
-title: How to print detailed logs (Python SDK)
-sidebarTitle: Print detailed logs (Python SDK)
+title: 如何打印详细日志（Python SDK）
+sidebarTitle: 打印详细日志（Python SDK）
 ---
 
-The LangSmith package uses Python's built in  mechanism to output logs about its behavior to standard output.
+LangSmith 包使用 Python 内建的日志机制，将其行为相关的日志输出到标准输出（standard output）。
 
-## Ensure logging is configured
+## 确保日志配置正确
 
 <Note>
-By default, Jupyter notebooks send logs to standard error instead of standard output, which means your logs will not show up in your notebook cell output unless you configure logging as we do below.
+默认情况下，Jupyter Notebook 会将日志发送到标准错误（standard error）而不是标准输出，这意味着除非我们像下面那样配置日志，否则你的日志将不会显示在 Notebook 的单元格输出中。
 </Note>
 
-If logging is not currently configured to send logs to standard output for your Python environment, you'll need to explicitly turn it on as follows:
+如果你的 Python 环境的日志当前没有配置为将日志发送到标准输出，你需要像下面这样明确地开启它：
 
 ```python
 import logging
-# Note: this will affect _all_ packages that use python's built-in logging mechanism,
-#       so may increase your log volume. Pick the right log level for your use case.
+# 注意：这将影响所有使用 Python 内建日志机制的包，
+#       因此可能会增加你的日志量。请根据你的用例选择合适的日志级别。
 logging.basicConfig(level=logging.WARNING)
 ```
 
-## Increase the logger's verbosity
+## 提高日志记录器的详细程度
 
-When debugging an issue, it's helpful to increase logs to a higher level verbosity so more info is outputted to standard output. Python loggers default to using `WARNING` log level, but you can choose different values to get different levels of verbosity. The values, from least verbose to most, are `ERROR`, `WARNING`, `INFO`, and `DEBUG`. You can set this as follows:
-
+在调试问题时，将日志级别提高到更高的详细程度（verbosity）会很有帮助，这样会有更多信息输出到标准输出。Python 日志记录器默认使用 `WARNING` 日志级别，但你可以选择不同的值来获取不同级别的详细程度。这些值从最不详细到最详细依次是：`ERROR`、`WARNING`、`INFO` 和 `DEBUG`。你可以通过以下方式设置级别：
 
 ```python
 import langsmith
 import logging
 
-# Loggers are hierarchical, so setting the log level on "langsmith" will
-# set it on all modules inside the "langsmith" package
+# 日志记录器是分层的，因此在 "langsmith" 上设置日志级别会
+# 将其应用于 "langsmith" 包内的所有模块
 langsmith_logger = logging.getLogger("langsmith")
 langsmith_logger.setLevel(level=logging.DEBUG)
 ```

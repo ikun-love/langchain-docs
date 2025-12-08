@@ -2,44 +2,39 @@
 title: Neon Postgres
 ---
 
-Neon is a fully managed serverless PostgreSQL database. It separates storage and compute to offer
-features such as instant branching and automatic scaling.
+Neon 是一种完全托管的无服务器 PostgreSQL 数据库。它将存储和计算分离，从而提供即时分支和自动扩展等功能。
 
-With the `pgvector` extension, Neon provides a vector store that can be used with LangChain.js to store and query embeddings.
+通过使用 `pgvector` 扩展，Neon 提供了一个向量存储（vector store），该存储可与 LangChain.js 结合使用来存储和查询嵌入向量（embeddings）。
 
-## Setup
+## 设置 (Setup)
 
-### Select a Neon project
+### 选择一个 Neon 项目
 
-If you do not have a Neon account, sign up for one at [Neon](https://neon.tech). After logging into the Neon Console, proceed
-to the [Projects](https://console.neon.tech/app/projects) section and select an existing project or create a new one.
+如果您还没有 Neon 账户，请在 [Neon](https://neon.tech) 注册一个。登录 Neon 控制台后，前往 [Projects](https://console.neon.tech/app/projects) 部分，选择一个现有项目或创建一个新项目。
 
-Your Neon project comes with a ready-to-use Postgres database named `neondb` that you can use to store embeddings. Navigate to
-the Connection Details section to find your database connection string. It should look similar to this:
+您的 Neon 项目会附带一个现成的 Postgres 数据库，名为 `neondb`，您可以将其用于存储嵌入向量。请导航到“连接详情 (Connection Details)”部分，找到您的数据库连接字符串。它看起来应该与以下示例相似：
 
 ```text
 postgres://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/dbname?sslmode=require
 ```
 
-Keep your connection string handy for later use.
+请记下您的连接字符串，以备后用。
 
-### Application code
+### 应用程序代码 (Application code)
 
-To work with Neon Postgres, you need to install the `@neondatabase/serverless` package which provides a JavaScript/TypeScript
-driver to connect to the database.
+要使用 Neon Postgres，您需要安装 `@neondatabase/serverless` 包，该包提供了一个 JavaScript/TypeScript 驱动程序用于连接到数据库。
 
 ```bash npm
 npm install @neondatabase/serverless
 ```
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅 [此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
-To initialize a `NeonPostgres` vectorstore, you need to provide your Neon database connection string. You can use the connection string
-we fetched above directly, or store it as an environment variable and use it in your code.
+要初始化 `NeonPostgres` 向量存储，您需要提供您的 Neon 数据库连接字符串。您可以直接使用我们上面获取的连接字符串，或者将其存储为环境变量并在代码中使用它。
 
 ```typescript
 const vectorStore = await NeonPostgres.initialize(embeddings, {
@@ -47,26 +42,25 @@ const vectorStore = await NeonPostgres.initialize(embeddings, {
 });
 ```
 
-## Usage
+## 用法 (Usage)
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { NeonPostgres } from "@langchain/community/vectorstores/neon";
 
-// Initialize an embeddings instance
+// 初始化一个嵌入向量实例
 const embeddings = new OpenAIEmbeddings({
   apiKey: process.env.OPENAI_API_KEY,
   dimensions: 256,
   model: "text-embedding-3-small",
 });
 
-// Initialize a NeonPostgres instance to store embedding vectors
+// 初始化一个 NeonPostgres 实例来存储嵌入向量
 const vectorStore = await NeonPostgres.initialize(embeddings, {
   connectionString: process.env.DATABASE_URL as string,
 });
 
-// You can add documents to the store, strings in the `pageContent` field will be embedded
-// and stored in the database
+// 您可以将文档添加到存储中，`pageContent` 字段中的字符串将被嵌入并存储在数据库中
 const documents = [
   { pageContent: "Hello world", metadata: { topic: "greeting" } },
   { pageContent: "Bye bye", metadata: { topic: "greeting" } },
@@ -77,7 +71,7 @@ const documents = [
 ];
 const idsInserted = await vectorStore.addDocuments(documents);
 
-// You can now query the store for similar documents to the input query
+// 您现在可以对存储进行查询，以查找与输入查询相似的文档
 const resultOne = await vectorStore.similaritySearch("hola", 1);
 console.log(resultOne);
 /*
@@ -89,7 +83,7 @@ console.log(resultOne);
 ]
 */
 
-// You can also filter by metadata
+// 您也可以根据元数据进行过滤
 const resultTwo = await vectorStore.similaritySearch("Irrelevant query", 2, {
   topic: "science",
 });
@@ -103,7 +97,7 @@ console.log(resultTwo);
 ]
 */
 
-// Metadata filtering with IN-filters works as well
+// 带有 IN 过滤器的元数据过滤也同样有效 (Metadata filtering with IN-filters works as well)
 const resultsThree = await vectorStore.similaritySearch("Irrelevant query", 2, {
   topic: { in: ["greeting"] },
 });
@@ -118,7 +112,7 @@ console.log(resultsThree);
 ]
 */
 
-// Upserting is supported as well
+// 支持 Upsert（更新或插入）操作
 await vectorStore.addDocuments(
   [
     {
@@ -144,7 +138,7 @@ console.log(resultsFour);
 */
 ```
 
-## Related
+## 相关 (Related)
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储 [概念指南](/oss/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/integrations/vectorstores)

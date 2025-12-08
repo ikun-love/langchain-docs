@@ -1,32 +1,32 @@
 ---
-title: Basic authentication with email and password
-sidebarTitle: Set up basic authentication
+title: 使用邮件和密码的基础认证
+sidebarTitle: 设置基础认证
 ---
 
-LangSmith supports login via username/password with a few limitations:
+LangSmith 支持使用用户名/密码进行登录，但存在一些限制：
 
-* You cannot change an existing installation from basic auth mode to OAuth with PKCE (deprecated) or vice versa - installations must be either one or the other. **A basic auth installation requires a completely fresh installation including a separate PostgreSQL database/schema, unless migrating from an existing `None` type installation (see below).**
-* Users must be given their initial auto-generated password once they are invited. This password may be changed later by any Organization Admin.
-* You cannot use both basic auth and OAuth with client secret at the same time.
+* 您无法将现有安装从基础认证模式（Basic Auth）切换到使用 PKCE 的 OAuth 模式（已弃用），反之亦然——安装必须是两者中的一种。**基础认证安装要求进行一次全新的安装，包括一个独立的 PostgreSQL 数据库/Schema，除非是从现有的 `None` 类型安装迁移（参见下文）。**
+* 用户在被邀请时，必须获得他们初始的自动生成密码。此密码之后可以由任何组织管理员更改。
+* 您不能同时使用基础认证和带有客户端密钥（Client Secret）的 OAuth。
 
-## Requirements and features
+## 要求和特性
 
-* There is a single `Default` organization that is provisioned during initial installation, and creating additional organizations is not supported
-* Your initial password (configured below) must be least 12 characters long and have at least one lowercase, uppercase, and symbol
-* There are no strict requirements for the secret used for signing JWTs, but we recommend securely generating a string of at least 32 characters. For example: `openssl rand -base64 32`
+* 在初始安装过程中会配置一个单一的 `Default` 组织，不支持创建额外的组织。
+* 您初始设置的密码（在下方配置）长度必须至少为 12 个字符，并且至少包含一个**小写字母、一个大写字母和一个符号**。
+* JWT 签名密钥没有严格要求，但我们建议安全地生成一个至少 32 个字符的字符串。例如：`openssl rand -base64 32`
 
-### Migrating from None auth
+### 从 None 认证迁移
 
-**Only supported in versions 0.7 and above.**
+**仅在 0.7 及以上版本受支持。**
 
-Migrating an installation from [None](/langsmith/authentication-methods#none) auth mode replaces the single "default" user with a user with the configured credentials and keeps all existing resources. The single pre-existing workspace ID post-migration remains `00000000-0000-0000-0000-000000000000`, but everything else about the migrated installation is standard for a basic auth installation.
+将安装从 [None](/langsmith/authentication-methods#none) 认证模式迁移时，会将单一的“默认”用户替换为使用您配置的凭据的用户，并保留所有现有资源。迁移后，预先存在的单一工作区 ID 仍为 `00000000-0000-0000-0000-000000000000`，但迁移安装的其余部分将是标准的基础认证安装。
 
-To migrate, simply update your configuration as shown below and run `helm upgrade` (or `docker-compose up`) as usual.
+要进行迁移，只需按照下方所示更新您的配置，然后像往常一样运行 `helm upgrade`（或 `docker-compose up`）。
 
-### Configuration
+### 配置
 
 <Note>
-Changing the JWT secret will log out your users
+更改 JWT 密钥将导致您的用户登出
 </Note>
 
 <CodeGroup>
@@ -36,28 +36,28 @@ config:
   authType: mixed
   basicAuth:
     enabled: true
-    initialOrgAdminEmail: <YOUR EMAIL ADDRESS>
-    initialOrgAdminPassword: <PASSWORD> # Must be at least 12 characters long and have at least one lowercase, uppercase, and symbol
-    jwtSecret: <SECRET>
+    initialOrgAdminEmail: <您的邮箱地址>
+    initialOrgAdminPassword: <密码> # 必须至少包含 12 个字符，且包含至少一个小写字母、一个大写字母和一个符号
+    jwtSecret: <密钥>
 ```
 
 ```bash Docker
-# In your .env file
+# 在您的 .env 文件中
 AUTH_TYPE=mixed
 BASIC_AUTH_ENABLED=true
-INITIAL_ORG_ADMIN_EMAIL=<YOUR EMAIL ADDRESS>
-INITIAL_ORG_ADMIN_PASSWORD=<PASSWORD> # Must be at least 12 characters long and have at least one lowercase, uppercase, and symbol
-BASIC_AUTH_JWT_SECRET=<SECRET>
+INITIAL_ORG_ADMIN_EMAIL=<您的邮箱地址>
+INITIAL_ORG_ADMIN_PASSWORD=<密码> # 必须至少包含 12 个字符，且包含至少一个小写字母、一个大写字母和一个符号
+BASIC_AUTH_JWT_SECRET=<密钥>
 ```
 
 </CodeGroup>
 
-Additionally, in docker-compose you will need to run the bootstrap command to create the initial organization and user:
+此外，在使用 docker-compose 时，您需要运行启动命令（bootstrap command）来创建初始组织和用户：
 
 ```bash
 docker-compose exec langchain-backend python hooks/auth_bootstrap.pyc
 ```
 
-Once configured, you will see a login screen like the one below. You should be able to login with the `initialOrgAdminEmail` and `initialOrgAdminPassword` values, and your user will be auto-provisioned with role `Organization Admin`. See the [admin guide](/langsmith/administration-overview#organization-roles) for more details on organization roles.
+配置完成后，您将看到如下所示的登录屏幕。您应该能够使用 `initialOrgAdminEmail` 和 `initialOrgAdminPassword` 的值登录，您的用户将自动被配置为 `Organization Admin`（组织管理员）角色。有关组织角色的更多详细信息，请参阅 [管理员指南](/langsmith/administration-overview#organization-roles)。
 
 ![LangSmith UI with basic auth](/langsmith/images/langsmith-ui-basic-auth.png)

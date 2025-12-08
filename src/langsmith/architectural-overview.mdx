@@ -1,24 +1,24 @@
 ---
-title: Architectural overview
-sidebarTitle: Overview
+title: 架构概述
+sidebarTitle: 概述
 ---
 
 <Info>
-Self-hosted LangSmith is an add-on to the Enterprise Plan designed for our largest, most security-conscious customers. See our [pricing page](https://www.langchain.com/pricing) for more detail, and [contact our sales team](https://www.langchain.com/contact-sales) if you want to get a license key to trial LangSmith in your environment.
+自托管 LangSmith 是企业版 (Enterprise Plan) 的一个附加功能，专为我们规模最大、最注重安全性的客户设计。请参阅我们的 [定价页面](https://www.langchain.com/pricing) 了解更多详情，如果您想获取许可证密钥在您自己的环境中试用 LangSmith，请[联系我们的销售团队](https://www.langchain.com/contact-sales)。
 </Info>
 
-You can run LangSmith in Kubernetes (recommended) or Docker in a cloud environment that you control. The LangSmith application consists of several components including LangSmith servers and stateful services:
+您可以在您控制的云环境中使用 Kubernetes（推荐）或 Docker 运行 LangSmith。LangSmith 应用程序包含多个组件，包括 LangSmith 服务器和有状态服务：
 
-- [LangSmith frontend](#langsmith-frontend)
-- [LangSmith backend](#langsmith-backend)
-- [LangSmith platform backend](#langsmith-platform-backend)
-- [LangSmith Playground](#langsmith-playground)
-- [LangSmith queue](#langsmith-queue)
-- [LangSmith ACE (Arbitrary Code Execution) backend](#langsmith-acearbitrary-code-execution-backend)
+- [LangSmith 前端](#langsmith-frontend)
+- [LangSmith 后端](#langsmith-backend)
+- [LangSmith 平台后端](#langsmith-platform-backend)
+- [LangSmith 游乐场 (Playground)](#langsmith-playground)
+- [LangSmith 队列](#langsmith-queue)
+- [LangSmith ACE（任意代码执行）后端](#langsmith-acearbitrary-code-execution-backend)
 - [ClickHouse](#clickhouse)
 - [PostgreSQL](#postgresql)
 - [Redis](#redis)
-- [Blob storage](#blob-storage) (Optional, but recommended)
+- [Blob 存储](#blob-storage)（可选，但推荐）
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -34,60 +34,60 @@ You can run LangSmith in Kubernetes (recommended) or Docker in a cloud environme
 />
 </div>
 
-To access the LangSmith UI and send API requests, you will need to expose the [LangSmith frontend](#langsmith-frontend) service. Depending on your installation method, this can be a load balancer or a port exposed on the host machine.
+要访问 LangSmith UI 并发送 API 请求，您需要暴露 [LangSmith 前端](#langsmith-frontend) 服务。根据您的安装方法，这可以是一个负载均衡器或在宿主机上暴露的一个端口。
 
-## Storage Services
+## 存储服务
 
 <Note>
-LangSmith Self-Hosted will bundle all storage services by default. You can configure LangSmith to use external versions of all storage services. In a production setting, we **strongly recommend using external storage services**.
+LangSmith 自托管版默认会捆绑所有存储服务。您可以配置 LangSmith 以使用外部版本的存储服务。在生产环境中，我们 **强烈建议使用外部存储服务**。
 </Note>
 
 ### ClickHouse
 
-[ClickHouse](https://clickhouse.com/docs/en/intro) is a high-performance, column-oriented SQL database management system (DBMS) for online analytical processing (OLAP).
+[ClickHouse](https://clickhouse.com/docs/en/intro) 是一个高性能的、面向列的 SQL 数据库管理系统 (DBMS)，用于在线分析处理 (OLAP)。
 
-LangSmith uses ClickHouse as the primary data store for traces and feedback (high-volume data).
+LangSmith 将 ClickHouse 用作（高容量数据）跟踪 (traces) 和反馈的主要数据存储。
 
 ### PostgreSQL
 
-[PostgreSQL](https://www.postgresql.org/about/) is a powerful, open source object-relational database system that uses and extends the SQL language combined with many features that safely store and scale the most complicated data workloads
+[PostgreSQL](https://www.postgresql.org/about/) 是一个强大的、开源的对象关系数据库系统，它使用并扩展了 SQL 语言，并结合了许多功能，可以安全地存储和扩展最复杂的数据工作负载。
 
-LangSmith uses PostgreSQL as the primary data store for transactional workloads and operational data (almost everything besides traces and feedback).
+LangSmith 将 PostgreSQL 用作事务性工作负载和操作数据（除跟踪和反馈之外的几乎所有内容）的主要数据存储。
 
 ### Redis
 
-[Redis](https://github.com/redis/redis) is a powerful in-memory key-value database that persists on disk. By holding data in memory, Redis offers high performance for operations like caching.
+[Redis](https://github.com/redis/redis) 是一个强大的内存键值数据库，它会持久化到磁盘。通过将数据保留在内存中，Redis 为缓存等操作提供了高性能。
 
-LangSmith uses Redis to back queuing and caching operations.
+LangSmith 使用 Redis 来支持队列和缓存操作。
 
-### Blob storage
+### Blob 存储
 
-LangSmith supports several blob storage providers, including [AWS S3](https://aws.amazon.com/s3/), [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/), and [Google Cloud Storage](https://cloud.google.com/storage).
+LangSmith 支持多种 Blob 存储提供商，包括 [AWS S3](https://aws.amazon.com/s3/)、[Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/) 和 [Google Cloud Storage](https://cloud.google.com/storage)。
 
-LangSmith uses blob storage to store large files, such as trace artifacts, feedback attachments, and other large data objects. Blob storage is optional, but highly recommended for production deployments.
+LangSmith 使用 Blob 存储来存储大文件，例如跟踪工件 (trace artifacts)、反馈附件和其他大型数据对象。Blob 存储是可选的，但在生产部署中强烈推荐使用。
 
-## Services
+## 服务
 
-### LangSmith frontend
+### LangSmith 前端
 
-The frontend uses Nginx to serve the LangSmith UI and route API requests to the other servers. This serves as the entrypoint for the application and is the only component that must be exposed to users.
+前端使用 Nginx 来服务 LangSmith UI 并将 API 请求路由到其他服务器。这作为应用程序的入口点，也是唯一必须向用户暴露的组件。
 
-### LangSmith backend
+### LangSmith 后端
 
-The backend is the main entrypoint for CRUD API requests and handles the majority of the business logic for the application. This includes handling requests from the frontend and SDK, preparing traces for ingestion, and supporting the hub API.
+后端是处理 CRUD API 请求的主要入口点，并处理应用程序的大部分业务逻辑。这包括处理来自前端和 SDK 的请求、准备要摄入的跟踪数据，以及支持 Hub API。
 
-### LangSmith queue
+### LangSmith 队列
 
-The queue handles incoming traces and feedback to ensure that they are ingested and persisted into the traces and feedback datastore asynchronously, handling checks for data integrity and ensuring successful insert into the datastore, handling retries in situations such as database errors or the temporary inability to connect to the database.
+队列负责处理传入的跟踪数据和反馈，以确保它们被异步地摄入并持久化到跟踪和反馈数据存储中。它会处理数据完整性检查，确保成功写入数据存储，并在出现数据库错误或暂时无法连接到数据库等情况时处理重试。
 
-### LangSmith platform backend
+### LangSmith 平台后端
 
-The platform backend is another critical service that primarily handles authentication, run ingestion, and other high-volume tasks.
+平台后端是另一个关键服务，主要处理身份验证、运行数据摄入和其他高容量任务。
 
-### LangSmith playground
+### LangSmith 游乐场 (Playground)
 
-The playground is a service that handles forwarding requests to various LLM APIs to support the LangSmith Playground feature. This can also be used to connect to your own custom model servers.
+游乐场是负责将请求转发到各种 LLM API 的服务，以支持 LangSmith Playground 功能。它也可以用来连接到您自己的自定义模型服务器。
 
-### LangSmith ACE (Arbitrary Code Execution) backend
+### LangSmith ACE（任意代码执行）后端
 
-The ACE backend is a service that handles executing arbitrary code in a secure environment. This is used to support running custom code within LangSmith.
+ACE 后端是一个服务，负责在安全的环境中执行任意代码。这用于支持在 LangSmith 内部运行自定义代码。

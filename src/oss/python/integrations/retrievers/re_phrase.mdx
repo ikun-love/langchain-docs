@@ -2,15 +2,15 @@
 title: RePhraseQuery
 ---
 
-`RePhraseQuery` is a simple retriever that applies an LLM between the user input and the query passed by the retriever.
+`RePhraseQuery` 是一个简单的检索器（retriever），它在用户输入和检索器传递的查询之间应用了一个大语言模型（LLM）。
 
-It can be used to pre-process the user input in any way.
+它可以用于以任何方式预处理用户输入。
 
-## Example
+## 示例
 
-### Setting up
+### 设置
 
-Create a vector store.
+创建一个向量存储（vector store）。
 
 ```python
 import logging
@@ -35,9 +35,9 @@ all_splits = text_splitter.split_documents(data)
 vectorstore = Chroma.from_documents(documents=all_splits, embedding=OpenAIEmbeddings())
 ```
 
-### Using the default prompt
+### 使用默认提示词
 
-The default prompt used in the `from_llm` classmethod:
+`from_llm` 类方法中使用的默认提示词模板：
 
 ```
 DEFAULT_TEMPLATE = """You are an assistant tasked with taking a natural language \
@@ -75,7 +75,7 @@ docs = retriever_from_llm.invoke(
 INFO:langchain.retrievers.re_phraser:Re-phrased question: Query for vectorstore: "Types of Memory"
 ```
 
-### Custom prompt
+### 自定义提示词
 
 ```python
 from langchain_classic.chains import LLMChain

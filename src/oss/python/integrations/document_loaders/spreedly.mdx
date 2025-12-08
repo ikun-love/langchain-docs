@@ -2,11 +2,11 @@
 title: Spreedly
 ---
 
->[Spreedly](https://docs.spreedly.com/) is a service that allows you to securely store credit cards and use them to transact against any number of payment gateways and third party APIs. It does this by simultaneously providing a card tokenization/vault service as well as a gateway and receiver integration service. Payment methods tokenized by Spreedly are stored at `Spreedly`, allowing you to independently store a card and then pass that card to different end points based on your business requirements.
+>[Spreedly](https://docs.spreedly.com/) 是一项服务，它允许您安全地存储信用卡信息，并利用这些信息针对任意数量的支付网关和第三方 API 执行交易。它通过同时提供卡标记化/安全存储服务（vault service）以及网关和接收器集成服务来实现这一目标。Spreedly 标记化的支付方式存储在 `Spreedly` 中，这使得您可以独立存储卡信息，然后根据您的业务需求将该卡信息传递给不同的终端点。
 
-This notebook covers how to load data from the [Spreedly REST API](https://docs.spreedly.com/reference/api/v1/) into a format that can be ingested into LangChain, along with example usage for vectorization.
+本 Notebook 介绍如何将数据从 [Spreedly REST API](https://docs.spreedly.com/reference/api/v1/) 加载到可被 LangChain 摄取（ingest）的格式中，并提供向量化（vectorization）的示例用法。
 
-Note: this notebook assumes the following packages are installed: `openai`, `chromadb`, and `tiktoken`.
+注意：本 Notebook 假设已安装以下软件包：`openai`, `chromadb`, 和 `tiktoken`。
 
 ```python
 import os
@@ -15,20 +15,20 @@ from langchain.indexes import VectorstoreIndexCreator
 from langchain_community.document_loaders import SpreedlyLoader
 ```
 
-Spreedly API requires an access token, which can be found inside the Spreedly Admin Console.
+Spreedly API 需要一个访问令牌（access token），您可以在 Spreedly 管理控制台（Admin Console）中找到它。
 
-This document loader does not currently support pagination, nor access to more complex objects which require additional parameters. It also requires a `resource` option which defines what objects you want to load.
+此文档加载器目前不支持分页（pagination），也不支持需要额外参数的更复杂的对象访问。它还需要一个 `resource` 选项来定义您想要加载的对象类型。
 
-Following resources are available:
+以下资源是可用的：
 
-- `gateways_options`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-supported-gateways)
-- `gateways`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-created-gateways)
-- `receivers_options`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-supported-receivers)
-- `receivers`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-created-receivers)
-- `payment_methods`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list)
-- `certificates`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-certificates)
-- `transactions`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list49)
-- `environments`: [Documentation](https://docs.spreedly.com/reference/api/v1/#list-environments)
+- `gateways_options`: [文档](https://docs.spreedly.com/reference/api/v1/#list-supported-gateways)
+- `gateways`: [文档](https://docs.spreedly.com/reference/api/v1/#list-created-gateways)
+- `receivers_options`: [文档](https://docs.spreedly.com/reference/api/v1/#list-supported-receivers)
+- `receivers`: [文档](https://docs.spreedly.com/reference/api/v1/#list-created-receivers)
+- `payment_methods`: [文档](https://docs.spreedly.com/reference/api/v1/#list)
+- `certificates`: [文档](https://docs.spreedly.com/reference/api/v1/#list-certificates)
+- `transactions`: [文档](https://docs.spreedly.com/reference/api/v1/#list49)
+- `environments`: [文档](https://docs.spreedly.com/reference/api/v1/#list-environments)
 
 ```python
 spreedly_loader = SpreedlyLoader(
@@ -37,8 +37,8 @@ spreedly_loader = SpreedlyLoader(
 ```
 
 ```python
-# Create a vectorstore retriever from the loader
-# see https://python.langchain.com/en/latest/modules/data_connection/getting_started.html for more details
+# 从加载器创建一个向量存储检索器 (vectorstore retriever)
+# 更多细节请参阅 https://python.langchain.com/en/latest/modules/data_connection/getting_started.html
 
 index = VectorstoreIndexCreator().from_loaders([spreedly_loader])
 spreedly_doc_retriever = index.vectorstore.as_retriever()
@@ -49,7 +49,7 @@ Using embedded DuckDB without persistence: data will be transient
 ```
 
 ```python
-# Test the retriever
+# 测试检索器
 spreedly_doc_retriever.invoke("CRC")
 ```
 

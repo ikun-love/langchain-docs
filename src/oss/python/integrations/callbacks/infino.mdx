@@ -1,21 +1,23 @@
+```yaml
 ---
 title: Infino
 ---
+```
 
->[Infino](https://github.com/infinohq/infino) is a scalable telemetry store designed for logs, metrics, and traces. Infino can function as a standalone observability solution or as the storage layer in your observability stack.
+>[Infino](https://github.com/infinohq/infino) 是一个可扩展的遥测存储系统，专为日志、指标和跟踪（trace）而设计。Infino 可以作为独立的观测性解决方案运行，也可以作为您观测性技术栈中的存储层。
 
-This example shows how one can track the following while calling OpenAI and ChatOpenAI models via `LangChain` and [Infino](https://github.com/infinohq/infino):
+本示例展示了如何在使用 `LangChain` 和 [Infino](https://github.com/infinohq/infino) 调用 OpenAI 和 ChatOpenAI 模型时，跟踪以下信息：
 
-* prompt input
-* response from `ChatGPT` or any other `LangChain` model
-* latency
-* errors
-* number of tokens consumed
+*   Prompt 输入
+*   来自 `ChatGPT` 或任何其他 `LangChain` 模型的响应
+*   延迟（Latency）
+*   错误（Errors）
+*   消耗的 Token 数量
 
-## Initializing
+## 初始化
 
 ```python
-# Install necessary dependencies.
+# 安装必要的依赖项。
 pip install -qU  infinopy
 pip install -qU  matplotlib
 pip install -qU  tiktoken
@@ -38,13 +40,13 @@ from infinopy import InfinoClient
 from langchain_openai import OpenAI
 ```
 
-## Start Infino server, initialize the Infino client
+## 启动 Infino 服务器，初始化 Infino 客户端
 
 ```python
-# Start server using the Infino docker image.
+# 使用 Infino Docker 镜像启动服务器。
 !docker run --rm --detach --name infino-example -p 3000:3000 infinohq/infino:latest
 
-# Create Infino client.
+# 创建 Infino 客户端。
 client = InfinoClient()
 ```
 
@@ -52,10 +54,10 @@ client = InfinoClient()
 a1159e99c6bdb3101139157acee6aba7ae9319375e77ab6fbc79beff75abeca3
 ```
 
-## Read the questions dataset
+## 读取问题数据集
 
 ```python
-# These are a subset of questions from Stanford's QA dataset -
+# 这些是斯坦福 QA 数据集中的部分问题子集 -
 # https://rajpurkar.github.io/SQuAD-explorer/
 data = """In what country is Normandy located?
 When were the Normans in Normandy?
@@ -81,28 +83,28 @@ What name comes from the English words Normans/Normanz?"""
 questions = data.split("\n")
 ```
 
-## Example 1: LangChain OpenAI Q&A; Publish metrics and logs to Infino
+## 示例 1：LangChain OpenAI 问答；向 Infino 发布指标和日志
 
 ```python
-# Set your key here.
+# 在此处设置您的密钥。
 # os.environ["OPENAI_API_KEY"] = "YOUR_API_KEY"
 
-# Create callback handler. This logs latency, errors, token usage, prompts as well as prompt responses to Infino.
+# 创建回调处理器。这会将延迟、错误、Token 使用情况、Prompt 以及 Prompt 响应记录到 Infino。
 handler = InfinoCallbackHandler(
     model_id="test_openai", model_version="0.1", verbose=False
 )
 
-# Create LLM.
+# 创建 LLM 实例。
 llm = OpenAI(temperature=0.1)
 
-# Number of questions to ask the OpenAI model. We limit to a short number here to save $$ while running this demo.
+# 要向 OpenAI 模型提问的问题数量。我们在这里限制一个较小的数字，以节省运行此演示的费用。
 num_questions = 10
 
 questions = questions[0:num_questions]
 for question in questions:
     print(question)
 
-    # We send the question to OpenAI API, with Infino callback.
+    # 我们将问题发送到 OpenAI API，并附带 Infino 回调。
     llm_result = llm.generate([question], callbacks=[handler])
     print(llm_result)
 ```
@@ -130,16 +132,16 @@ Who was the duke in the battle of Hastings?
 generations=[[Generation(text='\n\nThe Duke of Normandy, William the Conqueror, was the leader of the Norman forces at the Battle of Hastings in 1066.', generation_info={'finish_reason': 'stop', 'logprobs': None})]] llm_output={'token_usage': {'total_tokens': 39, 'prompt_tokens': 11, 'completion_tokens': 28}, 'model_name': 'text-davinci-003'} run=[RunInfo(run_id=UUID('b8f84619-ea5f-4c18-b411-b62194f36fe0'))]
 ```
 
-## Create Metric Charts
+## 创建指标图表
 
-We now use matplotlib to create graphs of latency, errors and tokens consumed.
+我们现在使用 `matplotlib` 创建延迟、错误和消耗 Token 数量的图表。
 
 ```python
-# Helper function to create a graph using matplotlib.
+# 使用 matplotlib 创建图表的辅助函数。
 def plot(data, title):
     data = json.loads(data)
 
-    # Extract x and y values from the data
+    # 从数据中提取 x 轴和 y 轴值
     timestamps = [item["time"] for item in data]
     dates = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
     y = [item["value"] for item in data]
@@ -151,10 +153,10 @@ def plot(data, title):
     xfmt = md.DateFormatter("%Y-%m-%d %H:%M:%S")
     ax.xaxis.set_major_formatter(xfmt)
 
-    # Create the plot
+    # 创建图表
     plt.plot(dates, y)
 
-    # Set labels and title
+    # 设置标签和标题
     plt.xlabel("Time")
     plt.ylabel("Value")
     plt.title(title)
@@ -179,10 +181,10 @@ response = client.search_ts("__name__", "total_tokens", 0, int(time.time()))
 plot(response.text, "Total Tokens")
 ```
 
-## Full text query on prompt or prompt outputs
+## 对 Prompt 或 Prompt 输出进行全文查询
 
 ```python
-# Search for a particular prompt text.
+# 搜索特定的 Prompt 文本。
 query = "normandy"
 response = client.search_log(query, 0, int(time.time()))
 print("Results for", query, ":", response.text)
@@ -200,17 +202,17 @@ Results for normandy : [{"time":1696947743,"fields":{"prompt_response":"\n\nThe 
 Results for king charles III : [{"time":1696947745,"fields":{"prompt_response":"\n\nKing Charles III swore fealty to King Philip II of Spain."},"text":"\n\nKing Charles III swore fealty to King Philip II of Spain."},{"time":1696947744,"fields":{"prompt":"Who did King Charles III swear fealty to?"},"text":"Who did King Charles III swear fealty to?"}]
 ```
 
-# Example 2: Summarize a piece of text using ChatOpenAI
+# 示例 2：使用 ChatOpenAI 总结一段文本
 
 ```python
-# Set your key here.
+# 在此处设置您的密钥。
 # os.environ["OPENAI_API_KEY"] = "YOUR_API_KEY"
 
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_openai import ChatOpenAI
 
-# Create callback handler. This logs latency, errors, token usage, prompts, as well as prompt responses to Infino.
+# 创建回调处理器。这会将延迟、错误、Token 使用情况、Prompt 以及 Prompt 响应记录到 Infino。
 handler = InfinoCallbackHandler(
     model_id="test_chatopenai", model_version="0.1", verbose=False
 )
@@ -231,7 +233,7 @@ for url in urls:
     chain.run(docs)
 ```
 
-## Create Metric Charts
+## 创建指标图表
 
 ```python
 response = client.search_ts("__name__", "latency", 0, int(time.time()))
@@ -248,15 +250,15 @@ plot(response.text, "Completion Tokens")
 ```
 
 ```python
-## Full text query on prompt or prompt outputs
+## 对 Prompt 或 Prompt 输出进行全文查询
 ```
 
 ```python
-# Search for a particular prompt text.
+# 搜索特定的 Prompt 文本。
 query = "machine learning"
 response = client.search_log(query, 0, int(time.time()))
 
-# The output can be verbose - uncomment below if it needs to be printed.
+# 输出内容可能很冗长 - 如果需要打印，请取消注释下面的行。
 # print("Results for", query, ":", response.text)
 
 print("===")
@@ -267,7 +269,7 @@ print("===")
 ```
 
 ```python
-## Stop Infino server
+## 停止 Infino 服务器
 ```
 
 ```python
@@ -278,6 +280,6 @@ print("===")
 infino-example
 ```
 
-```python
+```
 
 ```

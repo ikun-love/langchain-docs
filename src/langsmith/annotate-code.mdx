@@ -1,35 +1,34 @@
 ---
-title: Custom instrumentation
-sidebarTitle: Custom instrumentation
+title: 自定义追踪
+sidebarTitle: 自定义追踪
 ---
 
 <Note>
-If you've decided you no longer want to trace your runs, you can remove the `LANGSMITH_TRACING` environment variable. Note that this does not affect the `RunTree` objects or API users, as these are meant to be low-level and not affected by the tracing toggle.
+如果你决定不再追踪（trace）你的运行，可以移除 `LANGSMITH_TRACING` 环境变量。请注意，这不会影响 `RunTree` 对象或 API 用户，因为它们被设计为底层组件，不受追踪开关的影响。
 </Note>
 
-There are several ways to log traces to LangSmith.
+有几种方法可以将追踪（traces）日志记录到 LangSmith。
 
 <Check>
-If you are using LangChain (either Python or JS/TS), you can skip this section and go directly to the [LangChain-specific instructions](/langsmith/trace-with-langchain).
+如果你正在使用 LangChain（Python 或 JS/TS），可以跳过本节，直接前往 [LangChain 特定说明](/langsmith/trace-with-langchain)。
 </Check>
 
-## Use `@traceable` / `traceable`
+## 使用 `@traceable` / `traceable`
 
-LangSmith makes it easy to log traces with minimal changes to your existing code with the `@traceable` decorator in Python and `traceable` function in TypeScript.
+LangSmith 通过 Python 中的 `@traceable` 装饰器和 TypeScript 中的 `traceable` 函数，使得只需对现有代码进行最少更改就能轻松记录追踪信息。
 
 <Note>
-The `LANGSMITH_TRACING` environment variable must be set to `'true'` in order for traces to be logged to LangSmith, even when using `@traceable` or `traceable`. This allows you to toggle tracing on and off without changing your code.
+即使在使用 `@traceable` 或 `traceable` 时，也必须将 `LANGSMITH_TRACING` 环境变量设置为 `'true'`，追踪信息才会记录到 LangSmith。这使得你无需更改代码即可打开或关闭追踪。
 
-Additionally, you will need to set the `LANGSMITH_API_KEY` environment variable to your API key (see [Setup](/) for more information).
+此外，你需要设置 `LANGSMITH_API_KEY` 环境变量为你的 API 密钥（更多信息请参阅 [设置](/））。
 
-By default, the traces will be logged to a project named `default`. To log traces to a different project, see [this section](/langsmith/log-traces-to-project).
+默认情况下，追踪信息将记录到名为 `default` 的项目中。要将追踪信息记录到不同的项目，请参阅 [本节](/langsmith/log-traces-to-project)。
 </Note>
 
 
-The `@traceable` decorator is a simple way to log traces from the LangSmith Python SDK. Simply decorate any function with `@traceable`.
+`@traceable` 装饰器是使用 LangSmith Python SDK 从函数记录追踪的一种简单方法。只需用 `@traceable` 装饰任何函数即可。
 
-Note that when wrapping a sync function with `traceable`, (e.g. `formatPrompt` in the example below), you should use the `await` keyword when calling it to
-  ensure the trace is logged correctly.
+请注意，当使用 `traceable` 包装同步函数时（例如下面示例中的 `formatPrompt`），调用它时应该使用 `await` 关键字，以确保追踪被正确记录。
 
 <CodeGroup>
 
@@ -124,16 +123,16 @@ await runPipeline();
 
 ![](/langsmith/images/annotate-code-trace.gif)
 
-## Use the `trace` context manager (Python only)
+## 使用 `trace` 上下文管理器（仅限 Python）
 
-In Python, you can use the `trace` context manager to log traces to LangSmith. This is useful in situations where:
+在 Python 中，你可以使用 `trace` 上下文管理器将追踪信息记录到 LangSmith。在以下情况下，这非常有用：
 
-1. You want to log traces for a specific block of code.
-2. You want control over the inputs, outputs, and other attributes of the trace.
-3. It is not feasible to use a decorator or wrapper.
-4. Any or all of the above.
+1. 你想记录特定代码块的追踪信息。
+2. 你希望控制追踪的输入、输出和其他属性。
+3. 无法使用装饰器或包装器。
+4. 以上所有或部分情况。
 
-The context manager integrates seamlessly with the `traceable` decorator and `wrap_openai` wrapper, so you can use them together in the same application.
+此上下文管理器与 `traceable` 装饰器和 `wrap_openai` 包装器无缝集成，因此你可以在同一个应用程序中将它们一起使用。
 
 ```python
 import openai
@@ -164,11 +163,11 @@ with ls.trace("Chat Pipeline", "chain", project_name="my_test", inputs=app_input
     rt.end(outputs={"output": output})
 ```
 
-## Use the `RunTree` API
+## 使用 `RunTree` API
 
-Another, more explicit way to log traces to LangSmith is via the `RunTree` API. This API allows you more control over your tracing - you can manually create runs and children runs to assemble your trace. You still need to set your `LANGSMITH_API_KEY`, but `LANGSMITH_TRACING` is not necessary for this method.
+另一种更明确地将追踪信息记录到 LangSmith 的方法是通过 `RunTree` API。此 API 允许你对追踪拥有更大的控制权——你可以手动创建运行（runs）和子运行（children runs）来组装你的追踪。你仍然需要设置 `LANGSMITH_API_KEY`，但对于此方法，`LANGSMITH_TRACING` 是可选的。
 
-This method is not recommended, as it's easier to make mistakes in propagating trace context.
+不推荐使用此方法，因为它更容易在传播追踪上下文时出错。
 
 <CodeGroup>
 
@@ -260,11 +259,11 @@ await pipeline.patchRun();
 
 </CodeGroup>
 
-## Example usage
+## 示例用法
 
-You can extend the utilities above to conveniently trace any code. Below are some example extensions:
+你可以扩展上述工具，以便方便地追踪任何代码。以下是一些示例扩展：
 
-Trace any public method in a class:
+追踪类中的任何公共方法：
 
 ```python
 from typing import Any, Callable, Type, TypeVar
@@ -313,13 +312,13 @@ class MyClass:
 MyClass(13).combine(29)
 ```
 
-## Ensure all traces are submitted before exiting
+## 确保退出前提交所有追踪信息
 
-LangSmith's tracing is done in a background thread to avoid obstructing your production application. This means that your process may end before all traces are successfully posted to LangSmith. Here are some options for ensuring all traces are submitted before exiting your application.
+LangSmith 的追踪是在后台线程中完成的，以避免阻塞你的生产应用程序。这意味着在所有追踪信息成功发布到 LangSmith 之前，你的进程可能会结束。以下是一些确保在应用程序退出前提交所有追踪信息的选项。
 
-### Using the LangSmith SDK
+### 使用 LangSmith SDK
 
-If you are using the LangSmith SDK standalone, you can use the `flush` method before exit:
+如果你是单独使用 LangSmith SDK，可以在退出前使用 `flush` 方法：
 
 <CodeGroup>
 
@@ -357,8 +356,8 @@ try {
 
 </CodeGroup>
 
-### Using LangChain
+### 使用 LangChain
 
-If you are using LangChain, please refer to our [LangChain tracing guide](/langsmith/trace-with-langchain#ensure-all-traces-are-submitted-before-exiting).
+如果你正在使用 LangChain，请参考我们的 [LangChain 追踪指南](/langsmith/trace-with-langchain#ensure-all-traces-are-submitted-before-exiting)。
 
-If you prefer a video tutorial, check out the [Tracing Basics video](https://academy.langchain.com/pages/intro-to-langsmith-preview) from the Introduction to LangSmith Course.
+如果你更喜欢视频教程，请查看“LangSmith 简介”课程中的 [追踪基础知识视频](https://academy.langchain.com/pages/intro-to-langsmith-preview)。

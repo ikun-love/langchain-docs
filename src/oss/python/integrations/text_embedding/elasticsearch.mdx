@@ -2,12 +2,12 @@
 title: Elasticsearch
 ---
 
-Walkthrough of how to generate embeddings using a hosted embedding model in Elasticsearch
+介绍如何使用 Elasticsearch 中托管的嵌入模型来生成嵌入（embeddings）的演练指南。
 
-The easiest way to instantiate the `ElasticsearchEmbeddings` class it either
+实例化 `ElasticsearchEmbeddings` 类最简单的方法是：
 
-- using the `from_credentials` constructor if you are using Elastic Cloud
-- or using the `from_es_connection` constructor with any Elasticsearch cluster
+- 如果您使用的是 Elastic Cloud，则使用 `from_credentials` 构造函数。
+- 否则，使用 `from_es_connection` 构造函数连接到任何 Elasticsearch 集群。
 
 ```python
 !pip -q install langchain-elasticsearch
@@ -18,16 +18,16 @@ from langchain_elasticsearch import ElasticsearchEmbeddings
 ```
 
 ```python
-# Define the model ID
+# 定义模型 ID
 model_id = "your_model_id"
 ```
 
-## Testing with `from_credentials`
+## 使用 `from_credentials` 进行测试
 
-This required an Elastic Cloud `cloud_id`
+这需要一个 Elastic Cloud 的 `cloud_id`。
 
 ```python
-# Instantiate ElasticsearchEmbeddings using credentials
+# 使用凭证实例化 ElasticsearchEmbeddings
 embeddings = ElasticsearchEmbeddings.from_credentials(
     model_id,
     es_cloud_id="your_cloud_id",
@@ -37,7 +37,7 @@ embeddings = ElasticsearchEmbeddings.from_credentials(
 ```
 
 ```python
-# Create embeddings for multiple documents
+# 为多个文档创建嵌入
 documents = [
     "This is an example document.",
     "Another example document to generate embeddings for.",
@@ -46,28 +46,28 @@ document_embeddings = embeddings.embed_documents(documents)
 ```
 
 ```python
-# Print document embeddings
+# 打印文档嵌入
 for i, embedding in enumerate(document_embeddings):
     print(f"Embedding for document {i + 1}: {embedding}")
 ```
 
 ```python
-# Create an embedding for a single query
+# 为单个查询创建嵌入
 query = "This is a single query."
 query_embedding = embeddings.embed_query(query)
 ```
 
 ```python
-# Print query embedding
+# 打印查询嵌入
 print(f"Embedding for query: {query_embedding}")
 ```
 
-## Testing with Existing Elasticsearch client connection
+## 使用现有 Elasticsearch 客户端连接进行测试
 
-This can be used with any Elasticsearch deployment
+这可以用于任何 Elasticsearch 部署。
 
 ```python
-# Create Elasticsearch connection
+# 创建 Elasticsearch 连接
 from elasticsearch import Elasticsearch
 
 es_connection = Elasticsearch(
@@ -76,7 +76,7 @@ es_connection = Elasticsearch(
 ```
 
 ```python
-# Instantiate ElasticsearchEmbeddings using es_connection
+# 使用 es_connection 实例化 ElasticsearchEmbeddings
 embeddings = ElasticsearchEmbeddings.from_es_connection(
     model_id,
     es_connection,
@@ -84,7 +84,7 @@ embeddings = ElasticsearchEmbeddings.from_es_connection(
 ```
 
 ```python
-# Create embeddings for multiple documents
+# 为多个文档创建嵌入
 documents = [
     "This is an example document.",
     "Another example document to generate embeddings for.",
@@ -93,18 +93,18 @@ document_embeddings = embeddings.embed_documents(documents)
 ```
 
 ```python
-# Print document embeddings
+# 打印文档嵌入
 for i, embedding in enumerate(document_embeddings):
     print(f"Embedding for document {i + 1}: {embedding}")
 ```
 
 ```python
-# Create an embedding for a single query
+# 为单个查询创建嵌入
 query = "This is a single query."
 query_embedding = embeddings.embed_query(query)
 ```
 
 ```python
-# Print query embedding
+# 打印查询嵌入
 print(f"Embedding for query: {query_embedding}")
 ```

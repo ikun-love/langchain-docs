@@ -2,34 +2,33 @@
 title: Arcee
 ---
 
->[Arcee](https://www.arcee.ai/about/about-us) helps with the development of the SLMs—small, specialized, secure, and scalable language models.
+> [Arcee](https://www.arcee.ai/about/about-us) 致力于帮助开发 SLM（即小型化、专业化、安全且可扩展的语言模型）。
 
-This notebook demonstrates how to use the `ArceeRetriever` class to retrieve relevant document(s) for Arcee's `Domain Adapted Language Models` (`DALMs`).
+本示例 Notebook 将演示如何使用 `ArceeRetriever` 类来检索与 Arcee 的“领域自适应语言模型”（`DALM`s）相关的文档。
 
-### Setup
+### 设置 (Setup)
 
-Before using `ArceeRetriever`, make sure the Arcee API key is set as `ARCEE_API_KEY` environment variable. You can also pass the api key as a named parameter.
+在使用 `ArceeRetriever` 之前，请确保 Arcee API 密钥已设置为 `ARCEE_API_KEY` 环境变量。您也可以将其作为命名参数传递。
 
 ```python
 from langchain_community.retrievers import ArceeRetriever
 
 retriever = ArceeRetriever(
     model="DALM-PubMed",
-    # arcee_api_key="ARCEE-API-KEY" # if not already set in the environment
+    # arcee_api_key="ARCEE-API-KEY" # 如果尚未在环境中设置，则取消注释
 )
 ```
 
-### Additional Configuration
+### 附加配置 (Additional Configuration)
 
-You can also configure `ArceeRetriever`'s parameters such as `arcee_api_url`, `arcee_app_url`, and `model_kwargs` as needed.
-Setting the `model_kwargs` at the object initialization uses the filters and size as default for all the subsequent retrievals.
+您可以根据需要配置 `ArceeRetriever` 的其他参数，例如 `arcee_api_url`、`arcee_app_url` 和 `model_kwargs`。在对象初始化时设置 `model_kwargs` 会将指定的过滤条件（filters）和结果数量（size）作为所有后续检索操作的默认值。
 
 ```python
 retriever = ArceeRetriever(
     model="DALM-PubMed",
-    # arcee_api_key="ARCEE-API-KEY", # if not already set in the environment
-    arcee_api_url="https://custom-api.arcee.ai",  # default is https://api.arcee.ai
-    arcee_app_url="https://custom-app.arcee.ai",  # default is https://app.arcee.ai
+    # arcee_api_key="ARCEE-API-KEY", # 如果尚未在环境中设置，则取消注释
+    arcee_api_url="https://custom-api.arcee.ai",  # 默认值为 https://api.arcee.ai
+    arcee_app_url="https://custom-app.arcee.ai",  # 默认值为 https://app.arcee.ai
     model_kwargs={
         "size": 5,
         "filters": [
@@ -43,26 +42,26 @@ retriever = ArceeRetriever(
 )
 ```
 
-### Retrieving documents
+### 检索文档 (Retrieving documents)
 
-You can retrieve relevant documents from uploaded contexts by providing a query. Here's an example:
+您可以通过提供查询（query）来从已上传的上下文中检索相关文档。示例如下：
 
 ```python
 query = "Can AI-driven music therapy contribute to the rehabilitation of patients with disorders of consciousness?"
 documents = retriever.invoke(query)
 ```
 
-### Additional parameters
+### 附加参数 (Additional parameters)
 
-Arcee allows you to apply `filters` and set the `size` (in terms of count) of retrieved document(s). Filters help narrow down the results. Here's how to use these parameters:
+Arcee 允许您应用 `filters`（过滤条件）并设置检索到的文档的数量（`size`）。过滤条件有助于缩小搜索结果范围。下面是如何使用这些参数的示例：
 
 ```python
-# Define filters
+# 定义过滤条件
 filters = [
     {"field_name": "document", "filter_type": "fuzzy_search", "value": "Music"},
     {"field_name": "year", "filter_type": "strict_search", "value": "1905"},
 ]
 
-# Retrieve documents with filters and size params
+# 使用过滤条件和 size 参数检索文档
 documents = retriever.invoke(query, size=5, filters=filters)
 ```

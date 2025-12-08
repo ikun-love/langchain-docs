@@ -1,18 +1,18 @@
 ---
-title: Open City Data
+title: 开放城市数据
 ---
 
-[Socrata](https://dev.socrata.com/foundry/data.sfgov.org/vw6y-z8j6) provides an API for city open data.
+[Socrata](https://dev.socrata.com/foundry/data.sfgov.org/vw6y-z8j6) 提供了一个用于城市开放数据的 API。
 
-For a dataset such as [SF crime](https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-Historical-2003/tmnf-yvry), see the `API` tab on top right.
+对于像 [SF 犯罪](https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-Historical-2003/tmnf-yvry) 这样的数据集，请查看右上角的 `API` 标签页。
 
-That provides you with the `dataset identifier`.
+该标签页会提供给你 `数据集标识符`（dataset identifier）。
 
-Use the dataset identifier to grab specific tables for a given city_id (`data.sfgov.org`) -
+使用该数据集标识符，可以为给定的 `city_id`（例如 `data.sfgov.org`）抓取特定的数据表：
 
-E.g., `vw6y-z8j6` for [SF 311 data](https://dev.socrata.com/foundry/data.sfgov.org/vw6y-z8j6).
+例如，`vw6y-z8j6` 对应 [SF 311 数据](https://dev.socrata.com/foundry/data.sfgov.org/vw6y-z8j6)。
 
-E.g., `tmnf-yvry` for [SF Police data](https://dev.socrata.com/foundry/data.sfgov.org/tmnf-yvry).
+例如，`tmnf-yvry` 对应 [SF 警务数据](https://dev.socrata.com/foundry/data.sfgov.org/tmnf-yvry)。
 
 ```python
 pip install -qU  sodapy
@@ -23,8 +23,8 @@ from langchain_community.document_loaders import OpenCityDataLoader
 ```
 
 ```python
-dataset = "vw6y-z8j6"  # 311 data
-dataset = "tmnf-yvry"  # crime data
+dataset = "vw6y-z8j6"  # 311 数据集
+dataset = "tmnf-yvry"  # 犯罪数据集
 loader = OpenCityDataLoader(city_id="data.sfgov.org", dataset_id=dataset, limit=2000)
 ```
 

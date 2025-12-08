@@ -1,26 +1,24 @@
 ---
-title: Call agents from code
-description: Invoke Agent Builder agents from Python or JavaScript using the LangGraph SDK.
-sidebarTitle: Call from code
-mode: wide
+title: 从代码调用智能体
+description: 使用 LangGraph SDK 从 Python 或 JavaScript 调用 Agent Builder 智能体。
+sidebarTitle: 从代码调用
 ---
 
-You can invoke Agent Builder agents from your applications using the LangGraph SDK. You can use all the same API methods as you would with any other LangGraph deployment.
+您可以使用 LangGraph SDK 从您的应用程序中调用 Agent Builder 智能体。您可以像使用任何其他 LangGraph 部署一样使用所有相同的 API 方法。
 
-## Authentication
+## 身份验证 (Authentication)
 
-To authenticate with the deployment your Agent Builder agents are running on, you must provide a personal access token (PAT) API key tied to your user to the `api_key` arg when instantiating the LangGraph SDK client, or via the `X-API-Key` header. Then, set the `X-Auth-Scheme` header to `langsmith-api-key`.
+要对正在运行 Agent Builder 智能体的部署进行身份验证，您必须在实例化 LangGraph SDK 客户端时，通过 `api_key` 参数，或者通过 `X-API-Key` 标头，提供一个与您的用户关联的个人访问令牌 (PAT) API 密钥。然后，将 `X-Auth-Scheme` 标头设置为 `langsmith-api-key`。
 
-If the PAT you pass is not tied to the owner of the agent, your request will be rejected with a 404 not found error.
+如果您提供的 PAT 未与智能体所有者关联，您的请求将被拒绝并返回 404 Not Found 错误。
 
-If the agent you're trying to invoke is a workspace agent, and you're not the owner, you'll be able to preform all the same operations as you would in the UI (read-only).
+如果您尝试调用的智能体是工作区智能体（workspace agent），并且您不是所有者，您将能够执行与在 UI 中相同的操作（只读）。
 
+## 示例 (Example)
 
-## Example
+要调用智能体，您可以复制下面的代码，并将 `agent_id` 和 `api_url` 替换为正确的值。
 
-To invoke the agent, you can copy the code below, and replace the `agent_id` and `api_url` with the correct values.
-
-Alternatively, you can copy the same code shown below, but pre-populated with the proper agent ID and API URL, via the Agent Builder UI. To do this, navigate to the agent you want to invoke, visit the editor page, then click on the <Icon icon="gear" /> settings icon in the top right corner, and click `View code snippets`. You'll still need to manually set your `LANGGRAPH_API_KEY` environment variable.
+或者，您可以通过 Agent Builder UI 复制下面显示的相同代码，并预先填充正确的智能体 ID 和 API URL。要执行此操作，请导航到您想要调用的智能体，访问编辑器页面，然后点击右上角的 <Icon icon="gear" /> 设置图标，然后点击 `View code snippets`（查看代码片段）。您仍然需要手动设置 `LANGGRAPH_API_KEY` 环境变量。
 
 <Tabs>
   <Tab title="Python">
@@ -84,5 +82,5 @@ main(agentId).catch(console.error);
 </Tabs>
 
 <Callout icon="key" color="#FEF3C7" iconType="regular">
-  Use a PAT (Personal Access Token) API key tied to your user account. Set the `X-Auth-Scheme` header to `langsmith-api-key` for authentication. If you implemented custom authentication, pass your user's token in headers so the agent can use user‑scoped tools. See "Add custom authentication".
+  请使用与您的用户帐户关联的 PAT（个人访问令牌）API 密钥。将 `X-Auth-Scheme` 标头设置为 `langsmith-api-key` 以进行身份验证。如果您实现了自定义身份验证，请在标头中传递您用户的令牌，以便智能体可以使用面向用户的工具范围。请参阅“添加自定义身份验证”。
 </Callout>

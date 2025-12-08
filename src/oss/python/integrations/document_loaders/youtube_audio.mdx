@@ -1,15 +1,14 @@
 ---
-title: YouTube audio
+title: YouTube 音频
 ---
 
-Building chat or QA applications on YouTube videos is a topic of high interest.
+基于 YouTube 视频构建聊天或问答（QA）应用程序是一个备受关注的话题。
 
-Below we show how to easily go from a `YouTube url` to `audio of the video` to `text` to `chat`!
+下面我们将展示如何轻松地从 `YouTube url` 经过 `视频音频` 转换为 `文本`，最终实现 `聊天` 功能！
 
-We wil use the `OpenAIWhisperParser`, which will use the OpenAI Whisper API to transcribe audio to text,
-and the  `OpenAIWhisperParserLocal` for local support and running on private clouds or on premise.
+我们将使用 `OpenAIWhisperParser`，它会调用 OpenAI Whisper API 将音频转录成文本；对于本地支持或在私有云/本地环境（on premise）上运行，则使用 `OpenAIWhisperParserLocal`。
 
-Note: You will need to have an `OPENAI_API_KEY` supplied.
+注意：您需要提供一个 `OPENAI_API_KEY`。
 
 ```python
 from langchain_community.document_loaders.blob_loaders.youtube_audio import (
@@ -22,9 +21,9 @@ from langchain_community.document_loaders.parsers.audio import (
 )
 ```
 
-We will use `yt_dlp` to download audio for YouTube urls.
+我们将使用 `yt_dlp` 来下载 YouTube URL 的音频文件。
 
-We will use `pydub` to split downloaded audio files (such that we adhere to Whisper API's 25MB file size limit).
+然后，我们将使用 `pydub` 来分割下载的音频文件（以遵守 Whisper API 的 25MB 文件大小限制）。
 
 ```python
 pip install -qU  yt_dlp
@@ -32,28 +31,28 @@ pip install -qU  pydub
 pip install -qU  librosa
 ```
 
-### YouTube url to text
+### YouTube URL 转文本
 
-Use `YoutubeAudioLoader` to fetch / download the audio files.
+使用 `YoutubeAudioLoader` 来获取/下载音频文件。
 
-Then, ues `OpenAIWhisperParser()` to transcribe them to text.
+然后，使用 `OpenAIWhisperParser()` 将它们转录成文本。
 
-Let's take the first lecture of Andrej Karpathy's YouTube course as an example!
+我们以 Andrej Karpathy 的 YouTube 课程的第一个讲座为例！
 
 ```python
-# set a flag to switch between local and remote parsing
-# change this to True if you want to use local parsing
+# 设置一个标志位来切换本地和远程解析
+# 如果您想使用本地解析，请将此项更改为 True
 local = False
 ```
 
 ```python
-# Two Karpathy lecture videos
+# Karpathy 的两个讲座视频
 urls = ["https://youtu.be/kCc8FmEb1nY", "https://youtu.be/VMj-3S1tku0"]
 
-# Directory to save audio files
+# 用于保存音频文件的目录
 save_dir = "~/Downloads/YouTube"
 
-# Transcribe the videos to text
+# 将视频转录为文本
 if local:
     loader = GenericLoader(
         YoutubeAudioLoader(urls, save_dir), OpenAIWhisperParserLocal()
@@ -83,7 +82,7 @@ docs = loader.load()
 ```
 
 ```python
-# Returns a list of Documents, which can be easily viewed or parsed
+# 返回一个 Document 列表，可以方便地查看或解析
 docs[0].page_content[0:500]
 ```
 
@@ -91,9 +90,9 @@ docs[0].page_content[0:500]
 "Hello, my name is Andrej and I've been training deep neural networks for a bit more than a decade. And in this lecture I'd like to show you what neural network training looks like under the hood. So in particular we are going to start with a blank Jupyter notebook and by the end of this lecture we will define and train a neural net and you'll get to see everything that goes on under the hood and exactly sort of how that works on an intuitive level. Now specifically what I would like to do is I w"
 ```
 
-### Building a chat app from YouTube video
+### 从 YouTube 视频构建聊天应用
 
-Given `Documents`, we can easily enable chat / question+answering.
+给定 `Documents`，我们可以轻松地启用聊天/问答功能。
 
 ```python
 from langchain.chains import RetrievalQA
@@ -103,25 +102,25 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 ```
 
 ```python
-# Combine doc
+# 合并文档内容
 combined_docs = [doc.page_content for doc in docs]
 text = " ".join(combined_docs)
 ```
 
 ```python
-# Split them
+# 分割文本
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=150)
 splits = text_splitter.split_text(text)
 ```
 
 ```python
-# Build an index
+# 构建索引
 embeddings = OpenAIEmbeddings()
 vectordb = FAISS.from_texts(splits, embeddings)
 ```
 
 ```python
-# Build a QA chain
+# 构建 QA 链
 qa_chain = RetrievalQA.from_chain_type(
     llm=ChatOpenAI(model="gpt-3.5-turbo", temperature=0),
     chain_type="stuff",
@@ -130,7 +129,7 @@ qa_chain = RetrievalQA.from_chain_type(
 ```
 
 ```python
-# Ask a question!
+# 提问!
 query = "Why do we need to zero out the gradient before backprop at each step?"
 qa_chain.run(query)
 ```

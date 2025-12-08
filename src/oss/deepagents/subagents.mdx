@@ -1,69 +1,69 @@
 ---
-title: Subagents
-description: Learn how to use subagents to delegate work and keep context clean
+title: 子代理 (Subagents)
+description: 学习如何使用子代理来委托工作并保持上下文的整洁
 ---
 
-Deep agents can create subagents to delegate work. You can specify custom subagents in the `subagents` parameter. Subagents are useful for [context quarantine](https://www.dbreunig.com/2025/06/26/how-to-fix-your-context.html#context-quarantine) (keeping the main agent's context clean) and for providing specialized instructions.
+深度代理 (Deep agents) 可以创建子代理 (subagents) 来委托工作。您可以在 `subagents` 参数中指定自定义的子代理。子代理在进行 [上下文隔离](https://www.dbreunig.com/2025/06/26/how-to-fix-your-context.html#context-quarantine)（保持主代理上下文整洁）和提供专门指令方面非常有用。
 
 ```mermaid
 graph TB
-    Main[Main Agent] --> |task tool| Sub[Subagent]
+    Main[主代理 Main Agent] --> |任务工具 task tool| Sub[子代理 Subagent]
 
-    Sub --> Research[Research]
-    Sub --> Code[Code]
-    Sub --> General[General]
+    Sub --> Research[研究 Research]
+    Sub --> Code[代码 Code]
+    Sub --> General[通用 General]
 
-    Research --> |isolated work| Result[Final Result]
-    Code --> |isolated work| Result
-    General --> |isolated work| Result
+    Research --> |隔离工作 isolated work| Result[最终结果 Final Result]
+    Code --> |隔离工作 isolated work| Result
+    General --> |隔离工作 isolated work| Result
 
     Result --> Main
 ```
 
-## Why use subagents?
+## 为什么要使用子代理？
 
-Subagents solve the **context bloat problem**. When agents use tools with large outputs (web search, file reads, database queries), the context window fills up quickly with intermediate results. Subagents isolate this detailed work—the main agent receives only the final result, not the dozens of tool calls that produced it.
+子代理解决了 **上下文膨胀问题 (context bloat problem)**。当代理使用具有大输出的工具时（例如网页搜索、文件读取、数据库查询），上下文窗口会很快被中间结果填满。子代理隔离了这些详细工作——主代理只接收最终结果，而不是产生该结果的数十次工具调用。
 
-**When to use subagents:**
-- ✅ Multi-step tasks that would clutter the main agent's context
-- ✅ Specialized domains that need custom instructions or tools
-- ✅ Tasks requiring different model capabilities
-- ✅ When you want to keep the main agent focused on high-level coordination
+**何时使用子代理：**
+- ✅ 会使主代理上下文冗余的多步骤任务
+- ✅ 需要自定义指令或工具的专业领域任务
+- ✅ 需要不同模型能力的任务
+- ✅ 当您希望主代理专注于高层协调时
 
-**When NOT to use subagents:**
-- ❌ Simple, single-step tasks
-- ❌ When you need to maintain intermediate context
-- ❌ When the overhead outweighs benefits
+**何时不使用子代理：**
+- ❌ 简单、单步任务
+- ❌ 当您需要维护中间上下文时
+- ❌ 当开销大于收益时
 
-## Configuration
+## 配置
 
-`subagents` should be a list of dictionaries or `CompiledSubAgent` objects. There are two types:
+`subagents` 应为字典列表或 `CompiledSubAgent` 对象的列表。它有两种类型：
 
-### SubAgent (Dictionary-based)
+### 子代理 (基于字典)
 
-For most use cases, define subagents as dictionaries:
+对于大多数用例，将子代理定义为字典：
 
-**Required fields:**
-- **name** (`str`): Unique identifier for the subagent. The main agent uses this name when calling the `task()` tool.
-- **description** (`str`): What this subagent does. Be specific and action-oriented. The main agent uses this to decide when to delegate.
-- **system_prompt** (`str`): Instructions for the subagent. Include tool usage guidance and output format requirements.
-- **tools** (`List[Callable]`): Tools the subagent can use. Keep this minimal and include only what's needed.
+**必需字段：**
+- **name** (`str`): 子代理的唯一标识符。主代理在调用 `task()` 工具时使用此名称。
+- **description** (`str`): 该子代理执行什么操作。描述要具体且面向行动。主代理使用此描述来决定何时委派任务。
+- **system_prompt** (`str`): 子代理的指令。应包含工具使用指南和输出格式要求。
+- **tools** (`List[Callable]`): 子代理可使用的工具。保持此列表最精简，仅包含必需的工具。
 
-**Optional fields:**
-- **model** (`str | BaseChatModel`): Override the main agent's model. Use the format `"provider:model-name"` (for example, `"openai:gpt-4o"`).
-- **middleware** (`List[Middleware]`): Additional middleware for custom behavior, logging, or rate limiting.
-- **interrupt_on** (`Dict[str, bool]`): Configure human-in-the-loop for specific tools. Requires a checkpointer.
+**可选字段：**
+- **model** (`str | BaseChatModel`): 覆盖主代理的模型。使用格式 `"provider:model-name"`（例如，`"openai:gpt-4o"`）。
+- **middleware** (`List[Middleware]`): 用于自定义行为、日志记录或速率限制的附加中间件。
+- **interrupt_on** (`Dict[str, bool]`): 为特定工具配置人工干预（human-in-the-loop）。需要检查点 (checkpointer)。
 
-### CompiledSubAgent
+### 编译后的子代理 (CompiledSubAgent)
 
-For complex workflows, use a pre-built LangGraph graph:
+对于复杂的流程，可以使用预构建的 LangGraph 图：
 
-**Fields:**
-- **name** (`str`): Unique identifier
-- **description** (`str`): What this subagent does
-- **runnable** (`Runnable`): A compiled LangGraph graph (must call `.compile()` first)
+**字段：**
+- **name** (`str`): 唯一标识符
+- **description** (`str`): 该子代理执行什么操作
+- **runnable** (`Runnable`): 编译后的 LangGraph 图（必须先调用 `.compile()`）
 
-## Using SubAgent
+## 使用 SubAgent
 
 :::python
 ```python
@@ -80,7 +80,7 @@ def internet_search(
     topic: Literal["general", "news", "finance"] = "general",
     include_raw_content: bool = False,
 ):
-    """Run a web search"""
+    """运行网络搜索"""
     return tavily_client.search(
         query,
         max_results=max_results,
@@ -90,10 +90,10 @@ def internet_search(
 
 research_subagent = {
     "name": "research-agent",
-    "description": "Used to research more in depth questions",
-    "system_prompt": "You are a great researcher",
+    "description": "用于深入研究更复杂的问题",
+    "system_prompt": "你是一名出色的研究员",
     "tools": [internet_search],
-    "model": "openai:gpt-4o",  # Optional override, defaults to main agent model
+    "model": "openai:gpt-4o",  # 可选覆盖，默认为主代理模型
 }
 subagents = [research_subagent]
 
@@ -134,9 +134,9 @@ const internetSearch = tool(
   },
   {
     name: "internet_search",
-    description: "Run a web search",
+    description: "运行网络搜索",
     schema: z.object({
-      query: z.string().describe("The search query"),
+      query: z.string().describe("搜索查询"),
       maxResults: z.number().optional().default(5),
       topic: z
         .enum(["general", "news", "finance"])
@@ -149,10 +149,10 @@ const internetSearch = tool(
 
 const researchSubagent = {
   name: "research-agent",
-  description: "Used to research more in depth questions",
-  systemPrompt: "You are a great researcher",
+  description: "用于深入研究更复杂的问题",
+  systemPrompt: "你是一名出色的研究员",
   tools: [internetSearch],
-  model: new ChatAnthropic({model:"claude-sonnet-4-5-20250929"}),  // Optional override, defaults to main agent model
+  model: new ChatAnthropic({model:"claude-sonnet-4-5-20250929"}),  // 可选覆盖，默认为主代理模型
 };
 const subagents = [researchSubagent];
 
@@ -163,26 +163,26 @@ const agent = createDeepAgent({
 ```
 :::
 
-## Using CompiledSubAgent
+## 使用 CompiledSubAgent
 
-For more complex use cases, you can provide your own pre-built LangGraph graph as a subagent:
+对于更复杂的用例，您可以提供自己的预构建 LangGraph 图作为子代理：
 
 :::python
 ```python
 from deepagents import create_deep_agent, CompiledSubAgent
 from langchain.agents import create_agent
 
-# Create a custom agent graph
+# 创建一个自定义的代理图
 custom_graph = create_agent(
     model=your_model,
     tools=specialized_tools,
-    prompt="You are a specialized agent for data analysis..."
+    prompt="你是一个专门用于数据分析的代理..."
 )
 
-# Use it as a custom subagent
+# 将其用作自定义子代理
 custom_subagent = CompiledSubAgent(
     name="data-analyzer",
-    description="Specialized agent for complex data analysis tasks",
+    description="专门用于复杂数据分析任务的代理",
     runnable=custom_graph
 )
 
@@ -202,17 +202,17 @@ agent = create_deep_agent(
 import { createDeepAgent, CompiledSubAgent } from "deepagents";
 import { createAgent } from "langchain";
 
-// Create a custom agent graph
+// 创建一个自定义的代理图
 const customGraph = createAgent({
   model: yourModel,
   tools: specializedTools,
-  prompt: "You are a specialized agent for data analysis...",
+  prompt: "你是一个专门用于数据分析的代理...",
 });
 
-// Use it as a custom subagent
+// 将其用作自定义子代理
 const customSubagent: CompiledSubAgent = {
   name: "data-analyzer",
-  description: "Specialized agent for complex data analysis tasks",
+  description: "专门用于复杂数据分析任务的代理",
   runnable: customGraph,
 };
 
@@ -227,53 +227,53 @@ const agent = createDeepAgent({
 ```
 :::
 
-## The general-purpose subagent
+## 通用子代理 (The general-purpose subagent)
 
-In addition to any user-defined subagents, deep agents have access to a `general-purpose` subagent at all times. This subagent:
-- Has the same system prompt as the main agent
-- Has access to all the same tools
-- Uses the same model (unless overridden)
+除了任何用户定义的子代理外，深度代理始终可以访问一个 `general-purpose` 子代理。此子代理：
+- 具有与主代理相同的系统提示
+- 可以访问所有相同的工具
+- 使用相同的模型（除非被覆盖）
 
-### When to use it
+### 何时使用它
 
-The general-purpose subagent is ideal for context isolation without specialized behavior. The main agent can delegate a complex multi-step task to this subagent and get a concise result back without bloat from intermediate tool calls.
+通用子代理非常适合在没有专门行为的情况下进行上下文隔离。主代理可以将复杂的多步骤任务委托给此子代理，并接收一个简洁的结果，而不会因为中间工具调用而产生上下文膨胀。
 
-<Card title="Example">
-    Instead of the main agent making 10 web searches and filling its context with results, it delegates to the general-purpose subagent: `task(name="general-purpose", task="Research quantum computing trends")`. The subagent performs all the searches internally and returns only a summary.
+<Card title="示例">
+    主代理不是进行 10 次网页搜索并将结果填满其上下文，而是将任务委托给通用子代理：`task(name="general-purpose", task="研究量子计算趋势")`。子代理在内部执行所有搜索，仅返回一个摘要。
 </Card>
 
-## Best practices
+## 最佳实践
 
-### Write clear descriptions
+### 编写清晰的描述
 
-The main agent uses descriptions to decide which subagent to call. Be specific:
+主代理使用描述来决定调用哪个子代理。要具体：
 
-✅ **Good:** `"Analyzes financial data and generates investment insights with confidence scores"`
+✅ **好 (Good):** `"分析财务数据并生成带有置信度分数的投资见解"`
 
-❌ **Bad:** `"Does finance stuff"`
+❌ **差 (Bad):** `"做一些金融方面的事情"`
 
-### Keep system prompts detailed
+### 保持系统提示详细
 
-Include specific guidance on how to use tools and format outputs:
+包含有关如何使用工具和格式化输出的具体指导：
 
 :::python
 ```python
 research_subagent = {
     "name": "research-agent",
-    "description": "Conducts in-depth research using web search and synthesizes findings",
-    "system_prompt": """You are a thorough researcher. Your job is to:
+    "description": "使用网络搜索进行深入研究并综合发现",
+    "system_prompt": """你是一名彻底的研究员。你的工作是：
 
-    1. Break down the research question into searchable queries
-    2. Use internet_search to find relevant information
-    3. Synthesize findings into a comprehensive but concise summary
-    4. Cite sources when making claims
+    1. 将研究问题分解为可搜索的查询
+    2. 使用 internet_search 来查找相关信息
+    3. 将发现综合成全面但简洁的摘要
+    4. 在提出主张时引用来源
 
-    Output format:
-    - Summary (2-3 paragraphs)
-    - Key findings (bullet points)
-    - Sources (with URLs)
+    输出格式：
+    - 摘要 (2-3 段)
+    - 关键发现 (要点列表)
+    - 来源 (附带 URL)
 
-    Keep your response under 500 words to maintain clean context.""",
+    将响应保持在 500 字以内，以保持上下文整洁。""",
     "tools": [internet_search],
 }
 ```
@@ -283,81 +283,81 @@ research_subagent = {
 ```typescript
 const researchSubagent = {
   name: "research-agent",
-  description: "Conducts in-depth research using web search and synthesizes findings",
-  systemPrompt: `You are a thorough researcher. Your job is to:
+  description: "使用网络搜索进行深入研究并综合发现",
+  systemPrompt: `你是一名彻底的研究员。你的工作是：
 
-  1. Break down the research question into searchable queries
-  2. Use internet_search to find relevant information
-  3. Synthesize findings into a comprehensive but concise summary
-  4. Cite sources when making claims
+  1. 将研究问题分解为可搜索的查询
+  2. 使用 internet_search 来查找相关信息
+  3. 将发现综合成全面但简洁的摘要
+  4. 在提出主张时引用来源
 
-  Output format:
-  - Summary (2-3 paragraphs)
-  - Key findings (bullet points)
-  - Sources (with URLs)
+  输出格式：
+  - 摘要 (2-3 段)
+  - 关键发现 (要点列表)
+  - 来源 (附带 URL)
 
-  Keep your response under 500 words to maintain clean context.`,
+  将响应保持在 500 字以内，以保持上下文整洁。`,
   tools: [internetSearch],
 };
 ```
 :::
 
-### Minimize tool sets
+### 最小化工具集
 
-Only give subagents the tools they need. This improves focus and security:
+仅向子代理提供它们需要的工具。这可以提高注意力和安全性：
 
 :::python
 ```python
-# ✅ Good: Focused tool set
+# ✅ 好：集中的工具集
 email_agent = {
     "name": "email-sender",
-    "tools": [send_email, validate_email],  # Only email-related
+    "tools": [send_email, validate_email],  # 仅与电子邮件相关
 }
 
-# ❌ Bad: Too many tools
+# ❌ 差：工具太多
 email_agent = {
     "name": "email-sender",
-    "tools": [send_email, web_search, database_query, file_upload],  # Unfocused
+    "tools": [send_email, web_search, database_query, file_upload],  # 不集中
 }
 ```
 :::
 
 :::js
 ```typescript
-// ✅ Good: Focused tool set
+// ✅ 好：集中的工具集
 const emailAgent = {
   name: "email-sender",
-  tools: [sendEmail, validateEmail],  // Only email-related
+  tools: [sendEmail, validateEmail],  // 仅与电子邮件相关
 };
 
-// ❌ Bad: Too many tools
+// ❌ 差：工具太多
 const emailAgentBad = {
   name: "email-sender",
-  tools: [sendEmail, webSearch, databaseQuery, fileUpload],  // Unfocused
+  tools: [sendEmail, webSearch, databaseQuery, fileUpload],  // 不集中
 };
 ```
 :::
 
-### Choose models by task
+### 按任务选择模型
 
-Different models excel at different tasks:
+不同的模型在不同任务上表现出色：
 
 :::python
 ```python
 subagents = [
     {
         "name": "contract-reviewer",
-        "description": "Reviews legal documents and contracts",
-        "system_prompt": "You are an expert legal reviewer...",
+        "description": "审查法律文件和合同",
+        "system_prompt": "你是一名专业的法律审查员...",
         "tools": [read_document, analyze_contract],
-        "model": "claude-sonnet-4-5-20250929",  # Large context for long documents
+        "model": "claude-sonnet-4-5-20250929",  # 用于长文档的大上下文
     },
     {
         "name": "financial-analyst",
-        "description": "Analyzes financial data and market trends",
-        "system_prompt": "You are an expert financial analyst...",
+        "description": "分析财务数据和市场趋势",
+        "system_prompt": "你是一名专业的金融分析师...",
         "tools": [get_stock_price, analyze_fundamentals],
-        "model": "openai:gpt-5",  # Better for numerical analysis
+        "model": "openai:gpt-5",  # 更适合数值分析
     },
 ]
 ```
@@ -368,40 +368,40 @@ subagents = [
 const subagents = [
   {
     name: "contract-reviewer",
-    description: "Reviews legal documents and contracts",
-    systemPrompt: "You are an expert legal reviewer...",
+    description: "审查法律文件和合同",
+    systemPrompt: "你是一名专业的法律审查员...",
     tools: [readDocument, analyzeContract],
-    model: "claude-sonnet-4-5-20250929",  // Large context for long documents
+    model: "claude-sonnet-4-5-20250929",  // 用于长文档的大上下文
   },
   {
     name: "financial-analyst",
-    description: "Analyzes financial data and market trends",
-    systemPrompt: "You are an expert financial analyst...",
+    description: "分析财务数据和市场趋势",
+    systemPrompt: "你是一名专业的金融分析师...",
     tools: [getStockPrice, analyzeFundamentals],
-    model: "gpt-5",  // Better for numerical analysis
+    model: "gpt-5",  // 更适合数值分析
   },
 ];
 ```
 :::
 
-### Return concise results
+### 返回简洁的结果
 
-Instruct subagents to return summaries, not raw data:
+指导子代理返回摘要，而不是原始数据：
 
 :::python
 ```python
 data_analyst = {
-    "system_prompt": """Analyze the data and return:
-    1. Key insights (3-5 bullet points)
-    2. Overall confidence score
-    3. Recommended next actions
+    "system_prompt": """分析数据并返回：
+    1. 关键见解 (3-5 个要点)
+    2. 总体置信度分数
+    3. 建议的后续操作
 
-    Do NOT include:
-    - Raw data
-    - Intermediate calculations
-    - Detailed tool outputs
+    不要包含：
+    - 原始数据
+    - 中间计算
+    - 详细的工具输出
 
-    Keep response under 300 words."""
+    将响应保持在 300 字以内。"""
 }
 ```
 :::
@@ -409,26 +409,26 @@ data_analyst = {
 :::js
 ```typescript
 const dataAnalyst = {
-  systemPrompt: `Analyze the data and return:
-  1. Key insights (3-5 bullet points)
-  2. Overall confidence score
-  3. Recommended next actions
+  systemPrompt: `分析数据并返回：
+  1. 关键见解 (3-5 个要点)
+  2. 总体置信度分数
+  3. 建议的后续操作
 
-  Do NOT include:
-  - Raw data
-  - Intermediate calculations
-  - Detailed tool outputs
+  不要包含：
+  - 原始数据
+  - 中间计算
+  - 详细的工具输出
 
-  Keep response under 300 words.`,
+  将响应保持在 300 字以内。`,
 };
 ```
 :::
 
-## Common patterns
+## 常见模式
 
-### Multiple specialized subagents
+### 多个专业子代理
 
-Create specialized subagents for different domains:
+为不同领域创建专业子代理：
 
 :::python
 ```python
@@ -437,27 +437,27 @@ from deepagents import create_deep_agent
 subagents = [
     {
         "name": "data-collector",
-        "description": "Gathers raw data from various sources",
-        "system_prompt": "Collect comprehensive data on the topic",
+        "description": "从各种来源收集原始数据",
+        "system_prompt": "收集关于该主题的全面数据",
         "tools": [web_search, api_call, database_query],
     },
     {
         "name": "data-analyzer",
-        "description": "Analyzes collected data for insights",
-        "system_prompt": "Analyze data and extract key insights",
+        "description": "分析收集的数据以提取见解",
+        "system_prompt": "分析数据并提取关键见解",
         "tools": [statistical_analysis],
     },
     {
         "name": "report-writer",
-        "description": "Writes polished reports from analysis",
-        "system_prompt": "Create professional reports from insights",
+        "description": "根据分析撰写完善的报告",
+        "system_prompt": "根据见解创建专业报告",
         "tools": [format_document],
     },
 ]
 
 agent = create_deep_agent(
     model="claude-sonnet-4-5-20250929",
-    system_prompt="You coordinate data analysis and reporting. Use subagents for specialized tasks.",
+    system_prompt="你协调数据分析和报告。使用子代理来处理专门任务。",
     subagents=subagents
 )
 ```
@@ -470,80 +470,80 @@ import { createDeepAgent } from "deepagents";
 const subagents = [
   {
     name: "data-collector",
-    description: "Gathers raw data from various sources",
-    systemPrompt: "Collect comprehensive data on the topic",
+    description: "从各种来源收集原始数据",
+    systemPrompt: "收集关于该主题的全面数据",
     tools: [webSearch, apiCall, databaseQuery],
   },
   {
     name: "data-analyzer",
-    description: "Analyzes collected data for insights",
-    systemPrompt: "Analyze data and extract key insights",
+    description: "分析收集的数据以提取见解",
+    systemPrompt: "分析数据并提取关键见解",
     tools: [statisticalAnalysis],
   },
   {
     name: "report-writer",
-    description: "Writes polished reports from analysis",
-    systemPrompt: "Create professional reports from insights",
+    description: "根据分析撰写完善的报告",
+    systemPrompt: "根据见解创建专业报告",
     tools: [formatDocument],
   },
 ];
 
 const agent = createDeepAgent({
   model: "claude-sonnet-4-5-20250929",
-  systemPrompt: "You coordinate data analysis and reporting. Use subagents for specialized tasks.",
+  systemPrompt: "你协调数据分析和报告。使用子代理来处理专门任务。",
   subagents: subagents,
 });
 ```
 :::
 
-**Workflow:**
-1. Main agent creates high-level plan
-2. Delegates data collection to data-collector
-3. Passes results to data-analyzer
-4. Sends insights to report-writer
-5. Compiles final output
+**工作流程：**
+1. 主代理创建高层计划
+2. 将数据收集委托给 `data-collector`
+3. 将结果传递给 `data-analyzer`
+4. 将见解发送给 `report-writer`
+5. 汇编最终输出
 
-Each subagent works with clean context focused only on its task.
+每个子代理都在干净的上下文中工作，只关注其任务本身。
 
-## Troubleshooting
+## 故障排除
 
-### Subagent not being called
+### 子代理未被调用
 
-**Problem**: Main agent tries to do work itself instead of delegating.
+**问题**：主代理试图自行完成工作，而不是委托。
 
-**Solutions**:
+**解决方案**：
 
-1. **Make descriptions more specific:**
+1. **使描述更具体：**
 
    :::python
    ```python
-   # ✅ Good
-   {"name": "research-specialist", "description": "Conducts in-depth research on specific topics using web search. Use when you need detailed information that requires multiple searches."}
+   # ✅ 好
+   {"name": "research-specialist", "description": "使用网络搜索对特定主题进行深入研究。在需要多次搜索才能获得详细信息时使用。"}
 
-   # ❌ Bad
-   {"name": "helper", "description": "helps with stuff"}
+   # ❌ 差
+   {"name": "helper", "description": "帮忙处理事情"}
    ```
    :::
 
    :::js
    ```typescript
-   // ✅ Good
-   { name: "research-specialist", description: "Conducts in-depth research on specific topics using web search. Use when you need detailed information that requires multiple searches." }
+   // ✅ 好
+   { name: "research-specialist", description: "使用网络搜索对特定主题进行深入研究。在需要多次搜索才能获得详细信息时使用。" }
 
-   // ❌ Bad
-   { name: "helper", description: "helps with stuff" }
+   // ❌ 差
+   { name: "helper", description: "帮忙处理事情" }
    ```
    :::
 
-2. **Instruct main agent to delegate:**
+2. **指示主代理进行委托：**
 
    :::python
    ```python
    agent = create_deep_agent(
-       system_prompt="""...your instructions...
+       system_prompt="""...你的指令...
 
-       IMPORTANT: For complex tasks, delegate to your subagents using the task() tool.
-       This keeps your context clean and improves results.""",
+       重要提示：对于复杂任务，请使用 task() 工具委托给你的子代理。
+       这可以保持你的上下文整洁并提高结果质量。""",
        subagents=[...]
    )
    ```
@@ -552,30 +552,30 @@ Each subagent works with clean context focused only on its task.
    :::js
    ```typescript
    const agent = createDeepAgent({
-     systemPrompt: `...your instructions...
+     systemPrompt: `...你的指令...
 
-     IMPORTANT: For complex tasks, delegate to your subagents using the task() tool.
-     This keeps your context clean and improves results.`,
+     重要提示：对于复杂任务，请使用 task() 工具委托给你的子代理。
+     这可以保持你的上下文整洁并提高结果质量。`,
      subagents: [...]
    });
    ```
    :::
 
-### Context still getting bloated
+### 上下文仍然膨胀
 
-**Problem**: Context fills up despite using subagents.
+**问题**：尽管使用了子代理，上下文仍然填满。
 
-**Solutions**:
+**解决方案**：
 
-1. **Instruct subagent to return concise results:**
+1. **指示子代理返回简洁的结果：**
 
    :::python
    ```python
    system_prompt="""...
 
-   IMPORTANT: Return only the essential summary.
-   Do NOT include raw data, intermediate search results, or detailed tool outputs.
-   Your response should be under 500 words."""
+   重要提示：仅返回必要的摘要。
+   不要包含原始数据、中间搜索结果或详细工具输出。
+   您的响应应少于 500 字。"""
    ```
    :::
 
@@ -583,52 +583,52 @@ Each subagent works with clean context focused only on its task.
    ```typescript
    systemPrompt: `...
 
-   IMPORTANT: Return only the essential summary.
-   Do NOT include raw data, intermediate search results, or detailed tool outputs.
-   Your response should be under 500 words.`
+   重要提示：仅返回必要的摘要。
+   不要包含原始数据、中间搜索结果或详细工具输出。
+   您的响应应少于 500 字。`
    ```
    :::
 
-2. **Use filesystem for large data:**
+2. **使用文件系统存储大型数据：**
 
    :::python
    ```python
-   system_prompt="""When you gather large amounts of data:
-   1. Save raw data to /data/raw_results.txt
-   2. Process and analyze the data
-   3. Return only the analysis summary
+   system_prompt="""当您收集大量数据时：
+   1. 将原始数据保存到 /data/raw_results.txt
+   2. 处理和分析数据
+   3. 仅返回分析摘要
 
-   This keeps context clean."""
+   这可以保持上下文整洁。"""
    ```
    :::
 
    :::js
    ```typescript
-   systemPrompt: `When you gather large amounts of data:
-   1. Save raw data to /data/raw_results.txt
-   2. Process and analyze the data
-   3. Return only the analysis summary
+   systemPrompt: `当您收集大量数据时：
+   1. 将原始数据保存到 /data/raw_results.txt
+   2. 处理和分析数据
+   3. 仅返回分析摘要
 
-   This keeps context clean.`
+   这可以保持上下文整洁。`
    ```
    :::
 
-### Wrong subagent being selected
+### 选择错误的子代理
 
-**Problem**: Main agent calls inappropriate subagent for the task.
+**问题**：主代理为该任务调用了不合适的子代理。
 
-**Solution**: Differentiate subagents clearly in descriptions:
+**解决方案**：在描述中清晰地区分子代理：
 
 :::python
 ```python
 subagents = [
     {
         "name": "quick-researcher",
-        "description": "For simple, quick research questions that need 1-2 searches. Use when you need basic facts or definitions.",
+        "description": "用于需要 1-2 次搜索的简单、快速的研究问题。在需要基本事实或定义时使用。",
     },
     {
         "name": "deep-researcher",
-        "description": "For complex, in-depth research requiring multiple searches, synthesis, and analysis. Use for comprehensive reports.",
+        "description": "用于复杂、深入的研究，需要多次搜索、综合和分析。用于全面报告。",
     }
 ]
 ```
@@ -639,11 +639,11 @@ subagents = [
 const subagents = [
   {
     name: "quick-researcher",
-    description: "For simple, quick research questions that need 1-2 searches. Use when you need basic facts or definitions.",
+    description: "用于需要 1-2 次搜索的简单、快速的研究问题。在需要基本事实或定义时使用。",
   },
   {
     name: "deep-researcher",
-    description: "For complex, in-depth research requiring multiple searches, synthesis, and analysis. Use for comprehensive reports.",
+    description: "用于复杂、深入的研究，需要多次搜索、综合和分析。用于全面报告。",
   }
 ];
 ```

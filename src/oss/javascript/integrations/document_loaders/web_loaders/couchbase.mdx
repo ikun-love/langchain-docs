@@ -2,39 +2,39 @@
 title: Couchbase
 ---
 
-[Couchbase](http://couchbase.com/) is an award-winning distributed NoSQL cloud database that delivers unmatched versatility, performance, scalability, and financial value for all of your cloud, mobile, AI, and edge computing applications.
+[Couchbase](http://couchbase.com/) 是一款屡获殊荣的分布式 NoSQL 云数据库，它为所有云、移动、AI 和边缘计算应用提供无与伦比的多功能性、性能、可扩展性和经济价值。
 
-This guide shows how to use load documents from couchbase database.
+本指南展示了如何从 Couchbase 数据库加载文档。
 
-# Installation
+# 安装
 
 ```bash npm
 npm install @langchain/community @langchain/core couchbase
 ```
-## Usage
+## 用法
 
-### Querying for Documents from Couchbase
+### 从 Couchbase 查询文档
 
-For more details on connecting to a Couchbase cluster, please check the [Node.js SDK documentation](https://docs.couchbase.com/nodejs-sdk/current/howtos/managing-connections.html#connection-strings).
+有关连接到 Couchbase 集群的更多详细信息，请查阅 [Node.js SDK 文档](https://docs.couchbase.com/nodejs-sdk/current/howtos/managing-connections.html#connection-strings)。
 
-For help with querying for documents using SQL++ (SQL for JSON), please check the [documentation](https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/index.html).
+有关使用 SQL++（JSON 的 SQL）查询文档的帮助，请查阅 [文档](https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/index.html)。
 
 ```typescript
 import { CouchbaseDocumentLoader } from "@langchain/community/document_loaders/web/couchbase";
 import { Cluster } from "couchbase";
 
-const connectionString = "couchbase://localhost"; // valid couchbase connection string
-const dbUsername = "Administrator"; // valid database user with read access to the bucket being queried
-const dbPassword = "Password"; // password for the database user
+const connectionString = "couchbase://localhost"; // 有效的 couchbase 连接字符串
+const dbUsername = "Administrator"; // 对正在查询的 bucket 具有读取权限的有效数据库用户
+const dbPassword = "Password"; // 数据库用户的密码
 
-// query is a valid SQL++ query
+// query 是一个有效的 SQL++ 查询
 const query = `
     SELECT h.* FROM \`travel-sample\`.inventory.hotel h
     WHERE h.country = 'United States'
     LIMIT 1
 `;
 ```
-### Connect to Couchbase Cluster
+### 连接到 Couchbase 集群
 
 ```typescript
 const couchbaseClient = await Cluster.connect(connectionString, {
@@ -43,41 +43,41 @@ const couchbaseClient = await Cluster.connect(connectionString, {
   configProfile: "wanDevelopment",
 });
 ```
-### Create the Loader
+### 创建加载器
 
 ```typescript
 const loader = new CouchbaseDocumentLoader(
-  couchbaseClient, // The connected couchbase cluster client
-  query // A valid SQL++ query which will return the required data
+  couchbaseClient, // 已连接的 couchbase 集群客户端
+  query // 一个将返回所需数据的有效 SQL++ 查询
 );
 ```
-### Load Documents
+### 加载文档
 
-You can fetch the documents by calling the `load` method of the loader. It will return a list with all the documents. If you want to avoid this blocking call, you can call `lazy_load` method that returns an Iterator.
+您可以通过调用加载器的 `load` 方法来获取文档。它将返回包含所有文档的列表。如果您想避免这种阻塞调用，可以调用 `lazy_load` 方法，它返回一个迭代器（Iterator）。
 
 ```typescript
-// using load method
+// 使用 load 方法
 docs = await loader.load();
 console.log(docs);
 ```
 ```typescript
-// using lazy_load
+// 使用 lazy_load
 for await (const doc of this.lazyLoad()) {
   console.log(doc);
-  break; // break based on required condition
+  break; // 根据所需条件中断
 }
 ```
 
-### Specifying Fields with Content and Metadata
+### 指定内容和元数据的字段
 
-The fields that are part of the Document content can be specified using the `pageContentFields` parameter.
-The metadata fields for the Document can be specified using the `metadataFields` parameter.
+可以使用 `pageContentFields` 参数指定作为文档内容的字段。
+可以使用 `metadataFields` 参数指定文档的元数据字段。
 
 ```typescript
 const loaderWithSelectedFields = new CouchbaseDocumentLoader(
   couchbaseClient,
   query,
-  // pageContentFields
+  // pageContentFields（页面内容字段）
   [
     "address",
     "name",
@@ -88,7 +88,7 @@ const loaderWithSelectedFields = new CouchbaseDocumentLoader(
     "description",
     "reviews",
   ],
-  ["id"] // metadataFields
+  ["id"] // metadataFields（元数据字段）
 );
 
 const filtered_docs = await loaderWithSelectedFields.load();

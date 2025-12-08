@@ -1,12 +1,12 @@
 ---
-title: Doctran interrogate documents
+title: Doctran 询问文档
 ---
 
-Documents used in a vector store knowledge base are typically stored in a narrative or conversational format. However, most user queries are in question format. If we **convert documents into Q&A format** before vectorizing them, we can increase the likelihood of retrieving relevant documents, and decrease the likelihood of retrieving irrelevant documents.
+存储在向量存储知识库中的文档通常以叙事或对话格式存储。然而，大多数用户查询都是以问题形式出现的。如果在向量化之前**将文档转换为问答（Q&A）格式**，我们可以提高检索相关文档的可能性，并降低检索不相关文档的可能性。
 
-We can accomplish this using the [Doctran](https://github.com/psychic-api/doctran) library, which uses OpenAI's function calling feature to "interrogate" documents.
+我们可以使用 [Doctran](https://github.com/psychic-api/doctran) 库来实现这一点，该库利用 OpenAI 的函数调用功能来“询问”（interrogate）文档。
 
-See [this notebook](https://github.com/psychic-api/doctran/blob/main/benchmark.ipynb) for benchmarks on vector similarity scores for various queries based on raw documents versus interrogated documents.
+有关基于原始文档与询问后文档的各种查询的向量相似性得分的基准测试，请参阅[此 Notebook](https://github.com/psychic-api/doctran/blob/main/benchmark.ipynb)。
 
 ```python
 pip install -qU  doctran
@@ -29,9 +29,9 @@ load_dotenv()
 True
 ```
 
-## Input
+## 输入 (Input)
 
-This is the document we'll interrogate
+这是我们将要询问的文档
 
 ```python
 sample_text = """[Generated with ChatGPT]
@@ -115,9 +115,9 @@ qa_transformer = DoctranQATransformer()
 transformed_document = qa_transformer.transform_documents(documents)
 ```
 
-## Output
+## 输出 (Output)
 
-After interrogating a document, the result will be returned as a new document with questions and answers provided in the metadata.
+询问文档后，结果将作为包含元数据中提供的问题和答案的新文档返回。
 
 ```python
 transformed_document = qa_transformer.transform_documents(documents)

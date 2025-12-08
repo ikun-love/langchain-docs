@@ -1,10 +1,11 @@
+```markdown
 ---
 title: OpenVINOEmbeddings
 ---
 
-[OpenVINO™](https://github.com/openvinotoolkit/openvino) is an open-source toolkit for optimizing and deploying AI inference. The OpenVINO™ Runtime supports various hardware [devices](https://github.com/openvinotoolkit/openvino?tab=readme-ov-file#supported-hardware-matrix) including x86 and ARM CPUs, and Intel GPUs. It can help to boost deep learning performance in Computer Vision, Automatic Speech Recognition, Natural Language Processing and other common tasks.
+[OpenVINO™](https://github.com/openvinotoolkit/openvino) 是一个用于优化和部署 AI 推理的开源工具包。OpenVINO™ Runtime 支持多种硬件 [设备](https://github.com/openvinotoolkit/openvino?tab=readme-ov-file#supported-hardware-matrix)，包括 x86 和 ARM CPU，以及 Intel GPU。它可以帮助提升计算机视觉、自动语音识别、自然语言处理及其他常见任务中的深度学习性能。
 
-Hugging Face embedding model can be supported by OpenVINO through `OpenVINOEmbeddings` class. If you have an Intel GPU, you can specify `model_kwargs={"device": "GPU"}` to run inference on it.
+通过 `OpenVINOEmbeddings` 类，OpenVINO 可以支持 Hugging Face 的嵌入模型。如果您拥有 Intel GPU，您可以设置 `model_kwargs={"device": "GPU"}` 来在 GPU 上运行推理。
 
 ```python
 pip install -U-strategy eager "optimum[openvino,nncf]" --quiet
@@ -46,9 +47,9 @@ query_result[:3]
 doc_result = ov_embeddings.embed_documents([text])
 ```
 
-## Export IR model
+## 导出 IR 模型
 
-It is possible to export your embedding model to the OpenVINO IR format with `OVModelForFeatureExtraction`, and load the model from local folder.
+可以使用 `OVModelForFeatureExtraction` 将您的嵌入模型导出为 OpenVINO IR 格式，然后从本地文件夹加载模型。
 
 ```python
 from pathlib import Path
@@ -70,9 +71,9 @@ ov_embeddings = OpenVINOEmbeddings(
 Compiling the model to CPU ...
 ```
 
-## BGE with OpenVINO
+## BGE 配合 OpenVINO 使用
 
-We can also access BGE embedding models via the `OpenVINOBgeEmbeddings` class with OpenVINO.
+我们也可以通过 `OpenVINOBgeEmbeddings` 类并配合 OpenVINO 来访问 BGE 嵌入模型。
 
 ```python
 from langchain_community.embeddings import OpenVINOBgeEmbeddings
@@ -96,12 +97,13 @@ len(embedding)
 384
 ```
 
-For more information refer to:
+更多信息请参考：
 
-* [OpenVINO LLM guide](https://docs.openvino.ai/2024/learn-openvino/llm_inference_guide.html).
+* [OpenVINO LLM 指南](https://docs.openvino.ai/2024/learn-openvino/llm_inference_guide.html)。
 
-* [OpenVINO Documentation](https://docs.openvino.ai/2024/home.html).
+* [OpenVINO 文档](https://docs.openvino.ai/2024/home.html)。
 
-* [OpenVINO Get Started Guide](https://www.intel.com/content/www/us/en/content-details/819067/openvino-get-started-guide.html).
+* [OpenVINO 入门指南](https://www.intel.com/content/www/us/en/content-details/819067/openvino-get-started-guide.html)。
 
-* [RAG Notebook with LangChain](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/llm-rag-langchain).
+* [使用 LangChain 的 RAG Notebook](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/llm-rag-langchain)。
+```

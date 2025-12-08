@@ -1,20 +1,22 @@
+```markdown
 ---
-title: SAP HANA Cloud Vector Engine
+title: SAP HANA Cloud 向量引擎
+description: SAP HANA Cloud Vector Engine 简介与使用指南
 ---
 
->[SAP HANA Cloud Vector Engine](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide) is a vector store fully integrated into the `SAP HANA Cloud` database.
+>[SAP HANA Cloud Vector Engine](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide) 是一个完全集成在 `SAP HANA Cloud` 数据库中的向量存储。
 
-## Setup
+## 设置 (Setup)
 
-Install the `langchain-hana` external integration package, as well as the other packages used throughout this notebook.
+安装 `langchain-hana` 外部集成包，以及本 Notebook 中使用的其他包。
 
 ```python
 pip install -qU langchain-hana
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-Ensure your SAP HANA instance is running. Load your credentials from environment variables and create a connection:
+确保您的 SAP HANA 实例正在运行。从环境变量加载您的凭证并建立连接：
 
 ```python
 import os
@@ -23,7 +25,7 @@ from dotenv import load_dotenv
 from hdbcli import dbapi
 
 load_dotenv()
-# Use connection settings from the environment
+# 使用来自环境的连接设置
 connection = dbapi.connect(
     address=os.environ.get("HANA_DB_ADDRESS"),
     port=os.environ.get("HANA_DB_PORT"),
@@ -34,13 +36,13 @@ connection = dbapi.connect(
 )
 ```
 
-Learn more about SAP HANA in [What is SAP HANA?](https://www.sap.com/products/data-cloud/hana/what-is-sap-hana.html).
+了解更多关于 SAP HANA 的信息，请参阅 [What is SAP HANA?](https://www.sap.com/products/data-cloud/hana/what-is-sap-hana.html)。
 
-### Initialization
+### 初始化 (Initialization)
 
-To initialize a `HanaDB` vector store, you need a database connection and an embedding instance. SAP HANA Cloud Vector Engine supports both external and internal embeddings.
+要初始化一个 `HanaDB` 向量存储，您需要一个数据库连接和一个嵌入模型实例。SAP HANA Cloud Vector Engine 同时支持外部和内部嵌入。
 
-- #### Using External Embeddings
+- #### 使用外部嵌入 (Using External Embeddings)
 
 <EmbeddingTabs/>
 
@@ -52,11 +54,11 @@ from langchain_openai import OpenAIEmbeddings
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 ```
 
-- #### Using Internal Embeddings
+- #### 使用内部嵌入 (Using Internal Embeddings)
 
-Alternatively, you can compute embeddings directly in SAP HANA using its native `VECTOR_EMBEDDING()` function. To enable this, create an instance of `HanaInternalEmbeddings` with your internal model ID and pass it to `HanaDB`. Note that the `HanaInternalEmbeddings` instance is specifically designed for use with `HanaDB` and is not intended for use with other vector store implementations. For more information about internal embedding, see the [SAP HANA VECTOR_EMBEDDING Function](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/vector-embedding-function-vector).
+或者，您可以使用 SAP HANA 的原生 `VECTOR_EMBEDDING()` 函数直接在其中计算嵌入。要启用此功能，请使用您的内部模型 ID 实例化 `HanaInternalEmbeddings` 并将其传递给 `HanaDB`。请注意，`HanaInternalEmbeddings` 实例专为与 `HanaDB` 配合使用而设计，不适用于其他向量存储实现。有关内部嵌入的更多信息，请参阅 [SAP HANA VECTOR_EMBEDDING Function](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/vector-embedding-function-vector)。
 
-> **Caution:** Ensure NLP is enabled in your SAP HANA Cloud instance.
+> **注意 (Caution):** 确保您的 SAP HANA Cloud 实例中已启用 NLP (自然语言处理)。
 
 ```python
 from langchain_hana import HanaInternalEmbeddings
@@ -64,7 +66,7 @@ from langchain_hana import HanaInternalEmbeddings
 embeddings = HanaInternalEmbeddings(internal_embedding_model_id="SAP_NEB.20240715")
 ```
 
-Once you have your connection and embedding instance, create the vector store by passing them to `HanaDB` along with a table name for storing vectors:
+拥有连接和嵌入实例后，通过将它们以及用于存储向量的表名传递给 `HanaDB` 来创建向量存储：
 
 ```python
 from langchain_hana import HanaDB
@@ -74,9 +76,9 @@ db = HanaDB(
 )
 ```
 
-## Example
+## 示例 (Example)
 
-Load the sample document "state_of_the_union.txt" and create chunks from it.
+加载示例文档 "state_of_the_union.txt" 并从中创建文本块 (chunks)。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -96,7 +98,7 @@ print(f"Number of document chunks: {len(text_chunks)}")
 Number of document chunks: 88
 ```
 
-Add the loaded document chunks to the table. For this example, we delete any previous content from the table which might exist from previous runs.
+将加载的文档块添加到表中。对于此示例，我们删除了表中可能在先前运行时已存在的所有内容。
 
 ```python
 # Delete already existing documents from the table
@@ -110,8 +112,8 @@ db.add_documents(text_chunks)
 []
 ```
 
-Perform a query to get the two best-matching document chunks from the ones that were added in the previous step.
-By default "Cosine Similarity" is used for the search.
+执行查询，从上一步添加的文档中获取两个最匹配的文档块。
+默认情况下，搜索使用“余弦相似度 (Cosine Similarity)”。
 
 ```python
 query = "What did the president say about Ketanji Brown Jackson"
@@ -133,7 +135,7 @@ As I said last year, especially to our younger transgender Americans, I will alw
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ```
 
-Query the same content with "Euclidian Distance". The results shoud be the same as with "Cosine Similarity".
+使用“欧几里得距离 (Euclidian Distance)”查询相同的内容。结果应与“余弦相似度”的结果相同。
 
 ```python
 from langchain_hana.utils import DistanceStrategy
@@ -163,9 +165,9 @@ As I said last year, especially to our younger transgender Americans, I will alw
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ```
 
-## Maximal Marginal Relevance Search (MMR)
+## 最大边际相关性搜索 (Maximal Marginal Relevance Search, MMR)
 
-`Maximal marginal relevance` optimizes for similarity to query AND diversity among selected documents. The first 20 (fetch_k) items will be retrieved from the DB. The MMR algorithm will then find the best 2 (k) matches.
+`最大边际相关性 (Maximal marginal relevance)` 优化查询的相关性 **和** 所选文档之间的多样性。将从数据库中检索前 20 个 (fetch\_k) 项目。然后，MMR 算法将找到最佳的 2 (k) 个匹配项。
 
 ```python
 docs = db.max_marginal_relevance_search(query, k=2, fetch_k=20)
@@ -187,41 +189,41 @@ In this struggle as President Zelenskyy said in his speech to the European Parli
 Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
 ```
 
-## Creating an HNSW Vector Index
+## 创建 HNSW 向量索引 (Creating an HNSW Vector Index)
 
-A vector index can significantly speed up top-k nearest neighbor queries for vectors. Users can create a Hierarchical Navigable Small World (HNSW) vector index using the `create_hnsw_index` function.
+向量索引可以显著加速向量的 Top-k 最近邻查询。用户可以使用 `create_hnsw_index` 函数创建**分层可导航小世界 (Hierarchical Navigable Small World, HNSW)** 向量索引。
 
-For more information about creating an index at the database level, please refer to the [official documentation](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/create-vector-index-statement-data-definition).
+有关在数据库级别创建索引的更多信息，请参阅[官方文档](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/create-vector-index-statement-data-definition)。
 
 ```python
-# HanaDB instance uses cosine similarity as default:
+# HanaDB 实例默认使用余弦相似度 (cosine similarity):
 db_cosine = HanaDB(
     embedding=embeddings, connection=connection, table_name="STATE_OF_THE_UNION"
 )
 
-# Attempting to create the HNSW index with default parameters
-db_cosine.create_hnsw_index()  # If no other parameters are specified, the default values will be used
-# Default values: m=64, ef_construction=128, ef_search=200
-# The default index name will be: STATE_OF_THE_UNION_COSINE_SIMILARITY_IDX (verify this naming pattern in HanaDB class)
+# 尝试使用默认参数创建 HNSW 索引
+db_cosine.create_hnsw_index()  # 如果未指定其他参数，将使用默认值
+# 默认值: m=64, ef_construction=128, ef_search=200
+# 默认索引名称将是: STATE_OF_THE_UNION_COSINE_SIMILARITY_IDX (请在 HanaDB 类中验证此命名模式)
 
 
-# Creating a HanaDB instance with L2 distance as the similarity function and defined values
+# 使用 L2 距离作为相似性函数并定义值的 HanaDB 实例
 db_l2 = HanaDB(
     embedding=embeddings,
     connection=connection,
     table_name="STATE_OF_THE_UNION",
-    distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE,  # Specify L2 distance
+    distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE,  # 指定 L2 距离
 )
 
-# This will create an index based on L2 distance strategy.
+# 这将创建一个基于 L2 距离策略的索引。
 db_l2.create_hnsw_index(
     index_name="STATE_OF_THE_UNION_L2_index",
-    m=100,  # Max number of neighbors per graph node (valid range: 4 to 1000)
-    ef_construction=200,  # Max number of candidates during graph construction (valid range: 1 to 100000)
-    ef_search=500,  # Min number of candidates during the search (valid range: 1 to 100000)
+    m=100,  # 每个图节点的最大邻居数 (有效范围: 4 到 1000)
+    ef_construction=200,  # 图构造期间的最大候选数 (有效范围: 1 到 100000)
+    ef_search=500,  # 搜索期间的最小候选数 (有效范围: 1 到 100000)
 )
 
-# Use L2 index to perform MMR
+# 使用 L2 索引执行 MMR
 docs = db_l2.max_marginal_relevance_search(query, k=2, fetch_k=20)
 for doc in docs:
     print("-" * 80)
@@ -241,12 +243,12 @@ In this struggle as President Zelenskyy said in his speech to the European Parli
 Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
 ```
 
-**Key Points**:
+**关键点 (Key Points)**:
 
-- **Similarity Function**: The similarity function for the index is **cosine similarity** by default. If you want to use a different similarity function (e.g., `L2` distance), you need to specify it when initializing the `HanaDB` instance.
-- **Default Parameters**: In the `create_hnsw_index` function, if the user does not provide custom values for parameters like `m`, `ef_construction`, or `ef_search`, the default values (e.g., `m=64`, `ef_construction=128`, `ef_search=200`) will be used automatically. These values ensure the index is created with reasonable performance without requiring user intervention.
+- **相似性函数 (Similarity Function)**: 索引的相似性函数默认为**余弦相似度**。如果您想使用不同的相似性函数（例如 `L2` 距离），则需要在初始化 `HanaDB` 实例时指定它。
+- **默认参数 (Default Parameters)**: 在 `create_hnsw_index` 函数中，如果用户未为 `m`、`ef_construction` 或 `ef_search` 等参数提供自定义值，系统将自动使用默认值（例如 `m=64`、`ef_construction=128`、`ef_search=200`）。这些值确保在无需用户干预的情况下创建具有合理性能的索引。
 
-## Basic Vectorstore Operations
+## 基本向量存储操作 (Basic Vectorstore Operations)
 
 ```python
 db = HanaDB(
@@ -261,7 +263,7 @@ db.delete(filter={})
 True
 ```
 
-We can add simple text documents to the existing table.
+我们可以向现有表中添加简单的文本文档。
 
 ```python
 docs = [Document(page_content="Some text"), Document(page_content="Other docs")]
@@ -272,7 +274,7 @@ db.add_documents(docs)
 []
 ```
 
-Add documents with metadata.
+添加带有元数据的文档。
 
 ```python
 docs = [
@@ -292,7 +294,7 @@ db.add_documents(docs)
 []
 ```
 
-Query documents with specific metadata.
+按特定元数据查询文档。
 
 ```python
 docs = db.similarity_search("foobar", k=2, filter={"quality": "bad"})
@@ -309,7 +311,7 @@ foo
 {'start': 100, 'end': 150, 'doc_name': 'foo.txt', 'quality': 'bad'}
 ```
 
-Delete documents with specific metadata.
+按特定元数据删除文档。
 
 ```python
 db.delete(filter={"quality": "bad"})
@@ -323,26 +325,26 @@ print(len(docs))
 0
 ```
 
-## Advanced filtering
+## 高级过滤 (Advanced filtering)
 
-In addition to the basic value-based filtering capabilities, it is possible to use more advanced filtering.
-The table below shows the available filter operators.
+除了基本的基于值的过滤功能外，还可以使用更高级的过滤。
+下表显示了可用的过滤运算符。
 
-| Operator | Semantic                 |
+| 运算符 (Operator) | 语义 (Semantic) |
 |----------|-------------------------|
-| `$eq`    | Equality (==)           |
-| `$ne`    | Inequality (!=)         |
-| `$lt`    | Less than (&lt;)           |
-| `$lte`   | Less than or equal (&lt;=) |
-| `$gt`    | Greater than (>)        |
-| `$gte`   | Greater than or equal (>=) |
-| `$in`    | Contained in a set of given values  (in)    |
-| `$nin`   | Not contained in a set of given values  (not in)  |
-| `$between` | Between the range of two boundary values |
-| `$like`  | Text equality based on the "LIKE" semantics in SQL (using "%" as wildcard)  |
-| `$contains` | Filters documents containing a specific keyword |
-| `$and`   | Logical "and", supporting two or more operands |
-| `$or`    | Logical "or", supporting two or more operands |
+| `$eq`    | 等于 (==)           |
+| `$ne`    | 不等于 (!=)         |
+| `$lt`    | 小于 (<)           |
+| `$lte`   | 小于或等于 (<=) |
+| `$gt`    | 大于 (>)        |
+| `$gte`   | 大于或等于 (>=) |
+| `$in`    | 包含在一组给定值中 (in)    |
+| `$nin`   | 不包含在一组给定值中 (not in)  |
+| `$between` | 在两个边界值之间 |
+| `$like`  | 基于 SQL 中的 "LIKE" 语义的文本相等性 (使用 "%" 作为通配符)  |
+| `$contains` | 过滤包含特定关键字的文档 |
+| `$and`   | 逻辑 "与"，支持两个或多个操作数 |
+| `$or`    | 逻辑 "或"，支持两个或多个操作数 |
 
 ```python
 # Prepare some test documents
@@ -380,7 +382,7 @@ def print_filter_result(result):
         print(doc.metadata)
 ```
 
-Filtering with `$ne`, `$gt`, `$gte`, `$lt`, `$lte`
+使用 `$ne`、`$gt`、`$gte`、`$lt`、`$lte` 进行过滤
 
 ```python
 advanced_filter = {"id": {"$ne": 1}}
@@ -421,7 +423,7 @@ Filter: {'id': {'$lte': 1}}
 {'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
 ```
 
-Filtering with `$between`, `$in`, `$nin`
+使用 `$between`、`$in`、`$nin` 进行过滤
 
 ```python
 advanced_filter = {"id": {"$between": (1, 2)}}
@@ -448,7 +450,7 @@ Filter: {'name': {'$nin': ['Adam Smith', 'Bob Johnson']}}
 {'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
 ```
 
-Text filtering with `$like`
+使用 `$like` 进行文本过滤
 
 ```python
 advanced_filter = {"name": {"$like": "a%"}}
@@ -468,7 +470,7 @@ Filter: {'name': {'$like': '%a%'}}
 {'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
 ```
 
-Text filtering with `$contains`
+使用 `$contains` 进行文本过滤
 
 ```python
 advanced_filter = {"name": {"$contains": "bob"}}
@@ -499,7 +501,7 @@ Filter: {'name': {'$contains': 'Adam Smith'}}
 {'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
 ```
 
-Combined filtering with `$and`, `$or`
+使用 `$and`、`$or` 进行组合过滤
 
 ```python
 advanced_filter = {"$or": [{"id": 1}, {"name": "bob"}]}
@@ -534,7 +536,7 @@ Filter: {'$and': [{'name': {'$contains': 'bob'}}, {'name': {'$contains': 'johnso
 {'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
 ```
 
-## Using a VectorStore as a retriever in chains for retrieval augmented generation (RAG)
+## 在检索增强生成 (RAG) 的链中使用向量存储作为检索器 (Using a VectorStore as a retriever in chains for retrieval augmented generation (RAG))
 
 ```python
 # Access the vector DB with a new table
@@ -554,7 +556,7 @@ db.add_documents(text_chunks)
 retriever = db.as_retriever()
 ```
 
-Define the prompt.
+定义提示模板 (Define the prompt)。
 
 ```python
 from langchain_core.prompts import PromptTemplate
@@ -576,7 +578,7 @@ PROMPT = PromptTemplate(
 chain_type_kwargs = {"prompt": PROMPT}
 ```
 
-Create the ConversationalRetrievalChain, which handles the chat history and the retrieval of similar document chunks to be added to the prompt.
+创建 `ConversationalRetrievalChain`，它处理聊天历史记录以及检索相似文档块以添加到提示中的过程。
 
 ```python
 from langchain.chains import ConversationalRetrievalChain
@@ -597,7 +599,7 @@ qa_chain = ConversationalRetrievalChain.from_llm(
 )
 ```
 
-Ask the first question (and verify how many text chunks have been used).
+提出第一个问题（并验证使用了多少个文本块）。
 
 ```python
 question = "What about Mexico and Guatemala?"
@@ -620,7 +622,7 @@ The United States has set up joint patrols with Mexico and Guatemala to catch mo
 Number of used source document chunks: 5
 ```
 
-Examine the used chunks of the chain in detail. Check if the best ranked chunk contains info about "Mexico and Guatemala" as mentioned in the question.
+详细检查链中使用的块。检查排名最佳的块是否包含有关问题中提到的“墨西哥和危地马拉”的信息。
 
 ```python
 for doc in source_docs:
@@ -629,7 +631,7 @@ for doc in source_docs:
     print(doc.metadata)
 ```
 
-Ask another question on the same conversational chain. The answer should relate to the previous answer given.
+在同一对话链中提出另一个问题。答案应该与先前的答案相关。
 
 ```python
 question = "How many casualties were reported after that?"
@@ -646,13 +648,13 @@ Answer from LLM:
 Countries like Mexico and Guatemala are participating in joint patrols to catch human traffickers. The United States is also working with partners in South and Central America to host more refugees and secure their borders. Additionally, the U.S. is working with twenty-seven members of the European Union, as well as countries like France, Germany, Italy, the United Kingdom, Canada, Japan, Korea, Australia, New Zealand, and Switzerland.
 ```
 
-## Standard tables vs. "custom" tables with vector data
+## 标准表与包含向量数据的“自定义”表 (Standard tables vs. "custom" tables with vector data)
 
-As default behaviour, the table for the embeddings is created with 3 columns:
+作为默认行为，嵌入的表包含 3 列：
 
-- A column `VEC_TEXT`, which contains the text of the Document
-- A column `VEC_META`, which contains the metadata of the Document
-- A column `VEC_VECTOR`, which contains the embeddings-vector of the Document's text
+- 一列 `VEC_TEXT`，包含文档的文本
+- 一列 `VEC_META`，包含文档的元数据
+- 一列 `VEC_VECTOR`，包含文档文本的嵌入向量
 
 ```python
 # Access the vector DB with a new table
@@ -677,7 +679,7 @@ db.add_documents(docs)
 []
 ```
 
-Show the columns in table "LANGCHAIN_DEMO_NEW_TABLE"
+显示表 "LANGCHAIN_DEMO_NEW_TABLE" 中的列
 
 ```python
 cur = connection.cursor()
@@ -696,7 +698,7 @@ cur.close()
 ('VEC_VECTOR', 'REAL_VECTOR')
 ```
 
-Show the value of the inserted document in the three columns
+显示在三列中插入的文档的值
 
 ```python
 cur = connection.cursor()
@@ -710,13 +712,13 @@ print(rows[0][2])  # The vector
 cur.close()
 ```
 
-Custom tables must have at least three columns that match the semantics of a standard table
+自定义表至少需要具有与标准表语义匹配的三个列：
 
-- A column with type `NCLOB` or `NVARCHAR` for the text/context of the embeddings
-- A column with type `NCLOB` or `NVARCHAR` for the metadata
-- A column with type `REAL_VECTOR` for the embedding vector
+- 一个 `NCLOB` 或 `NVARCHAR` 类型的列，用于嵌入的文本/上下文
+- 一个 `NCLOB` 或 `NVARCHAR` 类型的列，用于元数据
+- 一个 `REAL_VECTOR` 类型的列，用于嵌入向量
 
-The table can contain additional columns. When new Documents are inserted into the table, these additional columns must allow NULL values.
+该表可以包含额外的列。当新文档插入到表中时，这些附加列必须允许 NULL 值。
 
 ```python
 # Create a new table "MY_OWN_TABLE_ADD" with three "standard" columns and one additional column
@@ -769,7 +771,7 @@ Some other text
 <memory at 0x110f856c0>
 ```
 
-Add another document and perform a similarity search on the custom table.
+添加另一个文档并在自定义表上执行相似性搜索。
 
 ```python
 docs = [
@@ -794,9 +796,9 @@ Some more text
 Some other text
 ```
 
-### Filter Performance Optimization with Custom Columns
+### 使用自定义列进行过滤性能优化 (Filter Performance Optimization with Custom Columns)
 
-To allow flexible metadata values, all metadata is stored as JSON in the metadata column by default. If some of the used metadata keys and value types are known, they can be stored in additional columns instead by creating the target table with the key names as column names and passing them to the HanaDB constructor via the specific_metadata_columns list. Metadata keys that match those values are copied into the special column during insert. Filters use the special columns instead of the metadata JSON column for keys in the specific_metadata_columns list.
+为了支持灵活的元数据值，所有元数据默认存储在元数据列中的 JSON 格式中。如果已知一些使用的元数据键和值类型，可以通过创建包含键名作为列名的目标表，并通过 `specific_metadata_columns` 列表将它们传递给 HanaDB 构造函数，将它们存储在额外的列中。在插入过程中，匹配这些值的元数据键将被复制到特殊列中。过滤操作将使用特殊列而不是元数据 JSON 列中对应于 `specific_metadata_columns` 列表中的键的值。
 
 ```python
 # Create a new table "PERFORMANT_CUSTOMTEXT_FILTER" with three "standard" columns and one additional column
@@ -859,7 +861,7 @@ Some other text
 <memory at 0x110f859c0>
 ```
 
-The special columns are completely transparent to the rest of the langchain interface. Everything works as it did before, just more performant.
+特殊列对 Langchain 接口是完全透明的。一切都像以前一样工作，只是性能更好了。
 
 ```python
 docs = [
@@ -888,4 +890,5 @@ for doc in docs:
 Some more text
 --------------------------------------------------------------------------------
 Some other text
+```
 ```

@@ -2,12 +2,12 @@
 title: Anyscale
 ---
 
-[Anyscale](https://www.anyscale.com/) is a fully-managed [Ray](https://www.ray.io/) platform, on which you can build, deploy, and manage scalable AI and Python applications
+[Anyscale](https://www.anyscale.com/) 是一个完全托管的 [Ray](https://www.ray.io/) 平台，您可以在其上构建、部署和管理可扩展的人工智能（AI）和 Python 应用程序。
 
-This example goes over how to use LangChain to interact with [Anyscale Endpoint](https://app.endpoints.anyscale.com/).
+本示例将介绍如何使用 LangChain 与 [Anyscale Endpoint](https://app.endpoints.anyscale.com/) 进行交互。
 
 ```python
-##Installing the langchain packages needed to use the integration
+## 安装使用集成所需的 langchain 包
 pip install -qU langchain-community
 ```
 
@@ -31,9 +31,9 @@ from langchain_core.prompts import PromptTemplate
 ```
 
 ```python
-template = """Question: {question}
+template = """问题: {question}
 
-Answer: Let's think step by step."""
+回答: 让我们一步一步来思考。"""
 
 prompt = PromptTemplate.from_template(template)
 ```
@@ -47,24 +47,24 @@ llm_chain = prompt | llm
 ```
 
 ```python
-question = "When was George Washington president?"
+question = "乔治·华盛顿是哪一年担任总统的？"
 
 llm_chain.invoke({"question": question})
 ```
 
-With Ray, we can distribute the queries without asynchronized implementation. This not only applies to Anyscale LLM model, but to any other LangChain LLM models which do not have `_acall` or `_agenerate` implemented
+使用 Ray，我们无需实现异步（asynchronized）代码即可分布式地发送查询。这不仅适用于 Anyscale LLM 模型，也适用于任何其他未实现 `_acall` 或 `_agenerate` 方法的 LangChain LLM 模型。
 
 ```python
 prompt_list = [
-    "When was George Washington president?",
-    "Explain to me the difference between nuclear fission and fusion.",
-    "Give me a list of 5 science fiction books I should read next.",
-    "Explain the difference between Spark and Ray.",
-    "Suggest some fun holiday ideas.",
-    "Tell a joke.",
-    "What is 2+2?",
-    "Explain what is machine learning like I am five years old.",
-    "Explain what is artifical intelligence.",
+    "乔治·华盛顿是哪一年担任总统的？",
+    "请向我解释核裂变和核聚变之间的区别。",
+    "给我推荐 5 本我应该阅读的科幻小说。",
+    "解释 Spark 和 Ray 之间的区别。",
+    "建议一些有趣的度假方式。",
+    "讲个笑话。",
+    "2+2 等于几？",
+    "像五岁小孩一样向我解释什么是机器学习。",
+    "解释什么是人工智能。",
 ]
 ```
 

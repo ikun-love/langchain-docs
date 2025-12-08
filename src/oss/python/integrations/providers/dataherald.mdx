@@ -2,12 +2,12 @@
 title: Dataherald
 ---
 
->[Dataherald](https://www.dataherald.com) is a natural language-to-SQL.
+> [Dataherald](https://www.dataherald.com) 是一个自然语言转 SQL 的（系统）。
 
-This page covers how to use the `Dataherald API` within LangChain.
+本页面介绍如何在 LangChain 中使用 `Dataherald API`。
 
-## Installation and Setup
-- Install requirements with
+## 安装与设置
+- 使用以下命令安装所需依赖：
 <CodeGroup>
 ```bash pip
 pip install dataherald
@@ -17,26 +17,26 @@ pip install dataherald
 uv add dataherald
 ```
 </CodeGroup>
-- Go to dataherald and sign up [here](https://www.dataherald.com)
-- Create an app and get your `API KEY`
-- Set your `API KEY` as an environment variable `DATAHERALD_API_KEY`
+- 访问 dataherald 并在 [此处](https://www.dataherald.com) 注册
+- 创建一个应用并获取您的 `API KEY`
+- 将您的 `API KEY` 设置为环境变量 `DATAHERALD_API_KEY`
 
 
-## Wrappers
+## 包装器 (Wrappers)
 
-### Utility
+### 实用工具 (Utility)
 
-There exists a DataheraldAPIWrapper utility which wraps this API. To import this utility:
+存在一个 `DataheraldAPIWrapper` 实用工具来包装此 API。要导入此实用工具：
 
 ```python
 from langchain_community.utilities.dataherald import DataheraldAPIWrapper
 ```
 
-For a more detailed walkthrough of this wrapper, see [this notebook](/oss/integrations/tools/dataherald).
+有关此包装器的更详细演练，请参阅[此 Notebook](/oss/integrations/tools/dataherald)。
 
-### Tool
+### 工具 (Tool)
 
-You can use the tool in an agent like this:
+您可以像这样在 Agent 中使用该工具：
 ```python
 from langchain_community.utilities.dataherald import DataheraldAPIWrapper
 from langchain_community.tools.dataherald.tool import DataheraldTextToSQL
@@ -53,13 +53,13 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_pa
 agent_executor.invoke({"input":"Return the sql for this question: How many employees are in the company?"})
 ```
 
-Output
+输出
 ```shell
 > Entering new AgentExecutor chain...
-I need to use a tool that can convert this question into SQL.
+我需要使用一个可以将该问题转换为 SQL 的工具。
 Action: dataherald
 Action Input: How many employees are in the company?Answer: SELECT
-    COUNT(*) FROM employeesI now know the final answer
+    COUNT(*) FROM employees我现在知道了最终答案
 Final Answer: SELECT
     COUNT(*)
 FROM
@@ -69,4 +69,4 @@ FROM
 {'input': 'Return the sql for this question: How many employees are in the company?', 'output': "SELECT \n    COUNT(*)\nFROM \n    employees"}
 ```
 
-For more information on tools, see [this page](/oss/integrations/tools).
+关于工具的更多信息，请参阅[此页面](/oss/integrations/tools)。

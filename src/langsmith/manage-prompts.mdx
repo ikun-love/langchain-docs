@@ -1,112 +1,111 @@
 ---
-title: Manage prompts
-sidebarTitle: Manage prompts
+title: 管理提示词
+sidebarTitle: 管理提示词
 ---
 
-LangSmith provides several tools to help you manage your [_prompts_](/langsmith/prompt-engineering-concepts) effectively. This page describes the following features:
+LangSmith 提供了多种工具来帮助您有效地管理您的 [_提示词_](/langsmith/prompt-engineering-concepts)。本页介绍以下功能：
 
-- [Commit tags](#commit-tags) for version control and environment management.
-- [Webhook triggers](#trigger-a-webhook-on-prompt-commit) for automating workflows when prompts are updated.
-- [Public prompt hub](#public-prompt-hub) for discovering and using community-created prompts.
+- 使用 [提交标签](#commit-tags) 进行版本控制和环境管理。
+- [在提示词提交时触发 Webhook](#trigger-a-webhook-on-prompt-commit)，以便在提示词更新时实现工作流自动化。
+- [公共提示词中心](#public-prompt-hub)，用于发现和使用社区创建的提示词。
 
-## Commit tags
+## 提交标签 (Commit tags)
 
-[_Commit tags_](/langsmith/prompt-engineering-concepts#tags) are labels that reference a specific [_commit_](/langsmith/prompt-engineering-concepts#commits) in your prompt's version history. They help you mark significant versions and control which versions run in different environments. By referencing tags rather than commit IDs in your code, you can update which version is being used without modifying the code itself.
+[_提交标签_](/langsmith/prompt-engineering-concepts#tags) 是引用提示词版本历史中特定 [_提交_](/langsmith/prompt-engineering-concepts#commits) 的标签。它们帮助您标记重要的版本，并控制不同环境中运行的版本。通过在代码中引用标签而不是提交 ID，您可以在不修改代码本身的情况下，更新正在使用的版本。
 
-Each tag references exactly one commit, though you can reassign a tag to point to a different commit.
+每个标签精确引用一个提交，但您可以将标签重新分配给指向另一个提交。
 
 <Note>
-**Not to be confused with resource tags**: Commit tags are specific to prompt versioning and reference individual commits in a prompt's history. [Resource tags](/langsmith/set-up-resource-tags) are key-value pairs used to organize workspace resources like projects, datasets, and prompts. While both can use similar naming conventions (like `prod` or `staging`), commit tags control **which version** of a prompt runs, while resource tags help you **organize and filter** resources across your workspace.
+**不要与资源标签混淆**：提交标签专门用于提示词版本控制，引用提示词历史中的单个提交。 **[资源标签](/langsmith/set-up-resource-tags)** 是一对键值，用于组织工作区资源，如项目、数据集和提示词。虽然两者都可以使用相似的命名约定（如 `prod` 或 `staging`），但提交标签控制提示词运行的**哪个版本**，而资源标签则帮助您**组织和筛选**工作区中的资源。
 </Note>
 
-### Create a tag
+### 创建标签
 
-To create a tag, navigate to the **Commits** tab for a prompt. Click on the tag icon next to the commit you want to tag. Click **New Tag** and enter a name for the tag.
+要创建标签，请导航到提示词的 **Commits**（提交）选项卡。点击您想标记的提交旁边的标签图标（tag icon）。点击 **New Tag**（新建标签）并输入标签名称。
 
 ![](/langsmith/images/commits-tab.png) ![](/langsmith/images/create-new-prompt-tag.png)
 
-### Move a tag
+### 移动标签
 
-To point a tag to a different commit, click on the tag icon next to the destination commit, and select the tag you want to move. This will automatically update the tag to point to the new commit.
+要将标签指向不同的提交，请点击目标提交旁边的标签图标，然后选择您想要移动的标签。这将自动更新该标签以指向新的提交。
 
 ![](/langsmith/images/move-prompt-tag.png)
 
-### Delete a tag
+### 删除标签
 
-To delete a tag, click on the delete icon next to the tag you want to delete. This will delete the tag altogether and it will no longer be associated with any commit.
+要删除标签，请点击您想要删除的标签旁边的删除图标。这将彻底删除该标签，使其不再与任何提交相关联。
 
-### Use tags in code
+### 在代码中使用标签
 
-Tags provide a stable way to reference specific versions of your prompts in code. Instead of using commit hashes directly, you can reference tags that can be updated without changing your code.
+标签提供了一种稳定引用的方式，用于在代码中引用特定版本的提示词。您不必直接使用提交哈希值，而是可以引用标签，这样即使版本更新，也无需更改代码。
 
-Here is an example of pulling a prompt by tag in Python:
+以下是如何在 Python 中通过标签拉取提示词的示例：
 
 ```python
 prompt = client.pull_prompt("joke-generator:prod")
-# If prod tag points to commit a1b2c3d4, this is equivalent to:
+# 如果 prod 标签指向提交 a1b2c3d4，这等效于：
 prompt = client.pull_prompt("joke-generator:a1b2c3d4")
 ```
 
-For more information on how to use prompts in code, refer to [Managing prompts programmatically](/langsmith/manage-prompts-programmatically).
+有关如何在代码中使用提示词的更多信息，请参阅 [以编程方式管理提示词](/langsmith/manage-prompts-programmatically)。
 
-## Trigger a webhook on prompt commit
+## 在提示词提交时触发 Webhook
 
-You can configure a webhook to be triggered whenever a commit is made to a prompt.
+您可以配置一个 Webhook，在对提示词进行任何提交时触发。
 
-Some common use cases of this include:
+这包括一些常见的用例：
 
-* Triggering a CI/CD pipeline when prompts are updated.
-* Synchronizing prompts with a GitHub repository.
-* Notifying team members about prompt modifications.
+* 在更新提示词时触发 CI/CD 流水线。
+* 将提示词与 GitHub 仓库同步。
+* 通知团队成员提示词修改情况。
 
-### Configure a webhook
+### 配置 Webhook
 
-Navigate to the **Prompts** section in the left-hand sidebar or from the application homepage. In the top right corner, click on the `+ Webhook` button.
+导航到左侧边栏的 **Prompts**（提示词）部分，或从应用程序主页进入。在右上角，点击 `+ Webhook` 按钮。
 
-Add a webhook URL and any required headers.
+添加一个 Webhook URL 和所有必需的标头（headers）。
 
 <Note>
-You can only configure one webhook per workspace. If you want to configure multiple per workspace or set up a different webhook for each prompt, let us know in the [LangChain Forum](https://forum.langchain.com/).
+每个工作区只能配置一个 Webhook。如果您希望为每个工作区配置多个，或者为每个提示词设置不同的 Webhook，请在 [LangChain 论坛](https://forum.langchain.com/) 告知我们。
 </Note>
 
-To test out your webhook, click the **Send test notification** button. This will send a test notification to the webhook URL you provided with a sample payload.
+要测试您的 Webhook，请点击 **Send test notification**（发送测试通知）按钮。这将向您提供的 Webhook URL 发送一个测试通知，其中包含一个示例有效负载（payload）。
 
-The sample payload is a JSON object with the following fields:
+示例有效负载是一个包含以下字段的 JSON 对象：
 
-- `prompt_id`: The ID of the prompt that was committed.
-- `prompt_name`: The name of the prompt that was committed.
-- `commit_hash`: The commit hash of the prompt.
-- `created_at`: The date of the commit.
-- `created_by`: The author of the commit.
-- `manifest`: The manifest of the prompt.
+- `prompt_id`: 已提交提示词的 ID。
+- `prompt_name`: 已提交提示词的名称。
+- `commit_hash`: 提示词的提交哈希值。
+- `created_at`: 提交的日期。
+- `created_by`: 提交的作者。
+- `manifest`: 提示词的清单（manifest）。
 
-### Trigger the webhook
+### 触发 Webhook
 
-Commit to a prompt to trigger the webhook you've configured.
+对提示词进行提交以触发您已配置的 Webhook。
 
-#### Use the Playground
+#### 使用 Playground
 
-If you do this in the Playground, you'll be prompted to deselect the webhooks you'd like to avoid triggering.
+如果您在 Playground 中进行操作，系统会提示您取消选择想要避免触发的 Webhook。
 
 ![](/langsmith/images/commit-prompt-playground.png)
 
-#### Using the API
+#### 使用 API
 
-If you commit via the API, you can specify to skip triggering the webhook by setting the `skip_webhooks` parameter to `true` or to an array of webhook ids to ignore. Refer to the [API docs](https://api.smith.langchain.com/redoc#tag/commits/operation/create_commit_api_v1_commits__owner___repo__post) for more information.
+如果您通过 API 进行提交，可以通过将 `skip_webhooks` 参数设置为 `true` 或一个要忽略的 Webhook ID 数组来指定跳过触发 Webhook。有关更多信息，请参阅 [API 文档](https://api.smith.langchain.com/redoc#tag/commits/operation/create_commit_api_v1_commits__owner___repo__post)。
 
-## Public prompt hub
+## 公共提示词中心 (Public prompt hub)
 
-LangSmith's public prompt hub is a collection of prompts that have been created by the LangChain community that you can use for reference.
+LangSmith 的公共提示词中心是 LangChain 社区创建的提示词集合，供您参考使用。
 
 <Note>
-Note that prompts are user-generated and unverified. LangChain does not review or endorse public prompts, use these at your own risk. Use of Prompt Hub is subject to our [Terms of Service](https://www.langchain.com/terms-of-service).
+请注意，提示词是用户生成且未经验证的。LangChain 不会审查或认可公共提示词，请自行承担使用风险。使用提示词中心需要遵守我们的 [服务条款](https://www.langchain.com/terms-of-service)。
 </Note>
 
-Navigate to the **Prompts** section of the left-hand sidebar and click on **Browse all Public Prompts in the LangChain Hub**.
+导航到左侧边栏的 **Prompts**（提示词）部分，然后点击 **Browse all Public Prompts in the LangChain Hub**（在 LangChain Hub 中浏览所有公共提示词）。
 
-Here you'll find all of the publicly listed prompts in the LangChain Hub. You can search for prompts by name, handle, use cases, descriptions, or models. You can fork prompts to your personal organization, view the prompt's details, and run the prompt in the Playground. You can [pull any public prompt into your code](/langsmith/manage-prompts-programmatically) using the SDK.
+在这里，您将找到 LangChain Hub 中所有公开列出的提示词。您可以按名称、句柄、用例、描述或模型搜索提示词。您可以将提示词 Fork（分支）到您的个人组织，查看提示词详情，并在 Playground 中运行提示词。您可以使用 SDK 将 [任何公共提示词拉取到您的代码中](/langsmith/manage-prompts-programmatically)。
 
-To view prompts tied to your workspace, visit the **Prompts** tab in the sidebar.
+要查看与您的工作区关联的提示词，请访问侧边栏中的 **Prompts** 选项卡。
 
 ![](/langsmith/images/prompts-tab.png)
-

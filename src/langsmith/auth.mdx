@@ -1,90 +1,89 @@
 ---
-title: Authentication & access control
-sidebarTitle: Overview
+title: 认证与访问控制
+sidebarTitle: 概述
 ---
 
-LangSmith provides a flexible authentication and authorization system that can integrate with most authentication schemes.
+LangSmith 提供了一个灵活的认证和授权系统，可以与大多数身份验证方案集成。
 
-## Core Concepts
+## 核心概念
 
-### Authentication vs authorization
+### 认证 (Authentication) vs 授权 (Authorization)
 
-While often used interchangeably, these terms represent distinct security concepts:
+虽然这两个术语经常互换使用，但它们代表了截然不同的安全概念：
 
-* [**Authentication**](#authentication) ("AuthN") verifies _who_ you are. This runs as middleware for every request.
-* [**Authorization**](#authorization) ("AuthZ") determines _what you can do_. This validates the user's privileges and roles on a per-resource basis.
+* [**认证 (Authentication)**](#authentication)（简称 "AuthN"）用于验证“你是谁”。这作为中间件对所有请求运行。
+* [**授权 (Authorization)**](#authorization)（简称 "AuthZ"）用于确定“你能做什么”。这会根据资源对用户的权限和角色进行验证。
 
-In LangSmith, authentication is handled by your @[`@auth.authenticate`][Auth.authenticate] handler, and authorization is handled by your @[`@auth.on`][Auth.on] handlers.
+在 LangSmith 中，身份验证由您的 @[`@auth.authenticate`][Auth.authenticate] 处理程序处理，而授权由您的 @[`@auth.on`][Auth.on] 处理程序处理。
 
-## Default security models
+## 默认安全模型
 
-LangSmith provides different security defaults:
+LangSmith 提供不同的安全默认设置：
 
 ### LangSmith
 
-* Uses LangSmith API keys by default
-* Requires valid API key in `x-api-key` header
-* Can be customized with your auth handler
+* 默认使用 LangSmith API 密钥
+* 要求在 `x-api-key` 请求头中提供有效的 API 密钥
+* 可以使用您的自定义身份验证处理程序进行定制
 
 <Note>
-**Custom auth**
-Custom auth **is supported** for all plans in LangSmith.
+**自定义身份验证**
+LangSmith 支持所有计划的自定义身份验证。
 </Note>
 
-### Self-hosted
+### 自托管 (Self-hosted)
 
-* No default authentication
-* Complete flexibility to implement your security model
-* You control all aspects of authentication and authorization
+* 没有默认身份验证
+* 完全灵活，可实现您自己的安全模型
+* 您控制身份验证和授权的所有方面
 
+## 系统架构
 
-## System architecture
+典型的身份验证设置涉及三个主要组件：
 
-A typical authentication setup involves three main components:
+1. **身份提供方 (Authentication Provider) / IdP**
+  * 一个专门管理用户身份和凭证的服务
+  * 处理用户注册、登录、密码重置等
+  * 在身份验证成功后签发令牌（JWT、会话令牌等）
+  * 示例：Auth0、Supabase Auth、Okta 或您自己的身份验证服务器
+2. **LangGraph 后端 (Resource Server)**（资源服务器）
+  * 包含业务逻辑和受保护资源的 LangGraph 应用程序
+  * 使用身份提供方验证令牌
+  * 根据用户身份和权限强制执行访问控制
+  * 不直接存储用户凭证
+3. **客户端应用程序 (Client Application)**（前端）
+  * Web 应用、移动应用或 API 客户端
+  * 收集时效性用户凭证并发送给身份提供方
+  * 从身份提供方接收令牌
+  * 在发往 LangGraph 后端的请求中包含这些令牌
 
-1. **Authentication Provider** (Identity Provider/IdP)
-  * A dedicated service that manages user identities and credentials
-  * Handles user registration, login, password resets, etc.
-  * Issues tokens (JWT, session tokens, etc.) after successful authentication
-  * Examples: Auth0, Supabase Auth, Okta, or your own auth server
-2. **LangGraph Backend** (Resource Server)
-  * Your LangGraph application that contains business logic and protected resources
-  * Validates tokens with the auth provider
-  * Enforces access control based on user identity and permissions
-  * Doesn't store user credentials directly
-3. **Client Application** (Frontend)
-  * Web app, mobile app, or API client
-  * Collects time-sensitive user credentials and sends to auth provider
-  * Receives tokens from auth provider
-  * Includes these tokens in requests to LangGraph backend
-
-Here's how these components typically interact:
+以下是这些组件的典型交互方式：
 
 ```mermaid
 sequenceDiagram
-    participant Client as Client App
-    participant Auth as Auth Provider
-    participant LG as LangGraph Backend
+    participant Client as 客户端应用
+    participant Auth as 身份提供方
+    participant LG as LangGraph 后端
 
-    Client->>Auth: 1. Login (username/password)
-    Auth-->>Client: 2. Return token
-    Client->>LG: 3. Request with token
-    Note over LG: 4. Validate token (@auth.authenticate)
-    LG-->>Auth:  5. Fetch user info
-    Auth-->>LG: 6. Confirm validity
-    Note over LG: 7. Apply access control (@auth.on.*)
-    LG-->>Client: 8. Return resources
+    Client->>Auth: 1. 登录 (用户名/密码)
+    Auth-->>Client: 2. 返回令牌
+    Client->>LG: 3. 带令牌的请求
+    Note over LG: 4. 验证令牌 (@auth.authenticate)
+    LG-->>Auth:  5. 获取用户信息
+    Auth-->>LG: 6. 确认有效性
+    Note over LG: 7. 应用访问控制 (@auth.on.*)
+    LG-->>Client: 8. 返回资源
 ```
 
-Your @[`@auth.authenticate`][Auth.authenticate] handler in LangGraph handles steps 4-6, while your @[`@auth.on`][Auth.on] handlers implement step 7.
+LangGraph 中的 @[`@auth.authenticate`][Auth.authenticate] 处理程序负责步骤 4-6，而 @[`@auth.on`][Auth.on] 处理程序负责实现步骤 7。
 
-## Authentication
+## 身份验证 (Authentication)
 
-Authentication in LangGraph runs as middleware on every request. Your @[`@auth.authenticate`][Auth.authenticate] handler receives request information and should:
+LangGraph 中的身份验证作为中间件在每次请求上运行。您的 @[`@auth.authenticate`][Auth.authenticate] 处理程序会接收请求信息，并且应该：
 
-1. Validate the credentials
-2. Return @[user info][MinimalUserDict] containing the user's identity and user information if valid
-3. Raise an @[HTTP exception][HTTPException] or AssertionError if invalid
+1. 验证凭证
+2. 如果有效，返回包含用户身份和信息的 @[用户信息][MinimalUserDict]
+3. 如果无效，抛出 @[HTTP 异常][HTTPException] 或 AssertionError
 
 ```python
 from langgraph_sdk import Auth
@@ -93,223 +92,218 @@ auth = Auth()
 
 @auth.authenticate
 async def authenticate(headers: dict) -> Auth.types.MinimalUserDict:
-    # Validate credentials (e.g., API key, JWT token)
+    # 验证凭证 (例如 API 密钥、JWT 令牌)
     api_key = headers.get(b"x-api-key")
     if not api_key or not is_valid_key(api_key):
         raise Auth.exceptions.HTTPException(
             status_code=401,
-            detail="Invalid API key"
+            detail="无效的 API 密钥"
         )
 
-    # Return user info - only identity and is_authenticated are required
-    # Add any additional fields you need for authorization
+    # 返回用户信息 - 只需要 identity 和 is_authenticated 字段
+    # 添加您需要的任何额外字段以供授权使用
     return {
-        "identity": "user-123",        # Required: unique user identifier
-        "is_authenticated": True,      # Optional: assumed True by default
-        "permissions": ["read", "write"] # Optional: for permission-based auth
-        # You can add more custom fields if you want to implement other auth patterns
+        "identity": "user-123",        # 必需: 唯一的身份标识符
+        "is_authenticated": True,      # 可选: 默认假定为 True
+        "permissions": ["read", "write"] # 可选: 用于基于权限的授权
+        # 如果您想实现其他认证模式，可以添加更多自定义字段
         "role": "admin",
         "org_id": "org-456"
 
     }
 ```
 
-The returned user information is available:
+返回的用户信息可在以下位置获取：
 
-* To your authorization handlers via @[`ctx.user`][AuthContext]
-* In your application via `config["configuration"]["langgraph_auth_user"]`
+* 授权处理程序中，通过 @[`ctx.user`][AuthContext]
+* 在您的应用程序中，通过 `config["configuration"]["langgraph_auth_user"]`
 
-<Accordion title="Supported Parameters">
-  The @[`@auth.authenticate`][Auth.authenticate] handler can accept any of the following parameters by name:
+<Accordion title="支持的参数">
+  @[`@auth.authenticate`][Auth.authenticate] 处理程序可以通过名称接受以下任何参数：
 
-  * request (Request): The raw ASGI request object
-  * path (str): The request path, e.g., `"/threads/abcd-1234-abcd-1234/runs/abcd-1234-abcd-1234/stream"`
-  * method (str): The HTTP method, e.g., `"GET"`
-  * path_params (dict[str, str]): URL path parameters, e.g., `{"thread_id": "abcd-1234-abcd-1234", "run_id": "abcd-1234-abcd-1234"}`
-  * query_params (dict[str, str]): URL query parameters, e.g., `{"stream": "true"}`
-  * headers (dict[bytes, bytes]): Request headers
-  * authorization (str | None): The Authorization header value (e.g., `"Bearer <token>"`)
+  * request (Request): 原生 ASGI 请求对象
+  * path (str): 请求路径，例如 `"/threads/abcd-1234-abcd-1234/runs/abcd-1234-abcd-1234/stream"`
+  * method (str): HTTP 方法，例如 `"GET"`
+  * path_params (dict[str, str]): URL 路径参数，例如 `{"thread_id": "abcd-1234-abcd-1234", "run_id": "abcd-1234-abcd-1234"}`
+  * query_params (dict[str, str]): URL 查询参数，例如 `{"stream": "true"}`
+  * headers (dict[bytes, bytes]): 请求头
+  * authorization (str | None): Authorization 请求头的值（例如 `"Bearer <token>"`）
 
-  In many of our tutorials, we will just show the "authorization" parameter to be concise, but you can opt to accept more information as needed
-  to implement your custom authentication scheme.
+  在我们许多教程中，为了简洁，我们只展示 "authorization" 参数，但您可以根据需要选择接受更多信息来实现自定义身份验证方案。
 </Accordion>
 
-### Agent authentication
+### 智能体身份验证 (Agent authentication)
 
-Custom authentication permits delegated access. The values you return in  `@auth.authenticate` are added to the run context, giving agents user-scoped credentials lets them access resources on the user’s behalf.
+自定义身份验证允许委托访问。您在 `@auth.authenticate` 中返回的值会被添加到运行上下文中，为智能体提供用户范围的凭证，使其能够代表用户访问资源。
 
 ```mermaid
 sequenceDiagram
   %% Actors
-  participant ClientApp as Client
-  participant AuthProv  as Auth Provider
-  participant LangGraph as LangGraph Backend
-  participant SecretStore as Secret Store
-  participant ExternalService as External Service
+  participant ClientApp as 客户端
+  participant AuthProv  as 身份提供方
+  participant LangGraph as LangGraph 后端
+  participant SecretStore as 密钥存储
+  participant ExternalService as 外部服务
 
   %% Platform login / AuthN
-  ClientApp  ->> AuthProv: 1. Login (username / password)
-  AuthProv   -->> ClientApp: 2. Return token
-  ClientApp  ->> LangGraph: 3. Request with token
+  ClientApp  ->> AuthProv: 1. 登录 (用户名 / 密码)
+  AuthProv   -->> ClientApp: 2. 返回令牌
+  ClientApp  ->> LangGraph: 3. 带令牌的请求
 
-  Note over LangGraph: 4. Validate token (@auth.authenticate)
-  LangGraph  -->> AuthProv: 5. Fetch user info
-  AuthProv   -->> LangGraph: 6. Confirm validity
+  Note over LangGraph: 4. 验证令牌 (@auth.authenticate)
+  LangGraph  -->> AuthProv: 5. 获取用户信息
+  AuthProv   -->> LangGraph: 6. 确认有效性
 
   %% Fetch user tokens from secret store
-  LangGraph  ->> SecretStore: 6a. Fetch user tokens
-  SecretStore -->> LangGraph: 6b. Return tokens
+  LangGraph  ->> SecretStore: 6a. 获取用户令牌
+  SecretStore -->> LangGraph: 6b. 返回令牌
 
-  Note over LangGraph: 7. Apply access control (@auth.on.*)
+  Note over LangGraph: 7. 应用访问控制 (@auth.on.*)
 
   %% External Service round-trip
-  LangGraph  ->> ExternalService: 8. Call external service (with header)
-  Note over ExternalService: 9. External service validates header and executes action
-  ExternalService  -->> LangGraph: 10. Service response
+  LangGraph  ->> ExternalService: 8. 调用外部服务 (带请求头)
+  Note over ExternalService: 9. 外部服务验证请求头并执行操作
+  ExternalService  -->> LangGraph: 10. 服务响应
 
   %% Return to caller
-  LangGraph  -->> ClientApp: 11. Return resources
+  LangGraph  -->> ClientApp: 11. 返回资源
 ```
 
-After authentication, the platform creates a special configuration object that is passed to your graph and all nodes via the configurable context.
-This object contains information about the current user, including any custom fields you return from your @[`@auth.authenticate`][Auth.authenticate] handler.
+身份验证后，平台会创建一个特殊的配置对象，该对象会传递给您的图表和所有节点（通过可配置上下文）。此对象包含当前用户信息，包括您从 @[`@auth.authenticate`][Auth.authenticate] 处理程序返回的任何自定义字段。
 
-To enable an agent to act on behalf of the user, use [custom authentication middleware](/langsmith/custom-auth). This will allow the agent to interact with external systems like MCP servers, external databases, and even other agents on behalf of the user.
+要使智能体能够代表用户执行操作，请使用[自定义身份验证中间件](/langsmith/custom-auth)。这将允许智能体与外部系统（如 MCP 服务器、外部数据库，甚至其他智能体）代表用户进行交互。
 
-For more information, see the [Use custom auth](/langsmith/custom-auth#enable-agent-authentication) guide.
+有关更多信息，请参阅[使用自定义身份验证](/langsmith/custom-auth)指南。
 
-### Agent authentication with MCP
+### 使用 MCP 的智能体身份验证
 
-For information on how to authenticate an agent to an MCP server, see the [MCP conceptual guide](/oss/langchain/mcp).
+有关如何向 MCP 服务器验证智能体身份的信息，请参阅[MCP 概念指南](/oss/langchain/mcp)。
 
-## Authorization
+## 授权 (Authorization)
 
-After authentication, LangGraph calls your @[`@auth.on`][Auth] handlers to control access to specific resources (e.g., threads, assistants, crons). These handlers can:
+身份验证之后，LangGraph 会调用您的 @[`@auth.on`][Auth] 处理程序来控制对特定资源的访问（例如，线程、助手、定时任务）。这些处理程序可以：
 
-1. Add metadata to be saved during resource creation by mutating the `value["metadata"]` dictionary directly. See the [supported actions table](#supported-actions) for the list of types the value can take for each action.
-2. Filter resources by metadata during search/list or read operations by returning a [filter dictionary](#filter-operations).
-3. Raise an HTTP exception if access is denied.
+1. 通过直接修改 `value["metadata"]` 字典，向资源创建期间保存的元数据中添加元数据。有关每个操作中 `value` 可以采取的类型的列表，请参阅[支持的操作表](#supported-actions)。
+2. 通过返回一个[筛选器字典](#filter-operations)，在搜索/列表或读取操作期间筛选资源元数据。
+3. 如果拒绝访问，则抛出 HTTP 异常。
 
-If you want to just implement simple user-scoped access control, you can use a single @[`@auth.on`][Auth] handler for all resources and actions. If you want to have different control depending on the resource and action, you can use [resource-specific handlers](#resource-specific-handlers). See the [Supported Resources](#supported-resources) section for a full list of the resources that support access control.
+如果您只想实现简单的用户范围的访问控制，可以为所有资源和操作使用单个 @[`@auth.on`][Auth] 处理程序。如果您希望根据资源和操作有所不同，可以使用[资源特定的处理程序](#resource-specific-handlers)。有关支持访问控制的资源完整列表，请参阅[支持的资源](#supported-resources)部分。
 
 ```python
 @auth.on
 async def add_owner(
     ctx: Auth.types.AuthContext,
-    value: dict  # The payload being sent to this access method
-) -> dict:  # Returns a filter dict that restricts access to resources
-    """Authorize all access to threads, runs, crons, and assistants.
+    value: dict  # 发送到此访问方法的请求负载
+) -> dict:  # 返回一个限制资源访问的筛选器字典
+    """授权对线程、运行、定时任务和助手的全部访问。
 
-    This handler does two things:
-        - Adds a value to resource metadata (to persist with the resource so it can be filtered later)
-        - Returns a filter (to restrict access to existing resources)
+    此处理程序执行两项操作：
+        - 向资源元数据添加一个值（以便它与资源一起持久化，以便可以稍后进行筛选）
+        - 返回一个筛选器（以限制对现有资源的访问）
 
     Args:
-        ctx: Authentication context containing user info, permissions, the path, and
-        value: The request payload sent to the endpoint. For creation
-              operations, this contains the resource parameters. For read
-              operations, this contains the resource being accessed.
+        ctx: 包含用户信息、权限、路径和
+        value: 发送到端点的请求负载。对于创建操作，它包含资源参数。对于读取操作，它包含正在访问的资源。
 
     Returns:
-        A filter dictionary that LangGraph uses to restrict access to resources.
-        See [Filter Operations](#filter-operations) for supported operators.
+        一个 LangGraph 用于限制资源访问的筛选器字典。
+        有关支持的运算符，请参阅[筛选操作](#filter-operations)。
     """
-    # Create filter to restrict access to just this user's resources
+    # 创建筛选器，将访问限制给该用户自己的资源
     filters = {"owner": ctx.user.identity}
 
-    # Get or create the metadata dictionary in the payload
-    # This is where we store persistent info about the resource
+    # 获取或创建负载中的元数据字典
+    # 这是存储资源持久性信息的地方
     metadata = value.setdefault("metadata", {})
 
-    # Add owner to metadata - if this is a create or update operation,
-    # this information will be saved with the resource
-    # So we can filter by it later in read operations
+    # 添加所有者到元数据 - 如果是创建或更新操作，
+    # 此信息将与资源一起保存
+    # 这样我们可以在读取操作中按其进行筛选
     metadata.update(filters)
 
-    # Return filters to restrict access
-    # These filters are applied to ALL operations (create, read, update, search, etc.)
-    # to ensure users can only access their own resources
+    # 返回用于限制访问的筛选器
+    # 这些筛选器应用于 ALL 操作（创建、读取、更新、搜索等）
+    # 以确保用户只能访问他们自己的资源
     return filters
 ```
 
 <a id="resource-specific-handlers"></a>
-### Resource-specific handlers
+### 资源特定的处理程序
 
-You can register handlers for specific resources and actions by chaining the resource and action names together with the @[`@auth.on`][Auth] decorator.
-When a request is made, the most specific handler that matches that resource and action is called. Below is an example of how to register handlers for specific resources and actions. For the following setup:
+您可以通过链接资源名称和操作名称与 @[`@auth.on`][Auth] 装饰器来注册针对特定资源和操作的处理程序。当发出请求时，匹配该资源和操作的最具体的处理程序将被调用。下面是如何注册针对特定资源和操作的处理程序的示例。对于以下设置：
 
-1. Authenticated users are able to create threads, read threads, and create runs on threads
-2. Only users with the "assistants:create" permission are allowed to create new assistants
-3. All other endpoints (e.g., e.g., delete assistant, crons, store) are disabled for all users.
+1. 经过身份验证的用户可以创建线程、读取线程以及在线程上创建运行
+2. 只有具有 "assistants:create" 权限的用户才允许创建新的助手
+3. 所有其他端点（例如，删除助手、定时任务、存储）对所有用户禁用。
 
 <Tip>
-**Supported Handlers**
-For a full list of supported resources and actions, see the [Supported Resources](#supported-resources) section below.
+**支持的处理程序**
+有关支持的资源和操作的完整列表，请参阅下面的[支持的资源](#supported-resources)部分。
 </Tip>
 
 ```python
-# Generic / global handler catches calls that aren't handled by more specific handlers
+# 通用/全局处理程序会捕获未被更具体处理程序处理的调用
 @auth.on
 async def reject_unhandled_requests(ctx: Auth.types.AuthContext, value: Any) -> False:
-    print(f"Request to {ctx.path} by {ctx.user.identity}")
+    print(f"对 {ctx.path} 的请求，由 {ctx.user.identity} 发出")
     raise Auth.exceptions.HTTPException(
         status_code=403,
-        detail="Forbidden"
+        detail="禁止访问"
     )
 
-# Matches the "thread" resource and all actions - create, read, update, delete, search
-# Since this is **more specific** than the generic @auth.on handler, it will take precedence
-# over the generic handler for all actions on the "threads" resource
+# 匹配 "thread" 资源和所有操作 - 创建、读取、更新、删除、搜索
+# 由于这比通用的 @auth.on 处理程序**更具体**，因此它将覆盖通用处理程序
+# 针对 "threads" 资源的所有操作
 @auth.on.threads
 async def on_thread(
     ctx: Auth.types.AuthContext,
     value: Auth.types.threads.create.value
 ):
-    # Setting metadata on the thread being created
-    # will ensure that the resource contains an "owner" field
-    # Then any time a user tries to access this thread or runs within the thread,
-    # we can filter by owner
+    # 在正在创建的线程元数据上设置
+    # 将确保资源包含 "owner" 字段
+    # 然后任何时候用户尝试访问此线程或其内部运行，
+    # 我们都可以按所有者进行筛选
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
     return {"owner": ctx.user.identity}
 
 
-# Thread creation. This will match only on thread create actions
-# Since this is **more specific** than both the generic @auth.on handler and the @auth.on.threads handler,
-# it will take precedence for any "create" actions on the "threads" resources
+# 线程创建。这将仅匹配线程创建操作
+# 由于这比通用的 @auth.on 处理程序和 @auth.on.threads 处理程序**更具体**，
+# 它将优先于针对 "threads" 资源的任何 "create" 操作
 @auth.on.threads.create
 async def on_thread_create(
     ctx: Auth.types.AuthContext,
     value: Auth.types.threads.create.value
 ):
-    # Reject if the user does not have write access
+    # 如果用户没有写入权限，则拒绝
     if "write" not in ctx.permissions:
         raise Auth.exceptions.HTTPException(
             status_code=403,
-            detail="User lacks the required permissions."
+            detail="用户缺乏所需的权限。"
         )
-    # Setting metadata on the thread being created
-    # will ensure that the resource contains an "owner" field
-    # Then any time a user tries to access this thread or runs within the thread,
-    # we can filter by owner
+    # 在正在创建的线程元数据上设置
+    # 将确保资源包含 "owner" 字段
+    # 然后任何时候用户尝试访问此线程或其内部运行，
+    # 我们都可以按所有者进行筛选
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
     return {"owner": ctx.user.identity}
 
-# Reading a thread. Since this is also more specific than the generic @auth.on handler, and the @auth.on.threads handler,
-# it will take precedence for any "read" actions on the "threads" resource
+# 读取线程。由于这也比通用的 @auth.on 处理程序和 @auth.on.threads 处理程序更具体，
+# 它将优先于 "threads" 资源的任何 "read" 操作
 @auth.on.threads.read
 async def on_thread_read(
     ctx: Auth.types.AuthContext,
     value: Auth.types.threads.read.value
 ):
-    # Since we are reading (and not creating) a thread,
-    # we don't need to set metadata. We just need to
-    # return a filter to ensure users can only see their own threads
+    # 由于我们正在读取（而不是创建）一个线程，
+    # 我们不需要设置元数据。我们只需要
+    # 返回一个筛选器以确保用户只能看到他们自己的线程
     return {"owner": ctx.user.identity}
 
-# Run creation, streaming, updates, etc.
-# This takes precedenceover the generic @auth.on handler and the @auth.on.threads handler
+# 运行创建、流式传输、更新等。
+# 这优先于通用的 @auth.on 处理程序和 @auth.on.threads 处理程序
 @auth.on.threads.create_run
 async def on_run_create(
     ctx: Auth.types.AuthContext,
@@ -317,10 +311,10 @@ async def on_run_create(
 ):
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
-    # Inherit thread's access control
+    # 继承线程的访问控制
     return {"owner": ctx.user.identity}
 
-# Assistant creation
+# 助手创建
 @auth.on.assistants.create
 async def on_assistant_create(
     ctx: Auth.types.AuthContext,
@@ -329,37 +323,37 @@ async def on_assistant_create(
     if "assistants:create" not in ctx.permissions:
         raise Auth.exceptions.HTTPException(
             status_code=403,
-            detail="User lacks the required permissions."
+            detail="用户缺乏所需的权限。"
         )
 ```
 
-Notice that we are mixing global and resource-specific handlers in the above example. Since each request is handled by the most specific handler, a request to create a `thread` would match the `on_thread_create` handler but NOT the `reject_unhandled_requests` handler. A request to `update` a thread, however would be handled by the global handler, since we don't have a more specific handler for that resource and action.
+请注意，我们在上面的示例中混合使用了全局和特定于资源的全局处理程序。由于每个请求都由最具体的处理程序处理，对 `thread` 的创建请求将匹配 `on_thread_create` 处理程序，但 NOT `reject_unhandled_requests` 处理程序。然而，对线程的 `update` 请求将由全局处理程序处理，因为我们没有针对该资源和操作的更具体的处理程序。
 
 <a id="filter-operations"></a>
-### Filter operations
+### 筛选操作 (Filter operations)
 
-Authorization handlers can return `None`, a boolean, or a filter dictionary.
+授权处理程序可以返回 `None`、布尔值或筛选器字典。
 
-* `None` and `True` mean "authorize access to all underling resources"
-* `False` means "deny access to all underling resources (raises a 403 exception)"
-* A metadata filter dictionary will restrict access to resources
+* `None` 和 `True` 表示“授权访问所有底层资源”
+* `False` 表示“拒绝访问所有底层资源（抛出 403 异常）”
+* 元数据筛选器字典将限制对资源的访问
 
-A filter dictionary is a dictionary with keys that match the resource metadata. It supports three operators:
+筛选器字典是一个字典，其键与资源元数据匹配。它支持三种运算符：
 
-* The default value is a shorthand for exact match, or "$eq", below. For example, `{"owner": user_id}` will include only resources with metadata containing `{"owner": user_id}`
-* `$eq`: Exact match (e.g., `{"owner": {"$eq": user_id}}`) - this is equivalent to the shorthand above, `{"owner": user_id}`
-* `$contains`: List membership (e.g., `{"allowed_users": {"$contains": user_id}}`) or list containment (e.g., `{"allowed_users": {"$contains": [user_id_1, user_id_2]}}`). The value here must be an element of the list or a subset of the elements of the list, respectively. The metadata in the stored resource must be a list/container type.
+* 默认值是精确匹配的简写，即下文中的“`$eq`”。例如，`{"owner": user_id}` 将只包含元数据中包含 `{"owner": user_id}` 的资源
+* `$eq`: 精确匹配（例如 `{"owner": {"$eq": user_id}}`）——这等同于简写 `{"owner": user_id}`
+* `$contains`: 列表成员资格（例如 `{"allowed_users": {"$contains": user_id}}`）或列表包含（例如 `{"allowed_users": {"$contains": [user_id_1, user_id_2]}}`）。这里的值必须是列表中的一个元素或列表的子集，分别对应。存储在元数据中的值必须是列表/容器类型。
 
-A dictionary with multiple keys is treated using a logical `AND` filter. For example, `{"owner": org_id, "allowed_users": {"$contains": user_id}}` will only match resources with metadata whose "owner" is `org_id` and whose "allowed_users" list contains `user_id`.
-See the reference @[`Auth`](Auth) for more information.
+具有多个键的字典使用逻辑 `AND` 筛选器进行处理。例如，`{"owner": org_id, "allowed_users": {"$contains": user_id}}` 将只匹配元数据中 "owner" 为 `org_id` 且 "allowed_users" 列表中包含 `user_id` 的资源。
+有关更多信息，请参阅 @[`Auth`](Auth) 引用。
 
-## Common access patterns
+## 常见访问模式
 
-Here are some typical authorization patterns:
+以下是一些典型的授权模式：
 
-### Single-owner resources
+### 单一所有者资源 (Single-owner resources)
 
-This common pattern lets you scope all threads, assistants, crons, and runs to a single user. It's useful for common single-user use cases like regular chatbot-style apps.
+这种常见模式允许您将所有线程、助手、定时任务和运行范围限定为单个用户。这对于常规聊天机器人应用等单用户用例非常有用。
 
 ```python
 @auth.on
@@ -369,19 +363,19 @@ async def owner_only(ctx: Auth.types.AuthContext, value: dict):
     return {"owner": ctx.user.identity}
 ```
 
-### Permission-based access
+### 基于权限的访问 (Permission-based access)
 
-This pattern lets you control access based on **permissions**. It's useful if you want certain roles to have broader or more restricted access to resources.
+这种模式允许您根据**权限**控制访问。如果您希望某些角色对资源的访问范围更广或更受限制，这非常有用。
 
 ```python
-# In your auth handler:
+# 在您的身份验证处理程序中：
 @auth.authenticate
 async def authenticate(headers: dict) -> Auth.types.MinimalUserDict:
     ...
     return {
         "identity": "user-123",
         "is_authenticated": True,
-        "permissions": ["threads:write", "threads:read"]  # Define permissions in auth
+        "permissions": ["threads:write", "threads:read"]  # 在 auth 中定义权限
     }
 
 def _default(ctx: Auth.types.AuthContext, value: dict):
@@ -394,7 +388,7 @@ async def create_thread(ctx: Auth.types.AuthContext, value: dict):
     if "threads:write" not in ctx.permissions:
         raise Auth.exceptions.HTTPException(
             status_code=403,
-            detail="Unauthorized"
+            detail="未授权"
         )
     return _default(ctx, value)
 
@@ -404,86 +398,85 @@ async def rbac_create(ctx: Auth.types.AuthContext, value: dict):
     if "threads:read" not in ctx.permissions and "threads:write" not in ctx.permissions:
         raise Auth.exceptions.HTTPException(
             status_code=403,
-            detail="Unauthorized"
+            detail="未授权"
         )
     return _default(ctx, value)
 ```
 
-## Supported resources
+## 支持的资源 (Supported resources)
 
-LangGraph provides three levels of authorization handlers, from most general to most specific:
+LangGraph 提供三个级别的授权处理程序，从最通用到最具体：
 
-1. **Global Handler** (`@auth.on`): Matches all resources and actions
-2. **Resource Handler** (e.g., `@auth.on.threads`, `@auth.on.assistants`, `@auth.on.crons`): Matches all actions for a specific resource
-3. **Action Handler** (e.g., `@auth.on.threads.create`, `@auth.on.threads.read`): Matches a specific action on a specific resource
+1. **全局处理程序** (`@auth.on`): 匹配所有资源和操作
+2. **资源处理程序**（例如 `@auth.on.threads`、`@auth.on.assistants`、`@auth.on.crons`）：匹配特定资源的所有操作
+3. **操作处理程序**（例如 `@auth.on.threads.create`、`@auth.on.threads.read`）：匹配特定资源上的特定操作
 
-The most specific matching handler will be used. For example, `@auth.on.threads.create` takes precedence over `@auth.on.threads` for thread creation.
-If a more specific handler is registered, the more general handler will not be called for that resource and action.
+将使用匹配度最高的处理程序。例如，`@auth.on.threads.create` 优先于 `_on.threads`（用于线程创建）处理程序。如果注册了更具体的处理程序，则更通用的处理程序不会针对该资源和操作被调用。
 
 <Tip>
-"Type Safety"
-Each handler has type hints available for its `value` parameter at `Auth.types.on.<resource>.<action>.value`. For example:
+“类型安全”
+每个处理程序都可以在其 `value` 参数下通过 `Auth.types.on.<resource>.<action>.value` 获得类型提示。例如：
 
 ```python
 @auth.on.threads.create
 async def on_thread_create(
 ctx: Auth.types.AuthContext,
-value: Auth.types.on.threads.create.value  # Specific type for thread creation
+value: Auth.types.on.threads.create.value  # 线程创建的具体类型
 ):
 ...
 
 @auth.on.threads
 async def on_threads(
 ctx: Auth.types.AuthContext,
-value: Auth.types.on.threads.value  # Union type of all thread actions
+value: Auth.types.on.threads.value  # 所有线程操作的联合类型
 ):
 ...
 
 @auth.on
 async def on_all(
 ctx: Auth.types.AuthContext,
-value: dict  # Union type of all possible actions
+value: dict  # 所有可能操作的联合类型
 ):
 ...
 ```
 
-More specific handlers provide better type hints since they handle fewer action types.
+越具体的处理程序提供的类型提示越好，因为它们处理的动作类型更少。
 </Tip>
 
 <a id="supported-actions"></a>
-#### Supported actions and types
+#### 支持的操作和类型
 
-Here are all the supported action handlers:
+以下是所有支持的操作处理程序：
 
-| Resource | Handler | Description | Value Type |
-|----------|---------|-------------|------------|
-| **Threads** | `@auth.on.threads.create` | Thread creation | @[`ThreadsCreate`] |
-| | `@auth.on.threads.read` | Thread retrieval | @[`ThreadsRead`] |
-| | `@auth.on.threads.update` | Thread updates | @[`ThreadsUpdate`] |
-| | `@auth.on.threads.delete` | Thread deletion | @[`ThreadsDelete`] |
-| | `@auth.on.threads.search` | Listing threads | @[`ThreadsSearch`] |
-| | `@auth.on.threads.create_run` | Creating or updating a run | @[`RunsCreate`] |
-| **Assistants** | `@auth.on.assistants.create` | Assistant creation | @[`AssistantsCreate`] |
-| | `@auth.on.assistants.read` | Assistant retrieval | @[`AssistantsRead`] |
-| | `@auth.on.assistants.update` | Assistant updates | @[`AssistantsUpdate`] |
-| | `@auth.on.assistants.delete` | Assistant deletion | @[`AssistantsDelete`] |
-| | `@auth.on.assistants.search` | Listing assistants | @[`AssistantsSearch`] |
-| **Crons** | `@auth.on.crons.create` | Cron job creation | @[`CronsCreate`] |
-| | `@auth.on.crons.read` | Cron job retrieval | @[`CronsRead`] |
-| | `@auth.on.crons.update` | Cron job updates | @[`CronsUpdate`] |
-| | `@auth.on.crons.delete` | Cron job deletion | @[`CronsDelete`] |
-| | `@auth.on.crons.search` | Listing cron jobs | @[`CronsSearch`] |
+| 资源 | 处理程序 | 描述 | 值类型 |
+|---|---|---|---|
+| **线程 (Threads)** | `@auth.on.threads.create` | 线程创建 | @[`ThreadsCreate`] |
+| | `@auth.on.threads.read` | 线程检索 | @[`ThreadsRead`] |
+| | `@auth.on.threads.update` | 线程更新 | @[`ThreadsUpdate`] |
+| | `@auth.on.threads.delete` | 线程删除 | @[`ThreadsDelete`] |
+| | `@auth.on.threads.search` | 列出线程 | @[`ThreadsSearch`] |
+| | `@auth.on.threads.create_run` | 创建或更新运行 | @[`RunsCreate`] |
+| **助手 (Assistants)** | `@auth.on.assistants.create` | 助手创建 | @[`AssistantsCreate`] |
+| | `@auth.on.assistants.read` | 助手检索 | @[`AssistantsRead`] |
+| | `@auth.on.assistants.update` | 助手更新 | @[`AssistantsUpdate`] |
+| | `@auth.on.assistants.delete` | 助手删除 | @[`AssistantsDelete`] |
+| | `@auth.on.assistants.search` | 列出助手 | @[`AssistantsSearch`] |
+| **定时任务 (Crons)** | `@auth.on.crons.create` | 定时任务创建 | @[`CronsCreate`] |
+| | `@auth.on.crons.read` | 定时任务检索 | @[`CronsRead`] |
+| | `@auth.on.crons.update` | 定时任务更新 | @[`CronsUpdate`] |
+| | `@auth.on.crons.delete` | 定时任务删除 | @[`CronsDelete`] |
+| | `@auth.on.crons.search` | 列出定时任务 | @[`CronsSearch`] |
 
 <Note>
-"About Runs"
+"关于运行 (Runs)"
 
-Runs are scoped to their parent thread for access control. This means permissions are typically inherited from the thread, reflecting the conversational nature of the data model. All run operations (reading, listing) except creation are controlled by the thread's handlers.
-There is a specific `create_run` handler for creating new runs because it had more arguments that you can view in the handler.
+运行的访问控制作用域限定于其父线程。这意味着权限通常从线程继承，反映了数据的对话式数据模型。除创建外，所有运行操作（读取、列出）都由线程的处理程序控制。
+有一个专门的 `create_run` 处理程序用于创建新运行，因为它具有更多您可以在处理程序中查看的参数。
 </Note>
 
-## Next steps
+##后续步骤 (Next steps)
 
-For implementation details:
+有关实施细节：
 
-* Check out the introductory tutorial on [setting up authentication](/langsmith/set-up-custom-auth)
-* See the how-to guide on implementing a [custom auth handlers](/langsmith/custom-auth)
+* 查阅有关[设置身份验证](/langsmith/set-up-custom-auth)的入门教程
+* 查看有关实现[自定义身份验证处理程序](/langsmith/custom-auth)的操作指南

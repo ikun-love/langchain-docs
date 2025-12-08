@@ -1,24 +1,24 @@
 ---
-title: Run an evaluation with multimodal content
-sidebarTitle: Run an evaluation with multimodal content
+title: 使用多模态内容运行评估
+sidebarTitle: 使用多模态内容运行评估
 ---
 
-LangSmith lets you create dataset examples with file attachments—like images, audio files, or documents—so you can reference them when evaluating an application that uses multimodal inputs or outputs.
+LangSmith 允许您创建带有文件附件（如图像、音频文件或文档）的数据集示例，这样您就可以在评估使用多模态输入或输出的应用程序时引用它们。
 
-While you can include multimodal data in your examples by base64 encoding it, this approach is inefficient - the encoded data takes up more space than the original binary files, resulting in slower transfers to and from LangSmith. Using attachments instead provides two key benefits:
+虽然您可以通过 Base64 编码将多模态数据包含在示例中，但这种方法效率较低——编码后的数据占用的空间比原始二进制文件要大，导致传输到 LangSmith 和从 LangSmith 传输数据的速度变慢。使用附件代替，可以带来两个主要优势：
 
-1. Faster upload and download speeds due to more efficient binary file transfers
-2. Enhanced visualization of different file types in the LangSmith UI
+1. 更高效的二进制文件传输，从而实现更快的上传和下载速度。
+2. 在 LangSmith UI 中增强对不同文件类型的可视化显示。
 
 ## SDK
 
-### 1. Create examples with attachments
+### 1. 使用附件创建示例
 
-To upload examples with attachments using the SDK, use the [create_examples](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_examples) / [update_examples](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.update_examples) Python methods or the [uploadExamplesMultipart](https://docs.smith.langchain.com/reference/js/classes/client.Client#uploadexamplesmultipart) / [updateExamplesMultipart](https://docs.smith.langchain.com/reference/js/classes/client.Client#updateexamplesmultipart) TypeScript methods.
+要使用 SDK 上传带有附件的示例，请使用 Python 中的 `[create_examples](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_examples)` / `[update_examples](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.update_examples)` 方法，或 TypeScript 中的 `[uploadExamplesMultipart](https://docs.smith.langchain.com/reference/js/classes/client.Client#uploadexamplesmultipart)` / `[updateExamplesMultipart](https://docs.smith.langchain.com/reference/js/classes/client.Client#updateexamplesmultipart)` 方法。
 
 #### Python
 
-Requires `langsmith>=0.3.13`
+需要 `langsmith>=0.3.13`
 
 ```python
 import requests
@@ -26,17 +26,17 @@ import uuid
 from pathlib import Path
 from langsmith import Client
 
-# Publicly available test files
+# 公共可用的测试文件
 pdf_url = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
 wav_url = "https://openaiassets.blob.core.windows.net/$web/API/docs/audio/alloy.wav"
 img_url = "https://www.w3.org/Graphics/PNG/nurbcup2si.png"
 
-# Fetch the files as bytes
+# 获取文件字节内容
 pdf_bytes = requests.get(pdf_url).content
 wav_bytes = requests.get(wav_url).content
 img_bytes = requests.get(img_url).content
 
-# Create the dataset
+# 创建数据集
 ls_client = Client()
 dataset_name = "attachment-test-dataset"
 dataset = ls_client.create_dataset(
@@ -54,7 +54,7 @@ outputs = {
   "image_answer": "A mug with a blanket over it.",
 }
 
-# Define an example with attachments
+# 定义带有附件的示例
 example_id = uuid.uuid4()
 example = {
   "id": example_id,
@@ -64,44 +64,43 @@ example = {
       "my_pdf": {"mime_type": "application/pdf", "data": pdf_bytes},
       "my_wav": {"mime_type": "audio/wav", "data": wav_bytes},
       "my_img": {"mime_type": "image/png", "data": img_bytes},
-      # Example of an attachment specified via a local file path:
+      # 通过本地文件路径指定的附件示例：
       # "my_local_img": {"mime_type": "image/png", "data": Path(__file__).parent / "my_local_img.png"},
   },
 }
 
-# Create the example
+# 创建示例
 ls_client.create_examples(
   dataset_id=dataset.id,
   examples=[example],
-  # Uncomment this flag if you'd like to upload attachments from local files:
+  # 如果您想从本地文件上传附件，请取消注释此标志：
   # dangerously_allow_filesystem=True
 )
 ```
 
 #### TypeScript
 
-Requires version >= 0.2.13
+需要版本 >= 0.2.13
 
-You can use the `uploadExamplesMultipart` method to upload examples with attachments.
+您可以使用 `uploadExamplesMultipart` 方法上传带有附件的示例。
 
-Note that this is a different method from the standard `createExamples` method, which currently does not support attachments. Each attachment requires either a `Uint8Array` or an `ArrayBuffer` as the data type.
+请注意，这是一个不同于标准的 `createExamples` 方法，后者目前不支持附件。每个附件要求 `data` 类型为 `Uint8Array` 或 `ArrayBuffer`。
 
-* `Uint8Array`: Useful for handling binary data directly.
-* `ArrayBuffer`: Represents fixed-length binary data, which can be converted to `Uint8Array` as needed.
+* `Uint8Array`: 有助于直接处理二进制数据。
+* `ArrayBuffer`: 代表固定长度的二进制数据，可根据需要转换为 `Uint8Array`。
 
-Note that you cannot directly pass in a file path in the TypeScript SDK, as accessing local files is not supported in all runtime environments.
-
+请注意，您不能在 TypeScript SDK 中直接传入文件路径，因为在所有运行时环境中并不支持访问本地文件。
 
 ```typescript
 import { Client } from "langsmith";
 import { v4 as uuid4 } from "uuid";
 
-// Publicly available test files
+// 公共可用的测试文件
 const pdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 const wavUrl = "https://openaiassets.blob.core.windows.net/$web/API/docs/audio/alloy.wav";
 const pngUrl = "https://www.w3.org/Graphics/PNG/nurbcup2si.png";
 
-// Helper function to fetch file as ArrayBuffer
+// 辅助函数：将文件获取为 ArrayBuffer
 async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -110,23 +109,23 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
-// Fetch files as ArrayBuffer
+// 获取文件内容为 ArrayBuffer
 const pdfArrayBuffer = await fetchArrayBuffer(pdfUrl);
 const wavArrayBuffer = await fetchArrayBuffer(wavUrl);
 const pngArrayBuffer = await fetchArrayBuffer(pngUrl);
 
-// Create the LangSmith client (Ensure LANGSMITH_API_KEY is set in env)
+// 创建 LangSmith 客户端 (确保 LANGSMITH_API_KEY 在环境变量中设置)
 const langsmithClient = new Client();
 
-// Create a unique dataset name
+// 创建一个唯一的 T 恤集名称
 const datasetName = "attachment-test-dataset:" + uuid4().substring(0, 8);
 
-// Create the dataset
+// 创建数据集
 const dataset = await langsmithClient.createDataset(datasetName, {
   description: "Test dataset for evals with publicly available attachments",
 });
 
-// Define the example with attachments
+// 定义带有附件的示例
 const exampleId = uuid4();
 const example = {
   id: exampleId,
@@ -154,30 +153,30 @@ const example = {
   },
 };
 
-// Upload the example with attachments to the dataset
+// 使用附件将示例上传到数据集
 await langsmithClient.uploadExamplesMultipart(dataset.id, [example]);
 ```
 
 <Info>
-Along with being passed in as bytes, attachments can be specified as paths to local files. To do so pass in a path for the attachment `data` value and specify arg `dangerously_allow_filesystem=True`:
+除了作为字节内容传入外，附件还可以指定为指向本地文件的路径。要执行此操作，请将附件的 `data` 值传递为路径，并指定参数 `dangerously_allow_filesystem=True`：
 
 ```python
 client.create_examples(..., dangerously_allow_filesystem=True)
 ```
 </Info>
 
-## 2. Run evaluations
+## 2. 运行评估
 
-### Define a target function
+### 定义目标函数
 
-Now that we have a dataset that includes examples with attachments, we can define a target function to run over these examples. The following example simply uses OpenAI's GPT-4o model to answer questions about an image and an audio clip.
+现在我们有了一个包含附件示例的数据集，我们可以定义一个目标函数来遍历这些示例。以下示例仅使用 OpenAI 的 GPT-4o 模型来回答有关图像和音频剪辑的问题。
 
 #### Python
 
-The target function you are evaluating must have two positional arguments in order to consume the attachments associated with the example, the first must be called `inputs` and the second must be called `attachments`.
+要评估的目标函数必须有两个位置参数，以便能够消费与示例关联的附件，第一个参数必须命名为 `inputs`，第二个参数必须命名为 `attachments`。
 
-* The `inputs` argument is a dictionary that contains the input data for the example, excluding the attachments.
-* The `attachments` argument is a dictionary that maps the attachment name to a dictionary containing a presigned url, mime_type, and a reader of the bytes content of the file. You can use either the presigned url or the reader to get the file contents. Each value in the attachments dictionary is a dictionary with the following structure:
+* `inputs` 参数是一个字典，其中包含示例的输入数据，不包括附件。
+* `attachments` 参数是一个字典，它将附件名称映射到一个字典，该字典包含一个预签名 URL (`presigned url`)、`mime_type` 和文件内容的一个读取器 (`reader`)。您可以使用预签名 URL 或读取器来获取文件内容。 `attachments` 字典中每个值是一个具有以下结构的字典：
 
 ```python
 {
@@ -194,9 +193,9 @@ from openai import OpenAI
 
 client = wrap_openai(OpenAI())
 
-# Define target function that uses attachments
+# 定义使用附件的目标函数
 def file_qa(inputs, attachments):
-    # Read the audio bytes from the reader and encode them in base64
+    # 从读取器中读取音频字节并使用 base64 编码
     audio_reader = attachments["my_wav"]["reader"]
     audio_b64 = base64.b64encode(audio_reader.read()).decode('utf-8')
 
@@ -222,8 +221,8 @@ def file_qa(inputs, attachments):
         ]
     )
 
-    # Most models support taking in an image URL directly in addition to base64 encoded images
-    # You can pipe the image pre-signed URL directly to the model
+    # 大多数模型支持直接接受图像 URL 以及 Base64 编码的图像
+    # 您可以将图像预签名 URL 直接传递给模型
     image_url = attachments["my_img"]["presigned_url"]
     image_completion = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -251,9 +250,9 @@ def file_qa(inputs, attachments):
 
 #### TypeScript
 
-In the TypeScript SDK, the `config` argument is used to pass in the attachments to the target function if `includeAttachments` is set to `true`.
+在 TypeScript SDK 中，如果 `includeAttachments` 设置为 `true`，则使用 `config` 参数将附件传递给目标函数。
 
-The `config` will contain `attachments` which is an object mapping the attachment name to an object of the form:
+`config` 将包含 `attachments`，这是一个对象，将附件名称映射到以下形式的对象：
 
 ```typescript
 {
@@ -328,20 +327,20 @@ async function fileQA(inputs: Record<string, any>, config?: Record<string, any>)
 }
 ```
 
-### Define custom evaluators
+### 定义自定义评估器
 
-The exact same rules apply as above to determine whether the evaluator should receive attachments.
+上述规则完全适用于确定评估器是否应接收附件的情况。
 
-The evaluator below uses an LLM to judge if the reasoning and the answer are consistent. To learn more about how to define llm-based evaluators, please see [this guide](/langsmith/llm-as-judge).
+下面的评估器使用 LLM 来判断推理和答案是否一致。要了解有关如何定义基于 LLM 的评估器的更多信息，请参阅[本指南](/langsmith/llm-as-judge)。
 
 <CodeGroup>
 
 ```python Python
-# Assumes you've installed pydantic
+# 假设您已安装 pydantic
 from pydantic import BaseModel
 
 def valid_image_description(outputs: dict, attachments: dict) -> bool:
-  """Use an LLM to judge if the image description and images are consistent."""
+  """使用 LLM 判断图像描述和图像是否一致。"""
   instructions = """
   Does the description of the following image make sense?
   Please carefully review the image and the description to determine if the description is valid.
@@ -421,7 +420,7 @@ Please carefully review the image and the description to determine if the descri
 
 const resp = await evaluate(fileQA, {
   data: datasetName,
-  // Need to pass flag to include attachments
+  // 需要传递标志以包含附件
   includeAttachments: true,
   evaluators: [validImageDescription],
   client: langsmithClient
@@ -430,23 +429,23 @@ const resp = await evaluate(fileQA, {
 
 </CodeGroup>
 
-## Update examples with attachments
+## 2. 更新带有附件的示例
 
-In the code above, we showed how to add examples with attachments to a dataset. It is also possible to update these same examples using the SDK.
+在上面的代码中，我们展示了如何向数据集添加带有附件的示例。也可以使用 SDK 更新这些相同的示例。
 
-As with existing examples, datasets are versioned when you update them with attachments. Therefore, you can navigate to the dataset version history to see the changes made to each example. To learn more, please see [this guide](/langsmith/manage-datasets-in-application).
+与现有示例一样，当您使用附件更新数据集时，数据集会被版本化。因此，您可以导航到数据集版本历史记录以查看对每个示例所做的更改。要了解更多信息，请参阅[本指南](/langsmith/manage-datasets-in-application)。
 
-When updating an example with attachments, you can update attachments in a few different ways:
+更新带有附件的示例时，您可以通过几种不同的方式更新附件：
 
-* Pass in new attachments
-* Rename existing attachments
-* Delete existing attachments
+* 传入新附件
+* 重命名现有附件
+* 删除现有附件
 
-Note that:
+请注意：
 
-* Any existing attachments that are not explicitly renamed or retained **will be deleted**.
-* An error will be raised if you pass in a non-existent attachment name to `retain` or `rename`.
-* New attachments take precedence over existing attachments in case the same attachment name appears in the `attachments` and `attachment_operations` fields.
+* 任何未明确重命名或保留的现有附件 **都将被删除**。
+* 如果您向 `retain` 或 `rename` 传递一个不存在的附件名称，则会引发错误。
+* 如果在 `attachments` 和 `attachment_operations` 字段中出现相同的附件名称，新附件将优先于现有附件。
 
 <CodeGroup>
 
@@ -454,17 +453,17 @@ Note that:
 example_update = {
   "id": example_id,
   "attachments": {
-      # These are net new attachments
+      # 这些是全新的附件
       "my_new_file": ("text/plain", b"foo bar"),
   },
   "inputs": inputs,
   "outputs": outputs,
-  # Any attachments not in rename/retain will be deleted.
-  # In this case, that would be "my_img" if we uploaded it.
+  # 任何不在 rename/retain 中的附件都将被删除。
+  # 在此示例中，如果我们上传了 "my_img"，它将被删除。
   "attachments_operations": {
-      # Retained attachments will stay exactly the same
+      # 保留的附件将保持完全一样
       "retain": ["my_pdf"],
-      # Renaming attachments preserves the original data
+      # 重命名附件会保留原始数据
       "rename": {
           "my_wav": "my_new_wav",
       }
@@ -480,21 +479,21 @@ import { ExampleUpdateWithAttachments } from "langsmith/schemas";
 const exampleUpdate: ExampleUpdateWithAttachments = {
   id: exampleId,
   attachments: {
-    // These are net new attachments
+    // 这些是全新的附件
     "my_new_file": {
       mimeType: "text/plain",
       data: Buffer.from("foo bar")
     },
   },
   attachments_operations: {
-    // Retained attachments will stay exactly the same
+    // 保留的附件将保持完全一样
     retain: ["my_img"],
-    // Renaming attachments preserves the original data
+    // 重命名附件会保留原始数据
     rename: {
       "my_wav": "my_new_wav",
     },
-    // Any attachments not in rename/retain will be deleted
-    // In this case, that would be "my_pdf"
+    // 任何不在 rename/retain 中的附件都将被删除
+    // 在此示例中，这将是 "my_pdf"
   },
 };
 
@@ -505,60 +504,60 @@ await langsmithClient.updateExamplesMultipart(dataset.id, [exampleUpdate]);
 
 ## UI
 
-### 1. Create examples with attachments
+### 1. 使用附件创建示例
 
-You can add examples with attachments to a dataset in a few different ways.
+您可以通过几种不同的方式向数据集中添加带有附件的示例。
 
-#### From existing runs
+#### 从现有运行添加
 
-When adding runs to a LangSmith dataset, attachments can be selectively propagated from the source run to the destination example. To learn more, please see [this guide](/langsmith/manage-datasets-in-application#add-runs-from-the-tracing-project-ui).
+当将运行添加到 LangSmith 数据集时，可以从源运行中选择性地将附件传播到目标示例。要了解更多信息，请参阅[本指南](/langsmith/manage-datasets-in-application#add-runs-from-the-tracing-project-ui)。
 
-![Add trace with attachments to dataset](/langsmith/images/add-trace-with-attachments-to-dataset.png)
+![将带有附件的跟踪添加到数据集](/langsmith/images/add-trace-with-attachments-to-dataset.png)
 
-#### From scratch
+#### 从头开始创建
 
-You can create examples with attachments directly from the LangSmith UI. Click the `+ Example` button in the `Examples` tab of the dataset UI. Then upload attachments using the "Upload Files" button:
+您可以直接从 LangSmith UI 创建带有附件的示例。在数据集 UI 的 `Examples` 选项卡中，点击 `+ Example` 按钮。然后使用“上传文件”按钮上传附件：
 
-![Create example with attachments](/langsmith/images/create-example-with-attachments.png)
+![从头创建带有附件的示例](/langsmith/images/create-example-with-attachments.png)
 
-Once uploaded, you can view examples with attachments in the LangSmith UI. Each attachment will be rendered with a preview for easy inspection. ![Attachments with examples](/langsmith/images/attachments-with-examples.png)
+上传后，您可以在 LangSmith UI 中查看带有附件的示例。每个附件都会渲染一个**预览**，以便于检查。 ![带有附件的示例](/langsmith/images/attachments-with-examples.png)
 
-### 2. Create a multimodal prompt
+### 2. 创建多模态提示
 
-The LangSmith UI allows you to include attachments in your prompts when evaluating multimodal models:
+LangSmith UI 允许您在评估多模态模型时在提示中包含附件：
 
-First, click the file icon in the message where you want to add multimodal content. Next, add a template variable for the attachment(s) you want to include for each example.
+首先，在要添加多模态内容的消息中点击文件图标。接下来，为您希望包含在每个示例中的附件添加一个模板变量。
 
-* For a single attachment type: Use the suggested variable name. Note: all examples must have an attachment with this name.
-* For multiple attachments or if your attachments have varying names from one example to another: Use the `All attachments` variable to include all available attachments for each example.
+* 对于单个附件类型：使用建议的变量名称。注意：所有示例都必须具有具有此名称的附件。
+* 对于多个附件或附件名称在示例之间有所不同：使用 `All attachments` 变量来包含每个示例所有可用的附件。
 
-![Adding multimodal variable](/langsmith/images/adding-multimodal-variable.gif)
+![添加多模态变量](/langsmith/images/adding-multimodal-variable.gif)
 
-### Define custom evaluators
-
-<Note>
-The LangSmith playground does not currently support pulling multimodal content into evaluators. If this would be helpful for your use case, please let us know in the [LangChain Forum](https://forum.langchain.com/) (sign up [here](https://www.langchain.com/join-community) if you're not already a member)!
-</Note>
-
-You can evaluate a model's text output by adding an evaluator that takes in the example's inputs and outputs. Even without multimodal support in your evaluators, you can still run text-only evaluations. For example:
-
-* OCR → text correction: Use a vision model to extract text from a document, then evaluate the accuracy of the extracted output.
-* Speech-to-text → transcription quality: Use a voice model to transcribe audio to text, then evaluate the transcription against your reference.
-
-For more information on defining custom evaluators, see the [LLM as Judge](/langsmith/llm-as-judge) guide.
-
-### Update examples with attachments
+### 定义自定义评估器
 
 <Note>
-Attachments are limited to 20MB in size in the UI.
+LangSmith 游乐场目前不支持将多模态内容导入评估器中。如果这对您的用例有帮助，请在 [LangChain 论坛](https://forum.langchain.com/) 告诉我们（如果您还不是会员，请在此处注册 [here](https://www.langchain.com/join-community))！
 </Note>
 
-When editing an example in the UI, you can:
+您可以通过添加一个接收示例的输入和输出来评估模型对文本的输出。即使您的评估器不支持多模态，您仍然可以运行纯文本评估。例如：
 
-* Upload new attachments
-* Rename and delete attachments
-* Reset attachments to their previous state using the quick reset button
+* OCR → 文本校正：使用视觉模型从文档中提取文本，然后评估提取出的输出的准确性。
+* 语音转文本 → 转录质量：使用语音模型将音频转录为文本，然后根据您的参考标准评估转录的准确性。
 
-Changes are not saved until you click submit.
+有关定义自定义评估器的更多信息，请参阅 [LLM 作为裁判](/langsmith/llm-as-judge) 指南。
 
-![Attachment editing](/langsmith/images/attachment-editing.gif)
+### 更新带有附件的示例
+
+<Note>
+在 UI 中，附件大小限制为 20MB。
+</Note>
+
+在 UI 中编辑示例时，您可以：
+
+* 上传新附件
+* 重命名和删除附件
+* 使用快速重置按钮将附件恢复到以前的状态
+
+更改在点击提交之前不会保存。
+
+![附件编辑](/langsmith/images/attachment-editing.gif)

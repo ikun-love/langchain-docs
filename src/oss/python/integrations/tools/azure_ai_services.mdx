@@ -1,20 +1,20 @@
 ---
-title: Azure AI Services Toolkit
+title: Azure AI 服务工具包
 ---
 
-This toolkit is used to interact with the `Azure AI Services API` to achieve some multimodal capabilities.
+此工具包用于与 `Azure AI Services API` 交互，以实现某些多模态能力。
 
-Currently There are five tools bundled in this toolkit:
+目前，此工具包中捆绑了五个工具：
 
-- **AzureAiServicesImageAnalysisTool**: used to extract caption, objects, tags, and text from images.
-- **AzureAiServicesDocumentIntelligenceTool**: used to extract text, tables, and key-value pairs from documents.
-- **AzureAiServicesSpeechToTextTool**: used to transcribe speech to text.
-- **AzureAiServicesTextToSpeechTool**: used to synthesize text to speech.
-- **AzureAiServicesTextAnalyticsForHealthTool**: used to extract healthcare entities.
+- **AzureAiServicesImageAnalysisTool**: 用于从图像中提取标题（caption）、对象（objects）、标签（tags）和文本（text）。
+- **AzureAiServicesDocumentIntelligenceTool**: 用于从文档中提取文本、表格和键值对。
+- **AzureAiServicesSpeechToTextTool**: 用于将语音转录成文本。
+- **AzureAiServicesTextToSpeechTool**: 用于合成文本到语音。
+- **AzureAiServicesTextAnalyticsForHealthTool**: 用于提取医疗健康实体。
 
-First, you need to set up an Azure account and create an AI Services resource. You can follow the instructions [here](https://learn.microsoft.com/en-us/azure/ai-services/multi-service-resource) to create a resource.
+首先，您需要设置一个 Azure 帐户并创建一个 AI Services 资源。您可以按照 [此处](https://learn.microsoft.com/en-us/azure/ai-services/multi-service-resource) 的说明来创建资源。
 
-Then, you need to get the endpoint, key and region of your resource, and set them as environment variables. You can find them in the "Keys and Endpoint" page of your resource.
+然后，您需要获取资源的终结点（endpoint）、密钥（key）和区域（region），并将它们设置为环境变量。您可以在资源的“密钥和终结点”页面找到这些信息。
 
 ```python
 pip install -qU  azure-ai-formrecognizer > /dev/null
@@ -33,7 +33,7 @@ os.environ["AZURE_AI_SERVICES_ENDPOINT"] = ""
 os.environ["AZURE_AI_SERVICES_REGION"] = ""
 ```
 
-## Create the Toolkit
+## 创建工具包 (Create the Toolkit)
 
 ```python
 from langchain_community.agent_toolkits import AzureAiServicesToolkit
@@ -53,7 +53,7 @@ toolkit = AzureAiServicesToolkit()
  'azure_ai_services_text_analytics_for_health']
 ```
 
-## Use within an Agent
+## 在 Agent 中使用 (Use within an Agent)
 
 ```python
 from langchain_classic import hub
@@ -82,9 +82,9 @@ agent_executor.invoke(
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 进入新的 AgentExecutor 链条...
 
-Thought: I need to use the azure_ai_services_image_analysis tool to analyze the image of the ingredients.
+Thought: 我需要使用 azure_ai_services_image_analysis 工具来分析原料的图片。
 Action:
 \`\`\`
 {
@@ -105,7 +105,7 @@ Action:
 
 
 
-> Finished chain.
+> 链条完成。
 ```
 
 ```output
@@ -119,9 +119,9 @@ audio_file = tts_result.get("output")
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 进入新的 AgentExecutor 链条...
 
-Thought: I can use the Azure AI Services Text to Speech API to convert text to speech.
+Thought: 我可以使用 Azure AI Services 文本转语音 API 将文本转换为语音。
 Action:
 \`\`\`
 {
@@ -132,7 +132,7 @@ Action:
 /tmp/tmpe48vamz0.wav
 
 
-> Finished chain.
+> 链条完成。
 ```
 
 ```python
@@ -159,9 +159,9 @@ agent_executor.invoke({"input": sample_input})
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 进入新的 AgentExecutor 链条...
 
-Thought: The patient has a history of progressive angina, a strong family history of coronary artery disease, and a previous cardiac catheterization revealing total occlusion of the RCA and 50% left main disease.
+Thought: 病史显示患者有进行性心绞痛史、有冠状动脉疾病的强烈家族史，以及先前的血管造影显示 RCA 完全闭塞和 50% 左主干病变。
 Action:
 \`\`\`
 {
@@ -177,7 +177,7 @@ Action:
 
 
 
-> Finished chain.
+> 链条完成。
 ```
 
 ```output

@@ -1,53 +1,54 @@
+```markdown
 ---
-title: Manage prompts programmatically
-sidebarTitle: Manage prompts programmatically
+title: 以编程方式管理提示词（Prompts）
+sidebarTitle: 以编程方式管理提示词（Prompts）
 ---
 
-You can use the LangSmith Python and TypeScript SDK to manage prompts programmatically.
+您可以使用 LangSmith 的 Python 和 TypeScript SDK 来以编程方式管理提示词。
 
 <Note>
-Previously this functionality lived in the `langchainhub` package which is now deprecated. All functionality going forward will live in the `langsmith` package.
+过去此功能位于 `langchainhub` 包中，该包现已弃用。今后所有功能都将集成在 `langsmith` 包中。
 </Note>
 
-## Install packages
+## 安装包
 
-In Python, you can directly use the LangSmith SDK (*recommended, full functionality*) or you can use through the LangChain package (limited to pushing and pulling prompts).
+在 Python 中，您可以直接使用 LangSmith SDK（*推荐，功能最全*），或者通过 LangChain 包使用（功能仅限于推送和拉取提示词）。
 
-In TypeScript, you must use the LangChain npm package for pulling prompts (it also allows pushing). For all other functionality, use the LangSmith package.
+在 TypeScript 中，拉取提示词必须使用 LangChain npm 包（它也支持推送）。对于所有其他功能，请使用 LangSmith 包。
 
 <CodeGroup>
 ```bash pip
-pip install -U langsmith # version >= 0.1.99
+pip install -U langsmith # 版本 >= 0.1.99
 ```
 
 ```bash uv
-uv add langsmith  # version >= 0.1.99
+uv add langsmith  # 版本 >= 0.1.99
 ```
 
 ```bash TypeScript
-yarn add langsmith langchain // langsmith version >= 0.1.99 and langchain version >= 0.2.14
+yarn add langsmith langchain // langsmith 版本 >= 0.1.99 且 langchain 版本 >= 0.2.14
 ```
 </CodeGroup>
 
-## Configure environment variables
+## 配置环境变量
 
-If you already have `LANGSMITH_API_KEY` set to your current workspace's api key from LangSmith, you can skip this step.
+如果您已经为 LangSmith 设置了当前工作区的 API 密钥（即设置了 `LANGSMITH_API_KEY`），则可以跳过此步骤。
 
-Otherwise, get an API key for your workspace by navigating to `Settings > API Keys > Create API Key` in LangSmith.
+否则，请导航至 LangSmith 中的 `Settings > API Keys > Create API Key` 来获取您工作区的 API 密钥。
 
-Set your environment variable.
+设置您的环境变量。
 
 ```bash
 export LANGSMITH_API_KEY="lsv2_..."
 ```
 
 <Note>
-What we refer to as "prompts" used to be called "repos", so any references to "repo" in the code are referring to a prompt.
+我们所说的“提示词”（prompts）以前被称为“仓库”（repos），因此代码中所有提到 "repo" 的地方都指的是一个提示词。
 </Note>
 
-## Push a prompt
+## 推送提示词 (Push a prompt)
 
-To create a new prompt or update an existing prompt, you can use the `push prompt` method.
+要创建新提示词或更新现有提示词，您可以使用 `push_prompt` 方法。
 
 <CodeGroup>
 
@@ -58,7 +59,7 @@ from langchain_core.prompts import ChatPromptTemplate
 client = Client()
 prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
 url = client.push_prompt("joke-generator", object=prompt)
-# url is a link to the prompt in the UI
+# url 是 LangSmith UI 中该提示词的链接
 print(url)
 ```
 
@@ -68,7 +69,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
 url = prompts.push("joke-generator", prompt)
-# url is a link to the prompt in the UI
+# url 是 LangSmith UI 中该提示词的链接
 print(url)
 ```
 
@@ -80,13 +81,13 @@ const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
 const url = hub.push("joke-generator", {
   object: prompt,
 });
-// url is a link to the prompt in the UI
+// url 是 LangSmith UI 中该提示词的链接
 console.log(url);
 ```
 
 </CodeGroup>
 
-You can also push a prompt as a RunnableSequence of a prompt and a model. This is useful for storing the model configuration you want to use with this prompt. The provider must be supported by the LangSmith playground. (see settings here: [Supported Providers](https://langsmith.com/playground))
+您也可以将提示词以及所用的模型配置为一个 `RunnableSequence` 进行推送。这对于存储您希望与此提示词一起使用的模型配置非常有用。提供商必须能被 LangSmith Playground 支持（参见此处的设置：[Supported Providers](https://langsmith.com/playground)）。
 
 <CodeGroup>
 
@@ -111,7 +112,7 @@ model = ChatOpenAI(model="gpt-4o-mini")
 prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
 chain = prompt | model
 url = prompts.push("joke-generator-with-model", chain)
-# url is a link to the prompt in the UI
+# url 是 LangSmith UI 中该提示词的链接
 print(url)
 ```
 
@@ -130,13 +131,13 @@ await hub.push("joke-generator-with-model", {
 
 </CodeGroup>
 
-## Pull a prompt
+## 拉取提示词 (Pull a prompt)
 
-To pull a prompt, you can use the `pull prompt` method, which returns a the prompt as a langchain `PromptTemplate`.
+要拉取提示词，您可以使用 `pull_prompt` 方法，它会返回一个 LangChain `PromptTemplate` 对象。
 
-To pull a **private prompt** you do not need to specify the owner handle (though you can, if you have one set).
+要拉取**私有提示词**，您不需要指定作者（Handle）（当然，如果您知道作者名称，也可以指定）。
 
-To pull a **public prompt** from the LangChain Hub, you need to specify the handle of the prompt's author.
+要从 LangChain Hub 拉取**公共提示词**，您需要指定作者的 Handle。
 
 <CodeGroup>
 
@@ -173,7 +174,7 @@ await chain.invoke({"topic": "cats"});
 
 </CodeGroup>
 
-Similar to pushing a prompt, you can also pull a prompt as a RunnableSequence of a prompt and a model. Just specify include\_model when pulling the prompt. If the stored prompt includes a model, it will be returned as a RunnableSequence. Make sure you have the proper environment variables set for the model you are using.
+与推送类似，拉取提示词时，您也可以将其作为一个包含提示词和模型的 `RunnableSequence` 来拉取。只需在拉取时设置 `include_model=True` 即可。如果存储的提示词包含模型，它将被返回为一个 `RunnableSequence`。请确保已为使用的模型设置了正确的环境变量。
 
 <CodeGroup>
 
@@ -202,7 +203,7 @@ await chain.invoke({"topic": "cats"});
 
 </CodeGroup>
 
-When pulling a prompt, you can also specify a specific commit hash or [commit tag](/langsmith/manage-prompts#commit-tags) to pull a specific version of the prompt.
+拉取提示词时，您还可以指定特定的提交哈希（commit hash）或[提交标签](/langsmith/manage-prompts#commit-tags)来拉取提示词的特定版本。
 
 <CodeGroup>
 
@@ -220,7 +221,7 @@ const prompt = await hub.pull("joke-generator:12344e88")
 
 </CodeGroup>
 
-To pull a public prompt from the LangChain Hub, you need to specify the handle of the prompt's author.
+要从 LangChain Hub 拉取公共提示词，您需要指定作者的 Handle。
 
 <CodeGroup>
 
@@ -239,16 +240,16 @@ const prompt = await hub.pull("efriis/my-first-prompt")
 </CodeGroup>
 
 <Note>
-For pulling prompts, if you are using Node.js or an environment that supports dynamic imports, we recommend using the `langchain/hub/node` entrypoint, as it handles deserialization of models associated with your prompt configuration automatically.
+对于拉取提示词，如果您使用的是支持动态导入的 Node.js 或环境，我们推荐使用 `langchain/hub/node` 入口点，因为它会自动处理与您的提示词配置相关的模型的反序列化。
 
-If you are in a non-Node environment, "includeModel" is not supported for non-OpenAI models and you should use the base `langchain/hub` entrypoint.
+如果您处于非 Node 环境中，`includeModel` 对于非 OpenAI 模型不受支持，您应该使用基础的 `langchain/hub` 入口点。
 </Note>
 
-## Use a prompt without LangChain
+## 在不使用 LangChain 的情况下使用提示词
 
-If you want to store your prompts in LangSmith but use them directly with a model provider's API, you can use our conversion methods. These convert your prompt into the payload required for the OpenAI or Anthropic API.
+如果您希望将提示词存储在 LangSmith 中，但想直接将其用于模型提供商的 API，您可以使用我们的转换方法。这些方法可以将您的提示词转换为 OpenAI 或 Anthropic API 所需的负载格式。
 
-These conversion methods rely on logic from within LangChain integration packages, and you will need to install the appropriate package as a dependency in addition to your official SDK of choice. Here are some examples:
+这些转换方法依赖于 LangChain 集成包内的逻辑，因此除了选择官方 SDK 之外，您还需要将相应的包作为依赖项安装。以下是一些示例：
 
 ### OpenAI
 
@@ -259,7 +260,7 @@ pip install -U langchain_openai
 ```
 
 ```bash TypeScript
-yarn add @langchain/openai @langchain/core // @langchain/openai version >= 0.3.2
+yarn add @langchain/openai @langchain/core // @langchain/openai 版本 >= 0.3.2
 ```
 
 </CodeGroup>
@@ -270,12 +271,12 @@ yarn add @langchain/openai @langchain/core // @langchain/openai version >= 0.3.2
 from openai import OpenAI
 from langsmith.client import Client, convert_prompt_to_openai_format
 
-# langsmith client
+# langsmith 客户端
 client = Client()
-# openai client
+# openai 客户端
 oai_client = OpenAI()
 
-# pull prompt and invoke to populate the variables
+# 拉取提示词并调用以填充变量
 prompt = client.pull_prompt("joke-generator")
 prompt_value = prompt.invoke({"topic": "cats"})
 openai_payload = convert_prompt_to_openai_format(prompt_value)
@@ -311,7 +312,7 @@ pip install -U langchain_anthropic
 ```
 
 ```bash TypeScript
-yarn add @langchain/anthropic @langchain/core // @langchain/anthropic version >= 0.3.3
+yarn add @langchain/anthropic @langchain/core // @langchain/anthropic 版本 >= 0.3.3
 ```
 
 </CodeGroup>
@@ -322,12 +323,12 @@ yarn add @langchain/anthropic @langchain/core // @langchain/anthropic version >=
 from anthropic import Anthropic
 from langsmith.client import Client, convert_prompt_to_anthropic_format
 
-# langsmith client
+# langsmith 客户端
 client = Client()
-# anthropic client
+# anthropic 客户端
 anthropic_client = Anthropic()
 
-# pull prompt and invoke to populate the variables
+# 拉取提示词并调用以填充变量
 prompt = client.pull_prompt("joke-generator")
 prompt_value = prompt.invoke({"topic": "cats"})
 anthropic_payload = convert_prompt_to_anthropic_format(prompt_value)
@@ -357,31 +358,31 @@ const anthropicResponse = await anthropicClient.messages.create({
 
 </CodeGroup>
 
-## List, delete, and like prompts
+## 列出、删除和点赞提示词
 
-You can also list, delete, and like/unlike prompts using the `list prompts`, `delete prompt`, `like prompt` and `unlike prompt` methods. See the [LangSmith SDK client](https://github.com/langchain-ai/langsmith-sdk) for extensive documentation on these methods.
+您还可以使用 `list_prompts`、`delete_prompt`、`like_prompt` 和 `unlike_prompt` 方法来列出、删除和点赞/取消点赞提示词。有关这些方法的详细文档，请参阅 [LangSmith SDK 客户端](https://github.com/langchain-ai/langsmith-sdk)。
 
 <CodeGroup>
 
 ```python Python
-# List all prompts in my workspace
+# 列出工作区中的所有提示词
 prompts = client.list_prompts()
 
-# List my private prompts that include "joke"
+# 列出包含 "joke" 的我的私有提示词
 prompts = client.list_prompts(query="joke", is_public=False)
 
-# Delete a prompt
+# 删除一个提示词
 client.delete_prompt("joke-generator")
 
-# Like a prompt
+# 点赞一个提示词
 client.like_prompt("efriis/my-first-prompt")
 
-# Unlike a prompt
+# 取消点赞一个提示词
 client.unlike_prompt("efriis/my-first-prompt")
 ```
 
 ```typescript TypeScript
-// List all prompts in my workspace
+// 列出工作区中的所有提示词
 import Client from "langsmith";
 
 const client = new Client({ apiKey: "lsv2_..." });
@@ -391,17 +392,18 @@ for await (const prompt of prompts) {
   console.log(prompt);
 }
 
-// List my private prompts that include "joke"
+// 列出包含 "joke" 的我的私有提示词
 const private_joke_prompts = client.listPrompts({ query: "joke", isPublic: false});
 
-// Delete a prompt
+// 删除一个提示词
 client.deletePrompt("joke-generator");
 
-// Like a prompt
+// 点赞一个提示词
 client.likePrompt("efriis/my-first-prompt");
 
-// Unlike a prompt
+// 取消点赞一个提示词
 client.unlikePrompt("efriis/my-first-prompt");
 ```
 
 </CodeGroup>
+```

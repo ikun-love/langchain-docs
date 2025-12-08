@@ -1,30 +1,30 @@
 ---
-title: LLMLingua Document Compressor
+title: LLMLingua 文档压缩器
 ---
 
->[LLMLingua](https://github.com/microsoft/LLMLingua) utilizes a compact, well-trained language model (e.g., GPT2-small, LLaMA-7B) to identify and remove non-essential tokens in prompts. This approach enables efficient inference with large language models (LLMs), achieving up to 20x compression with minimal performance loss.
+>[LLMLingua](https://github.com/microsoft/LLMLingua) 利用一个紧凑、训练有素的语言模型（例如 GPT2-small, LLaMA-7B）来识别和移除提示（Prompts）中非必要的 Token。这种方法可以实现大型语言模型（LLMs）的高效推理，在性能损失极小的情况下，压缩率可达 20 倍。
 
-This notebook shows how to use LLMLingua as a document compressor.
+本示例 Notebook 展示了如何将 LLMLingua 用作文档压缩器。
 
 ```python
 pip install -qU  llmlingua accelerate
 ```
 
 ```python
-# Helper function for printing docs
+# 用于打印文档的辅助函数
 
 
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Set up the base vector store retriever
+## 设置基础向量存储检索器 (Base Vector Store Retriever)
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+我们首先初始化一个简单的向量存储检索器，并将 2023 年的国情咨文（State of the Union speech）内容（分块后）存储进去。我们可以将检索器设置为检索较多的文档（比如 20 个）。
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -48,25 +48,25 @@ pretty_print_docs(docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
 
 While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
 A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
 
 And if we are to advance liberty and justice, we need to secure the Border and fix the immigration system.
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 He met the Ukrainian people.
 
@@ -76,7 +76,7 @@ Groups of citizens blocking tanks with their bodies. Everyone from students to r
 
 In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
 ----------------------------------------------------------------------------------------------------
-Document 5:
+文档 5:
 
 But that trickle-down theory led to weaker economic growth, lower wages, bigger deficits, and the widest gap between those at the top and everyone else in nearly a century.
 
@@ -85,7 +85,7 @@ Vice President Harris and I ran for office with a new economic vision for Americ
 Invest in America. Educate Americans. Grow the workforce. Build the economy from the bottom up
 and the middle out, not from the top down.
 ----------------------------------------------------------------------------------------------------
-Document 6:
+文档 6:
 
 And tonight, I’m announcing that the Justice Department will name a chief prosecutor for pandemic fraud.
 
@@ -99,7 +99,7 @@ I’m a capitalist, but capitalism without competition isn’t capitalism.
 
 It’s exploitation—and it drives up prices.
 ----------------------------------------------------------------------------------------------------
-Document 7:
+文档 7:
 
 I spoke with their families and told them that we are forever in debt for their sacrifice, and we will carry on their mission to restore the trust and safety every community deserves.
 
@@ -109,7 +109,7 @@ I know what works: Investing in crime prevention and community police officers w
 
 So let’s not abandon our streets. Or choose between safety and equal justice.
 ----------------------------------------------------------------------------------------------------
-Document 8:
+文档 8:
 
 As I’ve told Xi Jinping, it is never a good bet to bet against the American people.
 
@@ -117,7 +117,7 @@ We’ll create good jobs for millions of Americans, modernizing roads, airports,
 
 And we’ll do it all to withstand the devastating effects of the climate crisis and promote environmental justice.
 ----------------------------------------------------------------------------------------------------
-Document 9:
+文档 9:
 
 Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.
 
@@ -129,7 +129,7 @@ With a duty to one another to the American people to the Constitution.
 
 And with an unwavering resolve that freedom will always triumph over tyranny.
 ----------------------------------------------------------------------------------------------------
-Document 10:
+文档 10:
 
 As Ohio Senator Sherrod Brown says, “It’s time to bury the label “Rust Belt.”
 
@@ -141,7 +141,7 @@ Inflation is robbing them of the gains they might otherwise feel.
 
 I get it. That’s why my top priority is getting prices under control.
 ----------------------------------------------------------------------------------------------------
-Document 11:
+文档 11:
 
 I’m also calling on Congress: pass a law to make sure veterans devastated by toxic exposures in Iraq and Afghanistan finally get the benefits and comprehensive health care they deserve.
 
@@ -151,7 +151,7 @@ This is personal to me and Jill, to Kamala, and to so many of you.
 
 Cancer is the #2 cause of death in America–second only to heart disease.
 ----------------------------------------------------------------------------------------------------
-Document 12:
+文档 12:
 
 Headaches. Numbness. Dizziness.
 
@@ -169,7 +169,7 @@ Committed to military families like Danielle Robinson from Ohio.
 
 The widow of Sergeant First Class Heath Robinson.
 ----------------------------------------------------------------------------------------------------
-Document 13:
+文档 13:
 
 He will never extinguish their love of freedom. He will never weaken the resolve of the free world.
 
@@ -181,7 +181,7 @@ And so many families are living paycheck to paycheck, struggling to keep up with
 
 I understand.
 ----------------------------------------------------------------------------------------------------
-Document 14:
+文档 14:
 
 When we invest in our workers, when we build the economy from the bottom up and the middle out together, we can do something we haven’t done in a long time: build a better America.
 
@@ -191,7 +191,7 @@ And I know you’re tired, frustrated, and exhausted.
 
 But I also know this.
 ----------------------------------------------------------------------------------------------------
-Document 15:
+文档 15:
 
 My plan to fight inflation will lower your costs and lower the deficit.
 
@@ -199,7 +199,7 @@ My plan to fight inflation will lower your costs and lower the deficit.
 
 First – cut the cost of prescription drugs. Just look at insulin. One in ten Americans has diabetes. In Virginia, I met a 13-year-old boy named Joshua Davis.
 ----------------------------------------------------------------------------------------------------
-Document 16:
+文档 16:
 
 And soon, we’ll strengthen the Violence Against Women Act that I first wrote three decades ago. It is important for us to show the nation that we can come together and do big things.
 
@@ -209,7 +209,7 @@ First, beat the opioid epidemic.
 
 There is so much we can do. Increase funding for prevention, treatment, harm reduction, and recovery.
 ----------------------------------------------------------------------------------------------------
-Document 17:
+文档 17:
 
 My plan will not only lower costs to give families a fair shot, it will lower the deficit.
 
@@ -219,7 +219,7 @@ But in my administration, the watchdogs have been welcomed back.
 
 We’re going after the criminals who stole billions in relief money meant for small businesses and millions of Americans.
 ----------------------------------------------------------------------------------------------------
-Document 18:
+文档 18:
 
 So let’s not abandon our streets. Or choose between safety and equal justice.
 
@@ -227,7 +227,7 @@ Let’s come together to protect our communities, restore trust, and hold law en
 
 That’s why the Justice Department required body cameras, banned chokeholds, and restricted no-knock warrants for its officers.
 ----------------------------------------------------------------------------------------------------
-Document 19:
+文档 19:
 
 I understand.
 
@@ -239,7 +239,7 @@ Because people were hurting. We needed to act, and we did.
 
 Few pieces of legislation have done more in a critical moment in our history to lift us out of crisis.
 ----------------------------------------------------------------------------------------------------
-Document 20:
+文档 20:
 
 And we will, as one people.
 
@@ -250,9 +250,9 @@ The United States of America.
 May God bless you all. May God protect our troops.
 ```
 
-## Doing compression with LLMLingua
+## 使用 LLMLingua 进行压缩
 
-Now let’s wrap our base retriever with a `ContextualCompressionRetriever`, using `LLMLinguaCompressor` as a compressor.
+现在我们来看如何用 `ContextualCompressionRetriever` 来包装我们的基础检索器，并使用 `LLMLinguaCompressor` 作为压缩器。
 
 ```python
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
@@ -273,27 +273,27 @@ pretty_print_docs(compressed_docs)
 ```
 
 ```output
-Document 1:
+文档 1:
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
 ----------------------------------------------------------------------------------------------------
-Document 2:
+文档 2:
 
 . Numbness. Dizziness.A that would them in a-draped coffin. I One of those soldiers was my Biden We don’t know for sure if a burn pit the cause of brain, or the diseases of so many of our troops But I’m committed to finding out everything we can Committed to military families like Danielle Robinson from Ohio The widow of First Robinson.
 ----------------------------------------------------------------------------------------------------
-Document 3:
+文档 3:
 
-<ref#> let� Or between equal Let’ to protect, restore law accountable  why the Justice Department cameras bannedhold and restricted its officers. <
+<ref#> let Or between equal Let’ to protect, restore law accountable  why the Justice Department cameras bannedhold and restricted its officers. <
 ----------------------------------------------------------------------------------------------------
-Document 4:
+文档 4:
 
 <# The Sergeant Class Combat froms widow us toBut burn pits ravaged Heath’s lungs and body.
 Danielle says Heath was a fighter to the very end.
 ```
 
-## QA generation with LLMLingua
+## 使用 LLMLingua 进行问答生成 (QA generation)
 
-We can see what it looks like to use this in the generation step now
+我们现在来看看如何在生成步骤中使用 LLMLingua。
 
 ```python
 from langchain.chains import RetrievalQA
@@ -310,6 +310,6 @@ chain.invoke({"query": query})
  'result': "The President mentioned that Ketanji Brown Jackson is one of the nation's top legal minds and will continue Justice Breyer's legacy of excellence."}
 ```
 
-```python
+```
 
 ```

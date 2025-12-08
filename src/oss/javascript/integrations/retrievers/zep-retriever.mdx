@@ -1,30 +1,31 @@
+```markdown
 ---
-title: Zep Open Source Retriever
+title: Zep 开源检索器
 ---
 
-> [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
-> With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
-> while also reducing hallucinations, latency, and cost.
+> [Zep](https://www.getzep.com) 是一款面向 AI 助手应用的长期记忆服务。
+> 有了 Zep，您可以让 AI 助手具备回忆过去对话的能力，而不论这些对话发生多久以前，
+> 同时还能降低幻觉（Hallucinations）、延迟和成本。
 
-> Interested in Zep Cloud? See [Zep Cloud Installation Guide](https://help.getzep.com/sdks)
+> 对 Zep Cloud 感兴趣？请参阅 [Zep Cloud 安装指南](https://help.getzep.com/sdks)
 
-This example shows how to use the Zep Retriever in a retrieval chain to retrieve documents from Zep Open Source memory store.
+本示例展示了如何在检索链中使用 Zep Retriever，从 Zep 开源内存存储中检索文档。
 
-## Installation
+## 安装
 
-Follow the [Zep Open Source Quickstart Guide](https://help.getzep.com/quickstart) to install and get started with Zep.
+请遵循 [Zep 开源快速入门指南](https://help.getzep.com/quickstart) 来安装并开始使用 Zep。
 
-## Setup
+## 设置
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm i @getzep/zep-js @langchain/community @langchain/core
 ```
 
-## Usage
+## 用法
 
 ```typescript
 import { ZepRetriever } from "@langchain/community/retrievers/zep";
@@ -43,67 +44,66 @@ export const run = async () => {
     sessionId: `session_${randomUUID()}`,
   };
 
-  console.log(`Zep Config: ${JSON.stringify(zepConfig)}`);
+  console.log(`Zep 配置: ${JSON.stringify(zepConfig)}`);
 
   const memory = new ZepMemory({
     baseURL: zepConfig.url,
     sessionId: zepConfig.sessionId,
   });
 
-  // Generate chat messages about traveling to France
+  // 生成关于法国旅行的聊天消息
   const chatMessages = [
     {
       role: "AI",
-      message: "Bonjour! How can I assist you with your travel plans today?",
+      message: "Bonjour! 我今天能为您提供哪些旅行方面的帮助？",
     },
-    { role: "User", message: "I'm planning a trip to France." },
+    { role: "User", message: "我正在计划一次去法国的旅行。" },
     {
       role: "AI",
-      message: "That sounds exciting! What cities are you planning to visit?",
+      message: "听起来很棒！您计划访问哪些城市？",
     },
-    { role: "User", message: "I'm thinking of visiting Paris and Nice." },
+    { role: "User", message: "我正在考虑去巴黎和尼斯。" },
     {
       role: "AI",
-      message: "Great choices! Are you interested in any specific activities?",
+      message: "好主意！您对特定的活动感兴趣吗？",
     },
-    { role: "User", message: "I would love to visit some vineyards." },
-    {
-      role: "AI",
-      message:
-        "France has some of the best vineyards in the world. I can help you find some.",
-    },
-    { role: "User", message: "That would be great!" },
-    { role: "AI", message: "Do you prefer red or white wine?" },
-    { role: "User", message: "I prefer red wine." },
+    { role: "User", message: "我很想参观一些葡萄园。" },
     {
       role: "AI",
       message:
-        "Perfect! I'll find some vineyards that are known for their red wines.",
+        "法国拥有世界上最好的葡萄园之一。我可以帮您找一些。",
     },
-    { role: "User", message: "Thank you, that would be very helpful." },
+    { role: "User", message: "那太好了！" },
+    { role: "AI", message: "您更喜欢红葡萄酒还是白葡萄酒？" },
+    { role: "User", message: "我更喜欢红葡萄酒。" },
     {
       role: "AI",
       message:
-        "You're welcome! I'll also look up some French wine etiquette for you.",
+        "完美！我会为您查找一些以红葡萄酒闻名的葡萄园。",
+    },
+    { role: "User", message: "那将非常有帮助，谢谢。" },
+    {
+      role: "AI",
+      message: "不客气！我也会为您查找一些法国葡萄酒礼仪知识。",
     },
     {
       role: "User",
-      message: "That sounds great. I can't wait to start my trip!",
+      message: "听起来很棒。我已经迫不及待地想开始我的旅行了！",
     },
     {
       role: "AI",
       message:
-        "I'm sure you'll have a fantastic time. Do you have any other questions about your trip?",
+        "我相信您会度过愉快的时光。您对旅行还有其他问题吗？",
     },
-    { role: "User", message: "Not at the moment, thank you for your help!" },
+    { role: "User", message: "目前没有其他问题了，谢谢您的帮助！" },
   ];
 
   const zepClient = await memory.zepClientPromise;
   if (!zepClient) {
-    throw new Error("ZepClient is not initialized");
+    throw new Error("ZepClient 未初始化");
   }
 
-  // Add chat messages to memory
+  // 将聊天消息添加到内存中
   for (const chatMessage of chatMessages) {
     let m: MemoryModel;
     if (chatMessage.role === "AI") {
@@ -121,17 +121,17 @@ export const run = async () => {
     await zepClient.memory.addMemory(zepConfig.sessionId, m);
   }
 
-  // Wait for messages to be summarized, enriched, embedded and indexed.
+  // 等待消息被总结、丰富、嵌入和索引。
   await sleep(10000);
 
-  // Simple similarity search
-  const query = "Can I drive red cars in France?";
+  // 简单的相似性搜索
+  const query = "我可以在法国开车或携带红酒吗？";
   const retriever = new ZepRetriever({ ...zepConfig, topK: 3 });
   const docs = await retriever.invoke(query);
-  console.log("Simple similarity search");
+  console.log("简单相似性搜索");
   console.log(JSON.stringify(docs, null, 2));
 
-  // mmr reranking search
+  // mmr 重排搜索
   const mmrRetriever = new ZepRetriever({
     ...zepConfig,
     topK: 3,
@@ -139,10 +139,10 @@ export const run = async () => {
     mmrLambda: 0.5,
   });
   const mmrDocs = await mmrRetriever.invoke(query);
-  console.log("MMR reranking search");
+  console.log("MMR 重排搜索");
   console.log(JSON.stringify(mmrDocs, null, 2));
 
-  // summary search with mmr reranking
+  // 带有 mmr 重排的摘要搜索
   const mmrSummaryRetriever = new ZepRetriever({
     ...zepConfig,
     topK: 3,
@@ -151,10 +151,10 @@ export const run = async () => {
     mmrLambda: 0.5,
   });
   const mmrSummaryDocs = await mmrSummaryRetriever.invoke(query);
-  console.log("Summary search with MMR reranking");
+  console.log("带有 MMR 重排的摘要搜索");
   console.log(JSON.stringify(mmrSummaryDocs, null, 2));
 
-  // Filtered search
+  // 过滤搜索
   const filteredRetriever = new ZepRetriever({
     ...zepConfig,
     topK: 3,
@@ -163,11 +163,12 @@ export const run = async () => {
     },
   });
   const filteredDocs = await filteredRetriever.invoke(query);
-  console.log("Filtered search");
+  console.log("过滤搜索");
   console.log(JSON.stringify(filteredDocs, null, 2));
 };
 ```
 
-## Related
+## 相关
 
-- [Retrieval guide](/oss/langchain/retrieval)
+- [检索指南](/oss/langchain/retrieval)
+```

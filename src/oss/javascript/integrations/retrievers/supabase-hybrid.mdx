@@ -1,38 +1,39 @@
 ---
-title: Supabase Hybrid Search
+title: Supabase 混合搜索
 ---
 
-LangChain supports hybrid search with a Supabase Postgres database. The hybrid search combines the postgres `pgvector` extension (similarity search) and Full-Text Search (keyword search) to retrieve documents. You can add documents via SupabaseVectorStore `addDocuments` function. SupabaseHybridKeyWordSearch accepts embedding, supabase client, number of results for similarity search, and number of results for keyword search as parameters. The `getRelevantDocuments` function produces a list of documents that has duplicates removed and is sorted by relevance score.
+LangChain 支持使用 Supabase Postgres 数据库进行混合搜索（Hybrid Search）。混合搜索结合了 PostgreSQL 的 `pgvector` 扩展（用于相似性搜索）和全文搜索（Full-Text Search，用于关键词搜索）来检索文档。您可以通过 `SupabaseVectorStore` 的 `addDocuments` 函数添加文档。`SupabaseHybridKeyWordSearch` 接受嵌入（embedding）、Supabase 客户端（client）、用于相似性搜索的结果数量（number of results for similarity search）以及用于关键词搜索的结果数量（number of results for keyword search）作为参数。`getRelevantDocuments` 函数会返回一个列表，其中删除了重复项并按相关性得分排序的文档。
 
-## Setup
+## 设置
 
-### Install the library with
+### 使用以下命令安装库
 
 ```bash npm
 npm install -S @supabase/supabase-js
 ```
-### Create a table and search functions in your database
+### 在数据库中创建表和搜索函数
 
-Run this in your database:
+在您的数据库中运行以下 SQL 语句：
 
 ```sql
--- Enable the pgvector extension to work with embedding vectors
+-- 启用 pgvector 扩展，以便与嵌入向量一起工作
 create extension vector;
 
--- Create a table to store your documents
+-- 创建一个表来存储您的文档
 create table documents (
   id bigserial primary key,
-  content text, -- corresponds to Document.pageContent
-  metadata jsonb, -- corresponds to Document.metadata
-  embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed
+  content text, -- 对应于 Document.pageContent
+  metadata jsonb, -- 对应于 Document.metadata
+  embedding vector(1536) -- 对于 OpenAI 嵌入，1536 是一个合适的值，如果需要请更改
 );
 
--- Create a function to similarity search for documents
+-- 创建一个函数来进行文档的相似性搜索
 create function match_documents (
   query_embedding vector(1536),
   match_count int DEFAULT null,
   filter jsonb DEFAULT '{}'
-) returns table (
+)
+returns table (
   id bigint,
   content text,
   metadata jsonb,
@@ -55,7 +56,7 @@ begin
 end;
 $$;
 
--- Create a function to keyword search for documents
+-- 创建一个函数来进行文档的关键词搜索
 create function kw_match_documents(query_text text, match_count int)
 returns table (id bigint, content text, metadata jsonb, similarity real)
 as $$
@@ -71,10 +72,10 @@ using query_text, match_count;
 end;
 $$ language plpgsql;
 ```
-## Usage
+## 用法
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+请参阅[本节](/oss/langchain/install)以获取有关安装 LangChain 包的通用说明。
 </Tip>
 
 ```bash npm
@@ -96,7 +97,7 @@ export const run = async () => {
 
   const retriever = new SupabaseHybridSearch(embeddings, {
     client,
-    //  Below are the defaults, expecting that you set up your supabase table and functions according to the guide above. Please change if necessary.
+    //  以下是默认值，它们期望您已按照上述指南设置了 Supabase 表和函数。如果需要，请更改。
     similarityK: 2,
     keywordK: 2,
     tableName: "documents",
@@ -110,6 +111,6 @@ export const run = async () => {
 };
 ```
 
-## Related
+## 相关
 
-- [Retrieval guide](/oss/langchain/retrieval)
+- [检索指南](/oss/langchain/retrieval)

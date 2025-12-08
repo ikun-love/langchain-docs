@@ -1,12 +1,12 @@
 ---
-title: OpenAI Adapter(Old)
+title: OpenAI 适配器 (旧版)
 ---
 
-**Please ensure OpenAI library is less than 1.0.0; otherwise, refer to the newer doc [OpenAI Adapter](/oss/integrations/adapters/openai/).**
+**请确保 OpenAI 库的版本低于 1.0.0；否则，请参考新的文档 [OpenAI 适配器](/oss/integrations/adapters/openai/)。**
 
-A lot of people get started with OpenAI but want to explore other models. LangChain's integrations with many model providers make this easy to do so. While LangChain has it's own message and model APIs, we've also made it as easy as possible to explore other models by exposing an adapter to adapt LangChain models to the OpenAI api.
+许多用户从使用 OpenAI 起步，但希望探索其他模型。LangChain 对许多模型提供商的集成使得这种切换变得非常容易。虽然 LangChain 拥有自己的消息（message）和模型 API，但我们也通过提供一个适配器，将 LangChain 的模型包装成兼容 OpenAI API 的形式，使探索其他模型变得尽可能简单。
 
-At the moment this only deals with output and does not return other information (token counts, stop reasons, etc).
+目前，这个适配器仅处理输出内容，不返回其他信息（如 token 计数、停止原因等）。
 
 ```python
 import openai
@@ -19,7 +19,7 @@ from langchain_community.adapters import openai as lc_openai
 messages = [{"role": "user", "content": "hi"}]
 ```
 
-Original OpenAI call
+原始 OpenAI 调用
 
 ```python
 result = openai.ChatCompletion.create(
@@ -32,7 +32,7 @@ result["choices"][0]["message"].to_dict_recursive()
 {'role': 'assistant', 'content': 'Hello! How can I assist you today?'}
 ```
 
-LangChain OpenAI wrapper call
+LangChain OpenAI 包装器调用
 
 ```python
 lc_result = lc_openai.ChatCompletion.create(
@@ -45,7 +45,7 @@ lc_result["choices"][0]["message"]
 {'role': 'assistant', 'content': 'Hello! How can I assist you today?'}
 ```
 
-Swapping out model providers
+切换模型提供方
 
 ```python
 lc_result = lc_openai.ChatCompletion.create(
@@ -60,7 +60,7 @@ lc_result["choices"][0]["message"]
 
 ## ChatCompletion.stream
 
-Original OpenAI call
+原始 OpenAI 调用
 
 ```python
 for c in openai.ChatCompletion.create(
@@ -83,7 +83,7 @@ for c in openai.ChatCompletion.create(
 {}
 ```
 
-LangChain OpenAI wrapper call
+LangChain OpenAI 包装器调用
 
 ```python
 for c in lc_openai.ChatCompletion.create(
@@ -106,7 +106,7 @@ for c in lc_openai.ChatCompletion.create(
 {}
 ```
 
-Swapping out model providers
+切换模型提供方
 
 ```python
 for c in lc_openai.ChatCompletion.create(

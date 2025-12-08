@@ -1,46 +1,46 @@
 ---
-title: Test multi-turn conversations
-sidebarTitle: Test multi-turn conversations
+title: 测试多轮对话
+sidebarTitle: 测试多轮对话
 ---
 
-This how-to guide walks you through the various ways you can set up the playground for multi-turn conversations, which will allow you to test different tool configurations and system prompts against longer threads of messages.
+本操作指南将指导您完成设置 Playground 以支持多轮对话的各种方法。这使您能够针对较长的消息序列，测试不同的工具配置和系统提示（system prompts）。
 
 ![](/langsmith/images/multiturn-diagram.png)
 
-## From an existing run
+## 从现有运行（Run）开始
 
-First, ensure you have properly [traced](/langsmith/observability) a multi-turn conversation, and then navigate to your tracing project. Once you get to your tracing project simply open the run, select the LLM call, and open it in the playground as follows:
+首先，请确保您已正确地对多轮对话进行了[跟踪/追踪（traced）](/langsmith/observability)，然后导航到您的追踪项目。进入项目后，只需打开相应的运行（run），选择 LLM 调用，然后按以下方式在 Playground 中打开它：
 
 ![](/langsmith/images/multiturn-from-run.gif)
 
-You can then edit the system prompt, tweak the tools and/or output schema and observe how the output of the multi-turn conversation changes.
+随后，您可以编辑系统提示、调整工具和/或输出模式（output schema），并观察多轮对话的输出如何随之改变。
 
-## From a dataset
+## 从数据集（Dataset）开始
 
-Before starting, make sure you have [set up your dataset](/langsmith/manage-datasets-in-application). Since you want to evaluate multi-turn conversations, make sure there is a key in your inputs that contains a list of messages.
+在开始之前，请确保您已经[设置了数据集](/langsmith/manage-datasets-in-application)。由于您希望评估多轮对话，请确保您的输入（inputs）中有一个键（key）包含一个消息列表（list of messages）。
 
-Once you have created your dataset, head to the playground and [load your dataset](/langsmith/manage-datasets-in-application#from-the-prompt-playground) to evaluate.
+创建数据集后，前往 Playground 并[加载您的数据集](/langsmith/manage-datasets-in-application#from-the-prompt-playground)以进行评估。
 
-Then, add a messages list variable to your prompt, making sure to name it the same as the key in your inputs that contains the list of messages:
+然后，向您的提示中添加一个“消息列表”变量（`messages list` variable），并确保其名称与输入中包含消息列表的键的名称**完全相同**：
 
 ![](/langsmith/images/multiturn-from-dataset.gif)
 
-When you run your prompt, the messages from each example will be added as a list in place of the 'Messages List' variable.
+当您运行提示时，每个示例中的消息将作为一个列表插入到 `'Messages List'` 变量所占用的位置。
 
-## Manually
+## 手动创建
 
-There are two ways to manually create multi-turn conversations. The first way is by simply appending messages to the prompt:
+手动创建多轮对话有两种方法。第一种是通过简单地将消息追加到提示中：
 
 ![](/langsmith/images/multiturn-manual.gif)
 
-This is helpful for quick iteration, but is rigid since the multi-turn conversation is hardcoded. Instead, if you want your prompt to work with any multi-turn conversation you can add a 'Messages List' variable and add your multi-turn conversation there:
+这对于快速迭代很有帮助，但它比较死板，因为多轮对话是以硬编码（hardcoded）形式存在的。相反，如果您希望您的提示能够处理任何多轮对话，您可以添加一个“消息列表”变量，并将您的多轮对话内容放在该变量中：
 
 ![](/langsmith/images/multiturn-manual-list.gif)
 
-This allows you to just tweak the system prompt or the tools, while allowing any multi-turn conversation to take the place of the `Messages List` variable, allowing you to reuse this prompt across various runs.
+这样您就可以只调整系统提示或工具，同时允许任何多轮对话取代 `Messages List` 变量的位置，从而能够跨各种运行复用此提示。
 
-## Next steps
+## 后续步骤
 
-Now that you know how to set up the playground for multi-turn interactions, you can either manually inspect and judge the outputs, or you can [add evaluators](/langsmith/code-evaluator) to classify results.
+现在您已经了解了如何设置 Playground 以实现多轮交互，您可以手动检查和判断输出结果，或者添加[评估器（evaluators）](/langsmith/code-evaluator)来对结果进行分类。
 
-You can also read [these how-to guides](/langsmith/create-a-prompt) to learn more about how to use the playground to run evaluations.
+您还可以阅读[这些操作指南](/langsmith/create-a-prompt)以了解更多关于如何使用 Playground 来运行评估的信息。

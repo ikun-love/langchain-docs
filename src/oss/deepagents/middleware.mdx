@@ -1,16 +1,16 @@
 ---
-title: Deep Agents Middleware
-sidebarTitle: Middleware
-description: Understand the middleware that powers deep agents
+title: 深度智能体中间件
+sidebarTitle: 中间件
+description: 了解驱动深度智能体的中间件
 ---
 
-Deep agents are built with a modular middleware architecture. Deep agents have access to:
+深度智能体（Deep agents）是基于模块化的中间件架构构建的。深度智能体可以访问以下功能：
 
-1. A planning tool
-2. A filesystem for storing context and long-term memories
-3. The ability to spawn subagents
+1. 一个规划工具（planning tool）
+2. 用于存储上下文和长期记忆的文件系统
+3. 派生子智能体（subagents）的能力
 
-Each feature is implemented as separate middleware. When you create a deep agent with `create_deep_agent`, we automatically attach `TodoListMiddleware`, `FilesystemMiddleware`, and `SubAgentMiddleware` to your agent.
+每个功能都被实现为一个独立的中间件。当您使用 `create_deep_agent` 创建深度智能体时，我们会自动为其挂载 `TodoListMiddleware`、`FilesystemMiddleware` 和 `SubAgentMiddleware`。
 
 ```mermaid
 graph LR
@@ -23,29 +23,29 @@ graph LR
     Sub --> Tools
 ```
 
-Middleware is composable—you can add as many or as few middleware to an agent as needed. You can use any middleware independently.
+中间件是可组合的（composable）——您可以根据需要为智能体添加任意数量或任意数量的中间件。您可以独立使用任何中间件。
 
-The following sections explain what each middleware provides.
+接下来的部分将解释每个中间件提供了什么功能。
 
-## To-do list middleware
+## To-do list 中间件（待办事项列表中间件）
 
-Planning is integral to solving complex problems. If you've used Claude Code recently, you'll notice how it writes out a to-do list before tackling complex, multi-part tasks. You'll also notice how it can adapt and update this to-do list on the fly as more information comes in.
+规划对于解决复杂问题至关重要。如果您最近使用过 Claude Code，您会注意到它在处理复杂、多部分任务之前会写下一个待办事项列表。您还会注意到，随着新信息的到来，它可以动态地调整和更新这个待办事项列表。
 
-`TodoListMiddleware` provides your agent with a tool specifically for updating this to-do list. Before and while it executes a multi-part task, the agent is prompted to use the `write_todos` tool to keep track of what it's doing and what still needs to be done.
+`TodoListMiddleware` 为您的智能体提供了一个专门用于更新此待办事项列表的工具。在执行多部分任务之前和执行过程中，系统会提示智能体使用 `write_todos` 工具来跟踪它正在做什么以及还需要做什么。
 
 :::python
 ```python
 from langchain.agents import create_agent
 from langchain.agents.middleware import TodoListMiddleware
 
-# TodoListMiddleware is included by default in create_deep_agent
-# You can customize it if building a custom agent
+# TodoListMiddleware 默认包含在 create_deep_agent 中
+# 如果您构建自定义智能体，可以对其进行自定义
 agent = create_agent(
     model="claude-sonnet-4-5-20250929",
-    # Custom planning instructions can be added via middleware
+    # 可以通过中间件添加自定义规划指令
     middleware=[
         TodoListMiddleware(
-            system_prompt="Use the write_todos tool to..."  # Optional: Custom addition to the system prompt
+            system_prompt="Use the write_todos tool to..."  # 可选：对系统提示的自定义添加
         ),
     ],
 )
@@ -56,13 +56,13 @@ agent = create_agent(
 ```typescript
 import { createAgent, todoListMiddleware } from "langchain";
 
-// todoListMiddleware is included by default in createDeepAgent
-// You can customize it if building a custom agent
+// todoListMiddleware 默认包含在 createDeepAgent 中
+// 如果您构建自定义智能体，可以对其进行自定义
 const agent = createAgent({
   model: "claude-sonnet-4-5-20250929",
   middleware: [
     todoListMiddleware({
-      // Optional: Custom addition to the system prompt
+      // 可选：对系统提示的自定义添加
       systemPrompt: "Use the write_todos tool to...",
     }),
   ],
@@ -70,34 +70,34 @@ const agent = createAgent({
 ```
 :::
 
-## Filesystem middleware
+## Filesystem 中间件（文件系统中间件）
 
-Context engineering is a main challenge in building effective agents. This is particularly difficult when using tools that return variable-length results (for example, web_search and rag), as long tool results can quickly fill your context window.
+上下文工程（Context engineering）是构建有效智能体的核心挑战。当使用返回可变长度结果的工具时（例如 `web_search` 和 `rag`），这尤其困难，因为长的工具结果会很快填满您的上下文窗口。
 
-`FilesystemMiddleware` provides four tools for interacting with both short-term and long-term memory:
+`FilesystemMiddleware` 提供了四个工具来实现与短期和长期记忆的交互：
 
-- **ls**: List the files in the filesystem
-- **read_file**: Read an entire file or a certain number of lines from a file
-- **write_file**: Write a new file to the filesystem
-- **edit_file**: Edit an existing file in the filesystem
+- **ls**: 列出文件系统中的文件
+- **read\_file**: 读取整个文件或文件中的某几行内容
+- **write\_file**: 将新文件写入文件系统
+- **edit\_file**: 编辑文件系统中的现有文件
 
 :::python
 ```python
 from langchain.agents import create_agent
 from deepagents.middleware.filesystem import FilesystemMiddleware
 
-# FilesystemMiddleware is included by default in create_deep_agent
-# You can customize it if building a custom agent
+# FilesystemMiddleware 默认包含在 create_deep_agent 中
+# 如果您构建自定义智能体，可以对其进行自定义
 agent = create_agent(
     model="claude-sonnet-4-5-20250929",
     middleware=[
         FilesystemMiddleware(
-            backend=None,  # Optional: custom backend (defaults to StateBackend)
-            system_prompt="Write to the filesystem when...",  # Optional custom addition to the system prompt
+            backend=None,  # 可选：自定义后端 (默认为 StateBackend)
+            system_prompt="Write to the filesystem when...",  # 可选的系统提示自定义添加
             custom_tool_descriptions={
                 "ls": "Use the ls tool when...",
                 "read_file": "Use the read_file tool to..."
-            }  # Optional: Custom descriptions for filesystem tools
+            }  # 可选：文件系统的自定义工具描述
         ),
     ],
 )
@@ -109,27 +109,27 @@ agent = create_agent(
 import { createAgent } from "langchain";
 import { createFilesystemMiddleware } from "deepagents";
 
-// FilesystemMiddleware is included by default in createDeepAgent
-// You can customize it if building a custom agent
+// FilesystemMiddleware 默认包含在 createDeepAgent 中
+// 如果您构建自定义智能体，可以对其进行自定义
 const agent = createAgent({
   model: "claude-sonnet-4-5-20250929",
   middleware: [
     createFilesystemMiddleware({
-      backend: undefined,  // Optional: custom backend (defaults to StateBackend)
-      systemPrompt: "Write to the filesystem when...",  // Optional custom system prompt override
+      backend: undefined,  // 可选：自定义后端 (默认为 StateBackend)
+      systemPrompt: "Write to the filesystem when...",  // 可选的系统提示覆盖
       customToolDescriptions: {
         ls: "Use the ls tool when...",
         read_file: "Use the read_file tool to...",
-      },  // Optional: Custom descriptions for filesystem tools
+      },  // 可选：文件系统的自定义工具描述
     }),
   ],
 });
 ```
 :::
 
-### Short-term vs. long-term filesystem
+### 短期文件系统与长期文件系统
 
-By default, these tools write to a local "filesystem" in your graph state. To enable persistent storage across threads, configure a `CompositeBackend` that routes specific paths (like `/memories/`) to a `StoreBackend`.
+默认情况下，这些工具写入图状态（graph state）中的本地“文件系统”。要启用跨线程的持久化存储，请配置一个 `CompositeBackend`，将特定路径（如 `/memories/`）路由到一个 `StoreBackend`。
 
 :::python
 ```python
@@ -152,7 +152,7 @@ agent = create_agent(
             custom_tool_descriptions={
                 "ls": "Use the ls tool when...",
                 "read_file": "Use the read_file tool to..."
-            }  # Optional: Custom descriptions for filesystem tools
+            }  # 可选：文件系统的自定义工具描述
         ),
     ],
 )
@@ -176,24 +176,24 @@ const agent = createAgent({
         new StateBackend(config),
         { "/memories/": new StoreBackend(config) }
       ),
-      systemPrompt: "Write to the filesystem when...", // Optional custom system prompt override
+      systemPrompt: "Write to the filesystem when...", // 可选的系统提示覆盖
       customToolDescriptions: {
         ls: "Use the ls tool when...",
         read_file: "Use the read_file tool to...",
-      }, // Optional: Custom descriptions for filesystem tools
+      }, // 可选：文件系统的自定义工具描述
     }),
   ],
 });
 ```
 :::
 
-When you configure a `CompositeBackend` with a `StoreBackend` for `/memories/`, any files prefixed with **/memories/** are saved to persistent storage and survive across different threads. Files without this prefix remain in ephemeral state storage.
+当您使用 `StoreBackend` 为 `/memories/` 配置 `CompositeBackend` 时，所有以 `/memories/**` 为前缀的文件都将保存到持久化存储中，并在不同线程间保持下来。没有此前缀的文件则保留在临时状态存储中。
 
-## Subagent middleware
+## Subagent 中间件（子智能体中间件）
 
-Handing off tasks to subagents isolates context, keeping the main (supervisor) agent's context window clean while still going deep on a task.
+将任务委托给子智能体可以隔离上下文，使主（监督者）智能体的上下文窗口保持整洁，同时仍能深入处理特定任务。
 
-The subagents middleware allows you to supply subagents through a `task` tool.
+子智能体中间件允许您通过 `task` 工具提供子智能体。
 
 :::python
 ```python
@@ -271,9 +271,9 @@ const agent = createAgent({
 ```
 :::
 
-A subagent is defined with a **name**, **description**, **system prompt**, and **tools**. You can also provide a subagent with a custom **model**, or with additional **middleware**. This can be particularly useful when you want to give the subagent an additional state key to share with the main agent.
+子智能体通过 **名称** (name)、**描述** (description)、**系统提示** (system prompt) 和 **工具** (tools) 来定义。您也可以为子智能体提供自定义的 **模型** (model) 或额外的 **中间件** (middleware)。当您希望为子智能体提供一个额外的状态键（state key）以与主智能体共享时，这一点尤其有用。
 
-For more complex use cases, you can also provide your own pre-built LangGraph graph as a subagent.
+对于更复杂的用例，您还可以将自己预先构建好的 LangGraph 图作为子智能体提供。
 
 :::python
 ```python
@@ -282,15 +282,15 @@ from deepagents.middleware.subagents import SubAgentMiddleware
 from deepagents import CompiledSubAgent
 from langgraph.graph import StateGraph
 
-# Create a custom LangGraph graph
+# 创建一个自定义的 LangGraph 图
 def create_weather_graph():
     workflow = StateGraph(...)
-    # Build your custom graph
+    # 构建您的自定义图
     return workflow.compile()
 
 weather_graph = create_weather_graph()
 
-# Wrap it in a CompiledSubAgent
+# 使用 CompiledSubAgent 将其包装起来
 weather_subagent = CompiledSubAgent(
     name="weather",
     description="This subagent can get weather in cities.",
@@ -351,4 +351,4 @@ const agent = createAgent({
 ```
 :::
 
-In addition to any user-defined subagents, the main agent has access to a `general-purpose` subagent at all times. This subagent has the same instructions as the main agent and all the tools it has access to. The primary purpose of the `general-purpose` subagent is context isolation—the main agent can delegate a complex task to this subagent and get a concise answer back without bloat from intermediate tool calls.
+除了用户定义的任何子智能体外，主智能体始终可以访问一个 `general-purpose`（通用目的）子智能体。该子智能体具有与主智能体相同的指令和可访问的工具。`general-purpose` 子智能体的首要目的是上下文隔离——主智能体可以将一个复杂任务委托给该子智能体，并在不因中间工具调用而导致上下文膨胀的情况下获得简洁的答案。

@@ -2,27 +2,27 @@
 title: BasetenEmbeddings
 ---
 
-This will help you get started with Baseten embedding models using LangChain. For detailed documentation on `BasetenEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/baseten/embeddings/langchain_baseten.embeddings.BasetenEmbeddings.html).
+这将帮助您开始使用 LangChain 中的 Baseten 嵌入模型。有关 `BasetenEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/baseten/embeddings/langchain_baseten.embeddings.BasetenEmbeddings.html)。
 
-## Overview
+## 概述
 
-Baseten provides inference designed for production applications. Built on the Baseten Inference Stack, these APIs deliver enterprise-grade performance and reliability for leading open-source or custom models: https://www.baseten.co/library/.
+Baseten 提供专为生产应用设计的推理服务。这些 API 基于 Baseten 推理栈构建，为领先的开源模型或自定义模型提供企业级的性能和可靠性：https://www.baseten.co/library/。
 
-### Integration details
+### 集成详情
 
 <ItemTable category="text_embedding" item="Baseten" />
 
-## Setup
+## 设置
 
-To access Baseten embedding models you'll need to create a Baseten account, get an API key, and install the `langchain-baseten` integration package.
+要访问 Baseten 嵌入模型，您需要创建一个 Baseten 账户，获取一个 API 密钥，并安装 `langchain-baseten` 集成包。
 
-**Baseten embeddings are only available as dedicated models.** You must deploy an embedding model from the [Baseten model library](https://www.baseten.co/library/tag/embedding) before using this integration.
+**Baseten 嵌入仅作为专用模型提供。** 在使用此集成之前，您必须从 [Baseten 模型库](https://www.baseten.co/library/tag/embedding) 部署一个嵌入模型。
 
-The embeddings functionality uses Baseten's [Performance Client](https://www.baseten.co/blog/introducing-baseten-embeddings-inference-bei/) for optimized performance, which is automatically included as a dependency.
+嵌入功能使用 Baseten 的 [性能客户端 (Performance Client)](https://www.baseten.co/blog/introducing-baseten-embeddings-inference-bei/) 以优化性能，该客户端会自动作为依赖项包含进来。
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to [https://app.baseten.co](https://app.baseten.co) to sign up to Baseten and generate an API key. Once you've done this set the BASETEN_API_KEY environment variable:
+请访问 [https://app.baseten.co](https://app.baseten.co) 注册 Baseten 并生成一个 API 密钥。生成后，设置 `BASETEN_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -32,42 +32,42 @@ if not os.getenv("BASETEN_API_KEY"):
     os.environ["BASETEN_API_KEY"] = getpass.getpass("Enter your Baseten API key: ")
 ```
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### Installation
+### 安装
 
-The LangChain Baseten integration lives in the `langchain-baseten` package:
+LangChain Baseten 集成位于 `langchain-baseten` 包中：
 
 ```python
 pip install -qU langchain-baseten
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our embeddings object using your deployed model's URL:
+现在，我们可以使用已部署模型的 URL 来实例化我们的嵌入对象：
 
 ```python
 from langchain_baseten import BasetenEmbeddings
 
 embeddings = BasetenEmbeddings(
-    model_url="https://model-<id>.api.baseten.co/environments/production/sync",  # Your model URL
-    api_key="your-api-key",  # Or set BASETEN_API_KEY env var
+    model_url="https://model-<id>.api.baseten.co/environments/production/sync",  # 您的模型 URL
+    api_key="your-api-key",  # 或者设置 BASETEN_API_KEY 环境变量
 )
 ```
 
-## Indexing and Retrieval
+## 索引和检索
 
-Embedding models are often used in retrieval-augmented generation (RAG) flows, both as part of indexing data as well as later retrieving it. For more detailed instructions, please see our [RAG tutorials](/oss/langchain/rag).
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既作为索引数据的组成部分，也用于后续的数据检索。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-Below, see how to index and retrieve data using the `embeddings` object we initialized above. In this example, we will index and retrieve a sample document in the `InMemoryVectorStore`.
+下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 来索引和检索一个示例文档。
 
 ```python
-# Create a vector store with a sample text
+# 使用示例文本创建一个向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
 text = "LangChain is the framework for building context-aware reasoning applications"
@@ -77,13 +77,13 @@ vectorstore = InMemoryVectorStore.from_texts(
     embedding=embeddings,
 )
 
-# Use the vectorstore as a retriever
+# 使用向量存储作为检索器
 retriever = vectorstore.as_retriever()
 
-# Retrieve the most similar text
+# 检索最相似的文本
 retrieved_documents = retriever.invoke("What is LangChain?")
 
-# show the retrieved document's content
+# 显示检索到的文档内容
 retrieved_documents[0].page_content
 ```
 
@@ -91,28 +91,28 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## Direct Usage
+## 直接使用
 
-Under the hood, the vectorstore and retriever implementations are calling `embeddings.embed_documents(...)` and `embeddings.embed_query(...)` to create embeddings for the text(s) used in `from_texts` and retrieval `invoke` operations, respectively.
+在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 使用的文本和检索 `invoke` 操作创建嵌入向量。
 
-You can directly call these methods to get embeddings for your own use cases.
+您可以直接调用这些方法来获取用于您自身用例的嵌入向量。
 
-### Embed single texts
+### 嵌入单个文本
 
-You can embed single texts or documents with `embed_query`:
+您可以使用 `embed_query` 来嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
-print(str(single_vector)[:100])  # Show the first 100 characters of the vector
+print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
 [0.013201533816754818, 0.02222288027405739, -0.036066457629203796, 0.027374643832445145, -0.01692997
 ```
 
-### Embed multiple texts
+### 嵌入多个文本
 
-You can embed multiple texts with `embed_documents`:
+您可以使用 `embed_documents` 来嵌入多个文本：
 
 ```python
 text2 = (
@@ -120,7 +120,7 @@ text2 = (
 )
 two_vectors = embeddings.embed_documents([text, text2])
 for vector in two_vectors:
-    print(str(vector)[:100])  # Show the first 100 characters of the vector
+    print(str(vector)[:100])  # 显示向量的前 100 个字符
 ```
 
 ```output
@@ -130,6 +130,6 @@ for vector in two_vectors:
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation on `BasetenEmbeddings` features and configuration options, please refer to the [API reference](https://python.langchain.com/api_reference/baseten/embeddings/langchain_baseten.embeddings.BasetenEmbeddings.html).
+有关 `BasetenEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/baseten/embeddings/langchain_baseten.embeddings.BasetenEmbeddings.html)。

@@ -1,14 +1,14 @@
 ---
-title: SearchApi tool
+title: SearchApi 工具
 ---
 
-The `SearchApi` tool connects your agents and chains to the internet.
+`SearchApi` 工具将您的代理（agents）和链（chains）连接到互联网。
 
-A wrapper around the Search API. This tool is handy when you need to answer questions about current events.
+它是 Search API 的一个包装器。当您需要回答关于当前事件的问题时，这个工具非常方便。
 
-## Usage
+## 用法
 
-Input should be a search query.
+输入应该是一个搜索查询。
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
@@ -31,11 +31,11 @@ const tools = [
 const prefix = ChatPromptTemplate.fromMessages([
   [
     "ai",
-    "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format.",
+    "请尽最大努力回答以下问题。在您的最终答案中，请使用项目符号（bulleted list）的 Markdown 格式。",
   ],
   ["human", "{input}"],
 ]);
-// Replace this with your actual output parser.
+// 请用您实际的输出解析器替换此处的实现。
 const customOutputParser = (
   input: BaseMessageChunk
 ): AgentAction | AgentFinish => ({
@@ -44,19 +44,19 @@ const customOutputParser = (
     output: input,
   },
 });
-// Replace this placeholder agent with your actual implementation.
+// 请用您的实际代理实现替换此处的占位符代理。
 const agent = RunnableSequence.from([prefix, model, customOutputParser]);
 const executor = AgentExecutor.fromAgentAndTools({
   agent,
   tools,
 });
 const res = await executor.invoke({
-  input: "What's happening in Ukraine today?",
+  input: "今天乌克兰发生了什么？",
 });
 console.log(res);
 ```
 
-## Related
+## 相关内容
 
-- Tool [conceptual guide](/oss/langchain/tools)
-- Tool [how-to guides](/oss/langchain/tools)
+- 工具 [概念指南](/oss/langchain/tools)
+- 工具 [操作指南](/oss/langchain/tools)

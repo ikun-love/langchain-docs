@@ -2,15 +2,13 @@
 title: Prediction Guard
 ---
 
-This page covers how to use the Prediction Guard ecosystem within LangChain.
-It is broken into two parts: installation and setup, and then references to specific Prediction Guard wrappers.
+本文档介绍了如何在 LangChain 中使用 Prediction Guard 生态系统。内容分为两个部分：安装与设置，以及特定 Prediction Guard 封装器的参考。
 
-This integration is maintained in the [langchain-predictionguard](https://github.com/predictionguard/langchain-predictionguard)
-package.
+此集成维护在 [langchain-predictionguard](https://github.com/predictionguard/langchain-predictionguard) 包中。
 
-## Installation and Setup
+## 安装与设置
 
-- Install the PredictionGuard LangChain partner package:
+- 安装 PredictionGuard LangChain 合作伙伴包：
 
 <CodeGroup>
 ```bash pip
@@ -22,69 +20,69 @@ uv add langchain-predictionguard
 ```
 </CodeGroup>
 
-- Get a Prediction Guard API key (as described [here](https://docs.predictionguard.com/)) and set it as an environment variable (`PREDICTIONGUARD_API_KEY`)
+- 获取 Prediction Guard API 密钥（如 [此处](https://docs.predictionguard.com/)所述），并将其设置为环境变量 (`PREDICTIONGUARD_API_KEY`)
 
-## Prediction Guard LangChain Integrations
-|API|Description|Endpoint Docs| Import                                                  | Example Usage                                                                 |
-|---|---|---|---------------------------------------------------------|-------------------------------------------------------------------------------|
-|Chat|Build Chat Bots|[Chat](https://docs.predictionguard.com/api-reference/api-reference/chat-completions)| `from langchain_predictionguard import ChatPredictionGuard` | [ChatPredictionGuard.ipynb](/oss/integrations/chat/predictionguard)             |
-|Completions|Generate Text|[Completions](https://docs.predictionguard.com/api-reference/api-reference/completions)| `from langchain_predictionguard import PredictionGuard` | [PredictionGuard.ipynb](/oss/integrations/llms/predictionguard)                     |
-|Text Embedding|Embed String to Vectors|[Embeddings](https://docs.predictionguard.com/api-reference/api-reference/embeddings)| `from langchain_predictionguard import PredictionGuardEmbeddings` | [PredictionGuardEmbeddings.ipynb](/oss/integrations/text_embedding/predictionguard) |
+## Prediction Guard LangChain 集成
+| API | 描述 | 终端文档 | 导入方式 | 示例用法 |
+|---|---|---|---|---|
+| Chat | 构建聊天机器人 | [Chat](https://docs.predictionguard.com/api-reference/api-reference/chat-completions) | `from langchain_predictionguard import ChatPredictionGuard` | [ChatPredictionGuard.ipynb](/oss/integrations/chat/predictionguard) |
+| Completions | 生成文本 | [Completions](https://docs.predictionguard.com/api-reference/api-reference/completions) | `from langchain_predictionguard import PredictionGuard` | [PredictionGuard.ipynb](/oss/integrations/llms/predictionguard) |
+| Text Embedding | 将字符串嵌入为向量 | [Embeddings](https://docs.predictionguard.com/api-reference/api-reference/embeddings) | `from langchain_predictionguard import PredictionGuardEmbeddings` | [PredictionGuardEmbeddings.ipynb](/oss/integrations/text_embedding/predictionguard) |
 
-## Getting Started
+## 入门指南
 
-## Chat Models
+## 聊天模型
 
 ### Prediction Guard Chat
 
-See a [usage example](/oss/integrations/chat/predictionguard)
+查看 [使用示例](/oss/integrations/chat/predictionguard)
 
 ```python
 from langchain_predictionguard import ChatPredictionGuard
 ```
 
-#### Usage
+#### 用法
 
 ```python
-# If predictionguard_api_key is not passed, default behavior is to use the `PREDICTIONGUARD_API_KEY` environment variable.
+# 如果未传入 predictionguard_api_key，默认行为是使用 `PREDICTIONGUARD_API_KEY` 环境变量。
 chat = ChatPredictionGuard(model="Hermes-3-Llama-3.1-8B")
 
-chat.invoke("Tell me a joke")
+chat.invoke("讲个关于熊的笑话")
 ```
 
-## Embedding Models
+## 嵌入模型
 
 ### Prediction Guard Embeddings
 
-See a [usage example](/oss/integrations/text_embedding/predictionguard)
+查看 [使用示例](/oss/integrations/text_embedding/predictionguard)
 
 ```python
 from langchain_predictionguard import PredictionGuardEmbeddings
 ```
 
-#### Usage
+#### 用法
 ```python
-# If predictionguard_api_key is not passed, default behavior is to use the `PREDICTIONGUARD_API_KEY` environment variable.
+# 如果未传入 predictionguard_api_key，默认行为是使用 `PREDICTIONGUARD_API_KEY` 环境变量。
 embeddings = PredictionGuardEmbeddings(model="bridgetower-large-itm-mlm-itc")
 
-text = "This is an embedding example."
+text = "这是一个嵌入示例。"
 output = embeddings.embed_query(text)
 ```
 
-## LLMs
+## LLM
 
 ### Prediction Guard LLM
 
-See a [usage example](/oss/integrations/llms/predictionguard)
+查看 [使用示例](/oss/integrations/llms/predictionguard)
 
 ```python
 from langchain_predictionguard import PredictionGuard
 ```
 
-#### Usage
+#### 用法
 ```python
-# If predictionguard_api_key is not passed, default behavior is to use the `PREDICTIONGUARD_API_KEY` environment variable.
+# 如果未传入 predictionguard_api_key，默认行为是使用 `PREDICTIONGUARD_API_KEY` 环境变量。
 llm = PredictionGuard(model="Hermes-2-Pro-Llama-3-8B")
 
-llm.invoke("Tell me a joke about bears")
+llm.invoke("讲个关于熊的笑话")
 ```

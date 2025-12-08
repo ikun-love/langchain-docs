@@ -2,20 +2,20 @@
 title: Voy
 ---
 
-[Voy](https://github.com/tantaraio/voy) is a WASM vector similarity search engine written in Rust.
-It's supported in non-Node environments like browsers. You can use Voy as a vector store with LangChain.js.
+[Voy](https://github.com/tantaraio/voy) 是一个使用 Rust 编写的 WASM 向量相似性搜索引擎。
+它支持在浏览器等非 Node.js 环境中运行。您可以在 LangChain.js 中将 Voy 用作向量存储（vector store）。
 
-### Install Voy
+### 安装 Voy
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅 [本文档部分](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/openai voy-search @langchain/community @langchain/core
 ```
 
-## Usage
+## 用法 (Usage)
 
 ```typescript
 import { VoyVectorStore } from "@langchain/community/vectorstores/voy";
@@ -23,14 +23,14 @@ import { Voy as VoyClient } from "voy-search";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 
-// Create Voy client using the library.
+// 使用该库创建 Voy 客户端。
 const voyClient = new VoyClient();
-// Create embeddings
+// 创建嵌入模型 (embeddings)。
 const embeddings = new OpenAIEmbeddings();
-// Create the Voy store.
+// 创建 Voy 存储实例。
 const store = new VoyVectorStore(voyClient, embeddings);
 
-// Add two documents with some metadata.
+// 添加两条带有某些元数据 (metadata) 的文档。
 await store.addDocuments([
   new Document({
     pageContent: "How has life been treating you?",
@@ -49,10 +49,10 @@ await store.addDocuments([
 const model = new OpenAIEmbeddings();
 const query = await model.embedQuery("And I took it personally");
 
-// Perform a similarity search.
+// 执行相似性搜索。
 const resultsWithScore = await store.similaritySearchVectorWithScore(query, 1);
 
-// Print the results.
+// 打印结果。
 console.log(JSON.stringify(resultsWithScore, null, 2));
 /*
   [
@@ -69,7 +69,7 @@ console.log(JSON.stringify(resultsWithScore, null, 2));
 */
 ```
 
-## Related
+## 相关内容
 
-- Vector store [conceptual guide](/oss/integrations/vectorstores)
-- Vector store [how-to guides](/oss/integrations/vectorstores)
+- 向量存储 [概念指南](/oss/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/integrations/vectorstores)

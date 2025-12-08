@@ -1,34 +1,34 @@
 ---
-title: ManticoreSearch VectorStore
+title: ManticoreSearch 向量存储
 ---
 
-[ManticoreSearch](https://manticoresearch.com/) is an open-source search engine that offers fast, scalable, and user-friendly capabilities. Originating as a fork of [Sphinx Search](http://sphinxsearch.com/), it has evolved to incorporate modern search engine features and improvements. ManticoreSearch distinguishes itself with its robust performance and ease of integration into various applications.
+[ManticoreSearch](https://manticoresearch.com/) 是一款开源搜索引擎，提供快速、可扩展且用户友好的功能。它起源于 [Sphinx Search](http://sphinxsearch.com/) 的一个分支（Fork），并已发展出许多现代搜索引擎的特性和改进。ManticoreSearch 以其强大的性能和易于集成到各种应用的能力而著称。
 
-ManticoreSearch has recently introduced [vector search capabilities](https://manual.manticoresearch.com/dev/Searching/KNN), starting with search engine version 6.2 and only with [manticore-columnar-lib](https://github.com/manticoresoftware/columnar) package installed. This feature is a considerable advancement, allowing for the execution of searches based on vector similarity.
+ManticoreSearch 最近引入了 [向量搜索功能](https://manual.manticoresearch.com/dev/Searching/KNN)，该功能在搜索引擎 **6.2 版本**中首次提供，并且**仅在安装了** [manticore-columnar-lib](https://github.com/manticoresoftware/columnar) **包时才可用**。这是一个重要的进步，因为它允许基于向量相似性执行搜索。
 
-As of now, the vector search functionality is only accessible in the developmental (dev) versions of the search engine. Consequently, it is imperative to employ a developmental [manticoresearch-dev](https://pypi.org/project/manticoresearch-dev/) Python client for utilizing this feature effectively.
+截至目前，向量搜索功能仅在搜索引擎的开发（dev）版本中可用。因此，要有效地利用此功能，**必须**使用开发中的 [manticoresearch-dev](https://pypi.org/project/manticoresearch-dev/) Python 客户端。
 
-## Setting up environments
+## 设置环境
 
-Starting Docker-container with ManticoreSearch and installing manticore-columnar-lib package (optional)
+使用 ManticoreSearch 启动 Docker 容器并安装 manticore-columnar-lib 包（可选）
 
 ```python
 import time
 
-# Start container
+# 启动容器
 containers = !docker ps --filter "name=langchain-manticoresearch-server" -q
 if len(containers) == 0:
     !docker run -d -p 9308:9308 --name langchain-manticoresearch-server manticoresearch/manticore:dev
-    time.sleep(20)  # Wait for the container to start up
+    time.sleep(20)  # 等待容器启动
 
-# Get ID of container
+# 获取容器 ID
 container_id = containers[0]
 
-# Install manticore-columnar-lib package as root user
+# 以 root 用户安装 manticore-columnar-lib 包
 !docker exec -it --user 0 {container_id} apt-get update
 !docker exec -it --user 0 {container_id} apt-get install -y manticore-columnar-lib
 
-# Restart container
+# 重启容器
 !docker restart {container_id}
 ```
 
@@ -74,13 +74,13 @@ Setting up manticore-columnar-lib (2.2.5-240217-a5342a1) ...
 a546aec22291
 ```
 
-Installing ManticoreSearch python client
+安装 ManticoreSearch Python 客户端
 
 ```python
 pip install -qU manticoresearch-dev
 ```
 
-We want to use @[`OpenAIEmbeddings`] so we have to get the OpenAI API Key.
+我们希望使用 @[`OpenAIEmbeddings`]，因此需要获取 OpenAI API 密钥。
 
 ```python
 from langchain_community.embeddings import GPT4AllEmbeddings

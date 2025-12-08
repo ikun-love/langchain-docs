@@ -2,25 +2,23 @@
 title: Eden AI
 ---
 
-Eden AI is revolutionizing the AI landscape by uniting the best AI providers, empowering users to unlock limitless possibilities and tap into the true potential of artificial intelligence. With an all-in-one comprehensive and hassle-free platform, it allows users to deploy AI features to production lightning fast, enabling effortless access to the full breadth of AI capabilities via a single API. (website: [edenai.co/](https://edenai.co/))
+Eden AI 正在通过整合顶级的 AI 供应商来彻底改变人工智能格局，赋能用户释放无限潜力，并挖掘人工智能的真正价值。凭借一个全面、省心的一体化平台，它允许用户**极速部署** AI 功能到生产环境，通过**单一 API** 实现对全部 AI 能力的轻松访问。（网站：[edenai.co/](https://edenai.co/)）
 
-This example goes over how to use LangChain to interact with Eden AI models
+本示例将介绍如何使用 LangChain 与 Eden AI 模型进行交互。
 
 -----------------------------------------------------------------------------------
 
-Accessing the EDENAI's API requires an API key,
+访问 EDENAI 的 API 需要一个 API 密钥。
 
-which you can get by creating an account [app.edenai.run/user/register](https://app.edenai.run/user/register)  and heading here [app.edenai.run/admin/account/settings](https://app.edenai.run/admin/account/settings)
+您可以通过在 [app.edenai.run/user/register](https://app.edenai.run/user/register) 创建账户，然后前往 [app.edenai.run/admin/account/settings](https://app.edenai.run/admin/account/settings) 获取密钥。
 
-Once we have a key we'll want to set it as an environment variable by running:
+获取密钥后，我们通常会将其设置为环境变量，方法是运行以下命令：
 
 ```bash
 export EDENAI_API_KEY="..."
 ```
 
-If you'd prefer not to set an environment variable you can pass the key in directly via the edenai_api_key named parameter
-
- when initiating the EdenAI LLM class:
+如果您不想设置环境变量，也可以在初始化 `EdenAI` LLM 类时，直接通过名为 `edenai_api_key` 的参数传递密钥：
 
 ```python
 from langchain_community.llms import EdenAI
@@ -30,15 +28,15 @@ from langchain_community.llms import EdenAI
 llm = EdenAI(edenai_api_key="...", provider="openai", temperature=0.2, max_tokens=250)
 ```
 
-## Calling a model
+## 调用模型
 
-The EdenAI API brings together various providers, each offering multiple models.
+EdenAI API 汇集了各种供应商，每个供应商都提供多种模型。
 
-To access a specific model, you can simply add 'model' during instantiation.
+要访问特定模型，您可以在实例化时简单地添加 `model` 参数。
 
-For instance, let's explore the models provided by OpenAI, such as GPT3.5
+例如，让我们探索 OpenAI 提供的模型，比如 GPT-3.5。
 
-### text generation
+### 文本生成 (text generation)
 
 ```python
 from langchain.chains import LLMChain
@@ -53,14 +51,14 @@ llm = EdenAI(
 )
 
 prompt = """
-User: Answer the following yes/no question by reasoning step by step. Can a dog drive a car?
+User: 请逐步推理来回答以下是/否问题。狗会开车吗？
 Assistant:
 """
 
 llm(prompt)
 ```
 
-### image generation
+### 图像生成 (image generation)
 
 ```python
 import base64
@@ -70,16 +68,16 @@ from PIL import Image
 
 
 def print_base64_image(base64_string):
-    # Decode the base64 string into binary data
+    # 将 base64 字符串解码为二进制数据
     decoded_data = base64.b64decode(base64_string)
 
-    # Create an in-memory stream to read the binary data
+    # 创建一个内存流来读取二进制数据
     image_stream = BytesIO(decoded_data)
 
-    # Open the image using PIL
+    # 使用 PIL 打开图像
     image = Image.open(image_stream)
 
-    # Display the image
+    # 显示图像
     image.show()
 ```
 
@@ -95,7 +93,7 @@ image_output = text2image("A cat riding a motorcycle by Picasso")
 print_base64_image(image_output)
 ```
 
-### text generation with callback
+### 带有回调的文本生成 (text generation with callback)
 
 ```python
 from langchain_community.llms import EdenAI
@@ -109,13 +107,13 @@ llm = EdenAI(
     max_tokens=250,
 )
 prompt = """
-User: Answer the following yes/no question by reasoning step by step. Can a dog drive a car?
+User: 请逐步推理来回答以下是/否问题。狗会开车吗？
 Assistant:
 """
 print(llm.invoke(prompt))
 ```
 
-## Chaining Calls
+## 链式调用 (Chaining Calls)
 
 ```python
 from langchain.chains import LLMChain, SimpleSequentialChain
@@ -130,7 +128,7 @@ text2image = EdenAI(feature="image", provider="openai", resolution="512x512")
 ```python
 prompt = PromptTemplate(
     input_variables=["product"],
-    template="What is a good name for a company that makes {product}?",
+    template="为生产 {product} 的公司想一个好的名字？",
 )
 
 chain = LLMChain(llm=llm, prompt=prompt)
@@ -139,7 +137,7 @@ chain = LLMChain(llm=llm, prompt=prompt)
 ```python
 second_prompt = PromptTemplate(
     input_variables=["company_name"],
-    template="Write a description of a logo for this company: {company_name}, the logo should not contain text at all ",
+    template="为这家公司写一个 Logo 描述：{company_name}，Logo 中完全不能包含文字",
 )
 chain_two = LLMChain(llm=llm, prompt=second_prompt)
 ```
@@ -153,7 +151,7 @@ chain_three = LLMChain(llm=text2image, prompt=third_prompt)
 ```
 
 ```python
-# Run the chain specifying only the input variable for the first chain.
+# 运行链，只指定第一个链的输入变量。
 overall_chain = SimpleSequentialChain(
     chains=[chain, chain_two, chain_three], verbose=True
 )
@@ -161,6 +159,6 @@ output = overall_chain.run("hats")
 ```
 
 ```python
-# print the image
+# 打印图像
 print_base64_image(output)
 ```

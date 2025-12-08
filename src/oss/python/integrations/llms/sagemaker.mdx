@@ -2,27 +2,25 @@
 title: SageMakerEndpoint
 ---
 
-[Amazon SageMaker](https://aws.amazon.com/sagemaker/) is a system that can build, train, and deploy machine learning (ML) models for any use case with fully managed infrastructure, tools, and workflows.
+[Amazon SageMaker](https://aws.amazon.com/sagemaker/) 是一个系统，它可以使用完全托管的基础设施、工具和工作流程，为任何用例构建、训练和部署机器学习（ML）模型。
 
-This notebooks goes over how to use an LLM hosted on a `SageMaker endpoint`.
+本指南将介绍如何使用托管在 `SageMaker endpoint` 上的 LLM。
 
 ```python
 !pip3 install langchain boto3
 ```
 
-## Set up
+## 设置 (Set up)
 
-You have to set up following required parameters of the `SagemakerEndpoint` call:
+在使用 `SagemakerEndpoint` 调用时，您需要设置以下必需的参数：
 
-- `endpoint_name`: The name of the endpoint from the deployed Sagemaker model.
-    Must be unique within an AWS Region.
-- `credentials_profile_name`: The name of the profile in the ~/.aws/credentials or ~/.aws/config files, which
-    has either access keys or role information specified.
-    If not specified, the default credential profile or, if on an EC2 instance,
-    credentials from IMDS will be used.
-    See: [boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html)
+- `endpoint_name`: 从已部署的 Sagemaker 模型获得的端点名称。
+    在 AWS 区域内必须是唯一的。
+- `credentials_profile_name`: 在 `~/.aws/credentials` 或 `~/.aws/config` 文件中配置的配置文件的名称，其中指定了访问密钥或角色信息。
+    如果未指定，将使用默认凭证配置文件；如果位于 EC2 实例上，则使用来自 IMDS 的凭证。
+    参见：[boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html)
 
-## Example
+## 示例 (Example)
 
 ```python
 from langchain_core.documents import Document
@@ -42,9 +40,9 @@ docs = [
 ]
 ```
 
-## Example to initialize with external boto3 session
+## 示例：使用外部 boto3 会话进行初始化 (Example to initialize with external boto3 session)
 
-### for cross account scenarios
+### 用于跨账户场景 (for cross account scenarios)
 
 ```python
 import json

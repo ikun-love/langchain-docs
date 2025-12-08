@@ -1,34 +1,34 @@
 ---
-title: JigsawStack Tool
+title: JigsawStack 工具
 ---
 
-The JigsawStack Tool provides your agent with the following capabilities:
+JigsawStack 工具为您的智能体提供了以下能力：
 
-- JigsawStackAIScrape: Scrape web content using advanced AI.
+- `JigsawStackAIScrape`: 使用先进的 AI 进行网页内容抓取。
 
-- JigsawStackAISearch: Perform AI-powered web searches and retrieve high-quality results.
+- `JigsawStackAISearch`: 执行由 AI 驱动的网络搜索，并检索高质量的结果。
 
-- JigsawStackSpeechToText - Transcribe video and audio files using the Whisper large V3 AI model.
+- `JigsawStackSpeechToText`: 使用 Whisper large V3 AI 模型转录视频和音频文件。
 
-- JigsawStackVOCR - Recognize, describe, and extract data from images using a prompt.
+- `JigsawStackVOCR`: 使用提示（prompt）识别、描述和提取图像中的数据。
 
-- JigsawStackTextToSQL - Generate semantically correct SQL queries from text.
+- `JigsawStackTextToSQL`: 根据文本生成语义正确的 SQL 查询。
 
-## Setup
+## 设置 (Setup)
 
-- Set up an [account](https://jigsawstack.com/dashboard) (Get started for free)
-- Create and retrieve your [API key](https://jigsawstack.com/dashboard)
+- 设置一个 [账户](https://jigsawstack.com/dashboard)（免费开始使用）
+- 创建并获取您的 [API 密钥](https://jigsawstack.com/dashboard)
 
-## Credentials
+## 凭证 (Credentials)
 
 ```bash
 export JIGSAWSTACK_API_KEY="your-api-key"
 ```
 
-## Usage, standalone
+## 使用方式：独立 (Usage, standalone)
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的一般说明，请参阅[本章节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -44,7 +44,7 @@ import {
 } from "@langchain/jigsawstack";
 
 export const run = async () => {
-  // AI Scrape Tool
+  // AI 抓取工具
   const aiScrapeTool = new JigsawStackAIScrape({
     params: {
       element_prompts: ["Pro plan"],
@@ -54,13 +54,13 @@ export const run = async () => {
 
   console.log({ result });
 
-  // AI Search Tool
+  // AI 搜索工具
 
   const aiSearchTool = new JigsawStackAISearch();
   const doc = await aiSearchTool.invoke("The leaning tower of pisa");
   console.log({ doc });
 
-  // VOCR Tool
+  // VOCR 工具
 
   const vocrTool = new JigsawStackVOCR({
     params: {
@@ -73,13 +73,13 @@ export const run = async () => {
 
   console.log({ data });
 
-  // Speech-to-Text Tool
+  // 语音转文字工具
   const sttTool = new JigsawStackSpeechToText();
   await sttTool.invoke(
     "https://rogilvkqloanxtvjfrkm.supabase.co/storage/v1/object/public/demo/Video%201737458382653833217.mp4?t=2024-03-22T09%3A50%3A49.894"
   );
 
-  // Text-to-SQL Tool
+  // 文本转 SQL 工具
   const sqlTool = new JigsawStackTextToSQL({
     params: {
       sql_schema:
@@ -93,7 +93,7 @@ export const run = async () => {
 };
 ```
 
-## Usage, in an Agent
+## 使用方式：在 Agent 中 (Usage, in an Agent)
 
 ```js
 import { ChatOpenAI } from "@langchain/openai";
@@ -111,7 +111,7 @@ const model = new ChatOpenAI({
   temperature: 0,
 });
 
-//  add the tools that you need
+// 添加您需要的工具
 const tools = [
   new JigsawStackAIScrape(),
   new JigsawStackAISearch(),
@@ -134,7 +134,7 @@ console.log(res.output);
 /*
 {
   "query": "Kokkalo Restaurant Santorini",
-  "ai_overview": "Kokkalo Restaurant, located in Fira, Santorini, offers a unique dining experience that blends traditional Greek cuisine with modern culinary trends. Here are some key details about the restaurant:\n\n- **Location**: Situated on the main road of Firostefani, Kokkalo is surrounded by the picturesque Cycladic architecture and provides stunning views of the Aegean Sea.\n- **Cuisine**: The restaurant specializes in authentic Greek dishes, crafted from high-quality, locally sourced ingredients. The menu is designed to engage all senses and features a variety of Mediterranean flavors.\n- **Ambiance**: Kokkalo boasts a chic and modern décor, creating a welcoming atmosphere for guests. The staff is known for their professionalism and attentiveness, enhancing the overall dining experience.\n- **Culinary Experience**: The name \"Kokkalo,\" meaning \"bone\" in Greek, symbolizes the strong foundation of the restaurant's culinary philosophy. Guests can expect a bold and unforgettable culinary journey.\n- **Cooking Classes**: Kokkalo also offers cooking lessons, allowing visitors to learn how to prepare traditional Greek dishes, providing a unique souvenir of their time in Santorini.\n- **Contact Information**: \n  - Address: 25 Martiou str, Fira, Santorini 84 700, Cyclades, Greece\n  - Phone: +30 22860 25407\n  - Email: reservation@kokkalosantorini.com\n\nFor more information, you can visit their [official website](https://www.santorini-view.com/restaurants/kokkalo-restaurant/) or their [Facebook page](https://www.facebook.com/kokkalorestaurant/).",
+  "ai_overview": "位于圣托里尼费拉的 Kokkalo 餐厅，提供融合了传统希腊美食和现代烹饪趋势的独特用餐体验。以下是关于该餐厅的一些关键细节：\n\n- **位置**: Kokkalo 餐厅坐落在费罗斯特法尼（Firostefani）的主干道上，周围环绕着基克拉迪群岛标志性的建筑，并享有爱琴海的壮丽景色。\n- **菜系**: 餐厅专注于正宗的希腊菜肴，采用高品质的当地食材精心制作。菜单旨在调动所有感官，并以各种地中海风味为特色。\n- **氛围**: Kokkalo 拥有别致而现代的装饰，为客人营造出舒适的氛围。员工以专业和细心著称，提升了整体用餐体验。\n- **烹饪理念**: \"Kokkalo\" 在希腊语中意为 \"骨头\"，象征着餐厅烹饪理念的坚实基础。客人可以期待一次大胆而难忘的美食之旅。\n- **烹饪课程**: Kokkalo 还提供烹饪课程，让游客学习制作传统的希腊菜肴，为他们在圣托里尼的时光留下独特的纪念品。\n- **联系信息**: \n  - 地址: 25 Martiou str, Fira, Santorini 84 700, Cyclades, Greece\n  - 电话: +30 22860 25407\n  - 电子邮件: reservation@kokkalosantorini.com\n\n欲了解更多信息，您可以访问其[官方网站](https://www.santorini-view.com/restaurants/kokkalo-restaurant/) 或其[Facebook 页面](https://www.facebook.com/kokkalorestaurant/)。",
   "is_safe": true,
   "results": [
     {
@@ -153,7 +153,7 @@ console.log(res.output);
 */
 ```
 
-## Related
+## 相关 (Related)
 
-- Tool [conceptual guide](/oss/langchain/tools)
-- Tool [how-to guides](/oss/langchain/tools)
+- 工具 [概念指南](/oss/langchain/tools)
+- 工具 [操作指南](/oss/langchain/tools)

@@ -2,33 +2,31 @@
 title: html-to-text
 ---
 
-When ingesting HTML documents for later retrieval, we are often interested only in the actual content of the webpage rather than semantics.
-Stripping HTML tags from documents with the HtmlToTextTransformer can result in more content-rich chunks, making retrieval more effective.
+在摄取 HTML 文档以供后续检索时，我们通常只对网页的实际内容感兴趣，而不是其语义结构。使用 `HtmlToTextTransformer` 从文档中剥离 HTML 标签可以得到内容更丰富的块（chunks），从而使检索效果更有效。
 
-## Setup
+## 设置
 
-You'll need to install the [`html-to-text`](https://www.npmjs.com/package/html-to-text) npm package:
+你需要安装 [`html-to-text`](https://www.npmjs.com/package/html-to-text) npm 包：
 
 ```bash npm
 npm install html-to-text
 ```
-Though not required for the transformer by itself, the below usage examples require [`cheerio`](https://www.npmjs.com/package/cheerio) for scraping:
+虽然 Transformer 本身不需要，但下面的用法示例需要 [`cheerio`](https://www.npmjs.com/package/cheerio) 进行网页抓取：
 
 ```bash npm
 npm install cheerio
 ```
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
 
-## Usage
+## 用法
 
-The below example scrapes a Hacker News thread, splits it based on HTML tags to group chunks based on the semantic information from the tags,
-then extracts content from the individual chunks:
+下面的示例抓取了一个 Hacker News 帖子，根据 HTML 标签对其进行分割，以便根据标签中的语义信息对块进行分组，然后从各个块中提取内容：
 
 ```typescript
 import { HTMLWebBaseLoader } from "@langchain/community/document_loaders/web/html";
@@ -123,6 +121,6 @@ console.log(newDocuments);
 */
 ```
 
-## Customization
+## 定制
 
-You can pass the transformer any [arguments accepted by the `html-to-text` package](https://www.npmjs.com/package/html-to-text) to customize how it works.
+你可以向 Transformer 传递 `html-to-text` 包可以接受的任何[参数](https://www.npmjs.com/package/html-to-text)，以自定义其工作方式。

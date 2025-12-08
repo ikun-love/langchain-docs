@@ -2,23 +2,23 @@
 title: WeaviateStore
 ---
 
-[Weaviate](https://weaviate.io/) is an open source vector database that stores both objects and vectors, allowing for combining vector search with structured filtering. LangChain connects to Weaviate via the weaviate-client package, the official Typescript client for Weaviate.
+[Weaviate](https://weaviate.io/) 是一个开源的向量数据库，它可以存储对象和向量，从而将向量搜索与结构化过滤相结合。LangChain 通过 `weaviate-client` 包（Weaviate 官方的 Typescript 客户端）连接到 Weaviate。
 
-This guide provides a quick overview for getting started with Weaviate [vector stores](/oss/integrations/vectorstores). For detailed documentation of all `WeaviateStore` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_weaviate.WeaviateStore.html).
+本指南快速概述了如何开始使用 Weaviate [向量存储](/oss/integrations/vectorstores)。有关 `WeaviateStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_weaviate.WeaviateStore.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | [PY support](https://python.langchain.com/docs/integrations/vectorstores/weaviate/) |  Version |
+| 类名 | 包名 | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/weaviate/) | 版本 |
 | :--- | :--- | :---: | :---: |
 | [`WeaviateStore`](https://api.js.langchain.com/classes/langchain_weaviate.WeaviateStore.html) | [`@langchain/weaviate`](https://npmjs.com/@langchain/weaviate) | ✅ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/weaviate?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-To use Weaviate vector stores, you'll need to set up a Weaviate instance and install the `@langchain/weaviate` integration package. You should also install the `weaviate-client` package to initialize a client to connect to your instance with, and the `uuid` package if you want to assign indexed documents ids.
+要使用 Weaviate 向量存储，您需要设置一个 Weaviate 实例并安装 `@langchain/weaviate` 集成包。您还需要安装 `weaviate-client` 包来初始化一个客户端以连接到您的实例，如果您想为索引的文档分配 ID，还需要安装 `uuid` 包。
 
-This guide will also use [OpenAI embeddings](/oss/integrations/text_embedding/openai), which require you to install the `@langchain/openai` integration package. You can also use [other supported embeddings models](/oss/integrations/text_embedding) if you wish.
+本指南还将使用 [OpenAI 嵌入模型](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果您愿意，也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -32,37 +32,37 @@ pnpm add @langchain/weaviate @langchain/core weaviate-client uuid @langchain/ope
 ```
 </CodeGroup>
 
-You'll need to run Weaviate either locally or on a server. See [the Weaviate documentation](https://weaviate.io/developers/weaviate/installation) for more information.
+您需要本地运行或在服务器上运行 Weaviate。有关更多信息，请参阅 [Weaviate 文档](https://weaviate.io/developers/weaviate/installation)。
 
-### Credentials
+### 凭证
 
-Once you've set up your instance, set the following environment variables:
+设置好实例后，设置以下环境变量：
 
 ```typescript
-// If running locally, include port e.g. "localhost:8080"
+// 如果在本地运行，请包含端口号，例如 "localhost:8080"
 process.env.WEAVIATE_URL = "YOUR_WEAVIATE_URL";
-// Optional, for cloud deployments
+// 云部署可选
 process.env.WEAVIATE_API_KEY = "YOUR_API_KEY";
 ```
 
-If you are using OpenAI embeddings for this guide, you'll need to set your OpenAI key as well:
+如果本指南中使用 OpenAI 嵌入模型，您还需要设置 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您想获取模型调用的自动跟踪，还可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
 // process.env.LANGSMITH_API_KEY="your-api-key"
 ```
 
-## Instantiation
+## 实例化
 
-### Connect a weaviate client
+### 连接 Weaviate 客户端
 
-In most cases, you should use one of the connection helper functions to connect to your Weaviate instance:
+在大多数情况下，您应该使用其中一个连接帮助函数来连接到您的 Weaviate 实例：
 
 - connectToWeaviateCloud
 - connectToLocal
@@ -89,19 +89,19 @@ const weaviateClient = weaviate.connectToWeaviateCloud({
 });
 ```
 
-### Initiate the vectorStore
+### 初始化向量存储
 
-To create a collection, specify at least the collection name. If you don't specify any properties, `auto-schema` creates them.
+要创建集合（Collection），至少需要指定集合名称。如果您未指定任何属性（Properties），`auto-schema` 会自动创建它们。
 
 ```typescript
 const vectorStore = new WeaviateStore(embeddings, {
   client: weaviateClient,
-  // Must start with a capital letter
+  // 必须以大写字母开头
   indexName: "Langchainjs_test",
 });
 ```
 
-To use Weaviate's named vectors, vectorizers, reranker, generative-models etc., use the `schema` property when enabling the vector store. The collection name and other properties in `schema` will take precedence when creating the vector store.
+要使用 Weaviate 的命名向量（named vectors）、向量化器（vectorizers）、重排序器（reranker）、生成模型（generative-models）等，请在启用向量存储时使用 `schema` 属性。`schema` 中的集合名称和其他属性在创建向量存储时具有优先权。
 
 ```typescript
 const vectorStore = new WeaviateStore(embeddings, {
@@ -122,8 +122,8 @@ const vectorStore = new WeaviateStore(embeddings, {
     vectorizers: [
       vectorizer.text2VecOpenAI({
         name: "title",
-        sourceProperties: ["title"], // (Optional) Set the source property(ies)
-        // vectorIndexConfig: configure.vectorIndex.hnsw()   // (Optional) Set the vector index configuration
+        sourceProperties: ["title"], // (可选) 设置源属性
+        // vectorIndexConfig: configure.vectorIndex.hnsw()   // (可选) 设置向量索引配置
       }),
     ],
     generative: weaviate.configure.generative.openAI(),
@@ -132,11 +132,11 @@ const vectorStore = new WeaviateStore(embeddings, {
 });
 ```
 
-## Manage vector store
+## 管理向量存储
 
-### Add items to vector store
+### 向向量存储添加项目
 
-**Note:** If you want to associate ids with your indexed documents, they must be UUIDs.
+**注意：** 如果您想将 ID 与索引的文档关联起来，这些 ID 必须是 UUIDs。
 
 ```typescript
 import type { Document } from "@langchain/core/documents";
@@ -177,24 +177,24 @@ await vectorStore.addDocuments(documents, { ids: uuids });
 ]
 ```
 
-### Delete items from vector store
+### 从向量存储中删除项目
 
-You can delete by id as by passing a `filter` param:
+您可以通过传递 `filter` 参数按 ID 进行删除：
 
 ```typescript
 await vectorStore.delete({ ids: [uuids[3]] });
 ```
 
-## Query vector store
+## 查询向量存储
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
-In weaviate's v3, the client interacts with `collections` as the primary way to work with objects in the database. The `collection` object can be re-used throughout the codebase
+一旦您的向量存储创建完成并且相关的文档已添加，在运行链或代理时，您很可能希望对其进行查询。
+在 Weaviate v3 中，客户端主要通过 `collections` 与数据库中的对象进行交互。`collection` 对象可以在代码库中重复使用。
 
-### Query directly
+### 直接查询
 
-Performing a simple similarity search can be done as follows. The `Filter` helper class makes it easier to use filters with conditions. The v3 client streamlines how you use `Filter` so your code is cleaner and more concise.
+执行简单的相似度搜索可以按如下方式进行。`Filter` 帮助类使使用带条件的过滤器更容易。v3 客户端简化了 `Filter` 的使用方式，使您的代码更简洁、更紧凑。
 
-See [this page](https://weaviate.io/developers/weaviate/api/graphql/filters) for more on Weaviate filter syntax.
+有关 Weaviate 过滤器语法的更多信息，请参阅 [此页面](https://weaviate.io/developers/weaviate/api/graphql/filters)。
 
 ```typescript
 import { Filters } from "weaviate-client";
@@ -215,7 +215,7 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似度搜索并接收相应的分数，可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -230,11 +230,11 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.852] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### Hybrid Search
+### 混合搜索 (Hybrid Search)
 
-In Weaviate, `Hybrid search` combines the results of a vector search and a keyword (BM25F) search by fusing the two result sets. To change the relative weights of the keyword and vector components, set the `alpha` value in your query.
+在 Weaviate 中，`混合搜索` 通过融合向量搜索和关键字（BM25F）搜索的结果集来结合两者。要更改关键字和向量组件的相对权重，请在查询中设置 `alpha` 值。
 
-Check **[docs](https://weaviate.io/developers/weaviate/search/hybrid)** for the full list of hybrid search options.
+有关混合搜索选项的完整列表，请查看 **[文档](https://weaviate.io/developers/weaviate/search/hybrid)**。
 
 ```typescript
 const results = await vectorStore.hybridSearch("biology",
@@ -249,15 +249,15 @@ const results = await vectorStore.hybridSearch("biology",
 });
 ```
 
-### Retrieval Augmented Generation (RAG)
+### 检索增强生成 (RAG)
 
-Retrieval Augmented Generation (RAG) combines information retrieval with generative AI models.
+检索增强生成 (RAG) 将信息检索与生成式 AI 模型相结合。
 
-In Weaviate, a RAG query consists of two parts: a search query, and a prompt for the model. Weaviate first performs the search, then passes both the search results and your prompt to a generative AI model before returning the generated response.
+在 Weaviate 中，RAG 查询包含两个部分：一个搜索查询和一个用于模型的提示（Prompt）。Weaviate 首先执行搜索，然后将搜索结果和您的提示一起传递给生成式 AI 模型，最后返回生成的响应。
 
-- @param query The query to search for.
-- @param options available options for performing the hybrid search
-- @param generate available options for the generation. Check docs for complete list
+- @param query 用于搜索的查询字符串。
+- @param options 执行混合搜索的可用选项
+- @param generate 可用于生成的选项。查看文档以获取完整列表
 
 ```typescript
 const results = await vectorStore.generate("hello world",
@@ -276,13 +276,13 @@ const results = await vectorStore.generate("hello world",
 );
 ```
 
-### Query by turning into retriever
+### 通过转换为检索器进行查询
 
-You can also transform the vector store into a [retriever](/oss/langchain/retrieval) for easier usage in your chains.
+您还可以将向量存储转换为 [检索器](/oss/langchain/retrieval) 以便在链中更轻松地使用。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
-  // Optional filter
+  // 可选的过滤器
   filter: filter,
   k: 2,
 });
@@ -304,16 +304,16 @@ await retriever.invoke("biology");
 ]
 ```
 
-### Usage for retrieval-augmented generation
+### 用于检索增强生成的用法
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag).
-- [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
+- [代理式 RAG](/oss/langgraph/agentic-rag)
+- [检索文档](/oss/langchain/retrieval)
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `WeaviateStore` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_weaviate.WeaviateStore.html).
+有关 `WeaviateStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_weaviate.WeaviateStore.html)。

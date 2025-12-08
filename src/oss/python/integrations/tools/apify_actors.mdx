@@ -2,24 +2,24 @@
 title: Apify Actor
 ---
 
->[Apify Actors](https://docs.apify.com/platform/actors) are cloud programs designed for a wide range of web scraping, crawling, and data extraction tasks. These actors facilitate automated data gathering from the web, enabling users to extract, process, and store information efficiently. Actors can be used to perform tasks like scraping e-commerce sites for product details, monitoring price changes, or gathering search engine results. They integrate seamlessly with [Apify Datasets](https://docs.apify.com/platform/storage/dataset), allowing the structured data collected by actors to be stored, managed, and exported in formats like JSON, CSV, or Excel for further analysis or use.
+>[Apify Actors](https://docs.apify.com/platform/actors) 是专为各种网页抓取、爬虫和数据提取任务设计的云端程序。这些 Actor 促进了网络数据的自动化收集，使用户能够高效地提取、处理和存储信息。Actor 可用于执行各种任务，例如抓取电子商务网站的产品详情、监控价格变化或收集搜索引擎结果。它们与 [Apify Datasets](https://docs.apify.com/platform/storage/dataset) 无缝集成，允许将 Actor 收集的结构化数据以 JSON、CSV 或 Excel 等格式存储、管理和导出，以供进一步分析或使用。
 
-## Overview
+## 概述
 
-This notebook walks you through using [Apify Actors](https://docs.apify.com/platform/actors) with LangChain to automate web scraping and data extraction. The `langchain-apify` package integrates Apify's cloud-based tools with LangChain agents, enabling efficient data collection and processing for AI applications.
+本 Notebook 将引导您了解如何使用 [Apify Actors](https://docs.apify.com/platform/actors) 结合 LangChain 来自动化网页抓取和数据提取。`langchain-apify` 包将 Apify 的云端工具与 LangChain Agent 相集成，从而为 AI 应用实现高效的数据收集和处理。
 
-## Setup
+## 设置
 
-This integration lives in the [langchain-apify](https://pypi.org/project/langchain-apify/) package. The package can be installed using pip.
+此集成位于 [langchain-apify](https://pypi.org/project/langchain-apify/) 包中。可以使用 pip 安装该包。
 
 ```python
 pip install langchain-apify
 ```
 
-### Prerequisites
+### 先决条件
 
-- **Apify account**: Register your free Apify account [here](https://console.apify.com/sign-up).
-- **Apify API token**: Learn how to get your API token in the [Apify documentation](https://docs.apify.com/platform/integrations/api).
+- **Apify 账户**：请[在此处](https://console.apify.com/sign-up)注册您的免费 Apify 账户。
+- **Apify API 令牌**：请在 [Apify 文档](https://docs.apify.com/platform/integrations/api)中了解如何获取您的 API 令牌。
 
 ```python
 import os
@@ -28,9 +28,9 @@ os.environ["APIFY_API_TOKEN"] = "your-apify-api-token"
 os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 ```
 
-## Instantiation
+## 实例化
 
-Here we instantiate the `ApifyActorsTool` to be able to call [RAG Web Browser](https://apify.com/apify/rag-web-browser) Apify Actor. This Actor provides web browsing functionality for AI and LLM applications, similar to the web browsing feature in ChatGPT. Any Actor from the [Apify Store](https://apify.com/store) can be used in this way.
+在这里，我们实例化 `ApifyActorsTool`，以便调用 [RAG Web Browser](https://apify.com/apify/rag-web-browser) Apify Actor。此 Actor 为 AI 和 LLM 应用提供了网页浏览功能，类似于 ChatGPT 中的网页浏览功能。可以这样使用 [Apify Store](https://apify.com/store) 中的任何 Actor。
 
 ```python
 from langchain_apify import ApifyActorsTool
@@ -38,17 +38,17 @@ from langchain_apify import ApifyActorsTool
 tool = ApifyActorsTool("apify/rag-web-browser")
 ```
 
-## Invocation
+## 调用 (Invocation)
 
-The `ApifyActorsTool` takes a single argument, which is `run_input` - a dictionary that is passed as a run input to the Actor. Run input schema documentation can be found in the input section of the Actor details page. See [RAG Web Browser input schema](https://apify.com/apify/rag-web-browser/input-schema).
+`ApifyActorsTool` 接受一个参数，即 `run_input`——一个作为运行输入传递给 Actor 的字典。运行输入的 Schema 文档可以在 Actor 详情页面的输入部分找到。请参阅 [RAG Web Browser 输入 Schema](https://apify.com/apify/rag-web-browser/input-schema)。
 
 ```python
 tool.invoke({"run_input": {"query": "what is apify?", "maxResults": 2}})
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-We can provide the created tool to an [agent](https://python.langchain.com/docs/tutorials/agents/). When asked to search for information, the agent will call the Apify Actor, which will search the web, and then retrieve the search results.
+我们可以将创建的工具提供给一个 [Agent](https://python.langchain.com/docs/tutorials/agents/)。当要求搜索信息时，Agent 将调用 Apify Actor，Actor 将搜索网络，然后检索搜索结果。
 
 ```python
 pip install langgraph langchain-openai
@@ -69,7 +69,7 @@ graph = create_agent(model, tools=tools)
 inputs = {"messages": [("user", "search for what is Apify")]}
 for s in graph.stream(inputs, stream_mode="values"):
     message = s["messages"][-1]
-    # skip tool messages
+    # 跳过工具消息
     if isinstance(message, ToolMessage):
         continue
     message.pretty_print()
@@ -87,32 +87,32 @@ Tool Calls:
     run_input: {"run_input":{"query":"Apify","maxResults":3,"outputFormats":["markdown"]}}
 ================================== Ai Message ==================================
 
-Apify is a comprehensive platform for web scraping, browser automation, and data extraction. It offers a wide array of tools and services that cater to developers and businesses looking to extract data from websites efficiently and effectively. Here's an overview of Apify:
+Apify 是一个全面的平台，用于网页抓取、浏览器自动化和数据提取。它提供了一系列工具和服务，以满足希望高效、有效地从网站中提取数据的开发人员和企业。以下是 Apify 的概述：
 
-1. **Ecosystem and Tools**:
-   - Apify provides an ecosystem where developers can build, deploy, and publish data extraction and web automation tools called Actors.
-   - The platform supports various use cases such as extracting data from social media platforms, conducting automated browser-based tasks, and more.
+1. **生态系统和工具**：
+   - Apify 提供了一个生态系统，开发人员可以在其中构建、部署和发布名为 Actor 的数据提取和网络自动化工具。
+   - 该平台支持各种用例，例如从社交媒体平台提取数据、执行基于浏览器的自动化任务等。
 
-2. **Offerings**:
-   - Apify offers over 3,000 ready-made scraping tools and code templates.
-   - Users can also build custom solutions or hire Apify's professional services for more tailored data extraction needs.
+2. **提供的服务**：
+   - Apify 提供超过 3,000 个现成的抓取工具和代码模板。
+   - 用户还可以构建定制解决方案或聘请 Apify 的专业服务以满足更个性化的数据提取需求。
 
-3. **Technology and Integration**:
-   - The platform supports integration with popular tools and services like Zapier, GitHub, Google Sheets, Pinecone, and more.
-   - Apify supports open-source tools and technologies such as JavaScript, Python, Puppeteer, Playwright, Selenium, and its own Crawlee library for web crawling and browser automation.
+3. **技术和集成**：
+   - 该平台支持与 Zapier、GitHub、Google Sheets、Pinecone 等流行工具和服务的集成。
+   - Apify 支持开源工具和技术，如 JavaScript、Python、Puppeteer、Playwright、Selenium 及其自己的用于网络爬取和浏览器自动化的 Crawlee 库。
 
-4. **Community and Learning**:
-   - Apify hosts a community on Discord where developers can get help and share expertise.
-   - It offers educational resources through the Web Scraping Academy to help users become proficient in data scraping and automation.
+4. **社区和学习**：
+   - Apify 在 Discord 上设有社区，开发人员可以在此获得帮助和分享专业知识。
+   - 它通过 Web Scraping Academy 提供教育资源，以帮助用户熟练掌握数据抓取和自动化技术。
 
-5. **Enterprise Solutions**:
-   - Apify provides enterprise-grade web data extraction solutions with high reliability, 99.95% uptime, and compliance with SOC2, GDPR, and CCPA standards.
+5. **企业解决方案**：
+   - Apify 提供企业级的网络数据提取解决方案，具有高可靠性、99.95% 的正常运行时间，并符合 SOC2、GDPR 和 CCPA 标准。
 
-For more information, you can visit [Apify's official website](https://apify.com/) or their [GitHub page](https://github.com/apify) which contains their code repositories and further details about their projects.
+如需了解更多信息，您可以访问 [Apify 官方网站](https://apify.com/) 或其 [GitHub 页面](https://github.com/apify)，其中包含其代码仓库和关于其项目的更多详细信息。
 ```
 
 ---
 
-## API reference
+## API 参考
 
-For more information on how to use this integration, see the [git repository](https://github.com/apify/langchain-apify) or the [Apify integration documentation](https://docs.apify.com/platform/integrations/langgraph).
+有关如何使用此集成的更多信息，请参阅 [git 仓库](https://github.com/apify/langchain-apify) 或 [Apify 集成文档](https://docs.apify.com/platform/integrations/langgraph)。

@@ -2,35 +2,35 @@
 title: Jina Reranker
 ---
 
-This notebook shows how to use Jina Reranker for document compression and retrieval.
+本 Notebook 展示了如何使用 Jina Reranker 进行文档压缩和检索。
 
 ```python
 pip install -qU langchain langchain-openai langchain-community langchain-text-splitters langchainhub
 
 pip install -qU  faiss
 
-# OR  (depending on Python version)
+# 或者 (取决于 Python 版本)
 
 pip install -qU  faiss_cpu
 ```
 
 ```python
-# Helper function for printing docs
+# 打印文档的辅助函数
 
 
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n".join(
-            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"文档 {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
 ```
 
-## Set up the base vector store retriever
+## 设置基础向量存储检索器 (Base Vector Store Retriever)
 
-Let's start by initializing a simple vector store retriever and storing the 2023 State of the Union speech (in chunks). We can set up the retriever to retrieve a high number (20) of docs.
+我们首先初始化一个简单的向量存储检索器，并将 2023 年国情咨文（State of the Union）的文本（分块后）存储进去。我们可以将检索器配置为检索大量的文档（例如 20 个）。
 
-##### Set the Jina and OpenAI API keys
+##### 设置 Jina 和 OpenAI API 密钥
 
 ```python
 import getpass
@@ -60,9 +60,9 @@ docs = retriever.get_relevant_documents(query)
 pretty_print_docs(docs)
 ```
 
-## Doing reranking with JinaRerank
+## 使用 JinaRerank 进行重排序 (Reranking)
 
-Now let's wrap our base retriever with a ContextualCompressionRetriever, using Jina Reranker as a compressor.
+现在，让我们使用 Jina Reranker 作为压缩器，将基础检索器包装进一个 `ContextualCompressionRetriever` 中。
 
 ```python
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
@@ -82,7 +82,7 @@ compressed_docs = compression_retriever.get_relevant_documents(
 pretty_print_docs(compressed_docs)
 ```
 
-## QA reranking with Jina Reranker
+## 使用 Jina Reranker 进行 QA 重排序
 
 ```python
 from langchain_classic import hub

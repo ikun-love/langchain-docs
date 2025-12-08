@@ -1,39 +1,39 @@
 ---
-title: Automatically run evaluators on experiments
-sidebarTitle: Run evaluators on experiments
+title: 在实验上自动运行评估器
+sidebarTitle: 在实验上运行评估器
 ---
 
-LangSmith supports two ways to grade experiments created via the SDK:
+LangSmith 支持两种方式来评估通过 SDK 创建的实验：
 
-* **Programmatically**, by specifying evaluators in your code (see [this guide](/langsmith/evaluate-llm-application) for details)
-* By **binding evaluators to a dataset** in the UI. This will automatically run the evaluators on any new experiments created, in addition to any evaluators you've set up via the SDK. This is useful when you're iterating on your application (target function), and have a standard set of evaluators you want to run for all experiments.
+* **以编程方式**：在代码中指定评估器（有关详细信息，请参阅[本指南](/langsmith/evaluate-llm-application)）。
+* **在 UI 中将评估器绑定到数据集**。这将自动对所有新创建的实验运行评估器，此外还会运行您通过 SDK 设置的任何评估器。当您迭代应用程序（目标函数）并希望对所有实验运行一套标准的评估器时，此方法非常有用。
 
-## Configuring an evaluator on a dataset
+## 在数据集上配置评估器
 
-1. Click on the **Datasets and Experiments** tab in the sidebar.
-2. Select the dataset you want to configure the evaluator for.
-3. Click on the **+ Evaluator** button to add an evaluator to the dataset. This will open a pane you can use to configure the evaluator.
+1. 在侧边栏中，点击 **Datasets and Experiments**（数据集和实验）选项卡。
+2. 选择要配置评估器的目标数据集。
+3. 点击 **+ Evaluator**（+ 评估器）按钮将评估器添加到数据集中。这将打开一个面板，您可以在其中配置该评估器。
 
 <Note>
-When you configure an evaluator for a dataset, it will only affect the experiment runs that are created after the evaluator is configured. It will not affect the evaluation of experiment runs that were created before the evaluator was configured.
+当您为数据集配置评估器时，它**仅会影响**评估器配置后创建的实验运行。它**不会影响**在此评估器配置之前创建的实验运行的评估。
 </Note>
 
-## LLM-as-a-judge evaluators
+## LLM-作为裁判（LLM-as-a-judge）评估器
 
-The process for binding evaluators to a dataset is very similar to the process for configuring a LLM-as-a-judge evaluator in the Playground. View instructions for [configuring an LLM-as-a-judge evaluator in the Playground.](/langsmith/llm-as-judge?mode=ui)
+将评估器绑定到数据集的过程与在 Playground 中配置 LLM-作为裁判评估器的过程非常相似。请查看[在 Playground 中配置 LLM-作为裁判评估器](/langsmith/llm-as-judge?mode=ui)的说明。
 
-## Custom code evaluators
+## 自定义代码评估器
 
-The process for binding a code evaluators to a dataset is very similar to the process for configuring a code evaluator in online evaluation. View instruction for [configuring code evaluators](/langsmith/online-evaluations#configure-a-custom-code-evaluator).
+将代码评估器绑定到数据集的过程与在在线评估中配置代码评估器的过程非常相似。请查看[配置代码评估器](/langsmith/online-evaluations#configure-a-custom-code-evaluator)的说明。
 
-The only difference between configuring a code evaluator in online evaluation and binding a code evaluator to a dataset is that the custom code evaluator can reference outputs that are part of the dataset's `Example`.
+在在线评估中配置代码评估器与将代码评估器绑定到数据集之间的**唯一区别**在于，自定义代码评估器可以引用数据集的 `Example` 中的输出来进行比较。
 
-For custom code evaluators bound to a dataset, the evaluator function takes in two arguments:
+对于绑定到数据集的自定义代码评估器，评估器函数接收两个参数：
 
-* A `Run` ([reference](/langsmith/run-data-format)). This represents the new run in your experiment. For example, if you ran an experiment via SDK, this would contain the input/output from your chain or model you are testing.
-* An `Example` ([reference](/langsmith/example-data-format)). This represents the reference example in your dataset that the chain or model you are testing uses. The `inputs` to the Run and Example should be the same. If your Example has a reference `outputs`, then you can use this to compare to the run's output for scoring.
+* 一个 `Run` ([引用](/langsmith/run-data-format))。这代表实验中的新运行。例如，如果您通过 SDK 运行了实验，此对象将包含您正在测试的链或模型的输入/输出。
+* 一个 `Example` ([引用](/langsmith/example-data-format))。这代表数据集中被测试的链或模型使用的参考示例。`Run` 和 `Example` 的 `inputs` 应该是相同的。如果您的 `Example` 具有参考输出来源 `outputs`，那么您可以使用它与运行的输出来进行分数比较。
 
-The code below shows an example of a simple evaluator function that checks that the outputs exactly equal the reference outputs.
+下面的代码展示了一个简单的评估器函数示例，该函数检查输出是否与参考输出完全匹配：
 
 <CodeGroup>
 
@@ -41,8 +41,8 @@ The code below shows an example of a simple evaluator function that checks that 
 import numpy as np
 
 def perform_eval(run, example):
-    # run is a Run object
-    # example is an Example object
+    # run 是一个 Run 对象
+    # example 是一个 Example 对象
     output = run['outputs']['output']
     ref_output = example['outputs']['outputs']
     output_match = np.array_equal(output, ref_output)
@@ -52,12 +52,12 @@ def perform_eval(run, example):
 
 ```javascript JavaScript
 function perform_eval(run, example) {
-    // run is a Run object
-    // example is an Example object
+    // run 是一个 Run 对象
+    // example 是一个 Example 对象
     const output = run.outputs.output;
     const refOutput = example.outputs.outputs;
 
-    // Deep equality check for arrays/objects
+    // 对数组/对象进行深度相等性检查
     const outputMatch = JSON.stringify(output) === JSON.stringify(refOutput);
 
     return { "exact_match": outputMatch };
@@ -66,7 +66,7 @@ function perform_eval(run, example) {
 
 </CodeGroup>
 
-## Next steps
+## 后续步骤
 
-* Analyze your experiment results in the [experiments tab](/langsmith/analyze-an-experiment)
-* Compare your experiment results in the [comparison view](/langsmith/compare-experiment-results)
+* 在[实验选项卡](/langsmith/analyze-an-experiment)中分析您的实验结果
+* 在[比较视图](/langsmith/compare-experiment-results)中比较您的实验结果

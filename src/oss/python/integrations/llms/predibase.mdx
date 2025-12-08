@@ -2,15 +2,15 @@
 title: Predibase
 ---
 
-[Predibase](https://predibase.com/) allows you to train, fine-tune, and deploy any ML model—from linear regression to large language model.
+[Predibase](https://predibase.com/) 允许您训练、微调和部署任何机器学习模型——从线性回归到大型语言模型。
 
-This example demonstrates using LangChain with models deployed on Predibase
+本示例演示了如何结合使用 LangChain 与部署在 Predibase 上的模型。
 
-# Setup
+# 设置
 
-To run this notebook, you'll need a [Predibase account](https://predibase.com/free-trial/?utm_source=langchain) and an [API key](https://docs.predibase.com/sdk-guide/intro).
+要运行此 Notebook，您需要一个 [Predibase 账户](https://predibase.com/free-trial/?utm_source=langchain) 和一个 [API 密钥](https://docs.predibase.com/sdk-guide/intro)。
 
-You'll also need to install the Predibase Python package:
+您还需要安装 Predibase Python 包：
 
 ```python
 pip install -qU  predibase
@@ -19,7 +19,7 @@ import os
 os.environ["PREDIBASE_API_TOKEN"] = "{PREDIBASE_API_TOKEN}"
 ```
 
-## Initial Call
+## 初始调用
 
 ```python
 from langchain_community.llms import Predibase
@@ -33,16 +33,16 @@ model = Predibase(
 ```python
 from langchain_community.llms import Predibase
 
-# With a fine-tuned adapter hosted at Predibase (adapter_version must be specified).
+# 使用托管在 Predibase 上的微调适配器（必须指定 adapter_version）。
 model = Predibase(
     model="mistral-7b",
     predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
     adapter_id="e2e_nlg",
     adapter_version=1,
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
 ```
@@ -50,21 +50,21 @@ model = Predibase(
 ```python
 from langchain_community.llms import Predibase
 
-# With a fine-tuned adapter hosted at HuggingFace (adapter_version does not apply and will be ignored).
+# 使用托管在 HuggingFace 上的微调适配器（adapter_version 不适用且将被忽略）。
 model = Predibase(
     model="mistral-7b",
     predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
     adapter_id="predibase/e2e_nlg",
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
 ```
 
 ```python
-# Optionally use `kwargs` to dynamically overwrite "generate()" settings.
+# 可选地使用 `kwargs` 动态覆盖 "generate()" 设置。
 response = model.invoke(
     "Can you recommend me a nice dry wine?",
     **{"temperature": 0.5, "max_new_tokens": 1024},
@@ -72,7 +72,7 @@ response = model.invoke(
 print(response)
 ```
 
-## Chain Call Setup
+## 链式调用设置
 
 ```python
 from langchain_community.llms import Predibase
@@ -80,44 +80,44 @@ from langchain_community.llms import Predibase
 model = Predibase(
     model="mistral-7b",
     predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
 ```
 
 ```python
-# With a fine-tuned adapter hosted at Predibase (adapter_version must be specified).
+# 使用托管在 Predibase 上的微调适配器（必须指定 adapter_version）。
 model = Predibase(
     model="mistral-7b",
     predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
     adapter_id="e2e_nlg",
     adapter_version=1,
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
 ```
 
 ```python
-# With a fine-tuned adapter hosted at HuggingFace (adapter_version does not apply and will be ignored).
+# 使用托管在 HuggingFace 上的微调适配器（adapter_version 不适用且将被忽略）。
 llm = Predibase(
     model="mistral-7b",
     predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
     adapter_id="predibase/e2e_nlg",
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
 ```
 
-## SequentialChain
+## 顺序链 (SequentialChain)
 
 ```python
 from langchain.chains import LLMChain
@@ -125,7 +125,7 @@ from langchain_core.prompts import PromptTemplate
 ```
 
 ```python
-# This is an LLMChain to write a synopsis given a title of a play.
+# 这是一个 LLMChain，用于根据戏剧标题生成梗概。
 template = """You are a playwright. Given the title of play, it is your job to write a synopsis for that title.
 
 Title: {title}
@@ -135,7 +135,7 @@ synopsis_chain = LLMChain(llm=llm, prompt=prompt_template)
 ```
 
 ```python
-# This is an LLMChain to write a review of a play given a synopsis.
+# 这是一个 LLMChain，用于根据戏剧梗概撰写评论。
 template = """You are a play critic from the New York Times. Given the synopsis of play, it is your job to write a review for that play.
 
 Play Synopsis:
@@ -146,7 +146,7 @@ review_chain = LLMChain(llm=llm, prompt=prompt_template)
 ```
 
 ```python
-# This is the overall chain where we run these two chains in sequence.
+# 这是整体链，我们将按顺序运行这两个链。
 from langchain.chains import SimpleSequentialChain
 
 overall_chain = SimpleSequentialChain(
@@ -158,7 +158,7 @@ overall_chain = SimpleSequentialChain(
 review = overall_chain.run("Tragedy at sunset on the beach")
 ```
 
-## Fine-tuned LLM (Use your own fine-tuned LLM from Predibase)
+## 微调 LLM（使用您在 Predibase 上自己的微调 LLM）
 
 ```python
 from langchain_community.llms import Predibase
@@ -167,19 +167,19 @@ model = Predibase(
     model="my-base-LLM",
     predibase_api_key=os.environ.get(
         "PREDIBASE_API_TOKEN"
-    ),  # Adapter argument is optional.
-    predibase_sdk_version=None,  # optional parameter (defaults to the latest Predibase SDK version if omitted)
-    adapter_id="my-finetuned-adapter-id",  # Supports both, Predibase-hosted and HuggingFace-hosted adapter repositories.
-    adapter_version=1,  # required for Predibase-hosted adapters (ignored for HuggingFace-hosted adapters)
+    ),  # Adapter 参数是可选的。
+    predibase_sdk_version=None,  # 可选参数（如果省略，则默认为最新的 Predibase SDK 版本）
+    adapter_id="my-finetuned-adapter-id",  # 支持 Predibase 托管和 HuggingFace 托管的适配器仓库。
+    adapter_version=1,  # Predibase 托管的适配器必需（对于 HuggingFace 托管的适配器会被忽略）
     **{
         "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
-        "max_new_tokens": 5,  # default is 256
+        "max_new_tokens": 5,  # 默认为 256
     },
 )
-# replace my-base-LLM with the name of your choice of a serverless base model in Predibase
+# 将 my-base-LLM 替换为您在 Predibase 中选择的无服务器基础模型的名称
 ```
 
 ```python
-# Optionally use `kwargs` to dynamically overwrite "generate()" settings.
+# 可选地使用 `kwargs` 动态覆盖 "generate()" 设置。
 # response = model.invoke("Can you help categorize the following emails into positive, negative, and neutral?", **{"temperature": 0.5, "max_new_tokens": 1024})
 ```

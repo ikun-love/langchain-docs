@@ -1,24 +1,24 @@
 ---
-title: Azure OpenAI Whisper Parser
+title: Azure OpenAI Whisper 解析器
 ---
 
->[Azure OpenAI Whisper Parser](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/whisper-overview) is a wrapper around the Azure OpenAI Whisper API which utilizes machine learning to transcribe audio files to english text.
+>[Azure OpenAI Whisper 解析器](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/whisper-overview) 是对 Azure OpenAI Whisper API 的封装，它利用机器学习将音频文件转录成英文文本。
 >
->The Parser supports `.mp3`, `.mp4`, `.mpeg`, `.mpga`, `.m4a`, `.wav`, and `.webm`.
+>该解析器支持的文件格式包括：`.mp3`, `.mp4`, `.mpeg`, `.mpga`, `.m4a`, `.wav`, 和 `.webm`。
 
-The current implementation follows LangChain core principles and can be used with other loaders to handle both audio downloading and parsing. As a result of this the parser will `yield` an `Iterator[Document]`.
+当前的实现遵循 LangChain 核心原则，可以与其他加载器一起使用，以处理音频的下载和解析。因此，解析器将 `yield` 一个 `Iterator[Document]`（文档迭代器）。
 
-## Prerequisites
+## 前提条件
 
-The service requires Azure credentials, Azure endpoint and Whisper Model deployment, which can be set up by following the guide [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/whisper-quickstart?tabs=command-line%2Cpython-new%2Cjavascript&pivots=programming-language-python). Furthermore, the required dependencies must be installed.
+该服务需要 Azure 凭证、Azure 终结点（Endpoint）以及 Whisper 模型部署。您可以通过[此处](https://learn.microsoft.com/en-us/azure/ai-services/openai/whisper-quickstart?tabs=command-line%2Cpython-new%2Cjavascript&pivots=programming-language-python)的指南进行设置。此外，还需要安装所需的依赖包。
 
 ```python
 pip install -Uq  langchain langchain-community openai
 ```
 
-## Example 1
+## 示例 1
 
-The `AzureOpenAIWhisperParser`'s method, `.lazy_parse`, accepts a `Blob` object as a parameter containing the file path of the file to be transcribed.
+`AzureOpenAIWhisperParser` 的 `.lazy_parse` 方法接受一个 `Blob` 对象作为参数，该对象包含待转录文件的路径。
 
 ```python
 from langchain_core.documents.base import Blob
@@ -49,9 +49,9 @@ for doc in documents:
     print(doc.page_content)
 ```
 
-## Example 2
+## 示例 2
 
-The `AzureOpenAIWhisperParser` can also be used in conjunction with audio loaders, like the `YoutubeAudioLoader` with a `GenericLoader`.
+`AzureOpenAIWhisperParser` 也可以与音频加载器结合使用，例如与 `GenericLoader` 结合使用 `YoutubeAudioLoader`。
 
 ```python
 from langchain_community.document_loaders.blob_loaders.youtube_audio import (
@@ -61,7 +61,7 @@ from langchain_community.document_loaders.generic import GenericLoader
 ```
 
 ```python
-# Must be a list
+# URL 必须是一个列表
 url = ["www.youtube.url.com"]
 
 save_dir = "save/directory/"

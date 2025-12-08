@@ -1,41 +1,41 @@
 ---
 title: ChatOpenAI
-description: Get started using OpenAI [chat models](/oss/langchain/models) in LangChain.
+description: 开始在 LangChain 中使用 OpenAI 的 [聊天模型](/oss/langchain/models)。
 ---
 
-You can find information about OpenAI's latest models, their costs, context windows, and supported input types in the [OpenAI Platform](https://platform.openai.com) docs.
+您可以在 [OpenAI 平台](https://platform.openai.com) 文档中找到有关 OpenAI 最新模型、成本、上下文窗口和支持的输入类型的详细信息。
 
 <Tip>
-    **API Reference**
+    **API 参考**
 
-    For detailed documentation of all features and configuration options, head to the @[`ChatOpenAI`] API reference.
+    有关所有功能和配置选项的详细文档，请查阅 @[`ChatOpenAI`] API 参考。
 </Tip>
 
 <Note>
-    **Chat Completions API compatibility**
+    **Chat Completions API 兼容性**
 
-    `ChatOpenAI` is fully compatible with OpenAI's [Chat Completions API](https://platform.openai.com/docs/api-reference/chat). If you are looking to connect to other model providers that support the Chat Completions API, you can do so – see [instructions](/oss/integrations/chat#chat-completions-api).
+    `ChatOpenAI` 完全兼容 OpenAI 的 [Chat Completions API](https://platform.openai.com/docs/api-reference/chat)。如果您希望连接到支持 Chat Completions API 的其他模型提供商，可以这样做——请参阅[说明](/oss/integrations/chat#chat-completions-api)。
 </Note>
 
-## Overview
+## 概览
 
-### Integration details
+### 集成详情
 
-| Class | Package | <Tooltip tip="Can run on local hardware" cta="Learn more" href="/oss/langchain/models#local-models">Local</Tooltip> | Serializable | JS/TS Support | Downloads | Latest Version |
+| 类 | 包 | <Tooltip tip="Can run on local hardware" cta="Learn more" href="/oss/langchain/models#local-models">本地</Tooltip> | 可序列化 | JS/TS 支持 | 下载量 | 最新版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | @[`ChatOpenAI`] | @[`langchain-openai`] | ❌ | beta | ✅ [(npm)](https://js.langchain.com/docs/integrations/chat/openai) | <a href="https://pypi.org/project/langchain-openai/" target="_blank"><img src="https://static.pepy.tech/badge/langchain-openai/month" alt="Downloads per month" noZoom height="100" class="rounded" /></a> | <a href="https://pypi.org/project/langchain-openai/" target="_blank"><img src="https://img.shields.io/pypi/v/langchain-openai?style=flat-square&label=%20&color=orange" alt="PyPI - Latest version" noZoom height="100" class="rounded" /></a> |
 
-### Model features
+### 模型特性
 
-| [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output) | Image input | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | Native async | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | 图像输入 | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming/) | 原生异步 | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
 
-## Setup
+## 设置
 
-To access OpenAI models you'll need to install the `langchain-openai` integration package and acquire an [OpenAI Platform](https://platform.openai.com) API key.
+要访问 OpenAI 模型，您需要安装 `langchain-openai` 集成包并获取 [OpenAI 平台](https://platform.openai.com) API 密钥。
 
-### Installation
+### 安装
 
 <CodeGroup>
     ```bash pip
@@ -46,9 +46,9 @@ To access OpenAI models you'll need to install the `langchain-openai` integratio
     ```
 </CodeGroup>
 
-### Credentials
+### 凭证
 
-Head to the [OpenAI Platform](https://platform.openai.com/docs/api-reference/authentication) to sign up and generate an API key. Once you've done this set the `OPENAI_API_KEY` environment variable in your environment:
+前往 [OpenAI 平台](https://platform.openai.com/docs/api-reference/authentication) 注册并生成 API 密钥。完成此操作后，请在您的环境中设置 `OPENAI_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -58,16 +58,16 @@ if not os.environ.get("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/home) API key:
+如果您想对模型的调用进行自动追踪，也可以设置您的 [LangSmith](/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate responses:
+现在我们可以实例化模型对象并生成响应：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -87,17 +87,17 @@ llm = ChatOpenAI(
 )
 ```
 
-See the @[`ChatOpenAI`] API Reference for the full set of available model parameters.
+有关所有可用模型参数的完整信息，请参阅 @[`ChatOpenAI`] API 参考。
 
 <Note>
-    **Token parameter deprecation**
+    **Token 参数弃用**
 
-    OpenAI deprecated `max_tokens` in favor of `max_completion_tokens` in September 2024. While `max_tokens` is still supported for backwards compatibility, it's automatically converted to `max_completion_tokens` internally.
+    OpenAI 已在 2024 年 9 月弃用 `max_tokens`，转而使用 `max_completion_tokens`。虽然 `max_tokens` 仍受支持以保持向后兼容性，但它在内部会自动转换为 `max_completion_tokens`。
 </Note>
 
 ---
 
-## Invocation
+## 调用
 
 ```python
 messages = [
@@ -125,11 +125,11 @@ J'adore la programmation.
 
 ---
 
-## Streaming usage metadata
+## 流式传输用法元数据
 
-OpenAI's Chat Completions API does not stream token usage statistics by default (see API reference [here](https://platform.openai.com/docs/api-reference/completions/create#completions-create-stream_options)).
+OpenAI 的 Chat Completions API 默认不流式传输 Token 使用情况统计信息（请参阅 API 参考 [此处](https://platform.openai.com/docs/api-reference/completions/create#completions-create-stream_options)）。
 
-To recover token counts when streaming with @[`ChatOpenAI`] or `AzureChatOpenAI`, set `stream_usage=True` as an initialization parameter or on invocation:
+要在使用 @[`ChatOpenAI`] 或 `AzureChatOpenAI` 进行流式传输时恢复 Token 计数，请将 `stream_usage=True` 设置为初始化参数或调用参数：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -139,25 +139,25 @@ llm = ChatOpenAI(model="gpt-4.1-mini", stream_usage=True)  # [!code highlight]
 
 ---
 
-## Using with Azure OpenAI
+## 与 Azure OpenAI 配合使用
 
 <Info>
-    **Azure OpenAI v1 API support**
+    **Azure OpenAI v1 API 支持**
 
-    As of `langchain-openai>=1.0.1`, `ChatOpenAI` can be used directly with Azure OpenAI endpoints using the new [v1 API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=python#next-generation-api-1). This provides a unified way to use OpenAI models whether hosted on OpenAI or Azure.
+    从 `langchain-openai>=1.0.1` 开始，`ChatOpenAI` 可以直接与 Azure OpenAI 端点一起使用，并采用新的 [v1 API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=python#next-generation-api-1)。这提供了一种统一的方式来使用托管在 OpenAI 或 Azure 上的 OpenAI 模型。
 
-    For the traditional Azure-specific implementation, continue to use [`AzureChatOpenAI`](/oss/integrations/chat/azure_chat_openai/).
+    对于传统的特定于 Azure 的实现，请继续使用 [`AzureChatOpenAI`](/oss/integrations/chat/azure_chat_openai/)。
 </Info>
 
-<Accordion title="Using Azure OpenAI v1 API with API Key">
+<Accordion title="使用 API 密钥通过 Azure OpenAI v1 API">
 
-To use `ChatOpenAI` with Azure OpenAI, set the `base_url` to your Azure endpoint with `/openai/v1/` appended:
+要将 `ChatOpenAI` 与 Azure OpenAI 配合使用，请将 `base_url` 设置为您的 Azure 端点，并在末尾附加 `/openai/v1/`：
 
 ```python
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    model="gpt-5-mini",  # Your Azure deployment name
+    model="gpt-5-mini",  # 您的 Azure 部署名称
     base_url="https://{your-resource-name}.openai.azure.com/openai/v1/",
     api_key="your-azure-api-key"
 )
@@ -167,9 +167,9 @@ print(response.content)
 ```
 </Accordion>
 
-<Accordion title="Using Azure OpenAI with Microsoft Entra ID">
+<Accordion title="使用 Microsoft Entra ID 进行 Azure OpenAI">
 
-The v1 API adds native support for [Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/managed-identity) (formerly Azure AD) authentication with automatic token refresh. Pass a token provider callable to the `api_key` parameter:
+v1 API 为 [Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/managed-identity)（以前称为 Azure AD）身份验证提供了原生支持，并支持自动刷新令牌。将 Token 提供程序可调用对象传递给 `api_key` 参数：
 
 ```python
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -182,7 +182,7 @@ token_provider = get_bearer_token_provider(
 )
 
 llm = ChatOpenAI(
-    model="gpt-5-mini",  # Your Azure deployment name
+    model="gpt-5-mini",  # 您的 Azure 部署名称
     base_url="https://{your-resource-name}.openai.azure.com/openai/v1/",
     api_key=token_provider  # Callable that handles token refresh
 )
@@ -196,12 +196,12 @@ response = llm.invoke(messages)
 print(response.content)
 ```
 
-The token provider is a callable that automatically retrieves and refreshes authentication tokens, eliminating the need to manually manage token expiration.
+Token 提供程序是一个可调用对象，它会自动检索和刷新身份验证 Token，从而无需手动管理 Token 过期。
 
 <Tip>
-**Installation requirements**
+**安装要求**
 
-To use Microsoft Entra ID authentication, install the Azure Identity library:
+要使用 Microsoft Entra ID 身份验证，请安装 Azure Identity 库：
 
 ```bash
 pip install azure-identity
@@ -209,9 +209,7 @@ pip install azure-identity
 
 </Tip>
 
-You can also pass a token provider callable to the `api_key` parameter when using
-asynchronous functions. You must import DefaultAzureCredential from `azure.identity.aio`:
-
+当使用异步函数时，您也可以将 Token 提供程序可调用对象传递给 `api_key` 参数。您必须从 `azure.identity.aio` 导入 `DefaultAzureCredential`：
 
 ```python
 from azure.identity.aio import DefaultAzureCredential
@@ -229,20 +227,20 @@ response = await llm_async.ainvoke("Hello!")
 ```
 
 <Note>
-When using an async callable for the API key, you must use async methods (`ainvoke`, `astream`, etc.). Sync methods will raise an error.
+当使用异步可调用对象作为 API 密钥时，您必须使用异步方法（`ainvoke`、`astream` 等）。同步方法将引发错误。
 </Note>
 
 </Accordion>
 
 ---
 
-## Tool calling
+## 工具调用
 
-OpenAI has a [tool calling](https://platform.openai.com/docs/guides/function-calling) (we use "tool calling" and "function calling" interchangeably here) API that lets you describe tools and their arguments, and have the model return a JSON object with a tool to invoke and the inputs to that tool. tool-calling is extremely useful for building tool-using chains and agents, and for getting structured outputs from models more generally.
+OpenAI 具有一个 [工具调用](https://platform.openai.com/docs/guides/function-calling)（我们在此处互换使用“工具调用”和“函数调用”）API，它允许您描述工具及其参数，并让模型返回一个包含要调用的工具和该工具输入的 JSON 对象。工具调用对于构建使用工具的链和代理，以及更广泛地从模型中获取结构化输出极其有用。
 
-### Bind tools
+### 绑定工具
 
-With `ChatOpenAI.bind_tools`, we can easily pass in Pydantic classes, dict schemas, LangChain tools, or even functions as tools to the model. Under the hood these are converted to an OpenAI tool schemas, which looks like:
+使用 `ChatOpenAI.bind_tools`，我们可以轻松地将 Pydantic 类、字典模式、LangChain 工具甚至函数作为工具传递给模型。在底层，这些会被转换为 OpenAI 工具模式，看起来像这样：
 
 ```
 {
@@ -252,7 +250,7 @@ With `ChatOpenAI.bind_tools`, we can easily pass in Pydantic classes, dict schem
 }
 ```
 
-...and are passed in every model invocation.
+...并在每次模型调用中传递。
 
 ```python
 from pydantic import BaseModel, Field
@@ -278,18 +276,18 @@ ai_msg
 AIMessage(content='', additional_kwargs={'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 17, 'prompt_tokens': 68, 'total_tokens': 85}, 'model_name': 'gpt-4o-2024-05-13', 'system_fingerprint': 'fp_3aa7262c27', 'finish_reason': 'tool_calls', 'logprobs': None}, id='run-1617c9b2-dda5-4120-996b-0333ed5992e2-0', tool_calls=[{'name': 'GetWeather', 'args': {'location': 'San Francisco, CA'}, 'id': 'call_o9udf3EVOWiV4Iupktpbpofk', 'type': 'tool_call'}], usage_metadata={'input_tokens': 68, 'output_tokens': 17, 'total_tokens': 85})
 ```
 
-### Strict mode
+### 严格模式
 
 <Info>
-    **Requires `langchain-openai>=0.1.21`**
+    **需要 `langchain-openai>=0.1.21`**
 </Info>
 
-As of Aug 6, 2024, OpenAI supports a `strict` argument when calling tools that will enforce that the tool argument schema is respected by the model. [See more](https://platform.openai.com/docs/guides/function-calling).
+截至 2024 年 8 月 6 日，OpenAI 在调用工具时支持 `strict` 参数，这将强制要求模型遵守工具参数模式。[查看更多](https://platform.openai.com/docs/guides/function-calling)。
 
 <Note>
-    If `strict=True` the tool definition will also be validated, and a subset of JSON schema are accepted. Crucially, schema cannot have optional args (those with default values).
+    如果 `strict=True`，工具定义也将被验证，并且只接受 JSON 模式的子集。关键是，模式不能有可选参数（那些带有默认值的参数）。
 
-    Read [the full docs](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas) on what types of schema are supported.
+    请阅读[完整文档](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas)以了解支持哪些类型的模式。
 </Note>
 
 ```python
@@ -304,9 +302,9 @@ ai_msg
 AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'call_jUqhd8wzAIzInTJl72Rla8ht', 'function': {'arguments': '{"location":"San Francisco, CA"}', 'name': 'GetWeather'}, 'type': 'function'}], 'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 17, 'prompt_tokens': 68, 'total_tokens': 85}, 'model_name': 'gpt-4o-2024-05-13', 'system_fingerprint': 'fp_3aa7262c27', 'finish_reason': 'tool_calls', 'logprobs': None}, id='run-5e3356a9-132d-4623-8e73-dd5a898cf4a6-0', tool_calls=[{'name': 'GetWeather', 'args': {'location': 'San Francisco, CA'}, 'id': 'call_jUqhd8wzAIzInTJl72Rla8ht', 'type': 'tool_call'}], usage_metadata={'input_tokens': 68, 'output_tokens': 17, 'total_tokens': 85})
 ```
 
-### Tool calls
+### 工具调用
 
-Notice that the AIMessage has a `tool_calls` attribute. This contains in a standardized ToolCall format that is model-provider agnostic.
+请注意，`AIMessage` 具有 `tool_calls` 属性。它以标准化的 ToolCall 格式包含信息，这种格式与模型提供商无关。
 
 ```python
 ai_msg.tool_calls
@@ -319,11 +317,11 @@ ai_msg.tool_calls
   'type': 'tool_call'}]
 ```
 
-For more on binding tools and tool call outputs, head to the [tool calling](/oss/langchain/tools) docs.
+有关绑定工具和工具调用输出的更多信息，请查阅[工具调用](/oss/langchain/tools)文档。
 
-### Structured output and tool calls
+### 结构化输出和工具调用
 
-OpenAI's [structured output](https://platform.openai.com/docs/guides/structured-outputs) feature can be used simultaneously with tool-calling. The model will either generate tool calls or a response adhering to a desired schema. See example below:
+OpenAI 的[结构化输出](https://platform.openai.com/docs/guides/structured-outputs)功能可以与工具调用同时使用。模型将生成工具调用或与所需模式一致的响应。请看下面的示例：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -359,13 +357,13 @@ structured_response = structured_llm.invoke(
 )
 ```
 
-### Custom tools
+### 自定义工具
 
 <Info>
-**Requires `langchain-openai>=0.3.29`**
+**需要 `langchain-openai>=0.3.29`**
 </Info>
 
-[Custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools) support tools with arbitrary string inputs. They can be particularly useful when you expect your string arguments to be long or complex.
+[自定义工具](https://platform.openai.com/docs/guides/function-calling#custom-tools)支持带有任意字符串输入的工具。当您期望字符串参数很长或很复杂时，它们特别有用。
 
 ```python
 from langchain_openai import ChatOpenAI, custom_tool
@@ -411,9 +409,9 @@ Name: execute_code
 [{'type': 'text', 'text': '27', 'annotations': [], 'id': 'msg_68b73371e9e081a0927f54f88f2cd7a20d6082d28f91357a'}]
 ```
 
-<Accordion title="Context-free grammars">
+<Accordion title="上下文无关文法">
 
-OpenAI supports the specification of a [context-free grammar](https://platform.openai.com/docs/guides/function-calling#context-free-grammars) for custom tool inputs in `lark` or `regex` format. See [OpenAI docs](https://platform.openai.com/docs/guides/function-calling#context-free-grammars) for details. The `format` parameter can be passed into `@custom_tool` as shown below:
+OpenAI 支持以 `lark` 或 `regex` 格式指定自定义工具输入的[上下文无关文法](https://platform.openai.com/docs/guides/function-calling#context-free-grammars)。请参阅 OpenAI 文档了解详情。`format` 参数可以像下面所示那样传递给 `@custom_tool`：
 
 ```python
 from langchain_openai import ChatOpenAI, custom_tool
@@ -482,19 +480,19 @@ Name: do_math
 ## Responses API
 
 <Info>
-    **Requires `langchain-openai>=0.3.9`**
+    **需要 `langchain-openai>=0.3.9`**
 </Info>
 
-OpenAI supports a [Responses](https://platform.openai.com/docs/guides/responses-vs-chat-completions) API that is oriented toward building [agentic](/oss/langchain/agents) applications. It includes a suite of [built-in tools](https://platform.openai.com/docs/guides/tools?api-mode=responses), including web and file search. It also supports management of [conversation state](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses), allowing you to continue a conversational thread without explicitly passing in previous messages, as well as the output from [reasoning processes](https://platform.openai.com/docs/guides/reasoning?api-mode=responses).
+OpenAI 支持面向构建[代理式](/oss/langchain/agents)应用的[响应](https://platform.openai.com/docs/guides/responses-vs-chat-completions) API。它包括一套[内置工具](https://platform.openai.com/docs/guides/tools?api-mode=responses)，如网络和文件搜索。它还支持[对话状态](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)的管理，允许您在不显式传入先前消息的情况下继续对话，以及[推理过程](https://platform.openai.com/docs/guides/reasoning?api-mode=responses)的输出。
 
-@[`ChatOpenAI`] will route to the Responses API if one of these features is used. You can also specify `use_responses_api=True` when instantiating @[`ChatOpenAI`].
+当使用这些功能时，@[`ChatOpenAI`] 将路由到 Responses API。您也可以在实例化 @[`ChatOpenAI`] 时指定 `use_responses_api=True`。
 
-### Web search
+### 网络搜索
 
-To trigger a web search, pass `{"type": "web_search_preview"}` to the model as you would another tool.
+要触发网络搜索，请将 `{"type": "web_search_preview"}` 传递给模型，就像传递其他工具一样。
 
 <Tip>
-**You can also pass built-in tools as invocation params:**
+**您也可以将内置工具作为调用参数传递：**
 
 ```python
 llm.invoke("...", tools=[{"type": "web_search_preview"}])
@@ -513,7 +511,7 @@ llm_with_tools = llm.bind_tools([tool])
 response = llm_with_tools.invoke("What was a positive news story from today?")
 ```
 
-Note that the response includes structured [content blocks](/oss/langchain/messages/#message-content) that include both the text of the response and OpenAI [annotations](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses#output-and-citations) citing its sources. The output message will also contain information from any tool invocations:
+请注意，响应包括结构化的[内容块](/oss/langchain/messages/#message-content)，其中包含响应文本和 OpenAI [注释](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses#output-and-citations)（引用其来源）。输出消息还将包含来自任何工具调用的信息：
 
 ```python
 response.content_blocks
@@ -543,27 +541,27 @@ response.content_blocks
 ```
 
 <Tip>
-**You can recover just the text content of the response as a string by using `response.text`. For example, to stream response text:**
+**您可以使用 `response.text` 仅恢复响应文本的内容作为字符串。例如，要流式传输响应文本：**
 
 ```python
 for token in llm_with_tools.stream("..."):
     print(token.text, end="|")
 ```
 
-See the [streaming guide](/oss/langchain/streaming/) for more detail.
+有关更多详细信息，请参阅[流式传输指南](/oss/langchain/streaming/)。
 
 </Tip>
 
-### Image generation
+### 图像生成
 
 <Info>
-**Requires `langchain-openai>=0.3.19`**
+**需要 `langchain-openai>=0.3.19`**
 </Info>
 
-To trigger an image generation, pass `{"type": "image_generation"}` to the model as you would another tool.
+要触发图像生成，请将 `{"type": "image_generation"}` 传递给模型，就像传递其他工具一样。
 
 <Tip>
-You can also pass built-in tools as invocation params:
+您也可以将内置工具作为调用参数传递：
 ```python
 llm.invoke("...", tools=[{"type": "image_generation"}])
 ```
@@ -598,9 +596,9 @@ Image(base64.b64decode(image["base64"]), width=200)
     <img src="/images/cat.png" width="200px" />
 </p>
 
-### File search
+### 文件搜索
 
-To trigger a file search, pass a [file search tool](https://platform.openai.com/docs/guides/tools-file-search) to the model as you would another tool. You will need to populate an OpenAI-managed vector store and include the vector store ID in the tool definition. See [OpenAI documentation](https://platform.openai.com/docs/guides/tools-file-search) for more detail.
+要触发文件搜索，请将[文件搜索工具](https://platform.openai.com/docs/guides/tools-file-search)传递给模型，就像传递其他工具一样。您需要填充一个由 OpenAI 管理的向量存储，并将向量存储 ID 包含在工具定义中。请参阅 OpenAI [文档](https://platform.openai.com/docs/guides/tools-file-search)了解更多详细信息。
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -628,7 +626,7 @@ print(response.text)
 Deep Research by OpenAI is...
 ```
 
-As with [web search](#web-search), the response will include content blocks with citations:
+与[网络搜索](#web-search)一样，响应将包括带有引用的内容块：
 
 ```python
 [block["type"] for block in response.content_blocks]
@@ -653,7 +651,7 @@ text_block["annotations"][:2]
   'extras': {'file_id': 'file-3UzgX7jcC8Dt9ZAFzywg5k', 'index': 2712}}]
 ```
 
-It will also include information from the built-in tool invocations:
+它还将包括来自内置工具调用的信息：
 
 ```python
 response.content_blocks[0]
@@ -666,13 +664,13 @@ response.content_blocks[0]
  'args': {'queries': ['deep research by OpenAI']}}
 ```
 
-### Computer use
+### 计算机使用
 
-@[`ChatOpenAI`] supports the `"computer-use-preview"` model, which is a specialized model for the built-in computer use tool. To enable, pass a [computer use tool](https://platform.openai.com/docs/guides/tools-computer-use) as you would pass another tool.
+@[`ChatOpenAI`] 支持 `"computer-use-preview"` 模型，这是一种专门用于内置计算机使用工具的模型。要启用它，请像传递其他工具一样传递[计算机使用工具](https://platform.openai.com/docs/guides/tools-computer-use)。
 
-Currently, tool outputs for computer use are present in the message `content` field. To reply to the computer use tool call, construct a @[`ToolMessage`] with `{"type": "computer_call_output"}` in its `additional_kwargs`. The content of the message will be a screenshot. Below, we demonstrate a simple example.
+目前，计算机使用的工具输出存在于消息 `content` 字段中。要回复计算机使用工具调用，请使用 `{"type": "computer_call_output"}` 构造一个带有 `additional_kwargs` 的 @[`ToolMessage`]。消息的内容将是屏幕截图。下面，我们演示一个简单的示例。
 
-First, load two screenshots:
+首先，加载两个屏幕截图：
 
 ```python
 import base64
@@ -734,7 +732,7 @@ response = llm_with_tools.invoke(
 )
 ```
 
-The response will include a call to the computer-use tool in its `content`:
+响应将在其 `content` 中包含对计算机使用工具的调用：
 
 ```python
 response.content
@@ -753,11 +751,11 @@ response.content
   'type': 'computer_call'}]
 ```
 
-We next construct a @[`ToolMessage`] with these properties:
+接下来，我们使用这些属性构造一个 @[`ToolMessage`]:
 
-1. It has a `tool_call_id` matching the `call_id` from the computer-call.
-2. It has `{"type": "computer_call_output"}` in its `additional_kwargs`.
-3. Its content is either an `image_url` or an `input_image` output block (see [OpenAI docs](https://platform.openai.com/docs/guides/tools-computer-use#5-repeat) for formatting).
+1. 它具有与计算机调用中的 `call_id` 匹配的 `tool_call_id`。
+2. 它的 `additional_kwargs` 中包含 `{"type": "computer_call_output"}`。
+3. 它的内容是 `image_url` 或 `input_image` 输出块（请参阅 OpenAI [文档](https://platform.openai.com/docs/guides/tools-computer-use#5-repeat)了解格式）。
 
 ```python
 from langchain.messages import ToolMessage
@@ -779,7 +777,7 @@ tool_message = ToolMessage(
 )
 ```
 
-We can now invoke the model again using the message history:
+我们现在可以使用消息历史再次调用模型：
 
 ```python
 messages = [
@@ -804,7 +802,7 @@ response_2.text
 'VS Code has been closed, and the desktop is now visible.'
 ```
 
-Instead of passing back the entire sequence, we can also use the [`previous_response_id`](#passing-previous_response_id):
+与其返回整个序列，我们还可以使用 [`previous_response_id`](#passing-previous_response_id)：
 
 ```python
 previous_response_id = response.response_metadata["id"]
@@ -826,9 +824,9 @@ response_2.text
 'The VS Code window is closed, and the desktop is now visible. Let me know if you need any further assistance.'
 ```
 
-### Code interpreter
+### 代码解释器
 
-OpenAI implements a [code interpreter](https://platform.openai.com/docs/guides/tools-code-interpreter) tool to support the sandboxed generation and execution of code.
+OpenAI 实现了[代码解释器](https://platform.openai.com/docs/guides/tools-code-interpreter)工具来支持代码的沙箱生成和执行。
 
 ```python Example use
 from langchain_openai import ChatOpenAI
@@ -852,7 +850,7 @@ response = llm_with_tools.invoke(
 )
 ```
 
-Note that the above command created a new container. We can also specify an existing container ID:
+请注意，上述命令创建了一个新容器。我们也可以指定一个现有的容器 ID：
 
 ```python
 code_interpreter_calls = [
@@ -872,9 +870,9 @@ llm_with_tools = llm.bind_tools(
 )
 ```
 
-### Remote MCP
+### 远程 MCP
 
-OpenAI implements a [remote MCP](https://platform.openai.com/docs/guides/tools-remote-mcp) tool that allows for model-generated calls to MCP servers.
+OpenAI 实现了[远程 MCP](https://platform.openai.com/docs/guides/tools-remote-mcp) 工具，允许模型生成对 MCP 服务器的调用。
 
 ```python Example use
 from langchain_openai import ChatOpenAI
@@ -897,11 +895,11 @@ response = llm_with_tools.invoke(
 )
 ```
 
-<Accordion title="MCP Approvals">
+<Accordion title="MCP 批准">
 
-OpenAI will at times request approval before sharing data with a remote MCP server.
+OpenAI 有时会请求批准，然后才能与远程 MCP 服务器共享数据。
 
-In the above command, we instructed the model to never require approval. We can also configure the model to always request approval, or to always request approval for specific tools:
+在上面的命令中，我们指示模型永远不需要批准。我们也可以配置模型始终请求批准，或始终为特定工具请求批准：
 
 ```python
 llm_with_tools = llm.bind_tools(
@@ -924,9 +922,9 @@ response = llm_with_tools.invoke(
 )
 ```
 
-Responses may then include blocks with type `"mcp_approval_request"`.
+响应随后可能包含带有 `"mcp_approval_request"` 类型的块。
 
-To submit approvals for an approval request, structure it into a content block in an input message:
+要提交批准请求，请将其构造到输入消息的内容块中：
 
 ```python
 approval_message = {
@@ -951,13 +949,15 @@ next_response = llm_with_tools.invoke(
 
 </Accordion>
 
-### Managing conversation state
+---
 
-The Responses API supports management of [conversation state](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses).
+## 管理对话状态
 
-#### Manually manage state
+Responses API 支持管理[对话状态](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
 
-You can manage the state manually or using [LangGraph](/oss/langgraph/quickstart), as with other chat models:
+#### 手动管理状态
+
+您可以手动管理状态，或使用 [LangGraph](/oss/langgraph/quickstart)，就像使用其他聊天模型一样：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -993,13 +993,13 @@ You mentioned that your name is Bob. How can I assist you further, Bob?
 ```
 
 <Tip>
-**You can use [LangGraph](https://langchain-ai.github.io/langgraph/) to manage conversational threads for you in a variety of backends, including in-memory and Postgres. See [this tutorial](/oss/langgraph/quickstart) to get started.**
+**您可以使用 [LangGraph](https://langchain-ai.github.io/langgraph/) 在内存或 Postgres 等各种后端为您管理对话线程。请参阅[本教程](/oss/langgraph/quickstart)开始。**
 
 </Tip>
 
-#### Passing `previous_response_id`
+#### 传递 `previous_response_id`
 
-When using the Responses API, LangChain messages will include an `"id"` field in its metadata. Passing this ID to subsequent invocations will continue the conversation. Note that this is [equivalent](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses#openai-apis-for-conversation-state) to manually passing in messages from a billing perspective.
+当使用 Responses API 时，LangChain 消息将在其元数据中包含一个 `"id"` 字段。将此 ID 传递给后续调用将继续对话。请注意，这在计费方面[等同于](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses#openai-apis-for-conversation-state)手动传入消息。
 
 ```python
 second_response = llm.invoke(
@@ -1013,7 +1013,7 @@ print(second_response.text)
 Your name is Bob. How can I help you today, Bob?
 ```
 
-ChatOpenAI can also automatically specify `previous_response_id` using the last response in a message sequence:
+ChatOpenAI 也可以使用消息序列中的最后一个响应自动指定 `previous_response_id`：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -1024,9 +1024,9 @@ llm = ChatOpenAI(
 )
 ```
 
-If we set `use_previous_response_id=True`, input messages up to the most recent response will be dropped from request payloads, and `previous_response_id` will be set using the ID of the most recent response.
+如果设置了 `use_previous_response_id=True`，请求负载中将删除直到最近响应的输入消息，并且 `previous_response_id` 将使用最近响应的 ID 进行设置。
 
-That is,
+也就是说，
 
 ```python
 llm.invoke(
@@ -1038,17 +1038,17 @@ llm.invoke(
 )
 ```
 
-...is equivalent to:
+...相当于：
 
 ```python
 llm.invoke([HumanMessage("How are you?")], previous_response_id="resp_123")
 ```
 
-### Reasoning output
+### 推理输出
 
-Some OpenAI models will generate separate text content illustrating their reasoning process. See OpenAI's [reasoning documentation](https://platform.openai.com/docs/guides/reasoning?api-mode=responses) for details.
+一些 OpenAI 模型将生成单独的文本内容，以说明其推理过程。有关详细信息，请参阅 OpenAI 的[推理文档](https://platform.openai.com/docs/guides/reasoning?api-mode=responses)。
 
-OpenAI can return a summary of the model's reasoning (although it doesn't expose the raw reasoning tokens). To configure @[`ChatOpenAI`] to return this summary, specify the `reasoning` parameter. @[`ChatOpenAI`] will automatically route to the Responses API if this parameter is set.
+OpenAI 可以返回模型推理的摘要（尽管它不暴露原始推理 Token）。要配置 @[`ChatOpenAI`] 返回此摘要，请指定 `reasoning` 参数。如果设置了此参数，@[`ChatOpenAI`] 将自动路由到 Responses API。
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -1077,26 +1077,26 @@ for block in response.content_blocks:
 ```
 
 ```output
-**Calculating the power of three**
+**Initializing calculation of the power of three**
 
-The user is asking about 3 raised to the power of 3. That's a pretty simple calculation! I know that 3^3 equals 27, so I can say, "3 to the power of 3 equals 27." I might also include a quick explanation that it's 3 multiplied by itself three times: 3 × 3 × 3 = 27. So, the answer is definitely 27.
+The user is asking for the result of 3 raised to the power of 3 ($3^3$). This is a straightforward arithmetic operation. I will calculate $3 \times 3 \times 3$. $3 \times 3 = 9$, and $9 \times 3 = 27$. Therefore, the result is 27. I will provide this direct answer.
 ```
 
 <Tip>
-    **Troubleshooting: Empty responses from reasoning models**
+    **故障排除：来自推理模型的空响应**
 
-    If you're getting empty responses from reasoning models like `gpt-5-nano`, this is likely due to restrictive token limits. The model uses tokens for internal reasoning and may not have any left for the final output.
+    如果您从推理模型（如 `gpt-5-nano`）获得空响应，这很可能是由于 Token 限制严格造成的。模型使用 Token 进行内部推理，可能没有剩余 Token 用于最终输出。
 
-    Ensure `max_tokens` is set to `None` or increase the token limit to allow sufficient tokens for both reasoning and output generation.
+    确保 `max_tokens` 设置为 `None` 或增加 Token 限制，以允许足够的 Token 进行推理和输出生成。
 </Tip>
 
 ---
 
-## Fine-tuning
+## 微调
 
-You can call fine-tuned OpenAI models by passing in your corresponding `modelName` parameter.
+您可以通过传入相应的 `modelName` 参数来调用微调的 OpenAI 模型。
 
-This generally takes the form of `ft:{OPENAI_MODEL_NAME}:{ORG_NAME}::{MODEL_ID}`. For example:
+这通常采取 `ft:{OPENAI_MODEL_NAME}:{ORG_NAME}::{MODEL_ID}` 的形式。例如：
 
 ```python
 fine_tuned_model = ChatOpenAI(
@@ -1112,15 +1112,15 @@ AIMessage(content="J'adore la programmation.", additional_kwargs={'refusal': Non
 
 ---
 
-## Multimodal Inputs (images, PDFs, audio)
+## 多模态输入（图像、PDF、音频）
 
-OpenAI has models that support multimodal inputs. You can pass in images, PDFs, or audio to these models. For more information on how to do this in LangChain, head to the [multimodal inputs](/oss/langchain/messages#multimodal) docs.
+OpenAI 具有支持多模态输入的模型。您可以向这些模型传入图像、PDF 或音频。有关如何在 LangChain 中执行此操作的更多信息，请查阅[多模态输入](/oss/langchain/messages#multimodal)文档。
 
-You can see the list of models that support different modalities in [OpenAI's documentation](https://platform.openai.com/docs/models).
+您可以在 [OpenAI 文档](https://platform.openai.com/docs/models)中查看支持不同模态的模型列表。
 
-For all modalities, LangChain supports both its cross-provider standard as well as OpenAI's native content-block format.
+对于所有模态，LangChain 同时支持其跨提供商的标准格式和 OpenAI 的原生内容块格式。
 
-To pass multimodal data into @[`ChatOpenAI`], create a [content block](/oss/langchain/messages/) containing the data and incorporate it into a message, e.g., as below:
+要将多模态数据传入 @[`ChatOpenAI`]，请创建一个[内容块](/oss/langchain/messages/)，其中包含数据并将其纳入消息中，例如如下所示：
 
 ```python
 message = {
@@ -1136,11 +1136,11 @@ message = {
 }
 ```
 
-See below for examples of content blocks.
+有关内容块的示例，请参阅以下内容。
 
-<Accordion title="Images">
+<Accordion title="图像">
 
-Refer to examples in the how-to guide [here](/oss/langchain/messages#multimodal).
+请参阅[操作指南](/oss/langchain/messages#multimodal)中“如何操作”部分的示例。
 
 ```python URLs
 # LangChain format
@@ -1174,13 +1174,11 @@ content_block = {
 ```
 </Accordion>
 
-<Accordion title="PDFs">
+<Accordion title="PDF">
 
-Note: OpenAI requires file-names be specified for PDF inputs. When using LangChain's format, include the `filename` key.
+注意：OpenAI 要求为 PDF 输入指定文件名。使用 LangChain 的格式时，请包含 `filename` 键。
 
-Read more [here](/oss/langchain/messages#multimodal#example-openai-file-names).
-
-Refer to examples in the how-to guide [here](/oss/langchain/messages#multimodal#documents-pdf).
+有关更多信息，请参阅[操作指南](/oss/langchain/messages#multimodal#example-openai-file-names)中“如何操作”部分的示例，以及[此处](/oss/langchain/messages#multimodal#documents-pdf)。
 
 ```python In-line base64 data
 # LangChain format
@@ -1202,11 +1200,11 @@ content_block = {
 ```
 </Accordion>
 
-<Accordion title="Audio">
+<Accordion title="音频">
 
-See [supported models](https://platform.openai.com/docs/models), e.g., `"gpt-4o-audio-preview"`.
+请参阅[支持的模型](https://platform.openai.com/docs/models)，例如 `"gpt-4o-audio-preview"`。
 
-Refer to examples in the how-to guide [here](/oss/langchain/messages#multimodal#audio).
+有关更多信息，请参阅[操作指南](/oss/langchain/messages#multimodal#audio)的示例。
 
 ```python In-line base64 data
 # LangChain format
@@ -1226,15 +1224,15 @@ content_block = {
 
 ---
 
-## Predicted output
+## 预测输出
 
 <Info>
-**Requires `langchain-openai>=0.2.6`**
+**需要 `langchain-openai>=0.2.6`**
 </Info>
 
-Some OpenAI models (such as their `gpt-4o` and `gpt-4o-mini` series) support [Predicted Outputs](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs), which allow you to pass in a known portion of the LLM's expected output ahead of time to reduce latency. This is useful for cases such as editing text or code, where only a small part of the model's output will change.
+一些 OpenAI 模型（例如 `gpt-4o` 和 `gpt-4o-mini` 系列）支持[预测输出](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs)，它允许您提前传入已知部分的 LLM 预期输出，以减少延迟。这对于编辑文本或代码等场景非常有用，在这些场景中，模型输出只有一小部分会发生变化。
 
-Here's an example:
+这是一个例子：
 
 ```python
 code = """
@@ -1297,16 +1295,16 @@ public class User
 {'token_usage': {'completion_tokens': 226, 'prompt_tokens': 166, 'total_tokens': 392, 'completion_tokens_details': {'accepted_prediction_tokens': 49, 'audio_tokens': None, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 107}, 'prompt_tokens_details': {'audio_tokens': None, 'cached_tokens': 0}}, 'model_name': 'gpt-4o-2024-08-06', 'system_fingerprint': 'fp_45cf54deae', 'finish_reason': 'stop', 'logprobs': None}
 ```
 
-Note that currently predictions are billed as additional tokens and may increase your usage and costs in exchange for this reduced latency.
+请注意，目前预测是作为额外 Token 收费的，这可能会以降低延迟为代价增加您的使用量和成本。
 ---
 
-## Audio Generation (Preview)
+## 音频生成（预览）
 
 <Info>
-Requires `langchain-openai>=0.2.3`
+需要 `langchain-openai>=0.2.3`
 </Info>
 
-OpenAI has a new [audio generation feature](https://platform.openai.com/docs/guides/audio?audio-generation-quickstart-example=audio-out) that allows you to use audio inputs and outputs with the `gpt-4o-audio-preview` model.
+OpenAI 有一项新的[音频生成功能](https://platform.openai.com/docs/guides/audio?audio-generation-quickstart-example=audio-out)，允许您使用 `gpt-4o-audio-preview` 模型进行音频输入和输出。
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -1327,7 +1325,7 @@ output_message = llm.invoke(
 )
 ```
 
-`output_message.additional_kwargs['audio']` will contain a dictionary like
+`output_message.additional_kwargs['audio']` 将包含一个字典，如下所示：
 
 ```python
 {
@@ -1338,14 +1336,14 @@ output_message = llm.invoke(
 }
 ```
 
-...and the format will be what was passed in `model_kwargs['audio']['format']`.
+...并且格式将是 `model_kwargs['audio']['format']` 中传递的格式。
 
-We can also pass this message with audio data back to the model as part of a message history before openai `expires_at` is reached.
+在 OpenAI `expires_at` 到期之前，我们也可以将此消息连同音频数据作为消息历史的一部分传回给模型。
 
 <Note>
-**Output audio is stored under the `audio` key in `AIMessage.additional_kwargs`, but input content blocks are typed with an `input_audio` type and key in `HumanMessage.content` lists. **
+**输出音频存储在 `AIMessage.additional_kwargs` 的 `audio` 键下，而输入内容块在 `HumanMessage.content` 列表中使用 `input_audio` 类型和键进行类型化。**
 
-For more information, see OpenAI's [audio docs](https://platform.openai.com/docs/guides/audio).
+有关更多信息，请参阅 OpenAI 的[音频文档](https://platform.openai.com/docs/guides/audio)。
 </Note>
 
 ```python
@@ -1359,13 +1357,13 @@ second_output_message = llm.invoke(history)
 
 ---
 
-## Prompt caching
+## 提示缓存
 
-OpenAI's [prompt caching](https://platform.openai.com/docs/guides/prompt-caching) feature automatically caches prompts longer than 1024 tokens to reduce costs and improve response times. This feature is enabled for all recent models (`gpt-4o` and newer).
+OpenAI 的[提示缓存](https://platform.openai.com/docs/guides/prompt-caching)功能会自动缓存长度超过 1024 个 Token 的提示，以降低成本并提高响应时间。此功能对所有最新模型（`gpt-4o` 及更新版本）启用。
 
-### Manual caching
+### 手动缓存
 
-You can use the `prompt_cache_key` parameter to influence OpenAI's caching and optimize cache hit rates:
+您可以使用 `prompt_cache_key` 参数来影响 OpenAI 的缓存并优化缓存命中率：
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -1389,12 +1387,12 @@ print(f"Cached tokens used: {cache_read_tokens}")
 ```
 
 <Warning>
-    Cache hits require the prompt prefix to match exactly
+    缓存命中要求提示前缀完全匹配
 </Warning>
 
-### Cache key strategies
+### 缓存键策略
 
-You can use different cache key strategies based on your application's needs:
+您可以根据应用程序的需求使用不同的缓存键策略：
 
 ```python
 # Static cache keys for consistent prompt templates
@@ -1414,9 +1412,9 @@ cache_key = f"assistant-{user_type}-v1"
 response = llm.invoke(messages, prompt_cache_key=cache_key)
 ```
 
-### Model-level caching
+### 模型级缓存
 
-You can also set a default cache key at the model level using `model_kwargs`:
+您也可以使用 `model_kwargs` 在模型级别设置默认缓存键：
 
 ```python
 llm = ChatOpenAI(
@@ -1433,20 +1431,20 @@ response2 = llm.invoke(messages, prompt_cache_key="override-cache-v1")
 
 ---
 
-## Flex processing
+## 弹性处理
 
-OpenAI offers a variety of [service tiers](https://platform.openai.com/docs/guides/flex-processing). The "flex" tier offers cheaper pricing for requests, with the trade-off that responses may take longer and resources might not always be available. This approach is best suited for non-critical tasks, including model testing, data enhancement, or jobs that can be run asynchronously.
+OpenAI 提供了各种[服务层级](https://platform.openai.com/docs/guides/flex-processing)。“弹性 (flex)”层以更低的价格提供服务，交换条件是响应可能需要更长时间，资源不一定总能用。这种方法最适用于非关键任务，包括模型测试、数据增强或可以异步运行的作业。
 
-To use it, initialize the model with `service_tier="flex"`:
+要使用它，请使用 `service_tier="flex"` 初始化模型：
 
 ```python
 llm = ChatOpenAI(model="o4-mini", service_tier="flex")
 ```
 
-Note that this is a beta feature that is only available for a subset of models. See OpenAI [docs](https://platform.openai.com/docs/guides/flex-processing) for more detail.
+请注意，这是一项 beta 功能，仅适用于部分模型。有关更多详细信息，请参阅 OpenAI [文档](https://platform.openai.com/docs/guides/flex-processing)。
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all features and configuration options, head to the @[`ChatOpenAI`] API reference.
+有关所有功能和配置选项的详细文档，请查阅 @[`ChatOpenAI`] API 参考。

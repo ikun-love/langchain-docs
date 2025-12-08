@@ -1,34 +1,33 @@
 ---
-title: Banana
+title: 香蕉 (Banana)
 ---
 
-[Banana](https://www.banana.dev/about-us) is focused on building the machine learning infrastructure.
+[Banana](https://www.banana.dev/about-us) 致力于构建机器学习基础设施。
 
-This example goes over how to use LangChain to interact with Banana models
+这个示例将介绍如何使用 LangChain 与 Banana 模型进行交互。
 
 ```python
-##Installing the langchain packages needed to use the integration
+## 安装使用集成所需的 langchain 包
 pip install -qU  langchain-community
 ```
 
 ```python
-# Install the package  https://docs.banana.dev/banana-docs/core-concepts/sdks/python
+# 安装包 https://docs.banana.dev/banana-docs/core-concepts/sdks/python
 pip install -qU  banana-dev
 ```
 
 ```python
-# get new tokens: https://app.banana.dev/
-# We need three parameters to make a Banana.dev API call:
-# * a team api key
-# * the model's unique key
-# * the model's url slug
+# 获取新 token 的地址：https://app.banana.dev/
+# 我们可以使用三个参数来调用 Banana.dev API：
+# * 团队 API 密钥 (team api key)
+# * 模型的唯一密钥 (model's unique key)
+# * 模型的 URL slug
 
 import os
 
-# You can get this from the main dashboard
-# at https://app.banana.dev
+# 可以从 https://app.banana.dev/ 的主仪表板获取此密钥
 os.environ["BANANA_API_KEY"] = "YOUR_API_KEY"
-# OR
+# 或者
 # BANANA_API_KEY = getpass()
 ```
 
@@ -39,16 +38,15 @@ from langchain_core.prompts import PromptTemplate
 ```
 
 ```python
-template = """Question: {question}
+template = """问题: {question}
 
-Answer: Let's think step by step."""
+答案: 让我们一步一步思考。"""
 
 prompt = PromptTemplate.from_template(template)
 ```
 
 ```python
-# Both of these are found in your model's
-# detail page in https://app.banana.dev
+# 模型密钥 (model_key) 和模型 URL slug (model_url_slug) 都在 https://app.banana.dev/ 的模型详情页面中
 llm = Banana(model_key="YOUR_MODEL_KEY", model_url_slug="YOUR_MODEL_URL_SLUG")
 ```
 
@@ -57,7 +55,7 @@ llm_chain = LLMChain(prompt=prompt, llm=llm)
 ```
 
 ```python
-question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"
+question = "贾斯汀·比伯 (Justin Bieber) 出生那年，哪支 NFL 球队赢得了超级碗？"
 
 llm_chain.run(question)
 ```

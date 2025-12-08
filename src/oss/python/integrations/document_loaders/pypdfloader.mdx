@@ -1,41 +1,42 @@
+```markdown
 ---
 title: PyPDFLoader
 ---
 
-This notebook provides a quick overview for getting started with `PyPDF` [document loader](https://python.langchain.com/docs/concepts/document_loaders). For detailed documentation of all DocumentLoader features and configurations head to the [API reference](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html).
+本文档概述了如何快速开始使用 `PyPDF` [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)。要查看所有 DocumentLoader 特性和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | JS support|
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support)|
 | :--- | :--- | :---: | :---: |  :---: |
 | [PyPDFLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ❌ |
 
 ---------
 
-### Loader features
+### 加载器特性 (Loader features)
 
-|   Source    | Document Lazy Loading | Native Async Support | Extract Images | Extract Tables |
-|:-----------:| :---: | :---: | :---: |:---: |
+| 来源 (Source) | 文档惰性加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support) | 提取图像 (Extract Images) | 提取表格 (Extract Tables) |
+|:---:|:---:|:---:|:---:|:---:|
 | PyPDFLoader | ✅ | ❌ | ✅ | ❌  |
 
-## Setup
+## 设置 (Setup)
 
-### Credentials
+### 凭证 (Credentials)
 
-No credentials are required to use `PyPDFLoader`.
+使用 `PyPDFLoader` 不需要任何凭证。
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用对模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 # os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 # os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-### Installation
+### 安装 (Installation)
 
-Install **langchain-community** and **pypdf**.
+安装 **langchain-community** 和 **pypdf**。
 
 ```python
 %pip install -qU langchain-community pypdf
@@ -45,9 +46,9 @@ Install **langchain-community** and **pypdf**.
 Note: you may need to restart the kernel to use updated packages.
 ```
 
-## Initialization
+## 初始化 (Initialization)
 
-Now we can instantiate our model object and load documents:
+现在我们可以实例化我们的模型对象并加载文档：
 
 ```python
 from langchain_community.document_loaders import PyPDFLoader
@@ -56,7 +57,7 @@ file_path = "./example_data/layout-parser-paper.pdf"
 loader = PyPDFLoader(file_path)
 ```
 
-## Load
+## 加载 (Load)
 
 ```python
 docs = loader.load()
@@ -91,14 +92,14 @@ pprint.pp(docs[0].metadata)
  'page_label': '1'}
 ```
 
-## Lazy Load
+## 惰性加载 (Lazy Load)
 
 ```python
 pages = []
 for doc in loader.lazy_load():
     pages.append(doc)
     if len(pages) >= 10:
-        # do some paged operation, e.g.
+        # 执行一些分页操作，例如：
         # index.upsert(page)
 
         pages = []
@@ -134,28 +135,28 @@ focuses on precision, eﬃciency, and robustness. T
  'page_label': '11'}
 ```
 
-The metadata attribute contains at least the following keys:
+`metadata` 属性至少包含以下键：
 
-- source
-- page (if in mode *page*)
-- total_page
-- creationdate
-- creator
-- producer
+- source (源文件路径)
+- page（如果使用 *page* 模式）
+- total_page (总页数)
+- creationdate (创建日期)
+- creator (创建者)
+- producer (PDF 生产者)
 
-Additional metadata are specific to each parser.
-These pieces of information can be helpful (to categorize your PDFs for example).
+其他元数据特定于每个解析器。
+这些信息可能很有用（例如，用于对您的 PDF 进行分类）。
 
-## Splitting mode & custom pages delimiter
+## 分割模式和自定义页面分隔符 (Splitting mode & custom pages delimiter)
 
-When loading the PDF file you can split it in two different ways:
+加载 PDF 文件时，您可以通过两种不同的方式进行分割：
 
-- By page
-- As a single text flow
+- 按页 (By page)
+- 作为单个文本流 (As a single text flow)
 
-By default PyPDFLoader will split the PDF as a single text flow.
+默认情况下，PyPDFLoader 会将 PDF 分割为单个文本流。
 
-### Extract the PDF by page. Each page is extracted as a langchain Document object
+### 按页提取 PDF。每页作为一个 langchain Document 对象提取
 
 ```python
 loader = PyPDFLoader(
@@ -186,9 +187,9 @@ pprint.pp(docs[0].metadata)
  'page_label': '1'}
 ```
 
-In this mode the pdf is split by pages and the resulting Documents metadata contains the page number. But in some cases we could want to process the pdf as a single text flow (so we don't cut some paragraphs in half). In this case you can use the *single* mode :
+在此模式下，PDF 会按页分割，生成的 `Document` 元数据包含页码。但在某些情况下，我们可能希望将 PDF 作为一个单一的文本流来处理（这样可以避免段落被中间截断）。在这种情况下，您可以使用 *single* 模式：
 
-### Extract the whole PDF as a single langchain Document object
+### 将整个 PDF 提取为单个 langchain Document 对象
 
 ```python
 loader = PyPDFLoader(
@@ -217,9 +218,9 @@ pprint.pp(docs[0].metadata)
  'total_pages': 16}
 ```
 
-Logically, in this mode, the ‘page_number’ metadata disappears. Here's how to clearly identify where pages end in the text flow :
+从逻辑上讲，在这种模式下，`page_number` 元数据会消失。以下是如何在文本流中清晰识别页面结束位置的方法：
 
-### Add a custom *pages_delimiter* to identify where are ends of pages in *single* mode
+### 在 *single* 模式中添加自定义 *pages_delimiter* 来识别页面在何处结束
 
 ```python
 loader = PyPDFLoader(
@@ -234,7 +235,7 @@ print(docs[0].page_content[:5780])
 ```output
 LayoutParser: A Uniﬁed Toolkit for Deep
 Learning Based Document Image Analysis
-Zejiang Shen1 (  ), Ruochen Zhang2, Melissa Dell3, Benjamin Charles Germain
+Zejiang Shen1 (  ), Ruochen Zhang2, Melissa Dell3, Benjamin Charles Germain
 Lee4, Jacob Carlson3, and Weining Li5
 1 Allen Institute for AI
 shannons@allenai.org
@@ -325,21 +326,21 @@ LayoutParser: A Uniﬁed Toolkit for DL-Based DIA 3
 that require precision, eﬃciency, and robustness, as well as simple and light
 ```
 
-This could simply be \n, or \f to clearly indicate a page change, or \<!-- PAGE BREAK --> for seamless injection in a Markdown viewer without a visual effect.
+这可以简单地使用 `\n`，或使用 `\f` 来清晰地指示页面更改，或使用 `\<!-- PAGE BREAK -->` 以便在 Markdown 查看器中无视觉效果地注入。
 
-# Extract images from the PDF
+## 从 PDF 中提取图像 (Extract images from the PDF)
 
-You can extract images from your PDFs with a choice of three different solutions:
+您可以使用三种不同的解决方案从 PDF 中提取图像：
 
-- rapidOCR (lightweight Optical Character Recognition tool)
-- Tesseract (OCR tool with high precision)
-- Multimodal language model
+- rapidOCR（轻量级光学字符识别工具）
+- Tesseract（高精度 OCR 工具）
+- 多模态语言模型 (Multimodal language model)
 
-You can tune these functions to choose the output format of the extracted images among *html*, *markdown* or *text*
+您可以调整这些函数以选择提取图像的输出格式，可选格式包括 *html*、*markdown* 或 *text*。
 
-The result is inserted between the last and the second-to-last paragraphs of text of the page.
+结果将插入在页面的倒数第二个文本段落和最后一个文本段落之间。
 
-### Extract images from the PDF with rapidOCR
+### 使用 rapidOCR 从 PDF 中提取图像
 
 ```python
 %pip install -qU rapidocr-onnxruntime
@@ -431,9 +432,9 @@ The
 A list of the layout elements](#)
 ```
 
-Be careful, RapidOCR is designed to work with Chinese and English, not other languages.
+请注意，RapidOCR 专为处理中文和英文设计，不适用于其他语言。
 
-### Extract images from the PDF with Tesseract
+### 使用 Tesseract 从 PDF 中提取图像
 
 ```python
 %pip install -qU pytesseract
@@ -524,7 +525,7 @@ A list of the layout elements
 The same transformation and operation APIs src="#" />
 ```
 
-### Extract images from the PDF with multimodal model
+### 使用多模态模型从 PDF 中提取图像
 
 ```python
 %pip install -qU langchain-openai
@@ -631,12 +632,12 @@ coordinate1, textblock1, ...
 A list of the layout elements  ](#)
 ```
 
-## Working with Files
+## 处理文件 (Working with Files)
 
-Many document loaders involve parsing files. The difference between such loaders usually stems from how the file is parsed, rather than how the file is loaded. For example, you can use `open` to read the binary content of either a PDF or a markdown file, but you need different parsing logic to convert that binary data into text.
+许多文档加载器都涉及解析文件。这些加载器之间的区别通常在于文件解析的方式，而不是数据加载的方式。例如，您可以使用 `open` 读取 PDF 或 Markdown 文件的二进制内容，但需要不同的解析逻辑才能将该二进制数据转换为文本。
 
-As a result, it can be helpful to decouple the parsing logic from the loading logic, which makes it easier to re-use a given parser regardless of how the data was loaded.
-You can use this strategy to analyze different files, with the same parsing parameters.
+因此，将解析逻辑与加载逻辑解耦会很有帮助，这样可以更轻松地重用给定的解析器，而与数据加载方式无关。
+您可以使用此策略来分析不同的文件，并使用相同的解析参数。
 
 ```python
 from langchain_community.document_loaders import FileSystemBlobLoader
@@ -658,7 +659,7 @@ pprint.pp(docs[0].metadata)
 ```output
 LayoutParser: A Uniﬁed Toolkit for Deep
 Learning Based Document Image Analysis
-Zejiang Shen1 (  ), Ruochen Zhang2, Melissa Dell3, Benjamin Charles Germain
+Zejiang Shen1 (  ), Ruochen Zhang2, Melissa Dell3, Benjamin Charles Germain
 Lee4, Jacob Carlson3, and Weining Li5
 1 Allen Institute for AI
 shannons@allenai.org
@@ -714,7 +715,7 @@ arXiv:2103.15348v2  [cs.CV]  21 Jun 2021
  'page_label': '1'}
 ```
 
-It is possible to work with files from cloud storage.
+可以处理来自云存储的文件。
 
 ```python
 from langchain_community.document_loaders import CloudBlobLoader
@@ -722,7 +723,7 @@ from langchain_community.document_loaders.generic import GenericLoader
 
 loader = GenericLoader(
     blob_loader=CloudBlobLoader(
-        url="s3://mybucket",  # Supports s3://, az://, gs://, file:// schemes.
+        url="s3://mybucket",  # 支持 s3://, az://, gs://, file:// 协议。
         glob="*.pdf",
     ),
     blob_parser=PyPDFParser(),
@@ -732,6 +733,7 @@ print(docs[0].page_content)
 pprint.pp(docs[0].metadata)
 ```
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all `PyPDFLoader` features and configurations head to the API reference: [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html)
+有关所有 `PyPDFLoader` 特性和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html)
+```

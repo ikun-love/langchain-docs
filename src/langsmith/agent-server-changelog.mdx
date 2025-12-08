@@ -1,111 +1,130 @@
 ---
-title: Agent Server changelog
-sidebarTitle: Agent Server changelog
+title: 代理服务器更新日志
+sidebarTitle: 代理服务器更新日志
 ---
 
-[Agent Server](/langsmith/agent-server) is an API platform for creating and managing agent-based applications. It provides built-in persistence, a task queue, and supports deploying, configuring, and running assistants (agentic workflows) at scale. This changelog documents all notable updates, features, and fixes to Agent Server releases.
+[Agent Server](/langsmith/agent-server) 是一个用于创建和管理基于 Agent 的应用的 API 平台。它内置了持久化存储、任务队列，并支持大规模部署、配置和运行助手（Agentic 工作流）。本更新日志记录了 Agent Server 版本发布中的所有重要更新、新特性和修复。
+
+<a id="2025-12-06"></a>
+## v0.5.32
+- 引入了 OpenTelemetry 遥测代理，支持与 New Relic 集成。
+
+<a id="2025-12-05"></a>
+## v0.5.31
+- 添加了 Py-Spy 性能分析功能，用于改进部署性能分析，但覆盖率方面存在一些限制。
+
+<a id="2025-12-05"></a>
+## v0.5.30
+- 始终配置回环（loopback）传输客户端，以增强可靠性。
+- 确保了在 JS 中远程非流式方法中传递了身份验证标头。
+
+<a id="2025-12-04"></a>
+## v0.2.28
+- 引入了基于 Rust 的更快速的 uuid7 实现，以提高性能，现已在 langsmith 和 langchain-core 中使用。
+- 在 PostgreSQL 身份验证过滤器中增加了对 `$or` 和 `$and` 的支持，以在身份验证检查中实现复杂逻辑。
+- 限制了 psycopg 和 psycopg-pool 的版本，以防止在启动时无限期等待。
 
 <a id="2025-11-26"></a>
 ## v0.5.27
-- Ensured `runs.list` with filters returns only run fields, preventing incorrect status data from being included.
-- (JS) Updated `uuid` from version 10.0.0 to 13.0.0. and `exit-hook` from version 4.0.0 to 5.0.1.
+- 确保带有过滤器的 `runs.list` 调用只返回运行（run）字段，防止包含不正确的状态数据。
+- (JS) 将 `uuid` 从版本 10.0.0 升级到 13.0.0，将 `exit-hook` 从版本 4.0.0 升级到 5.0.1。
 
 <a id="2025-11-24"></a>
 ## v0.5.26
-- Resolved issues with `store.put` when used without AsyncBatchedStore in the JavaScript environment.
+- 解决了在 JavaScript 环境中使用 `store.put` 而不使用 AsyncBatchedStore 时的相关问题。
 
 <a id="2025-11-22"></a>
 ## v0.5.25
-- Introduced the ability to search assistants by their `name` using a new endpoint.
-- Casted store_get return types to tuple in JavaScript to ensure type consistency.
+- 引入了通过新端点按 `name` 搜索助手的 能力。
+- 在 JavaScript 中将 `store_get` 的返回类型转换为元组（tuple），以确保类型一致性。
 
 <a id="2025-11-21"></a>
 ## v0.5.24
-- Added executor metrics for Datadog and enhanced core stream API metrics for better performance tracking.
-- Disabled Redis Go maintenance notifications to prevent startup errors with unsupported commands in Redis versions below 8.
+- 为 Datadog 添加了执行器指标（executor metrics），并增强了核心流式 API 的指标，以提供更好的性能跟踪。
+- 禁用了 Redis Go 的维护通知，以防止在 Redis 版本低于 8 时使用不受支持的命令而导致启动错误。
 
 <a id="2025-11-20"></a>
 ## v0.5.20
-- Resolved an error in the executor service that occurred when handling large messages.
+- 解决了在处理大型消息时执行器服务中出现的错误。
 
 <a id="2025-11-19"></a>
 ## v0.5.19
-- Upgraded built-in langchain-core to version 1.0.7 to address a prompt formatting vulnerability.
+- 将内置的 langchain-core 升级到版本 1.0.7，以解决提示词格式化漏洞。
 
 <a id="2025-11-19"></a>
 ## v0.5.18
-- Introduced persistent cron threads with `on_run_completed: {keep,delete}` for enhanced cron management and retrieval options.
+- 引入了具有 `on_run_completed: {keep,delete}` 的持久化 cron 线程，以增强 cron 管理和检索选项。
 
 <a id="2025-11-19"></a>
 ## v0.5.17
-- Enhanced task handling to support multiple interrupts, aligning with open-source functionality.
+- 增强了任务处理能力，以支持多次中断，与开源功能保持一致。
 
 <a id="2025-11-18"></a>
 ## v0.5.15
-- Added custom JSON unmarshalling for `Resume` and `Goto` commands to fix map-style null resume interpretation issues.
+- 为 `Resume` 和 `Goto` 命令添加了自定义 JSON 反序列化（unmarshalling），以修复对 map 风格的 null 恢复（resume）的错误解释。
 
 <a id="2025-11-14"></a>
 ## v0.5.14
-- Ensured `pg make start` command functions correctly with core-api enabled.
+- 确保 `pg make start` 命令在启用 core-api 的情况下能正常工作。
 
 <a id="2025-11-13"></a>
 ## v0.5.13
-- Support `include` and `exclude` (plural form key for `includes` and `excludes`) since a doc incorrectly claimed support for that. Now the server accepts either.
+- 支持 `include` 和 `exclude`（对于 `includes` 和 `excludes` 是复数形式的键），因为文档错误地声称支持该功能。现在服务器可以接受任一形式。
 
 <a id="2025-11-10"></a>
 ## v0.5.11
-- Ensured auth handlers are applied consistently when streaming threads, aligning with recent security practices.
-- Bumped `undici` dependency from version 6.21.3 to 7.16.0, introducing various performance improvements and bug fixes.
-- Updated `p-queue` from version 8.0.1 to 9.0.0, introducing new features and breaking changes, including the removal of the `throwOnTimeout` option.
+- 确保身份验证处理器应用于流式（streaming）线程上，与最近的安全实践保持一致。
+- 将 `undici` 依赖项从版本 6.21.3 提升到 7.16.0，引入了各种性能改进和错误修复。
+- 将 `p-queue` 从版本 8.0.1 升级到 9.0.0，引入了新功能和破坏性变更，包括删除了 `throwOnTimeout` 选项。
 
 <a id="2025-11-10"></a>
 ## v0.5.10
-- Implemented healthcheck calls in the queue /ok handler to improve Kubernetes liveness and readiness probe compatibility.
+- 在队列的 /ok 处理器中实现了健康检查调用，以提高 Kubernetes Liveness 和 Readiness 探测的兼容性。
 
 <a id="2025-11-09"></a>
 ## v0.5.9
-- Resolved an issue causing an "unbound local error" for the `elapsed` variable during a SIGINT interruption.
-- Mapped the "interrupted" status to A2A's "input-required" status for better task status alignment.
+- 解决了在 SIGINT 中断期间，`elapsed` 变量导致“未绑定局部变量错误（unbound local error）”的问题。
+- 将“interrupted”状态映射到 A2A 的“input-required”状态，以更好地对齐任务状态。
 
 <a id="2025-11-07"></a>
 ## v0.5.8
-- Ensured environment variables are passed as a dictionary when starting langgraph-ui for compatibility with `uvloop`.
-- Implemented CRUD operations for runs in Go, simplifying JSON merges and improving transaction readability, with PostgreSQL as a reference.
+- 确保在启动 langgraph-ui 时将环境变量作为字典传递，以兼容 `uvloop`。
+- 在 Go 中实现了运行（run）的 CRUD 操作，简化了 JSON 合并，并提高了事务的可读性，以 PostgreSQL 为参考。
 
 <a id="2025-11-07"></a>
 ## v0.5.7
-- Replaced no-retry Redis client with a retry client to handle connection errors more effectively and reduced corresponding logging severity.
+- 用带有重试机制的 Redis 客户端替换了无重试的客户端，以更有效地处理连接错误，并降低了相应的日志记录级别。
 
 <a id="2025-11-06"></a>
 ## v0.5.6
-- Added pending time metrics to provide better insights into task waiting times.
-- Replaced `pb.Value` with `ChannelValue` to streamline code structure.
+- 添加了待处理时间指标（pending time metrics），以提供对任务等待时间的更好洞察。
+- 使用 `ChannelValue` 替换了 `pb.Value`，以简化代码结构。
 
 <a id="2025-11-05"></a>
 ## v0.5.5
-- Made the Redis `health_check_interval` more frequent and configurable for better handling of idle connections.
+- 使 Redis 的 `health_check_interval` 更频繁且可配置，以更好地处理空闲连接。
 
 <a id="2025-11-05"></a>
 ## v0.5.4
-- Implemented `ormsgpack` with `OPT_REPLACE_SURROGATES` and updated for compatibility with the latest FastAPI release affecting custom authentication dependencies.
+- 实现了带有 `OPT_REPLACE_SURROGATES` 的 `ormsgpack`，并进行了更新，以兼容影响自定义身份验证依赖项的最新 FastAPI 版本。
 
 <a id="2025-11-03"></a>
 ## v0.5.2
-- Added retry logic for PostgreSQL connections during startup to enhance deployment reliability and improved error logging for easier debugging.
+- 为启动过程中的 PostgreSQL 连接添加了重试逻辑，以提高部署的可靠性，并改进了错误日志记录以便于调试。
 
 <a id="2025-11-03"></a>
 ## v0.5.1
-- Resolved an issue where persistence was not functioning correctly with LangChain.js's createAgent feature.
-- Optimized assistants CRUD performance by improving database connection pooling and gRPC client reuse, reducing latency for large payloads.
+- 解决了使用 LangChain.js 的 `createAgent` 功能时持久化无法正常工作的问题。
+- 通过改进数据库连接池和 gRPC 客户端重用，优化了助手（assistants）的 CRUD 性能，减少了大型有效载荷的延迟。
 
 <a id="2025-10-31"></a>
 ## v0.5.0
 
-This minor version now requires langgraph-checkpoint versions later than 3.0 to prevent a deserialization vulnerability in earlier versions of the langgraph-checkpoint library.
-The `langgraph-checkpoint` library is compatible with `langgraph` minor versions 0.4, 0.5, 0.6, and 1.0.
+此次小版本更新要求 `langgraph-checkpoint` 版本高于 3.0，以防止早期 `langgraph-checkpoint` 库中存在的反序列化漏洞。
+`langgraph-checkpoint` 库兼容 `langgraph` 的小版本 0.4、0.5、0.6 和 1.0。
 
-This version removes default support for deserialization of payloads saved using the "json" type, which has never been the default.
-By default, objects are serialized using msgpack. Under certain uncommon situations, payloads were serialized using an older "json" mode. If those payloads contained custom python objects, those will no longer be deserializable unless you provide a `serde` config:
+此版本移除了对使用“json”类型保存的有效载荷的反序列化的默认支持，该类型从未是默认值。
+默认情况下，对象使用 msgpack 进行序列化。在某些不常见的情况下，有效载荷是使用较旧的“json”模式序列化的。如果这些有效载荷包含自定义 Python 对象，除非您提供 `serde` 配置，否则它们将不再可反序列化：
 
 ```json
 {
@@ -121,675 +140,675 @@ By default, objects are serialized using msgpack. Under certain uncommon situati
 
 <a id="2025-10-29"></a>
 ## v0.4.47
-- Validated and auto-corrected environment configuration types using TypeAdapter.
-- Added support for LangChain.js and LangGraph.js version 1.x, ensuring compatibility.
-- Updated hono library from version 4.9.7 to 4.10.3, addressing a CORS middleware security issue and enhancing JWT audience validation.
-- Introduced a modular benchmark framework, adding support for assistants and streams, with improvements to the existing ramp benchmark methodology.
-- Introduced a gRPC API for core threads CRUD operations, with updated Python and TypeScript clients.
-- Updated `hono` package from version 4.9.7 to 4.10.2, including security improvements for JWT audience validation.
-- Updated `hono` dependency from version 4.9.7 to 4.10.3 to fix a security issue and improve CORS middleware handling.
-- Introduced basic CRUD operations for threads, including create, get, patch, delete, search, count, and copy, with support for Go, gRPC server, and Python and TypeScript clients.
+- 使用 `TypeAdapter` 验证并自动更正了环境配置类型。
+- 添加了对 LangChain.js 和 LangGraph.js 1.x 版本的支持，确保兼容性。
+- 将 hono 库从版本 4.9.7 升级到 4.10.3，解决了 CORS 中间件安全问题并增强了 JWT 观众（audience）验证。
+- 引入了一个模块化的基准测试框架，增加了对助手（assistants）和流（streams）的支持，并改进了现有的斜坡（ramp）基准测试方法。
+- 引入了用于核心线程 CRUD 操作的 gRPC API，并更新了 Python 和 TypeScript 客户端。
+- 将 `hono` 包从版本 4.9.7 升级到 4.10.2，包括针对 JWT 观众验证的安全改进。
+- 将 `hono` 依赖项从版本 4.9.7 升级到 4.10.3，以修复安全问题并改进 CORS 中间件处理。
+- 引入了线程的基本 CRUD 操作，包括创建、获取、修补、删除、搜索、计数和复制，并支持 Go、gRPC 服务器以及 Python 和 TypeScript 客户端。
 
 <a id="2025-10-21"></a>
 ## v0.4.46
-- Added an option to enable message streaming from subgraph events, giving users more control over event notifications.
+- 添加了一个选项，可以从子图事件启用消息流式传输，使用户可以更好地控制事件通知。
 
 <a id="2025-10-21"></a>
 ## v0.4.45
-- Implemented support for authorization on custom routes, controlled by the `enable_custom_route_auth` flag.
-- Set default tracing to off for improved performance and simplified debugging.
+- 实现了对自定义路由授权的支持，由 `enable_custom_route_auth` 标志控制。
+- 默认关闭了追踪（tracing），以提高性能并简化调试。
 
 <a id="2025-10-18"></a>
 ## v0.4.44
-- Used Redis key prefix for license-related keys to prevent conflicts with existing setups.
+- 为与许可相关的键使用了 Redis 键前缀，以防止与现有设置冲突。
 
 <a id="2025-10-16"></a>
 ## v0.4.43
-- Implemented a health check for Redis connections to prevent them from idling out.
+- 为 Redis 连接实现了一个健康检查，以防止它们因闲置而超时。
 
 <a id="2025-10-15"></a>
 ## v0.4.40
-- Prevented duplicate messages in resumable run and thread streams by addressing a race condition and adding tests to ensure consistent behavior.
-- Ensured that runs don't start until the pubsub subscription is confirmed to prevent message drops on startup.
-- Renamed platform from langgraph to improve clarity and branding.
-- Reset PostgreSQL connections after use to prevent lock holding and improved error reporting for transaction issues.
+- 通过解决竞态条件并添加测试以确保行为一致性，防止在可恢复的运行和线程流中出现重复消息。
+- 确保运行（runs）在确认 pubsub 订阅之前不会启动，以防止启动时消息丢失。
+- 重命名平台：从 langgraph 改为 LangGraph，以提高清晰度和品牌标识。
+- 在使用后重置 PostgreSQL 连接，以防止保持锁，并改进了事务问题的错误报告。
 
 <a id="2025-10-10"></a>
 ## v0.4.39
-- Upgraded `hono` from version 4.7.6 to 4.9.7, addressing a security issue related to the `bodyLimit` middleware.
-- Allowed customization of the base authentication URL to enhance flexibility.
-- Pinned the 'ty' dependency to a stable version using 'uv' to prevent unexpected linting failures.
+- 将 `hono` 从版本 4.7.6 升级到 4.9.7，解决了与 `bodyLimit` 中间件相关的安全问题。
+- 允许自定义基础身份验证 URL，以增强灵活性。
+- 使用 'uv' 将 'ty' 依赖项固定到稳定版本，以防止意外的 linting 失败。
 
 <a id="2025-10-08"></a>
 ## v0.4.38
-- Replaced `LANGSMITH_API_KEY` with `LANGSMITH_CONTROL_PLANE_API_KEY` to support hybrid deployments requiring license verification.
-- Introduced self-hosted log ingestion support, configurable via `SELF_HOSTED_LOGS_ENABLED` and `SELF_HOSTED_LOGS_ENDPOINT` environment variables.
+- 用 `LANGSMITH_CONTROL_PLANE_API_KEY` 替换了 `LANGSMITH_API_KEY`，以支持需要许可证验证的混合部署。
+- 引入了自托管日志摄取支持，可通过 `SELF_HOSTED_LOGS_ENABLED` 和 `SELF_HOSTED_LOGS_ENDPOINT` 环境变量进行配置。
 
 <a id="2025-10-06"></a>
 ## v0.4.37
-- Required create permissions for copying threads to ensure proper authorization.
+- 要求复制线程（copying threads）具有创建权限，以确保适当的授权。
 
 <a id="2025-10-03"></a>
 ## v0.4.36
-- Improved error handling and added a delay to the sweep loop for smoother operation during Redis downtime or cancellation errors.
-- Updated the queue entrypoint to start the core-api gRPC server when `FF_USE_CORE_API` is enabled.
-- Introduced checks for invalid configurations in assistant endpoints to ensure consistency with other endpoints.
+- 改进了错误处理，并为扫描循环（sweep loop）添加了延迟，以便在 Redis 出现停机或取消错误时实现更平稳的操作。
+- 更新了队列入口点，在启用 `FF_USE_CORE_API` 时启动 core-api gRPC 服务器。
+- 在助手（assistant）端点中引入了对无效配置的检查，以确保与其他端点的一致性。
 
 <a id="2025-10-02"></a>
 ## v0.4.35
-- Resolved a timezone issue in the core API, ensuring accurate time data retrieval.
-- Introduced a new `middleware_order` setting to apply authentication middleware before custom middleware, allowing finer control over protected route configurations.
-- Logged the Redis URL when errors occur during Redis client creation.
-- Improved Go engine/runtime context propagation to ensure consistent execution flow.
-- Removed the unnecessary `assistants.put` call from the executor entrypoint to streamline the process.
+- 解决了核心 API 中的时区问题，确保了准确的时间数据检索。
+- 引入了新的 `middleware_order` 设置，以在自定义中间件之前应用身份验证中间件，从而可以对受保护的路由配置进行更精细的控制。
+- 在创建 Redis 客户端出错时记录 Redis URL。
+- 改进了 Go 引擎/运行时上下文传播，以确保一致的执行流程。
+- 从执行器入口点删除了不必要的 `assistants.put` 调用，以简化流程。
 
 <a id="2025-10-01"></a>
 ## v0.4.34
-- Blocked unauthorized users from updating thread TTL settings to enhance security.
+- 阻止未经授权的用户更新线程 TTL（Time-To-Live）设置，以增强安全性。
 
 <a id="2025-10-01"></a>
 ## v0.4.33
-- Improved error handling for Redis locks by logging `LockNotOwnedError` and extending initial pool migration lock timeout to 60 seconds.
-- Updated the BaseMessage schema to align with the latest langchain-core version and synchronized build dependencies for consistent local development.
+- 改进了对 Redis 锁的错误处理，记录了 `LockNotOwnedError`，并将初始连接池迁移锁超时延长至 60 秒。
+- 更新了 `BaseMessage` 模式以与最新的 langchain-core 版本保持一致，并同步了构建依赖项以实现一致的本地开发。
 
 <a id="2025-09-30"></a>
 ## v0.4.32
-- Added a GO persistence layer to the API image, enabling GRPC server operation with PostgreSQL support and enhancing configurability.
-- Set the status to error when a timeout occurs to improve error handling.
+- 向 API 镜像添加了 GO 持久化层，支持使用 PostgreSQL 的 gRPC 服务器操作，并增强了可配置性。
+- 在发生超时时将状态设置为 error，以改善错误处理。
 
 <a id="2025-09-30"></a>
 ## v0.4.30
-- Added support for context when using `stream_mode="events"` and included new tests for this functionality.
-- Added support for overriding the server port using `$LANGGRAPH_SERVER_PORT` and removed an unnecessary Dockerfile `ARG` for cleaner configuration.
-- Applied authorization filters to all table references in thread delete CTE to enhance security.
-- Introduced self-hosted metrics ingestion capability, allowing metrics to be sent to an OTLP collector every minute when the corresponding environment variables are set.
-- Ensured that the `set_latest` function properly updates the name and description of the version.
+- 在使用 `stream_mode="events"` 时增加了对上下文的支持，并包含了对此功能的新测试。
+- 增加了通过 `$LANGGRAPH_SERVER_PORT` 覆盖服务器端口的支持，并移除了不必要的 Dockerfile `ARG` 以实现更清晰的配置。
+- 对线程删除 CTE 中的所有表引用应用了授权过滤器，以增强安全性。
+- 引入了自托管指标摄取能力，当设置了相应的环境变量时，每分钟将指标发送到 OTLP 收集器。
+- 确保 `set_latest` 函数正确更新了版本的名称和描述。
 
 <a id="2025-09-26"></a>
 ## v0.4.29
-- Ensured proper cleanup of redis pubsub connections in all scenarios.
+- 在所有情况下都确保了对 redis pubsub 连接的正确清理。
 
 <a id="2025-09-25"></a>
 ## v0.4.28
-- Added a format parameter to the queue metrics server for enhanced customization.
-- Corrected `MOUNT_PREFIX` environment variable usage in CLI for consistency with documentation and to prevent confusion.
-- Added a feature to log warnings when messages are dropped due to no subscribers, controllable via a feature flag.
-- Added support for Bookworm and Bullseye distributions in Node images.
-- Consolidated executor definitions by moving them from the `langgraph-go` repository, improving manageability and updating the checkpointer setup method for server migrations.
-- Ensured correct response headers are sent for a2a, improving compatibility and communication.
-- Consolidated PostgreSQL checkpoint implementation, added CI testing for the `/core` directory, fixed RemoteStore test errors, and enhanced the Store implementation with transactions.
-- Added PostgreSQL migrations to the queue server to prevent errors from graphs being added before migrations are performed.
+- 为队列指标服务器添加了格式参数，以增强自定义能力。
+- 修正了 CLI 中 `MOUNT_PREFIX` 环境变量的使用，以与文档保持一致并防止混淆。
+- 增加了一个功能标志，用于在由于没有订阅者而丢弃消息时记录警告。
+- 为 Node 镜像中的 Bookworm 和 Bullseye 发行版添加了支持。
+- 合并了执行器定义，将它们从 `langgraph-go` 仓库中移出，提高了可管理性，并更新了用于服务器迁移的检查点设置方法。
+- 确保为 a2a 发送了正确的响应标头，改善了兼容性和通信。
+- 整合了 PostgreSQL 检查点实现，为 `/core` 目录添加了 CI 测试，修复了 RemoteStore 测试错误，并通过事务增强了 Store 实现。
+- 向队列服务器添加了 PostgreSQL 迁移，以防止在执行迁移之前添加图表时出错。
 
 <a id="2025-09-23"></a>
 ## v0.4.27
-- Replaced `coredis` with `redis-py` to improve connection handling and reliability under high traffic loads.
+- 用 `redis-py` 替换了 `coredis`，以在流量高时改进连接处理和可靠性。
 
 <a id="2025-09-22-v0.4.24"></a>
 ## v0.4.24
-- Added functionality to return full message history for A2A calls in accordance with the A2A spec.
-- Added a `LANGGRAPH_SERVER_HOST` environment variable to Dockerfiles to support custom host settings for dual stack mode.
+- 增加了按照 A2A 规范返回完整消息历史记录的功能。
+- 在 Dockerfiles 中添加了 `LANGGRAPH_SERVER_HOST` 环境变量，以支持双栈模式下的自定义主机设置。
 
 <a id="2025-09-22"></a>
 ## v0.4.23
-- Use a faster message codec for redis streaming.
+- 对 redis 流式传输使用了更快的消息编解码器。
 
 <a id="2025-09-19"></a>
 ## v0.4.22
-- Ported long-stream handling to the run stream, join, and cancel endpoints for improved stream management.
+- 将长流处理移植到 run stream、join 和 cancel 端点，以改进流管理。
 
 <a id="2025-09-18"></a>
 ## v0.4.21
-- Added A2A streaming functionality and enhanced testing with the A2A SDK.
-- Added Prometheus metrics to track language usage in graphs, middleware, and authentication for improved insights.
-- Fixed bugs in Open Source Software related to message conversion for chunks.
-- Removed await from pubsub subscribes to reduce flakiness in cluster tests and added retries in the shutdown suite to enhance API stability.
+- 添加了 A2A 流式传输功能，并通过 A2A SDK 增强了测试。
+- 为图、中间件和身份验证中使用的语言添加了 Prometheus 指标，以获得更深入的洞察。
+- 修复了开源软件中与块（chunk）的消息转换相关的错误。
+- 移除了对 pubsub 订阅的 `await`，以减少集群测试中的不稳定性，并在关闭套件中添加了重试以增强 API 稳定性。
 
 <a id="2025-09-11"></a>
 ## v0.4.20
-- Optimized Pubsub initialization to prevent overhead and address subscription timing issues, ensuring smoother run execution.
+- 优化了 Pubsub 初始化，以防止开销并解决订阅时序问题，确保运行执行更平稳。
 
 <a id="2025-09-11"></a>
 ## v0.4.19
-- Removed warnings from psycopg by addressing function checks introduced in version 3.2.10.
+- 通过解决版本 3.2.10 中引入的函数检查，消除了 psycopg 中的警告。
 
 <a id="2025-09-11"></a>
 ## v0.4.17
-- Filtered out logs with mount prefix to reduce noise in logging output.
+- 过滤掉了带有挂载前缀（mount prefix）的日志，以减少日志输出中的噪音。
 
 <a id="2025-09-10"></a>
 ## v0.4.16
-- Added support for implicit thread creation in a2a to streamline operations.
-- Improved error serialization and emission in distributed runtime streams, enabling more comprehensive testing.
+- 在 a2a 中增加了对隐式线程创建的支持，以简化操作。
+- 改进了分布式运行时流中的错误序列化和发射，从而实现了更全面的测试。
 
 <a id="2025-09-09"></a>
 ## v0.4.13
-- Monitored queue status in the health endpoint to ensure correct behavior when PostgreSQL fails to initialize.
-- Addressed an issue with unequal swept ID lengths to improve log clarity.
-- Enhanced streaming outputs by avoiding re-serialization of DR payloads, using msgpack byte inspection for json-like parsing.
+- 在健康端点中监控队列状态，以确保在 PostgreSQL 初始化失败时行为正确。
+- 解决了 ID 长度不相等的问题，以提高日志清晰度。
+- 通过避免重新序列化 DR 有效载荷（利用 msgpack 字节检查进行类 JSON 解析），增强了流式输出。
 
 <a id="2025-09-04"></a>
 ## v0.4.12
-- Ensured metrics are returned even when experiencing database connection issues.
-- Optimized update streams to prevent unnecessary data transmission.
-- Upgraded `hono` from version 4.9.2 to 4.9.6 in the `storage_postgres/langgraph-api-server` for improved URL path parsing security.
-- Added retries and an in-memory cache for LangSmith access calls to improve resilience against single failures.
+- 即使在出现数据库连接问题时也能确保返回指标。
+- 优化了更新流，以防止不必要的数据传输。
+- 在 `storage_postgres/langgraph-api-server` 中将 `hono` 从版本 4.9.2 升级到 4.9.6，以提高 URL 路径解析的安全性。
+- 为 LangSmith 访问调用添加了重试和内存缓存，以提高对单点故障的弹性。
 
 <a id="2025-09-04"></a>
 ## v0.4.11
-- Added support for TTL (time-to-live) in thread updates.
+- 在线程更新中增加了对 TTL（生存时间）的支持。
 
 <a id="2025-09-04"></a>
 ## v0.4.10
-- In distributed runtime, update serde logic for final checkpoint -> thread setting.
+- 在分布式运行时中，为最终检查点更新了 serde 逻辑 -> 线程设置。
 
 <a id="2025-09-02"></a>
 ## v0.4.9
-- Added support for filtering search results by IDs in the search endpoint for more precise queries.
-- Included configurable headers for assistant endpoints to enhance request customization.
-- Implemented a simple A2A endpoint with support for agent card retrieval, task creation, and task management.
+- 在搜索端点中增加了按 ID 过滤搜索结果的支持，以实现更精确的查询。
+- 包含了助手端点的可配置标头，以增强请求自定义。
+- 实现了一个简单的 A2A 端点，支持代理卡检索、任务创建和任务管理。
 
 <a id="2025-08-30"></a>
 ## v0.4.7
-- Stopped the inclusion of x-api-key to enhance security.
+- 停止包含 x-api-key，以增强安全性。
 
 <a id="2025-08-29"></a>
 ## v0.4.6
-- Fixed a race condition when joining streams, preventing duplicate start events.
+- 修复了加入流（joining streams）时的竞态条件，防止了重复的启动事件。
 
 <a id="2025-08-29"></a>
 ## v0.4.5
-- Ensured the checkpointer starts and stops correctly before and after the queue to improve shutdown and startup efficiency.
-- Resolved an issue where workers were being prematurely cancelled when the queue was cancelled.
-- Prevented queue termination by adding a fallback for cases when Redis fails to wake a worker.
+- 确保检查点（checkpointer）在队列之前和之后正确启动和停止，以提高关闭和启动效率。
+- 解决了队列取消时工作进程被过早取消的问题。
+- 通过对 Redis 无法唤醒工作进程的情况添加备用方案，防止队列终止。
 
 <a id="2025-08-28"></a>
 ## v0.4.4
-- Set the custom auth thread_id to None for stateless runs to prevent conflicts.
-- Improved Redis signaling in the Go runtime by adding a wakeup worker and Redis lock implementation, and updated sweep logic.
+- 将自定义身份验证的 `thread_id` 设置为 None，以应对无状态运行，防止冲突。
+- 通过在 Go 运行时中添加唤醒工作进程和 Redis 锁实现，改进了 Redis 信令，并更新了扫描逻辑。
 
 <a id="2025-08-27"></a>
 ## v0.4.3
-- Added stream mode to thread stream for improved data processing.
-- Added a durability parameter to runs for improved data persistence.
+- 为线程流（thread stream）添加了流模式，以改进数据处理。
+- 为运行（runs）添加了持久性参数，以增强数据持久性。
 
 <a id="2025-08-27"></a>
 ## v0.4.2
-- Ensured pubsub is initialized before creating a run to prevent errors from missing messages.
+- 确保在创建运行之前初始化 pubsub，以防止因缺少消息而导致的错误。
 
 <a id="2025-08-25"></a>
 ## v0.4.0
 
-Minor version 0.4 comes with a number of improvements as well as some breaking changes.
+小版本 0.4 带来了多项改进以及一些破坏性变更。
 
-- Emitted attempt messages correctly within the thread stream.
-- Reduced cluster conflicts by using only the thread ID for hashing in cluster mapping, prioritizing efficiency with stream_thread_cache.
-- Introduced a stream endpoint for threads to track all outputs across sequentially executed runs.
-- Made the filter query builder in PostgreSQL more robust against malformed expressions and improved validation to prevent potential security risks.
+- 在线程流中正确发出了尝试消息（attempt messages）。
+- 通过在集群映射中使用线程 ID 进行哈希处理（优先使用 `stream_thread_cache` 提高效率），减少了集群冲突。
+- 引入了线程的流式端点，用于跟踪顺序执行的运行中的所有输出。
+- 使 PostgreSQL 中过滤查询构建器对格式错误的表达式更加稳健，并改进了验证以防止潜在的安全风险。
 
-This minor version also includes a couple of breaking changes to improve the usability and security of the service:
+此小版本还包含几项破坏性变更，以提高服务的可用性和安全性：
 
-- In this minor version, we stop the practice of automatically including headers as configurable values in your runs. You can opt-in to specific patterns by setting **configurable_headers** in your agent server config.
-- Run stream event IDs (for resumable streams) are now in the format of `ms-seq` instead of the previous format. We retain backwards compatibility for the old format, but we recommend using the new format for new code.
+- 在此小版本中，我们停止了自动将标头作为可配置值包含在运行中的做法。您可以通过在代理服务器配置中设置 **configurable_headers** 来选择加入特定的模式。
+- 运行流事件 ID（用于可恢复流）的格式现在是 `ms-seq` 而不是以前的格式。我们保留对旧格式的向后兼容性，但建议在新代码中使用新格式。
 
 <a id="2025-08-25"></a>
 ## v0.3.4
-- Added custom Prometheus metrics for Redis/PG connection pools and switched the queue server to Uvicorn/Starlette for improved monitoring.
-- Restored Wolfi image build by correcting shell command formatting and added a Makefile target for testing with nginx.
+- 为 Redis/PG 连接池添加了自定义 Prometheus 指标，并将队列服务器切换到 Uvicorn/Starlette 以改进监控。
+- 通过更正 shell 命令格式，恢复了 Wolfi 镜像的构建，并添加了一个 Makefile 目标，用于使用 nginx 进行测试。
 
 <a id="2025-08-22"></a>
 ## v0.3.3
-- Added timeouts to specific Redis calls to prevent workers from being left active.
-- Updated the Golang runtime and added pytest skips for unsupported functionalities, including initial support for passing store to node and message streaming.
-- Introduced a reverse proxy setup for serving combined Python and Node.js graphs, with nginx handling server routing, to facilitate a Postgres/Redis backend for the Node.js API server.
+- 为特定 Redis 调用添加了超时，以防止工作进程保持活动状态。
+- 更新了 Golang 运行时并添加了 pytest 跳过（skips）以支持不受支持的功能，包括初始支持，用于将存储（store）传递给节点和消息流式传输。
+- 引入了用于服务组合（serving）Python 和 Node.js 图的反向代理设置，由 nginx 处理服务器路由，以支持用于 Node.js API 服务器的 Postgres/Redis 后端。
 
 <a id="2025-08-21"></a>
 ## v0.3.1
-- Added a statement timeout to the pool to prevent long-running queries.
+- 为连接池添加了一个语句超时（statement timeout），以防止长时间运行的查询。
 
 <a id="2025-08-21"></a>
 ## v0.3.0
-- Set a default 15-minute statement timeout and implemented monitoring for long-running queries to ensure system efficiency.
-- Stop propagating run configurable values to the thread configuration, because this can cause issues on subsequent runs if you are specifying a checkpoint_id. This is a **slight breaking change** in behavior, since the thread value will no longer automatically reflect the unioned configuration of the most recent run. We believe this behavior is more intuitive, however.
-- Enhanced compatibility with older worker versions by handling event data in channel names within ops.py.
+- 设置了默认 15 分钟的语句超时，并实现了对长时间运行查询的监控，以确保系统效率。
+- 停止将运行的可配置值传播到线程配置，因为这可能会在您指定 `checkpoint_id` 的后续运行中导致问题。这是一个**轻微的破坏性变更**，因为现在线程值将不再自动反映最近运行的合并配置。但是，我们认为这种行为更符合直觉。
+- 通过在 ops.py 中处理通道名称中的事件数据，增强了与旧工作进程版本的兼容性。
 
 <a id="2025-08-20"></a>
 ## v0.2.137
-- Fixed an unbound local error and improved logging for thread interruptions or errors, along with type updates.
+- 修复了未绑定的局部错误，并改进了关于线程中断或错误的日志记录，以及类型更新。
 
 <a id="2025-08-20"></a>
 ## v0.2.136
-- Added enhanced logging to aid in debugging metaview issues.
-- Upgraded executor and runtime to the latest version for improved performance and stability.
+- 添加了增强的日志记录，以帮助调试元视图（metaview）问题。
+- 升级了执行器和运行时到最新版本，以提高性能和稳定性。
 
 <a id="2025-08-19"></a>
 ## v0.2.135
-- Ensured async coroutines are properly awaited to prevent potential runtime errors.
+- 确保异步协程被正确 `await`，以防止潜在的运行时错误。
 
 <a id="2025-08-18"></a>
 ## v0.2.134
-- Enhanced search functionality to improve performance by allowing users to select specific columns for query results.
+- 通过允许用户选择用于查询结果的特定列，增强了搜索功能以提高性能。
 
 <a id="2025-08-18"></a>
 ## v0.2.133
-- Added count endpoints for crons, threads, and assistants to enhance data tracking (#1132).
-- Improved SSH functionality for better reliability and stability.
-- Updated @langchain/langgraph-api to version 0.0.59 to fix an invalid state schema issue.
+- 为 cron、线程和助手添加了计数端点（count endpoints），以增强数据跟踪（#1132）。
+- 改进了 SSH 功能，以提高可靠性和稳定性。
+- 将 `@langchain/langgraph-api` 更新到版本 0.0.59，以修复无效的状态模式问题。
 
 <a id="2025-08-15"></a>
 ## v0.2.132
-- Added Go language images to enhance project compatibility and functionality.
-- Printed internal PIDs for JS workers to facilitate process inspection via SIGUSR1 signal.
-- Resolved a `run_pkey` error that occurred when attempting to insert duplicate runs.
-- Added `ty run` command and switched to using uuid7 for generating run IDs.
-- Implemented the initial Golang runtime to expand language support.
+- 添加了 Go 语言镜像，以增强项目兼容性和功能。
+- 为 JS 工作进程打印内部 PID，以便通过 SIGUSR1 信号进行进程检查。
+- 解决了尝试插入重复运行（duplicate runs）时发生的 `run_pkey` 错误。
+- 添加了 `ty run` 命令，并开始使用 uuid7 来生成运行 ID。
+- 实现了初始的 Golang 运行时，以扩展语言支持。
 
 <a id="2025-08-14"></a>
 ## v0.2.131
-- Added support for `object agent spec` with descriptions in JS.
+- 在 JS 中添加了对带有描述的 `object agent spec` 的支持。
 
 <a id="2025-08-13"></a>
 ## v0.2.130
-- Added a feature flag (FF_RICH_THREADS=false) to disable thread updates on run creation, reducing lock contention and simplifying thread status handling.
-- Utilized existing connections for `aput` and `apwrite` operations to improve performance.
-- Improved error handling for decoding issues to enhance data processing reliability.
-- Excluded headers from logs to improve security while maintaining runtime functionality.
-- Fixed an error that prevented mapping slots to a single node.
-- Added debug logs to track node execution in JS deployments for improved issue diagnosis.
-- Changed the default multitask strategy to enqueue, improving throughput by eliminating the need to fetch inflight runs during new run insertions.
-- Optimized database operations for `Runs.next` and `Runs.sweep` to reduce redundant queries and improve efficiency.
-- Improved run creation speed by skipping unnecessary inflight runs queries.
+- 添加了一个功能标志（FF_RICH_THREADS=false）以禁用在创建运行时对线程的更新，减少了锁竞争，并简化了线程状态处理。
+- 为 `aput` 和 `apwrite` 操作利用现有连接以提高性能。
+- 改进了对解码问题的错误处理，以增强数据处理的可靠性。
+- 从日志中排除了标头以提高安全性，同时保持运行时功能。
+- 修复了阻止将槽位映射到单个节点的错误。
+- 在 JS 部署中添加了调试日志以跟踪节点执行，以改善问题诊断。
+- 将默认多任务策略更改为 enqueue（入队），通过消除在插入新运行时需要获取正在进行的（inflight）运行的需求来提高吞吐量。
+- 优化了 `Runs.next` 和 `Runs.sweep` 的数据库操作，以减少冗余查询并提高效率。
+- 通过跳过不必要的正在进行的运行查询，提高了运行创建速度。
 
 <a id="2025-08-11"></a>
 ## v0.2.129
-- Stopped passing internal LGP fields to context to prevent breaking type checks.
-- Exposed content-location headers to ensure correct resumability behavior in the API.
+- 停止将内部 LGP 字段传递到上下文，以防止破坏类型检查。
+- 暴露了内容位置（content-location）标头，以确保 API 中正确的可恢复（resumable）行为。
 
 <a id="2025-08-08"></a>
 ## v0.2.128
-- Ensured synchronized updates between `configurable` and `context` in assistants, preventing setup errors and supporting smoother version transitions.
+- 确保助手中的 `configurable` 和 `context` 之间进行同步更新，防止设置错误并支持平稳的版本过渡。
 
 <a id="2025-08-08"></a>
 ## v0.2.127
-- Excluded unrequested stream modes from the resumable stream to optimize functionality.
+- 从可恢复流中排除了未请求的流模式，以优化功能。
 
 <a id="2025-08-08"></a>
 ## v0.2.126
-- Made access logger headers configurable to enhance logging flexibility.
-- Debounced the Runs.stats function to reduce the frequency of expensive calls and improve performance.
-- Introduced debouncing for sweepers to enhance performance and efficiency (#1147).
-- Acquired a lock for TTL sweeping to prevent database spamming during scale-out operations.
+- 使访问日志记录器标头可配置，以增强日志记录灵活性。
+- 对 `Runs.stats` 函数进行了去抖（debounced）处理，以减少昂贵调用的频率并提高性能。
+- 为清扫器（sweepers）引入了去抖动，以提高性能和效率（#1147）。
+- 在 TTL 清扫过程中获取锁，以防止在扩展操作期间对数据库进行垃圾消息发送（spamming）。
 
 <a id="2025-08-06"></a>
 ## v0.2.125
-- Updated tracing context replicas to use the new format, ensuring compatibility.
+- 使用新格式更新了追踪上下文副本（tracing context replicas），确保兼容性。
 
 <a id="2025-08-06"></a>
 ## v0.2.123
-- Added an entrypoint to the queue replica for improved deployment management.
+- 为队列副本添加了入口点，以改进部署管理。
 
 <a id="2025-08-06"></a>
 ## v0.2.122
-- Utilized persisted interrupt status in `join` to ensure correct handling of user's interrupt state after completion.
+- 在 `join` 中使用了持久化的中断状态，以确保在完成后正确处理用户的中断状态。
 
 <a id="2025-08-06"></a>
 ## v0.2.121
-- Consolidated events to a single channel to prevent race conditions and optimize startup performance.
-- Ensured custom lifespans are invoked on queue workers for proper setup, and added tests.
+- 将事件合并到一个通道中，以防止竞态条件并优化启动性能。
+- 确保在队列工作进程上调用自定义生命周期（lifespans）以进行适当的设置，并添加了测试。
 
 <a id="2025-08-04"></a>
 ## v0.2.120
-- Restored the original streaming behavior of runs, ensuring consistent inclusion of interrupt events based on `stream_mode` settings.
-- Optimized `Runs.next` query to reduce average execution time from ~14.43ms to ~2.42ms, improving performance.
-- Added support for stream mode "tasks" and "checkpoints", normalized the UI namespace, and upgraded `@langchain/langgraph-api` for enhanced functionality.
+- 恢复了运行（runs）的原始流式传输行为，确保根据 `stream_mode` 设置一致地包含中断事件。
+- 优化了 `Runs.next` 查询，将平均执行时间从约 14.43ms 减少到约 2.42ms，提高了性能。
+- 添加了对流模式 "tasks" 和 "checkpoints" 的支持，标准化了 UI 命名空间，并升级了 `@langchain/langgraph-api` 以增强功能。
 
 <a id="2025-07-31"></a>
 ## v0.2.117
-- Added a composite index on threads for faster searches with owner-based authentication and updated the default sort order to `updated_at` for improved query performance.
+- 为线程添加了一个复合索引，以加快基于所有者的身份验证搜索，并将默认排序顺序更新为 `updated_at` 以提高查询性能。
 
 <a id="2025-07-31"></a>
 ## v0.2.116
-- Reduced the default number of history checkpoints from 10 to 1 to optimize performance.
+- 将可恢复流的默认历史检查点数从 10 个减少到 1 个，以优化性能。
 
 <a id="2025-07-31"></a>
 ## v0.2.115
-- Optimized cache re-use to enhance application performance and efficiency.
+- 优化了缓存重用，以增强应用程序性能和效率。
 
 <a id="2025-07-30"></a>
 ## v0.2.113
-- Improved thread search pagination by updating response headers with `X-Pagination-Total` and `X-Pagination-Next` for better navigation.
+- 通过在响应标头中更新 `X-Pagination-Total` 和 `X-Pagination-Next`，改进了线程搜索分页，以实现更好的导航。
 
 <a id="2025-07-30"></a>
 ## v0.2.112
-- Ensured sync logging methods are awaited and added a linter to prevent future occurrences.
-- Fixed an issue where JavaScript tasks were not being populated correctly for JS graphs.
+- 确保同步日志方法被 `await`，并添加了 linter 以防止未来发生。
+- 修复了 JS 图中 JS 任务未正确填充的问题。
 
 <a id="2025-07-29"></a>
 ## v0.2.111
-- Fixed JS graph streaming failure by starting the heartbeat as soon as the connection opens.
+- 通过在连接打开时立即启动心跳（heartbeat），修复了 JS 图流式传输失败的问题。
 
 <a id="2025-07-29"></a>
 ## v0.2.110
-- Added interrupts as default values for join operations while preserving stream behavior.
+- 在加入操作中将中断（interrupts）作为默认值添加，同时保留流行为。
 
 <a id="2025-07-28"></a>
 ## v0.2.109
-- Fixed an issue where config schema was missing when `config_type` was not set, ensuring more reliable configurations.
+- 修复了当未设置 `config_type` 时配置模式（config schema）缺失的问题，确保了更可靠的配置。
 
 <a id="2025-07-28"></a>
 ## v0.2.108
-- Prepared for LangGraph v0.6 compatibility with new context API support and bug fixes.
+- 为兼容 LangGraph v0.6 准备，支持新的上下文 API 和错误修复。
 
 <a id="2025-07-27"></a>
 ## v0.2.107
-- Implemented caching for authentication processes to enhance performance and efficiency.
-- Optimized database performance by merging count and select queries.
+- 实现了身份验证过程的缓存，以增强性能和效率。
+- 通过合并计数和选择查询来优化数据库性能。
 
 <a id="2025-07-27"></a>
 ## v0.2.106
-- Made log streams resumable, enhancing reliability and improving user experience when reconnecting.
+- 使日志流可恢复，增强了可靠性，并在重新连接时改善了用户体验。
 
 <a id="2025-07-27"></a>
 ## v0.2.105
-- Added a heapdump endpoint to save memory heap information to a file.
+- 添加了一个 `heapdump` 端点，用于将内存堆信息保存到文件中。
 
 <a id="2025-07-25"></a>
 ## v0.2.103
-- Used the correct metadata endpoint to resolve issues with data retrieval.
+- 使用正确的元数据端点来解决数据检索问题。
 
 <a id="2025-07-24"></a>
 ## v0.2.102
-- Captured interrupt events in the wait method to preserve previous behavior from langgraph 0.5.0.
-- Added support for SDK structlog in the JavaScript environment for enhanced logging capabilities.
+- 在等待方法中捕获中断事件，以保留 langgraph 0.5.0 中的先前行为。
+- 在 JavaScript 环境中添加了对 SDK structlog 的支持，以实现增强的日志记录功能。
 
 <a id="2025-07-24"></a>
 ## v0.2.101
-- Corrected the metadata endpoint for self-hosted deployments.
+- 修正了自托管部署的元数据端点。
 
 <a id="2025-07-22"></a>
 ## v0.2.99
-- Improved license check by adding an in-memory cache and handling Redis connection errors more effectively.
-- Reloaded assistants to preserve manually created ones while discarding those removed from the configuration file.
-- Reverted changes to ensure the UI namespace for gen UI is a valid JavaScript property name.
-- Ensured that the UI namespace for generated UI is a valid JavaScript property name, improving API compliance.
-- Enhanced error handling to return a 422 status code for unprocessable entity requests.
+- 通过添加内存缓存并更有效地处理 Redis 连接错误，改进了许可证检查。
+- 重新加载助手，以保留手动创建的助手，同时丢弃从配置文件中删除的助手。
+- 恢复了对确保 gen UI 的 UI 命名空间是有效的 JavaScript 属性名称的更改。
+- 确保为生成的 UI 设定的 UI 命名空间是有效的 JavaScript 属性名称，从而提高 API 合规性。
+- 增强了错误处理，为不可处理的实体请求返回 422 状态码。
 
 <a id="2025-07-19"></a>
 ## v0.2.98
-- Added context to langgraph nodes to improve log filtering and trace visibility.
+- 向 langgraph 节点添加了上下文，以改进日志过滤和跟踪可见性。
 
 <a id="2025-07-19"></a>
 ## v0.2.97
-- Improved interoperability with the ckpt ingestion worker on the main loop to prevent task scheduling issues.
-- Delayed queue worker startup until after migrations are completed to prevent premature execution.
-- Enhanced thread state error handling by adding specific metadata and improved response codes for better clarity when state updates fail during creation.
-- Exposed the interrupt ID when retrieving the thread state to improve API transparency.
+- 改进了主循环中 ckpt 摄取工作进程的互操作性，以防止任务调度问题。
+- 推迟队列工作进程启动，直到迁移完成后才启动，以防止过早执行。
+- 在创建线程状态更新失败时，增强了线程状态错误处理，添加了特定元数据和改进的响应代码，以提高清晰度。
+- 在检索线程状态时暴露了中断 ID，以提高 API 透明度。
 
 <a id="2025-07-17"></a>
 ## v0.2.96
 
-* Added a fallback mechanism for configurable header patterns to handle exclude/include settings more effectively.
+* 为可配置的标头模式添加了回退机制，以更有效地处理排除/包含设置。
 
 <a id="2025-07-17"></a>
 ## v0.2.95
 
-* Avoided setting the future if it is already done to prevent redundant operations.
-* Resolved compatibility errors in CI by switching from `typing.TypedDict` to `typing_extensions.TypedDict` for Python versions below 3.12.
+* 避免设置未来（future）如果它已经完成，以防止重复操作。
+* 通过将 Python 版本低于 3.12 的兼容性错误从 `typing.TypedDict` 切换到 `typing_extensions.TypedDict` 来解决 CI 中的兼容性错误。
 
 <a id="2025-07-16"></a>
 ## v0.2.94
 
-* Improved performance by omitting pending sends for langgraph versions 0.5 and above.
-* Improved server startup logs to provide clearer warnings when the DD_API_KEY environment variable is set.
+* 通过为 langgraph 版本 0.5 及以上版本省略待发送项（pending sends）来提高性能。
+* 改进了服务器启动日志，在设置 DD_API_KEY 环境变量时提供了更清晰的警告。
 
 <a id="2025-07-16"></a>
 ## v0.2.93
 
-* Removed the GIN index for run metadata to improve performance.
+* 删除了运行元数据（run metadata）上的 GIN 索引以提高性能。
 
 <a id="2025-07-16"></a>
 ## v0.2.92
 
-* Enabled copying functionality for blobs and checkpoints, improving data management flexibility.
+* 启用了 blob 和检查点的复制功能，增强了数据管理灵活性。
 
 <a id="2025-07-16"></a>
 ## v0.2.91
 
-* Reduced writes to the `checkpoint_blobs` table by inlining small values (null, numeric, str, etc.). This means we don't need to store extra values for channels that haven't been updated.
+* 通过内联小值（null、numeric、str 等）来减少写入 `checkpoint_blobs` 表的操作。这意味着我们不需要为尚未更新的通道存储额外的值。
 
 <a id="2025-07-16"></a>
 ## v0.2.90
 
-* Improve checkpoint writes via node-local background queueing.
+* 通过节点本地后台排队来改进检查点写入。
 
 <a id="2025-07-15"></a>
 ## v0.2.89
 
-* Decoupled checkpoint writing from thread/run state by removing foreign keys and updated logger to prevent timeout-related failures.
+* 通过删除外键，将检查点写入与线程/运行状态分离，并更新了记录器以防止与超时相关的失败。
 
 <a id="2025-07-14"></a>
 ## v0.2.88
 
-* Removed the foreign key constraint for `thread` in the `run` table to simplify database schema.
+* 删除了 `run` 表中 `thread` 的外键约束，以简化数据库模式。
 
 <a id="2025-07-14"></a>
 ## v0.2.87
 
-* Added more detailed logs for Redis worker signaling to improve debugging.
+* 为 Redis 工作进程信令添加了更详细的日志，以改进调试。
 
 <a id="2025-07-11"></a>
 ## v0.2.86
 
-* Honored tool descriptions in the `/mcp` endpoint to align with expected functionality.
+* 在 `/mcp` 端点中尊重工具描述，以符合预期功能。
 
 <a id="2025-07-10"></a>
 ## v0.2.85
 
-* Added support for the `on_disconnect` field to `runs/wait` and included disconnect logs for better debugging.
+* 在 `runs/wait` 中增加了对 `on_disconnect` 字段的支持，并包含了断开连接日志，以进行更好的调试。
 
 <a id="2025-07-09"></a>
 ## v0.2.84
 
-* Removed unnecessary status updates to streamline thread handling and updated version to 0.2.84.
+* 移除了不必要的在线程处理中流线化的状态更新，并将版本更新到 0.2.84。
 
 <a id="2025-07-09"></a>
 ## v0.2.83
 
-* Reduced the default time-to-live for resumable streams to 2 minutes.
-* Enhanced data submission logic to send data to both Beacon and LangSmith instance based on license configuration.
-* Enabled submission of self-hosted data to a LangSmith instance when the endpoint is configured.
+* 将可恢复流的默认生存时间（time-to-live）减少到 2 分钟。
+* 增强了数据提交逻辑，根据许可证配置将数据提交到 Beacon 和 LangSmith 实例。
+- 启用向 LangSmith 实例提交自托管数据（当配置了端点时）。
 
 <a id="2025-07-03"></a>
 ## v0.2.82
 
-* Addressed a race condition in background runs by implementing a lock using join, ensuring reliable execution across CTEs.
+* 通过使用 join 实现锁，解决了后台运行中的竞态条件，确保了跨 CTE 的可靠执行。
 
 <a id="2025-07-03"></a>
 ## v0.2.81
 
-* Optimized run streams by reducing initial wait time to improve responsiveness for older or non-existent runs.
+* 通过减少初始等待时间优化了运行流，以提高对旧的或不存在的运行的响应速度。
 
 <a id="2025-07-03"></a>
 ## v0.2.80
 
-* Corrected parameter passing in the `logger.ainfo()` API call to resolve a TypeError.
+* 修正了 `logger.ainfo()` API 调用中的参数传递，以解决 `TypeError`。
 
 <a id="2025-07-02"></a>
 ## v0.2.79
 
-* Fixed a JsonDecodeError in checkpointing with remote graph by correcting JSON serialization to handle trailing slashes properly.
-* Introduced a configuration flag to disable webhooks globally across all routes.
+* 修复了使用远程图进行检查点时的 `JsonDecodeError`，通过更正 JSON 序列化以正确处理尾部斜杠。
+* 引入了一个全局配置标志，用于在所有路由中禁用 webhooks。
 
 <a id="2025-07-02"></a>
 ## v0.2.78
 
-* Added timeout retries to webhook calls to improve reliability.
-* Added HTTP request metrics, including a request count and latency histogram, for enhanced monitoring capabilities.
+* 为 Webhook 调用添加了超时重试，以提高可靠性。
+* 添加了 HTTP 请求指标，包括请求计数和延迟直方图，以增强监控功能。
 
 <a id="2025-07-02"></a>
 ## v0.2.77
 
-* Added HTTP metrics to improve performance monitoring.
-* Changed the Redis cache delimiter to reduce conflicts with subgraph message names and updated caching behavior.
+* 添加了 HTTP 指标以改进性能监控。
+* 更改了 Redis 缓存分隔符以减少与子图消息名称的冲突，并更新了缓存行为。
 
 <a id="2025-07-01"></a>
 ## v0.2.76
 
-* Updated Redis cache delimiter to prevent conflicts with subgraph messages.
+* 更新了 Redis 缓存分隔符以防止与子图消息冲突。
 
 <a id="2025-06-30"></a>
 ## v0.2.74
 
-* Scheduled webhooks in an isolated loop to ensure thread-safe operations and prevent errors with PYTHONASYNCIODEBUG=1.
+* 在隔离的循环中调度了 Webhooks，以确保线程安全操作并防止在 `PYTHONASYNCIODEBUG=1` 时的错误。
 
 <a id="2025-06-27"></a>
 ## v0.2.73
 
-* Fixed an infinite frame loop issue and removed the dict_parser due to structlog's unexpected behavior.
-* Throw a 409 error on deadlock occurrence during run cancellations to handle lock conflicts gracefully.
+* 修复了无限帧循环问题，并由于 structlog 的意外行为而删除了 `dict_parser`。
+* 在发生死锁时抛出 409 错误，以优雅地处理锁冲突。
 
 <a id="2025-06-27"></a>
 ## v0.2.72
 
-* Ensured compatibility with future langgraph versions.
-* Implemented a 409 response status to handle deadlock issues during cancellation.
+* 确保了与未来 langgraph 版本的兼容性。
+* 实现了 409 响应状态码来处理取消期间的死锁问题。
 
 <a id="2025-06-26"></a>
 ## v0.2.71
 
-* Improved logging for better clarity and detail regarding log types.
+* 改进了日志记录，以提高日志类型的清晰度和详细程度。
 
 <a id="2025-06-26"></a>
 ## v0.2.70
 
-* Improved error handling to better distinguish and log TimeoutErrors caused by users from internal run timeouts.
+* 改进了错误处理，以更好地区分和记录由用户引起的超时错误（TimeoutErrors）和内部运行超时。
 
 <a id="2025-06-26"></a>
 ## v0.2.69
 
-* Added sorting and pagination to the crons API and updated schema definitions for improved accuracy.
+* 为 cron API 添加了排序和分页，并更新了模式定义以提高准确性。
 
 <a id="2025-06-26"></a>
 ## v0.2.66
 
-* Fixed a 404 error when creating multiple runs with the same thread_id using `on_not_exist="create"`.
+* 修复了在使用 `on_not_exist="create"` 创建多个具有相同 `thread_id` 的运行时出现 404 的错误。
 
 <a id="2025-06-25"></a>
 ## v0.2.65
 
-* Ensured that only fields from `assistant_versions` are returned when necessary.
-* Ensured consistent data types for in-memory and PostgreSQL users, improving internal authentication handling.
+* 确保仅在必要时才返回 `assistant_versions` 中的字段。
+* 确保内存中和 PostgreSQL 用户之间的数据类型一致性，改进了内部身份验证处理。
 
 <a id="2025-06-24"></a>
 ## v0.2.64
 
-* Added descriptions to version entries for better clarity.
+* 为版本条目添加了描述，以提高清晰度。
 
 <a id="2025-06-23"></a>
 ## v0.2.62
 
-* Improved user handling for custom authentication in the JS Studio.
-* Added Prometheus-format run statistics to the metrics endpoint for better monitoring.
-* Added run statistics in Prometheus format to the metrics endpoint.
+* 改进了 JS Studio 中自定义身份验证的用户处理。
+* 向指标端点添加了 Prometheus 格式的运行统计数据，以实现更好的监控。
+* 向指标端点添加了运行统计数据（Prometheus 格式）。
 
 <a id="2025-06-20"></a>
 ## v0.2.61
 
-* Set a maximum idle time for Redis connections to prevent unnecessary open connections.
+* 为 Redis 连接设置了最大空闲时间，以防止不必要的开放连接。
 
 <a id="2025-06-20"></a>
 ## v0.2.60
 
-* Enhanced error logging to include traceback details for dictionary operations.
-* Added a `/metrics` endpoint to expose queue worker metrics for monitoring.
+* 增强了错误日志记录，以包含字典操作的堆栈跟踪详细信息。
+* 添加了 `/metrics` 端点，以公开队列工作进程的指标供监控。
 
 <a id="2025-06-18"></a>
 ## v0.2.57
 
-* Removed CancelledError from retriable exceptions to allow local interrupts while maintaining retriability for workers.
-* Introduced middleware to gracefully shut down the server after completing in-flight requests upon receiving a SIGINT.
-* Reduced metadata stored in checkpoint to only include necessary information.
-* Improved error handling in join runs to return error details when present.
+* 从可重试异常中移除了 `CancelledError`，以允许本地中断，同时为工作进程保持重试能力。
+* 引入了中间件，在收到 SIGINT 时在完成进行中的请求后优雅地关闭服务器。
+* 减少了检查点中存储的元数据，只保留必要的信息。
+- 在连接（join）运行中改进了错误处理，在存在错误详细信息时返回它们。
 
 <a id="2025-06-17"></a>
 ## v0.2.56
 
-* Improved application stability by adding a handler for SIGTERM signals.
+* 通过添加 SIGTERM 信号的处理程序，提高了应用程序稳定性。
 
 <a id="2025-06-17"></a>
 ## v0.2.55
 
-* Improved the handling of cancellations in the queue entrypoint.
-* Improved cancellation handling in the queue entry point.
+* 改进了队列入口点中的取消处理。
+* 改进了队列入口点中的取消处理。
 
 <a id="2025-06-16"></a>
 ## v0.2.54
 
-* Enhanced error message for LuaLock timeout during license validation.
-* Fixed the $contains filter in custom auth by requiring an explicit ::text cast and updated tests accordingly.
-* Ensured project and tenant IDs are formatted as UUIDs for consistency.
+* 增强了许可证验证期间 LuaLock 超时的错误消息。
+* 通过要求显式 `::text` 转换并更新测试，修复了自定义身份验证中的 `$contains` 过滤器。
+* 确保项目和租户 ID 格式化为 UUID，以保持一致性。
 
 <a id="2025-06-13"></a>
 ## v0.2.53
 
-* Resolved a timing issue to ensure the queue starts only after the graph is registered.
-* Improved performance by setting thread and run status in a single query and enhanced error handling during checkpoint writes.
-* Reduced the default background grace period to 3 minutes.
+* 解决了一个时序问题，确保队列在图注册后才启动。
+* 通过在单个查询中设置线程和运行状态来提高性能，并增强了检查点写入期间的错误处理。
+* 将默认后台宽限期（grace period）减少到 3 分钟。
 
 <a id="2025-06-12"></a>
 ## v0.2.52
 
-* Now logging expected graphs when one is omitted to improve traceability.
-* Implemented a time-to-live (TTL) feature for resumable streams.
-* Improved query efficiency and consistency by adding a unique index and optimizing row locking.
+- 如果省略了某个图，现在会记录预期的图，以提高可追溯性。
+- 实现了线程可恢复流的时间到期（TTL）功能。
+- 通过添加唯一索引和优化行锁定，提高了查询效率和一致性。
 
 <a id="2025-06-12"></a>
 ## v0.2.51
 
-* Handled `CancelledError` by marking tasks as ready to retry, improving error management in worker processes.
-* Added LG API version and request ID to metadata and logs for better tracking.
-* Added LG API version and request ID to metadata and logs to improve traceability.
-* Improved database performance by creating indexes concurrently.
-* Ensured postgres write is committed only after the Redis running marker is set to prevent race conditions.
-* Enhanced query efficiency and reliability by adding a unique index on thread_id/running, optimizing row locks, and ensuring deterministic run selection.
-* Resolved a race condition by ensuring Postgres updates only occur after the Redis running marker is set.
+* 通过将任务标记为准备重试，处理了 `CancelledError`，改进了工作进程中的错误管理。
+* 为更好的跟踪，将 LG API 版本和请求 ID 添加到元数据和日志中。
+- 将 LG API 版本和请求 ID 添加到元数据和日志中，以提高可追溯性。
+- 通过并发创建索引来提高数据库性能。
+- 确保在设置 Redis 正在运行标记（running marker）之后才提交 postgres 写入，以防止竞态条件。
+- 通过添加唯一索引（thread_id/running），优化行锁定，并确保确定性的运行选择，增强了查询效率和可靠性。
+- 通过确保仅在设置 Redis 正在运行标记之后才发生 Postgres 更新，解决了一个竞态条件。
 
 <a id="2025-06-07"></a>
 ## v0.2.46
 
-* Introduced a new connection for each operation while preserving transaction characteristics in Threads state `update()` and `bulk()` commands.
+- 在 Threads 状态的 `update()` 和 `bulk()` 命令中，为每次操作引入了一个新连接，同时保留了事务特性。
 
 <a id="2025-06-05"></a>
 ## v0.2.45
 
-* Enhanced streaming feature by incorporating tracing contexts.
-* Removed an unnecessary query from the Crons.search function.
-* Resolved connection reuse issue when scheduling next run for multiple cron jobs.
-* Removed an unnecessary query in the Crons.search function to improve efficiency.
-* Resolved an issue with scheduling the next cron run by improving connection reuse.
+- 通过合并追踪上下文增强了流式传输功能。
+- 从 Crons.search 函数中移除了不必要的查询。
+- 通过改进连接重用，解决了调度多个 cron 作业的下一个运行时的连接重用问题。
+- 从 Crons.search 函数中移除了不必要的查询，以提高效率。
+- 通过改进连接重用，解决了调度下一个 cron 运行的问题。
 
 <a id="2025-06-04"></a>
 ## v0.2.44
 
-* Enhanced the worker logic to exit the pipeline before continuing when the Redis message limit is reached.
-* Introduced a ceiling for Redis message size with an option to skip messages larger than 128 MB for improved performance.
-* Ensured the pipeline always closes properly to prevent resource leaks.
+- 增强了工作进程逻辑，当达到 Redis 消息限制时提前退出管道。
+- 引入了 Redis 消息大小上限，并提供了跳过大于 128 MB 消息的选项，以提高性能。
+- 确保管道始终正确关闭，以防止资源泄漏。
 
 <a id="2025-06-04"></a>
 ## v0.2.43
 
-* Improved performance by omitting logs in metadata calls and ensuring output schema compliance in value streaming.
-* Ensured the connection is properly closed after use.
-* Aligned output format to strictly adhere to the specified schema.
-* Stopped sending internal logs in metadata requests to improve privacy.
+- 通过在元数据调用中省略日志并确保值流式传输中的输出模式合规性来提高性能。
+- 确保连接在使用后正确关闭。
+- 使输出格式与指定的模式严格保持一致。
+- 停止在元数据请求中发送内部日志，以提高隐私性。
 
 <a id="2025-06-04"></a>
 ## v0.2.42
 
-* Added timestamps to track the start and end of a request's run.
-* Added tracer information to the configuration settings.
-* Added support for streaming with tracing contexts.
+- 添加了时间戳以跟踪请求运行的开始和结束。
+- 将追踪器信息添加到配置设置中。
+- 添加了对带有追踪上下文的流式传输的支持。
 
 <a id="2025-06-03"></a>
 ## v0.2.41
 
-* Added locking mechanism to prevent errors in pipelined executions.
+- 为防止管道执行出错，添加了锁定机制。

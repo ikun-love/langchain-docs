@@ -2,11 +2,11 @@
 title: Databricks Unity Catalog (UC)
 ---
 
-This notebook shows how to use UC functions as LangChain tools, with both LangChain and LangGraph agent APIs.
+本 Notebook 演示了如何将 UC 函数用作 LangChain 工具，同时使用 LangChain 和 LangGraph 的 Agent API。
 
-See Databricks documentation ([AWS](https://docs.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/sql-ref-syntax-ddl-create-sql-function)|[GCP](https://docs.gcp.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function.html)) to learn how to create SQL or Python functions in UC. Do not skip function and parameter comments, which are critical for LLMs to call functions properly.
+请参阅 Databricks 文档（[AWS](https://docs.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/sql-ref-syntax-ddl-create-sql-function.html)|[GCP](https://docs.gcp.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function.html)）了解如何在 UC 中创建 SQL 或 Python 函数。**不要跳过函数和参数的注释**，这对 LLM 正确调用函数至关重要。
 
-In this example notebook, we create a simple Python function that executes arbitrary code and use it as a LangChain tool:
+在本示例 Notebook 中，我们创建一个简单的 Python 函数来执行任意代码，并将其用作 LangChain 工具：
 
 ```sql
 CREATE FUNCTION main.tools.python_exec (
@@ -25,7 +25,7 @@ AS $$
 $$
 ```
 
-It runs in a secure and isolated environment within a Databricks SQL warehouse.
+此函数在 Databricks SQL Warehouse 内部的安全隔离环境中运行。
 
 ```python
 pip install -qU databricks-sdk langchain-community databricks-langchain langgraph mlflow
@@ -48,15 +48,15 @@ client = DatabricksFunctionClient()
 set_uc_function_client(client)
 
 tools = UCFunctionToolkit(
-    # Include functions as tools using their qualified names.
-    # You can use "{catalog_name}.{schema_name}.*" to get all functions in a schema.
+    # 使用函数的完全限定名称（qualified names）将其包含为工具。
+    # 您可以使用 "{catalog_name}.{schema_name}.*" 来获取 Schema 中的所有函数。
     function_names=["main.tools.python_exec"]
 ).tools
 ```
 
-(Optional) To increase the retry time for getting a function execution response, set environment variable UC_TOOL_CLIENT_EXECUTION_TIMEOUT. Default retry time value is 120s.
+（可选）要增加获取函数执行响应的重试时间，请设置环境变量 `UC_TOOL_CLIENT_EXECUTION_TIMEOUT`。默认重试时间为 120 秒。
 
-## LangGraph agent example
+## LangGraph Agent 示例
 
 ```python
 import os
@@ -64,7 +64,7 @@ import os
 os.environ["UC_TOOL_CLIENT_EXECUTION_TIMEOUT"] = "200"
 ```
 
-## LangGraph agent example
+## LangGraph Agent 示例
 
 ```python
 from langchain.agents import create_agent
@@ -85,7 +85,7 @@ agent.invoke({"messages": [{"role": "user", "content": "36939 * 8922.4"}]})
   AIMessage(content='The result of the multiplication is:\n\n329584533.59999996', additional_kwargs={}, response_metadata={'prompt_tokens': 846, 'completion_tokens': 22, 'total_tokens': 868}, id='run-22772404-611b-46e4-9956-b85e4a385f0f-0')]}
 ```
 
-## LangChain agent example
+## LangChain Agent 示例
 
 ```python
 from langchain.agents import AgentExecutor, create_tool_calling_agent

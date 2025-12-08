@@ -2,18 +2,18 @@
 title: AskNews
 ---
 
-> [AskNews](https://asknews.app) infuses any LLM with the latest global news (or historical news), using a single natural language query. Specifically, AskNews is enriching over 300k articles per day by translating, summarizing, extracting entities, and indexing them into hot and cold vector databases. AskNews puts these vector databases on a low-latency endpoint for you. When you query AskNews, you get back a prompt-optimized string that contains all the most pertinent enrichments (e.g. entities, classifications, translation, summarization). This means that you do not need to manage your own news RAG, and you do not need to worry about how to properly convey news information in a condensed way to your LLM.
-> AskNews is also committed to transparency, which is why our coverage is monitored and diversified across hundreds of countries, 13 languages, and 50 thousand sources. If you'd like to track our source coverage, you can visit our [transparency dashboard](https://asknews.app/en/transparency).
+> [AskNews](https://asknews.app) 可以使用单个自然语言查询，为任何大型语言模型（LLM）注入最新的全球新闻（或历史新闻）。具体来说，AskNews 每天通过翻译、总结、提取实体并将它们索引到热库和冷向量数据库中，来丰富超过 30 万篇文章的数据。AskNews 将这些向量数据库置于一个低延迟的端点供您使用。当您查询 AskNews 时，您会收到一个经过提示优化的字符串，其中包含所有最相关的丰富信息（例如，实体、分类、翻译、摘要）。这意味着您不需要管理自己的新闻 RAG（检索增强生成），也不需要担心如何以简洁的方式将新闻信息有效地传达给您的 LLM。
+> AskNews 也致力于透明度，这就是为什么我们的报道涵盖并分散在数百个国家、13 种语言和五万个信源中。如果您想跟踪我们的信源覆盖情况，可以访问我们的 [透明度仪表板](https://asknews.app/en/transparency)。
 
-## Setup
+## 设置 (Setup)
 
-The integration lives in the `langchain-community` package. We also need to install the `asknews` package itself.
+集成位于 `langchain-community` 包中。我们还需要安装 `asknews` 包本身。
 
 ```bash
 pip install -U langchain-community asknews
 ```
 
-We also need to set our AskNews API credentials, which can be obtained at the [AskNews console](https://my.asknews.app).
+我们还需要设置我们的 AskNews API 凭证，这些凭证可以在 [AskNews 控制台](https://my.asknews.app) 获取。
 
 ```python
 import getpass
@@ -23,9 +23,9 @@ os.environ["ASKNEWS_CLIENT_ID"] = getpass.getpass()
 os.environ["ASKNEWS_CLIENT_SECRET"] = getpass.getpass()
 ```
 
-## Usage
+## 用法 (Usage)
 
-Here we show how to use the tool individually.
+在这里，我们展示如何单独使用该工具。
 
 ```python
 from langchain_community.tools.asknews import AskNewsSearch
@@ -35,12 +35,12 @@ tool.invoke({"query": "Effect of fed policy on tech sector"})
 ```
 
 ```output
-"\n<doc>\n[1]:\ntitle: Market Awaits Comments From Key Fed Official\nsummary: The market is awaiting comments from Fed Governor Christopher Waller, but it's not expected to move markets significantly. The recent Consumer Price Index (CPI) report showed slimming inflation figures, leading to a conclusion that inflation is being curbed. This has led to a 'soft landing' narrative, causing bullish sentiment in the stock market, with the Dow, S&P 500, Nasdaq, and Russell 2000 indices near all-time highs. NVIDIA is set to report earnings next week, and despite its 95% year-to-date growth, it remains a Zacks Rank #1 (Strong Buy) stock. The article also mentions upcoming economic data releases, including New and Existing Home Sales, S&P flash PMI Services and Manufacturing, Durable Goods, and Weekly Jobless Claims.\nsource: Yahoo\npublished: May 17 2024 14:53\nOrganization: Nasdaq, Fed, NVIDIA, Zacks\nPerson: Christopher Waller\nEvent: Weekly Jobless Claims\nclassification: Business\nsentiment: 0\n</doc>\n\n<doc>\n[2]:\ntitle: US futures flat as Fed comments cool rate cut optimism\nsummary: US stock index futures remained flat on Thursday evening, following a weak finish on Wall Street, as Federal Reserve officials warned that bets on interest rate cuts were potentially premature. The Fed officials, including Atlanta Fed President Raphael Bostic, New York Fed President John Williams, and Cleveland Fed President Loretta Mester, stated that the central bank still needed more confidence to cut interest rates, and that the timing of the move remained uncertain. As a result, investors slightly trimmed their expectations for a September rate cut, and the S&P 500 and Nasdaq 100 indexes fell 0.2% and 0.3%, respectively. Meanwhile, Reddit surged 11% after announcing a partnership with OpenAI, while Take-Two Interactive and DXC Technology fell after issuing disappointing earnings guidance.\nsource: Yahoo\npublished: May 16 2024 20:08\nLocation: US, Wall Street\nDate: September, Thursday\nOrganization: Atlanta Fed, Cleveland Fed, New York Fed, Fed, Reddit, Take-Two Interactive, DXC Technology, OpenAI, Federal Reserve\nTitle: President\nPerson: Loretta Mester, Raphael Bostic, John Williams\nclassification: Business\nsentiment: 0\n</doc>\n"
+"\n<doc>\n[1]:\ntitle: 市场期待美联储重要官员的评论\nsummary: 市场正在等待美联储理事 Christopher Waller 的评论，但预计不会对市场产生重大影响。最近的消费者价格指数 (CPI) 报告显示通胀数据有所收窄，得出的结论是通胀正在受到抑制。这导致了“软着陆”的叙事，推高了股市的看涨情绪，道琼斯指数、标准普尔 500 指数、纳斯达克指数和罗素 2000 指数均接近历史高点。英伟达 (NVIDIA) 即将在下周公布财报，尽管其今年迄今已增长 95%，但仍是 Zacks 排名第一（强烈买入）的股票。文章还提到了即将发布的经济数据，包括新屋和现有房屋销售、标准普尔快照 PMI 服务业和制造业、耐用品以及每周首次申请失业救济人数。\nsource: Yahoo\npublished: May 17 2024 14:53\nOrganization: Nasdaq, Fed, NVIDIA, Zacks\nPerson: Christopher Waller\nEvent: Weekly Jobless Claims\nclassification: Business\nsentiment: 0\n</doc>\n\n<doc>\n[2]:\ntitle: 美联储评论冷却降息乐观情绪，美国期货持平\nsummary: 周四晚间，美国股指期货持平，此前华尔街收盘疲软，因联邦储备委员会官员警告称，对降息的押注可能为时尚早。美联储官员，包括亚特兰大联储主席 Raphael Bostic、纽约联储主席 John Williams 和克利夫兰联储主席 Loretta Mester，表示央行仍需要更多信心才能降息，且降息时机仍不确定。因此，投资者略微削减了对九月降息的预期，标准普尔 500 指数和纳斯达克 100 指数分别下跌 0.2% 和 0.3%。与此同时，Reddit 在宣布与 OpenAI 合作后股价飙升 11%，而 Take-Two Interactive 和 DXC Technology 在发布令人失望的盈利指引后股价下跌。\nsource: Yahoo\npublished: May 16 2024 20:08\nLocation: US, Wall Street\nDate: September, Thursday\nOrganization: Atlanta Fed, Cleveland Fed, New York Fed, Fed, Reddit, Take-Two Interactive, DXC Technology, OpenAI, Federal Reserve\nTitle: President\nPerson: Loretta Mester, Raphael Bostic, John Williams\nclassification: Business\nsentiment: 0\n</doc>\n"
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-We show here how to use it as part of an agent. We use the OpenAI Functions Agent, so we will need to setup and install the required dependencies for that. We will also use [LangSmith Hub](https://smith.langchain.com/hub) to pull the prompt from, so we will need to install that.
+我们在此展示如何将其作为智能体的一部分使用。我们使用 OpenAI Functions Agent，因此需要设置并安装其所需的依赖项。我们还将使用 [LangSmith Hub](https://smith.langchain.com/hub) 来获取提示，因此需要安装该依赖项。
 
 ```bash
 pip install -U langchain-openai langchainhub
@@ -70,7 +70,7 @@ agent_executor.invoke({"input": "How is the tech sector being affected by fed po
 
 ```output
 {'input': 'How is the tech sector being affected by fed policy?',
- 'output': 'The tech sector is being affected by federal policy in various ways, particularly in relation to artificial intelligence (AI) regulation and investment. Here are some recent news articles related to the tech sector and federal policy:\n\n1. The US Senate has released a bipartisan AI policy roadmap, addressing areas of consensus and disagreement on AI use and development. The roadmap includes recommendations for intellectual property reforms, funding for AI research, sector-specific rules, and transparency requirements. It also emphasizes the need for increased funding for AI innovation and investments in national defense. [Source: The National Law Review]\n\n2. A bipartisan group of US senators, led by Senate Majority Leader Chuck Schumer, has proposed allocating at least $32 billion over the next three years to develop AI and establish safeguards around it. The proposal aims to regulate and promote AI development to maintain US competitiveness and improve quality of life. [Source: Cointelegraph]\n\n3. The US administration is planning to restrict the export of advanced AI models to prevent China and Russia from accessing the technology. This move is part of efforts to protect national security and prevent the misuse of AI by foreign powers. [Source: O Cafezinho]\n\n4. The US and China have discussed the risks of AI technologies, with the US taking the lead in the AI arms race. The US has proposed a $32 billion increase in federal spending on AI to maintain its lead, despite concerns about stifling innovation. [Source: AOL]\n\nThese articles highlight the ongoing discussions and actions related to AI regulation, investment, and export restrictions that are impacting the tech sector in response to federal policy decisions.'}
+ 'output': '科技行业正受到联邦政策的多种影响，尤其是在人工智能（AI）监管和投资方面。以下是一些与科技行业和联邦政策相关的最新新闻文章：\n\n1. 美国参议院发布了跨党派的 AI 政策路线图，解决了在 AI 使用和开发方面的共识和分歧领域。该路线图包括对知识产权改革、AI 研究资金、特定行业规则以及透明度要求的建议。它还强调需要增加对 AI 创新的资助和对国防的投资。[来源: The National Law Review]\n\n2. 由参议院多数党领袖 Chuck Schumer 领导的跨党派参议员团体提议在未来三年内至少拨款 320 亿美元用于开发 AI 并建立围绕它的保障措施。该提案旨在规范和促进 AI 的发展，以保持美国的竞争力并提高生活质量。[来源: Cointelegraph]\n\n3. 美国政府计划限制先进 AI 模型的出口，以防止中国和俄罗斯获取该技术。此举是保护国家安全和防止外国势力滥用 AI 的努力的一部分。[来源: O Cafezinho]\n\n4. 美国和中国讨论了 AI 技术的风险，美国在 AI 军备竞赛中占据主导地位。尽管对扼杀创新存在担忧，美国提议联邦支出增加 320 亿美元用于 AI 研发，以保持其领先地位。[来源: AOL]\n\n这些文章突显了为应对联邦政策决策对科技行业产生影响的 AI 监管、投资和出口限制方面正在进行的讨论和采取的行动。'}
 ```
 
 ```python

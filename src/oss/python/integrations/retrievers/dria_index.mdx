@@ -2,19 +2,19 @@
 title: Dria
 ---
 
->[Dria](https://dria.co/) is a hub of public RAG models for developers to both contribute and utilize a shared embedding lake. This notebook demonstrates how to use the `Dria API` for data retrieval tasks.
+>[Dria](https://dria.co/) 是一个公共 RAG 模型中心，开发者可以在其中贡献和利用一个共享的嵌入湖（embedding lake）。本 Notebook 演示如何使用 `Dria API` 来执行数据检索任务。
 
-# Installation
+# 安装
 
-Ensure you have the `dria` package installed. You can install it using pip:
+请确保已安装 `dria` 包。您可以使用 pip 进行安装：
 
 ```python
 pip install -qU dria
 ```
 
-# Configure API Key
+# 配置 API 密钥
 
-Set up your Dria API key for access.
+设置您的 Dria API 密钥以进行访问授权。
 
 ```python
 import os
@@ -22,9 +22,9 @@ import os
 os.environ["DRIA_API_KEY"] = "DRIA_API_KEY"
 ```
 
-# Initialize Dria Retriever
+# 初始化 Dria 检索器
 
-Create an instance of `DriaRetriever`.
+创建一个 `DriaRetriever` 实例。
 
 ```python
 from langchain_community.retrievers import DriaRetriever
@@ -33,40 +33,40 @@ api_key = os.getenv("DRIA_API_KEY")
 retriever = DriaRetriever(api_key=api_key)
 ```
 
-# **Create Knowledge Base**
+# **创建知识库 (Knowledge Base)**
 
-Create a knowledge on [Dria's Knowledge Hub](https://dria.co/knowledge)
+在 [Dria 的知识中心](https://dria.co/knowledge) 创建一个知识库。
 
 ```python
 contract_id = retriever.create_knowledge_base(
-    name="France's AI Development",
+    name="法国的人工智能发展",
     embedding=DriaRetriever.models.jina_embeddings_v2_base_en.value,
     category="Artificial Intelligence",
-    description="Explore the growth and contributions of France in the field of Artificial Intelligence.",
+    description="探索法国在人工智能领域的发展和贡献。",
 )
 ```
 
-# Add Data
+# 添加数据
 
-Load data into your Dria knowledge base.
+将数据加载到您的 Dria 知识库中。
 
 ```python
 texts = [
-    "The first text to add to Dria.",
-    "Another piece of information to store.",
-    "More data to include in the Dria knowledge base.",
+    "要添加到 Dria 的第一段文本。",
+    "需要存储的另一个信息片段。",
+    "要包含在 Dria 知识库中的更多数据。",
 ]
 
 ids = retriever.add_texts(texts)
-print("Data added with IDs:", ids)
+print("数据已添加，ID 为:", ids)
 ```
 
-# Retrieve Data
+# 检索数据
 
-Use the retriever to find relevant documents given a query.
+给定一个查询，使用检索器查找相关的文档。
 
 ```python
-query = "Find information about Dria."
+query = "查找关于 Dria 的信息。"
 result = retriever.invoke(query)
 for doc in result:
     print(doc)

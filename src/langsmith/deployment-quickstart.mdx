@@ -1,70 +1,70 @@
 ---
-title: Deploy your app to Cloud
-sidebarTitle: Cloud quickstart
+title: 将应用部署到 Cloud
+sidebarTitle: Cloud 快速开始
 ---
 
-This is a quickstart guide for deploying your first application to LangSmith Cloud.
+这是关于将您的第一个应用程序部署到 LangSmith Cloud 的快速入门指南。
 
 <Tip>
-For a comprehensive Cloud deployment guide with all configuration options, refer to the [Cloud deployment setup guide](/langsmith/deploy-to-cloud).
+有关包含所有配置选项的全面 Cloud 部署指南，请参阅 [Cloud 部署设置指南](/langsmith/deploy-to-cloud)。
 </Tip>
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+在开始之前，请确保您具备以下条件：
 
-* A [GitHub account](https://github.com/)
-* A [LangSmith account](https://smith.langchain.com/) (free to sign up)
+* 一个 [GitHub 帐户](https://github.com/)
+* 一个 [LangSmith 帐户](https://smith.langchain.com/)（免费注册）
 
-## 1. Create a repository on GitHub
+## 1. 在 GitHub 上创建一个仓库 (Repository)
 
-To deploy an application to **LangSmith**, your application code must reside in a GitHub repository. Both public and private repositories are supported. For this quickstart, use the [`new-langgraph-project` template](https://github.com/langchain-ai/react-agent) for your application:
+要将应用程序部署到 **LangSmith**，您的应用程序代码必须位于 GitHub 仓库中。我们支持公共仓库和私有仓库。对于本快速入门，请使用 [`new-langgraph-project` 模板](https://github.com/langchain-ai/react-agent) 作为您的应用程序基础：
 
-1. Go to the [`new-langgraph-project` repository](https://github.com/langchain-ai/new-langgraph-project) or [`new-langgraphjs-project` template](https://github.com/langchain-ai/new-langgraphjs-project).
-2. Click the `Fork` button in the top right corner to fork the repository to your GitHub account.
-3. Click **Create fork**.
+1. 前往 [`new-langgraph-project` 仓库](https://github.com/langchain-ai/new-langgraph-project) 或 [`new-langgraphjs-project` 模板](https://github.com/langchain-ai/new-langgraphjs-project)。
+2. 点击右上角的 `Fork` 按钮，将该仓库复刻 (fork) 到您的 GitHub 帐户下。
+3. 点击 **Create fork**。
 
-## 2. Deploy to LangSmith
+## 2. 部署到 LangSmith
 
-1. Log in to [LangSmith](https://smith.langchain.com/).
-2. In the left sidebar, select **Deployments**.
-3. Click the **+ New Deployment** button. A pane will open where you can fill in the required fields.
-4. If you are a first time user or adding a private repository that has not been previously connected, click the **Import from GitHub** button and follow the instructions to connect your GitHub account.
-5. Select your New LangGraph Project repository.
-6. Click **Submit** to deploy.
-  This may take about 15 minutes to complete. You can check the status in the **Deployment details** view.
+1. 登录 [LangSmith](https://smith.langchain.com/)。
+2. 在左侧边栏中，选择 **Deployments**（部署）。
+3. 点击 **+ New Deployment**（新建部署）按钮。将弹出一个面板，供您填写所需字段。
+4. 如果您是首次使用，或者正在添加先前从未连接过的私有仓库，请点击 **Import from GitHub**（从 GitHub 导入）按钮，并按照说明连接您的 GitHub 帐户。
+5. 选择您的 New LangGraph Project 仓库。
+6. 点击 **Submit**（提交）以开始部署。
+  此过程可能需要大约 15 分钟才能完成。您可以在 **Deployment details**（部署详情）视图中检查状态。
 
-## 3. Test your application in Studio
+## 3. 在 Studio 中测试您的应用程序
 
-Once your application is deployed:
+部署完成后：
 
-1. Select the deployment you just created to view more details.
-2. Click the **Studio** button in the top right corner. [Studio](/langsmith/studio) will open to display your graph.
+1. 选择您刚刚创建的部署，以查看更多详情。
+2. 点击右上角的 **Studio** 按钮。[Studio](/langsmith/studio) 将打开并显示您的图 (graph)。
 
-## 4. Get the API URL for your deployment
+## 4. 获取部署的 API URL
 
-1. In the **Deployment details** view, click the **API URL** to copy it to your clipboard.
-2. Click the `URL` to copy it to the clipboard.
+1. 在 **Deployment details**（部署详情）视图中，点击 **API URL** 即可将其复制到剪贴板。
+2. 点击 `URL` 以复制它到剪贴板。
 
-## 5. Test the API
+## 5. 测试 API
 
-You can now test the API:
+您现在可以测试 API 了：
 
 <Tabs>
-    <Tab title="Python SDK (Async)">
-    1. Install the LangGraph Python SDK:
+    <Tab title="Python SDK (异步)">
+    1. 安装 LangGraph Python SDK：
       ```shell
       pip install langgraph-sdk
       ```
-    2. Send a message to the assistant (threadless run):
+    2. 向助手发送一条消息（无线程运行）：
       ```python
       from langgraph_sdk import get_client
 
       client = get_client(url="your-deployment-url", api_key="your-langsmith-api-key")
 
       async for chunk in client.runs.stream(
-          None,  # Threadless run
-          "agent", # Name of assistant. Defined in langgraph.json.
+          None,  # 无线程运行
+          "agent", # 助手的名称。在 langgraph.json 中定义。
           input={
               "messages": [{
                   "role": "human",
@@ -78,20 +78,20 @@ You can now test the API:
           print("\n\n")
       ```
     </Tab>
-    <Tab title="Python SDK (Sync)">
-    1. Install the LangGraph Python SDK:
+    <Tab title="Python SDK (同步)">
+    1. 安装 LangGraph Python SDK：
       ```shell
       pip install langgraph-sdk
       ```
-    2. Send a message to the assistant (threadless run):
+    2. 向助手发送一条消息（无线程运行）：
       ```python
       from langgraph_sdk import get_sync_client
 
       client = get_sync_client(url="your-deployment-url", api_key="your-langsmith-api-key")
 
       for chunk in client.runs.stream(
-          None,  # Threadless run
-          "agent", # Name of assistant. Defined in langgraph.json.
+          None,  # 无线程运行
+          "agent", # 助手的名称。在 langgraph.json 中定义。
           input={
               "messages": [{
                   "role": "human",
@@ -106,19 +106,19 @@ You can now test the API:
       ```
     </Tab>
     <Tab title="JavaScript SDK">
-    1. Install the LangGraph JS SDK
+    1. 安装 LangGraph JS SDK
       ```shell
       npm install @langchain/langgraph-sdk
       ```
-    2. Send a message to the assistant (threadless run):
+    2. 向助手发送一条消息（无线程运行）：
       ```js
       const { Client } = await import("@langchain/langgraph-sdk");
 
       const client = new Client({ apiUrl: "your-deployment-url", apiKey: "your-langsmith-api-key" });
 
       const streamResponse = client.runs.stream(
-          null, // Threadless run
-          "agent", // Assistant ID
+          null, // 无线程运行
+          "agent", // 助手 ID
           {
               input: {
                   "messages": [
@@ -158,10 +158,10 @@ You can now test the API:
     </Tab>
 </Tabs>
 
-## Next steps
+## 后续步骤
 
-You've successfully deployed your application to LangSmith Cloud. Here are some next steps:
+您已成功将应用程序部署到 LangSmith Cloud。以下是一些后续步骤：
 
-- **Explore Studio**: Use [Studio](/langsmith/studio) to visualize and debug your graph interactively.
-- **Monitor your app**: Set up [observability](/langsmith/observability) with traces, dashboards, and alerts.
-- **Learn more about Cloud**: See the [complete Cloud setup guide](/langsmith/deploy-to-cloud) for all configuration options.
+- **探索 Studio**：使用 [Studio](/langsmith/studio) 来可视化和交互式地调试您的图。
+- **监控您的应用**：使用跟踪、仪表板和警报设置[可观测性](/langsmith/observability)。
+- **了解 Cloud 的更多信息**：查看[完整的 Cloud 设置指南](/langsmith/deploy-to-cloud) 以了解所有配置选项。

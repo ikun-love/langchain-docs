@@ -1,23 +1,23 @@
 ---
-title: Trace with the Vercel AI SDK (Legacy)
-sidebarTitle: Trace with the Vercel AI SDK (Legacy)
+title: 使用 Vercel AI SDK 进行跟踪（旧版）
+sidebarTitle: 使用 Vercel AI SDK 进行跟踪（旧版）
 ---
 
 <Warning>
-This page documents an older method of tracing AI SDK runs. For a simpler and more general method that does not require OTEL setup, see [the new guide](/langsmith/trace-with-vercel-ai-sdk).
+此页面记录了一种较旧的跟踪 AI SDK 运行的方法。对于不需要 OTEL 设置的更简单、更通用的方法，请参阅[新指南](/langsmith/trace-with-vercel-ai-sdk)。
 </Warning>
 
-You can use LangSmith to trace runs from the Vercel AI SDK using OpenTelemetry (OTEL). This guide will walk through an example.
+您可以使用 LangSmith 通过 OpenTelemetry (OTEL) 来跟踪来自 Vercel AI SDK 的运行。本指南将引导您完成一个示例。
 
 <Note>
-Many popular [OpenTelemetry implementations](https://www.npmjs.com/package/@opentelemetry/sdk-node) in JavaScript are currently experimental,
-and may behave erratically in production, especially when instrumenting LangSmith alongside other providers. If you are on AI SDK 5,
-we strongly suggest using [our recommended approach for tracing AI SDK runs](/langsmith/trace-with-vercel-ai-sdk).
+目前，JavaScript 中许多流行的 [OpenTelemetry 实现](https://www.npmjs.com/package/@opentelemetry/sdk-node) 仍处于实验性阶段，
+在生产环境中可能会出现异常行为，尤其是在与其它提供商一起使用 LangSmith 进行检测时。如果您使用的是 AI SDK 5，
+我们强烈建议使用[我们推荐的跟踪 AI SDK 运行的方法](/langsmith/trace-with-vercel-ai-sdk)。
 </Note>
 
-## 0. Installation
+## 0. 安装
 
-Install the Vercel AI SDK and required OTEL packages. We use their OpenAI integration for the code snippets below, but you can use any of their other options as well.
+安装 Vercel AI SDK 和所需的 OTEL 包。我们使用它们的 OpenAI 集成作为以下代码片段的示例，但您也可以使用它们的任何其他选项。
 
 <CodeGroup>
 
@@ -52,21 +52,21 @@ pnpm add @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-proto 
 
 </CodeGroup>
 
-## 1. Configure your environment
+## 1. 配置环境变量
 
 ```bash
 export LANGSMITH_TRACING=true
 export LANGSMITH_API_KEY=<your-api-key>
 export LANGSMITH_OTEL_ENABLED=true
 
-# This example uses OpenAI, but you can use any LLM provider of choice
+# 此示例使用 OpenAI，但您也可以使用任何您选择的 LLM 提供商
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
-## 2. Log a trace
+## 2. 记录一个追踪
 
 ### Node.js
 
-To start tracing, you will need to import and call the `initializeOTEL` method at the start of your code:
+要开始跟踪，您需要在代码开头导入并调用 `initializeOTEL` 方法：
 
 ```typescript
 import { initializeOTEL } from "langsmith/experimental/otel/setup";
@@ -74,10 +74,10 @@ import { initializeOTEL } from "langsmith/experimental/otel/setup";
 const { DEFAULT_LANGSMITH_SPAN_PROCESSOR } = initializeOTEL();
 ```
 
-Afterwards, add the `experimental_telemetry` argument to your AI SDK calls that you want to trace.
+之后，向您想要跟踪的 AI SDK 调用中添加 `experimental_telemetry` 参数。
 
 <Info>
-Do not forget to call `await DEFAULT_LANGSMITH_SPAN_PROCESSOR.shutdown();` before your application shuts down in order to flush any remaining traces to LangSmith.
+不要忘记在应用程序关闭前调用 `await DEFAULT_LANGSMITH_SPAN_PROCESSOR.shutdown();` 以确保所有跟踪都刷新到 LangSmith。
 </Info>
 
 ```typescript
@@ -88,7 +88,7 @@ let result;
 try {
   result = await generateText({
     model: openai("gpt-4.1-nano"),
-    prompt: "Write a vegetarian lasagna recipe for 4 people.",
+    prompt: "为 4 个人写一份素食千层面食谱。",
     experimental_telemetry: {
       isEnabled: true,
     },
@@ -98,9 +98,9 @@ try {
 }
 ```
 
-You should see a trace in your LangSmith dashboard [like this one](https://smith.langchain.com/public/21d33490-d522-4928-a944-a09e988d539c/r).
+您应该在 LangSmith 仪表板中看到一个 [如下所示的跟踪](https://smith.langchain.com/public/21d33490-d522-4928-a944-a09e988d539c/r)。
 
-You can also trace runs with tool calls:
+您也可以跟踪带有工具调用的运行：
 
 ```typescript
 import { generateText, tool } from "ai";
@@ -112,21 +112,21 @@ await generateText({
   messages: [
     {
       role: "user",
-      content: "What are my orders and where are they? My user ID is 123",
+      content: "我的订单是什么？它们在哪里？我的用户 ID 是 123",
     },
   ],
   tools: {
     listOrders: tool({
-      description: "list all orders",
+      description: "列出所有订单",
       parameters: z.object({ userId: z.string() }),
       execute: async ({ userId }) =>
-        `User ${userId} has the following orders: 1`,
+        `用户 ${userId} 有以下订单：1`,
     }),
     viewTrackingInformation: tool({
-      description: "view tracking information for a specific order",
+      description: "查看特定订单的跟踪信息",
       parameters: z.object({ orderId: z.string() }),
       execute: async ({ orderId }) =>
-        `Here is the tracking information for ${orderId}`,
+        `这是 ${orderId} 的跟踪信息`,
     }),
   },
   experimental_telemetry: {
@@ -136,11 +136,11 @@ await generateText({
 });
 ```
 
-Which results in a trace like [this one](https://smith.langchain.com/public/e6122734-2762-4ae0-986b-0cbe4d68692f/r).
+这会产生一个 [如下所示的跟踪](https://smith.langchain.com/public/e6122734-2762-4ae0-986b-0cbe4d68692f/r)。
 
-### With `traceable`
+### 使用 `traceable`
 
-You can wrap `traceable` calls around or within AI SDK tool calls. If you do so, we recommend you initialize a LangSmith `client` instance that you pass into each `traceable`, then call `client.awaitPendingTraceBatches();` to ensure all traces flush. If you do this, you do not need to manually call `shutdown()` or `forceFlush()` on the `DEFAULT_LANGSMITH_SPAN_PROCESSOR`. Here's an example:
+您可以将 `traceable` 调用包装在 AI SDK 工具调用周围或内部。如果这样做，我们建议您初始化一个 LangSmith `client` 实例，并将其传递给每个 `traceable`，然后调用 `client.awaitPendingTraceBatches()` 以确保所有跟踪都被刷新。如果您这样做，则无需手动调用 `shutdown()` 或 `forceFlush()` 在 `DEFAULT_LANGSMITH_SPAN_PROCESSOR` 上。这是一个例子：
 
 ```typescript
 import { initializeOTEL } from "langsmith/experimental/otel/setup";
@@ -162,7 +162,7 @@ const wrappedText = traceable(
       messages: [{ role: "user", content }],
       tools: {
         listOrders: tool({
-          description: "list all orders",
+          description: "列出所有订单",
           parameters: z.object({ userId: z.string() }),
           execute: async ({ userId }) => {
             const getOrderNumber = traceable(
@@ -172,7 +172,7 @@ const wrappedText = traceable(
               { name: "getOrderNumber" }
             );
             const orderNumber = await getOrderNumber();
-            return `User ${userId} has the following order: ${orderNumber}`;
+            return `用户 ${userId} 有以下订单：${orderNumber}`;
           },
         }),
       },
@@ -188,17 +188,17 @@ const wrappedText = traceable(
 
 let result;
 try {
-  result = await wrappedText("What are my orders?");
+  result = await wrappedText("我的订单是什么？");
 } finally {
   await client.awaitPendingTraceBatches();
 }
 ```
 
-The resulting trace will look [like this](https://smith.langchain.com/public/296a0134-f3d4-4e54-afc7-b18f2c190911/r).
+生成的跟踪将看起来 [像这样](https://smith.langchain.com/public/296a0134-f3d4-4e54-afc7-b18f2c190911/r)。
 
 ### Next.js
 
-First, install the [`@vercel/otel`](https://www.npmjs.com/package/@vercel/otel) package:
+首先，安装 [`@vercel/otel`](https://www.npmjs.com/package/@vercel/otel) 包：
 
 <CodeGroup>
 
@@ -216,9 +216,9 @@ pnpm add @vercel/otel
 
 </CodeGroup>
 
-Then, set up an [`instrumentation.ts`](https://nextjs.org/docs/app/guides/instrumentation) file in your root directory.
-Call `initializeOTEL` and pass the resulting `DEFAULT_LANGSMITH_SPAN_PROCESSOR` into the `spanProcessors` field into your `registerOTEL(...)` call.
-It should look something like this:
+然后，在根目录设置一个 [`instrumentation.ts`](https://nextjs.org/docs/app/guides/instrumentation) 文件。
+调用 `initializeOTEL` 并将生成的 `DEFAULT_LANGSMITH_SPAN_PROCESSOR` 传递到 `registerOTEL(...)` 调用中的 `spanProcessors` 字段中。
+它应该看起来像这样：
 
 ```typescript
 import { registerOTel } from "@vercel/otel";
@@ -234,7 +234,7 @@ export function register() {
 }
 ```
 
-And finally, in your API routes, call `initializeOTEL` as well and add an `experimental_telemetry` field to your AI SDK calls:
+最后，在您的 API 路由中，也调用 `initializeOTEL` 并在 AI SDK 调用中添加 `experimental_telemetry` 字段：
 
 ```typescript
 import { generateText } from "ai";
@@ -247,7 +247,7 @@ initializeOTEL();
 export async function GET() {
   const { text } = await generateText({
     model: openai("gpt-4.1-nano"),
-    messages: [{ role: "user", content: "Why is the sky blue?" }],
+    messages: [{ role: "user", content: "天空为什么是蓝色的？" }],
     experimental_telemetry: {
       isEnabled: true,
     },
@@ -257,14 +257,14 @@ export async function GET() {
 }
 ```
 
-You can also wrap parts of your code in `traceables` for more granularity.
+您也可以将代码部分包装在 `traceables` 中以获得更高的粒度。
 
 ### Sentry
 
-If you're using Sentry, you can attach the LangSmith trace exporter to Sentry's default OpenTelemetry instrumentation as show in the example below.
+如果您正在使用 Sentry，您可以将 LangSmith 的跟踪导出器附加到 Sentry 的默认 OpenTelemetry 仪器中，如以下示例所示。
 
 <Warning>
-At time of writing, Sentry only supports OTEL v1 packages. LangSmith supports both v1 and v2, but you **must** make sure you install OTEL v1 packages in order to make instrumentation work.
+在撰写本文时，Sentry 只支持 OTEL v1 包。LangSmith 支持 v1 和 v2，但您**必须**确保安装 OTEL v1 包才能使仪器正常工作。
 
 <CodeGroup>
 
@@ -324,16 +324,16 @@ const wrappedText = traceable(
 
 let result;
 try {
-  result = await wrappedText("What color is the sky?");
+  result = await wrappedText("天空是什么颜色的？");
 } finally {
   await sentry?.traceProvider?.shutdown();
 }
 ```
 
 
-## Add other metadata
+## 添加其他元数据
 
-You can add other metadata to your traces to help organize and filter them in the LangSmith UI:
+您可以向跟踪添加其他元数据，以帮助您在 LangSmith UI 中组织和过滤它们：
 
 ```typescript {highlight={9}}
 import { generateText } from "ai";
@@ -341,7 +341,7 @@ import { openai } from "@ai-sdk/openai";
 
 await generateText({
   model: openai("gpt-4.1-nano"),
-  prompt: "Write a vegetarian lasagna recipe for 4 people.",
+  prompt: "为 4 个人写一份素食千层面食谱。",
   experimental_telemetry: {
     isEnabled: true,
     metadata: { userId: "123", language: "english" },
@@ -349,12 +349,12 @@ await generateText({
 });
 ```
 
-Metadata will be visible in your LangSmith dashboard and can be used to filter and search for specific traces.
-Note that AI SDK propagates metadata on internal child spans as well.
+元数据将显示在您的 LangSmith 仪表板中，可用于筛选和搜索特定跟踪。
+请注意，AI SDK 会将元数据传播到内部子跨度上。
 
-## Customize run name
+## 自定义运行名称
 
-You can customize the run name by passing a metadata key named `ls_run_name` into `experimental_telemetry`.
+您可以通过将名为 `ls_run_name` 的元数据键传递到 `experimental_telemetry` 中来定制运行名称。
 
 ```typescript
 import { generateText } from "ai";
@@ -362,7 +362,7 @@ import { openai } from "@ai-sdk/openai";
 
 await generateText({
   model: openai("gpt-4o-mini"),
-  prompt: "Write a vegetarian lasagna recipe for 4 people.",
+  prompt: "为 4 个人写一份素食千层面食谱。",
   experimental_telemetry: {
     isEnabled: true,
     // highlight-start

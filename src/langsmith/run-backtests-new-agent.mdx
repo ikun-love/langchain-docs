@@ -1,30 +1,30 @@
 ---
-title: Run backtests on a new version of an agent
-sidebarTitle: Run backtests on a new version of an agent
+title: 在新版 Agent 上运行回测
+sidebarTitle: 在新版 Agent 上运行回测
 ---
 
-Deploying your application is just the beginning of a continuous improvement process. After you deploy to production, you'll want to refine your system by enhancing prompts, language models, tools, and architectures. Backtesting involves assessing new versions of your application using historical data and comparing the new outputs to the original ones. Compared to evaluations using pre-production datasets, backtesting offers a clearer indication of whether the new version of your application is an improvement over the current deployment.
+部署应用程序只是持续改进过程的开始。在部署到生产环境后，您会希望通过改进提示词（prompts）、语言模型（language models）、工具（tools）和架构（architectures）来完善您的系统。回测（Backtesting）涉及使用历史数据来评估应用程序的新版本，并将新输出与原始输出进行比较。与使用预生产数据集进行的评估相比，回测能更清晰地表明应用程序的新版本是否比当前部署有所改进。
 
-Here are the basic steps for backtesting:
+以下是回测的基本步骤：
 
-1. Select sample runs from your production tracing project to test against.
-2. Transform the run inputs into a dataset and record the run outputs as an initial experiment against that dataset.
-3. Execute your new system on the new dataset and compare the results of the experiments.
+1. 从您的生产追踪（production tracing）项目中选择样本运行（sample runs）进行测试。
+2. 将运行输入（run inputs）转换为数据集，并将运行输出（run outputs）记录为针对该数据集的初始实验。
+3. 在新数据集上执行您的新系统，并比较实验结果。
 
-This process will provide you with a new dataset of representative inputs, which you can version and use for backtesting your models.
+此过程将为您提供一组具有代表性的新数据集，您可以对其进行版本控制，并用于回测您的模型。
 
 <Info>
-Often, you won't have definitive "ground truth" answers available. In such cases, you can manually label the outputs or use evaluators that don't rely on reference data. If your application allows for capturing ground-truth labels, for example by allowing users to leave feedback, we strongly recommend doing so.
+通常，您可能无法获得明确的“地面真相”（ground truth）答案。在这种情况下，您可以手动标记输出，或者使用不依赖参考数据的评估器（evaluators）。如果您的应用程序允许捕获地面真相标签（例如，通过允许用户留下反馈），我们强烈建议您这样做。
 </Info>
 
-## Setup
+## 设置
 
-### Configure the environment
+### 配置环境
 
-Install and set environment variables. This guide requires `langsmith>=0.2.4`.
+安装必要的包并设置环境变量。本指南要求 `langsmith>=0.2.4`。
 
 <Info>
-For convenience we'll use the LangChain OSS framework in this tutorial, but the LangSmith functionality shown is framework-agnostic.
+为方便起见，本教程中将使用 LangChain OSS 框架，但这里展示的 LangSmith 功能是独立于框架的。
 </Info>
 
 <CodeGroup>
@@ -41,25 +41,25 @@ uv add langsmith langchain langchain-anthropic langchainhub emoji
 import getpass
 import os
 
-# Set the project name to whichever project you'd like to be testing against
+# 设置项目名称，即您希望进行测试的任何项目
 project_name = "Tweet Writing Task"
 os.environ["LANGSMITH_PROJECT"] = project_name
 os.environ["LANGSMITH_TRACING"] = "true"
 
 if not os.environ.get("LANGSMITH_API_KEY"):
-    os.environ["LANGSMITH_API_KEY"] = getpass.getpass("YOUR API KEY")
+    os.environ["LANGSMITH_API_KEY"] = getpass.getpass("您的 API KEY")
 
-# Optional. You can swap OpenAI for any other tool-calling chat model.
-os.environ["OPENAI_API_KEY"] = "YOUR OPENAI API KEY"
+# 可选。您可以将 OpenAI 替换为任何其他工具调用聊天模型。
+os.environ["OPENAI_API_KEY"] = "您的 OPENAI API KEY"
 
-# Optional. You can swap Tavily for the free DuckDuckGo search tool if preferred.
-# Get Tavily API key: https://tavily.com
-os.environ["TAVILY_API_KEY"] = "YOUR TAVILY API KEY"
+# 可选。如果更喜欢免费的 DuckDuckGo 搜索工具，可以将 Tavily 替换为它。
+# 获取 Tavily API 密钥: https://tavily.com
+os.environ["TAVILY_API_KEY"] = "您的 TAVILY API KEY"
 ```
 
-### Define the application
+### 定义应用程序
 
-For this example lets create a simple Tweet-writing application that has access to some internet search tools:
+在此示例中，我们创建一个简单的推文写作应用程序，该应用程序可以访问一些互联网搜索工具：
 
 ```python
 from langchain.chat_models import init_chat_model
@@ -68,50 +68,50 @@ from langchain_community.tools import DuckDuckGoSearchRun, TavilySearchResults
 from langchain_core.rate_limiters import InMemoryRateLimiter
 
 
-# We will use GPT-3.5 Turbo as the baseline and compare against GPT-4o
+# 我们将使用 GPT-3.5 Turbo 作为基线，并与 GPT-4o 进行比较
 gpt_3_5_turbo = init_chat_model(
     "gpt-3.5-turbo",
     temperature=1,
     configurable_fields=("model", "model_provider"),
 )
 
-# The instrucitons are passed as a system message to the agent
-instructions = """You are a tweet writing assistant. Given a topic, do some research and write a relevant and engaging tweet about it.
-- Use at least 3 emojis in each tweet
-- The tweet should be no longer than 280 characters
-- Always use the search tool to gather recent information on the tweet topic
-- Write the tweet only based on the search content. Do not rely on your internal knowledge
-- When relevant, link to your sources
-- Make your tweet as engaging as possible"""
+# 指令作为系统消息传递给 Agent
+instructions = """你是一名推文写作助手。给定一个主题，进行一些研究，并就该主题撰写一条相关且引人注目的推文。
+- 每条推文至少使用 3 个表情符号
+- 推文长度不得超过 280 个字符
+- 始终使用搜索工具收集有关推文主题的最新信息
+- 仅根据搜索内容撰写推文。不要依赖您的内部知识
+- 适当时，链接到您的来源
+- 使您的推文尽可能引人注目"""
 
-# Define the tools our agent can use
-# If you have a higher tiered Tavily API plan you can increase this
+# 定义 Agent 可以使用的工具
+# 如果您的 Tavily API 计划等级更高，可以增加此值
 rate_limiter = InMemoryRateLimiter(requests_per_second=0.08)
 
-# Use DuckDuckGo if you don't have a Tavily API key:
+# 如果您没有 Tavily API 密钥，请使用 DuckDuckGo:
 # tools = [DuckDuckGoSearchRun(rate_limiter=rate_limiter)]
 tools = [TavilySearchResults(max_results=5, rate_limiter=rate_limiter)]
 
 agent = create_agent(gpt_3_5_turbo, tools=tools, system_prompt=instructions)
 ```
 
-### Simulate production data
+### 模拟生产数据
 
-Now lets simulate some production data:
+现在我们模拟一些生产数据：
 
 ```python
 fake_production_inputs = [
-    "Alan turing's early childhood",
-    "Economic impacts of the European Union",
-    "Underrated philosophers",
-    "History of the Roxie theater in San Francisco",
-    "ELI5: gravitational waves",
-    "The arguments for and against a parliamentary system",
-    "Pivotal moments in music history",
-    "Big ideas in programming languages",
-    "Big questions in biology",
-    "The relationship between math and reality",
-    "What makes someone funny",
+    "艾伦·图灵的童年早期",
+    "欧盟的经济影响",
+    "被低估的哲学家",
+    "旧金山 Roxie 剧院的历史",
+    "ELI5: 引力波",
+    "议会制度的赞成和反对论点",
+    "音乐史上的关键时刻",
+    "编程语言中的宏大思想",
+    "生物学中的重大问题",
+    "数学与现实之间的关系",
+    "是什么让人发笑",
 ]
 
 agent.batch(
@@ -119,13 +119,13 @@ agent.batch(
 )
 ```
 
-## Convert Production Traces to Experiment
+## 将生产追踪转换为实验
 
-The first step is to generate a dataset based on the production *inputs*. Then copy over all the traces to serve as a baseline experiment.
+第一步是根据生产*输入*生成数据集，然后复制所有追踪以作为基线实验。
 
-### Select runs to backtest on
+### 选择用于回测的运行
 
-You can select the runs to backtest on using the `filter` argument of `list_runs`. The `filter` argument uses the LangSmith [trace query syntax](/langsmith/trace-query-syntax) to select runs.
+您可以使用 `list_runs` 的 `filter` 参数来选择用于回测的运行。`filter` 参数使用 LangSmith [追踪查询语法](/langsmith/trace-query-syntax)来选择运行。
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -133,10 +133,10 @@ from uuid import uuid4
 from langsmith import Client
 from langsmith.beta import convert_runs_to_test
 
-# Fetch the runs we want to convert to a dataset/experiment
+# 获取我们想要转换为数据集/实验的运行
 client = Client()
 
-# How we are sampling runs to include in our dataset
+# 我们如何采样要包含在数据集中的运行
 end_time = datetime.now(tz=timezone.utc)
 start_time = end_time - timedelta(days=1)
 run_filter = f'and(gt(start_time, "{start_time.isoformat()}"), lt(end_time, "{end_time.isoformat()}"))'
@@ -149,45 +149,44 @@ prod_runs = list(
 )
 ```
 
-### Convert runs to experiment
+### 将运行转换为实验
 
-`convert_runs_to_test` is a function which takes some runs and does the following:
+`convert_runs_to_test` 是一个函数，它接受一些运行并执行以下操作：
 
-1. The inputs, and optionally the outputs, are saved to a dataset as Examples.
-2. The inputs and outputs are stored as an experiment, as if you had run the `evaluate` function and received those outputs.
+1. 将输入，以及可选的输出，保存到数据集中作为示例（Examples）。
+2. 将输入和输出存储为实验，就像您运行了 `evaluate` 函数并收到了这些输出一样。
 
 ```python
-# Name of the dataset we want to create
+# 我们想要创建的数据集的名称
 dataset_name = f'{project_name}-backtesting {start_time.strftime("%Y-%m-%d")}-{end_time.strftime("%Y-%m-%d")}'
-# Name of the experiment we want to create from the historical runs
+# 从历史运行创建实验的名称
 baseline_experiment_name = f"prod-baseline-gpt-3.5-turbo-{str(uuid4())[:4]}"
 
-# This converts the runs to a dataset + experiment
+# 这会将运行转换为数据集 + 实验
 convert_runs_to_test(
     prod_runs,
-    # Name of the resulting dataset
+    # 结果数据集的名称
     dataset_name=dataset_name,
-    # Whether to include the run outputs as reference/ground truth
+    # 是否包含运行输出作为参考/地面真相
     include_outputs=False,
-    # Whether to include the full traces in the resulting experiment
-    # (default is to just include the root run)
+    # 是否在结果实验中包含完整的追踪（默认为仅包含根运行）
     load_child_runs=True,
-    # Name of the experiment so we can apply evalautors to it after
+    # 实验的名称，以便我们之后可以应用评估器
     test_project_name=baseline_experiment_name
 )
 ```
 
-Once this step is complete, you should see a new dataset in your LangSmith project called "Tweet Writing Task-backtesting TODAYS DATE", with a single experiment like so:
+完成此步骤后，您应该在 LangSmith 项目中看到一个名为 "Tweet Writing Task-backtesting 今天的日期" 的新数据集，以及一个实验，如下所示：
 
 ![](/langsmith/images/baseline-experiment.png)
 
-## Benchmark against new system
+## 使用新系统进行基准测试
 
-Now we can start the process of benchmarking our production runs against a new system.
+现在我们可以开始对新系统进行基准测试，以与我们的生产运行进行比较。
 
-### Define evaluators
+### 定义评估器
 
-First let's define the evaluators we will use to compare the two systems. Note that we have no reference outputs, so we'll need to come up with evaluation metrics that only require the actual outputs.
+首先，我们定义将用于比较这两个系统的评估器。请注意，我们没有任何参考输出，因此我们需要设计仅需要实际输出的评估指标。
 
 ```python
 import emoji
@@ -195,14 +194,14 @@ from pydantic import BaseModel, Field
 from langchain_core.messages import convert_to_openai_messages
 
 class Grade(BaseModel):
-    """Grade whether a response is supported by some context."""
-    grounded: bool = Field(..., description="Is the majority of the response supported by the retrieved context?")
+    """判断一个响应是否被某些上下文所支持的评分。"""
+    grounded: bool = Field(..., description="响应的大部分内容是否由检索到的上下文所支持？")
 
-grounded_instructions = f"""You have given somebody some contextual information and asked them to write a statement grounded in that context.
+grounded_instructions = f"""你已经提供了一些上下文信息，并要求某人根据该上下文写一个陈述。
 
-Grade whether their response is fully supported by the context you have provided. \
-If any meaningful part of their statement is not backed up directly by the context you provided, then their response is not grounded. \
-Otherwise it is grounded."""
+请对他们的回应是否完全由您提供的上下文所支持进行评分。\
+如果他们陈述中的任何有意义的部分没有直接被您提供的上下文所支持，那么他们的回应就不是基于上下文的（not grounded）。\
+否则就是基于上下文的（grounded）。"""
 grounded_model = init_chat_model(model="gpt-4o").with_structured_output(Grade)
 
 def lt_280_chars(outputs: dict) -> bool:
@@ -218,13 +217,13 @@ async def is_grounded(outputs: dict) -> bool:
     messages = convert_to_openai_messages(outputs["messages"])
     for message in messages:
         if message["role"] == "tool":
-            # Tool message outputs are the results returned from the Tavily/DuckDuckGo tool
+            # 工具消息输出是 Tavily/DuckDuckGo 工具返回的结果
             context += "\n\n" + message["content"]
     tweet = messages[-1]["content"]
-    user = f"""CONTEXT PROVIDED:
+    user = f"""提供的上下文:
     {context}
 
-    RESPONSE GIVEN:
+    给出的回应:
     {tweet}"""
     grade = await grounded_model.ainvoke([
         {"role": "system", "content": grounded_instructions},
@@ -233,22 +232,22 @@ async def is_grounded(outputs: dict) -> bool:
     return grade.grounded
 ```
 
-### Evaluate baseline
+### 评估基线
 
-Now, let's run our evaluators against the baseline experiment.
+现在，让我们针对基线实验运行我们的评估器。
 
 ```python
 baseline_results = await client.aevaluate(
     baseline_experiment_name,
     evaluators=[lt_280_chars, gte_3_emojis, is_grounded],
 )
-# If you have pandas installed can easily explore results as df:
+# 如果安装了 pandas，可以轻松地将结果探索为 df:
 # baseline_results.to_pandas()
 ```
 
-### Define and evaluate new system
+### 定义并评估新系统
 
-Now, let's define and evaluate our new system. In this example our new system will be the same as the old system, but will use GPT-4o instead of GPT-3.5. Since we've made our model configurable we can just update the default config passed to our agent:
+现在，我们来定义并评估我们的新系统。在此示例中，我们的新系统与旧系统相同，但它使用 GPT-4o 而不是 GPT-3.5。由于我们将模型配置为可配置的，我们只需更新传递给 Agent 的默认配置即可：
 
 ```python
 candidate_results = await client.aevaluate(
@@ -257,30 +256,28 @@ candidate_results = await client.aevaluate(
     evaluators=[lt_280_chars, gte_3_emojis, is_grounded],
     experiment_prefix="candidate-gpt-4o",
 )
-# If you have pandas installed can easily explore results as df:
+# 如果安装了 pandas，可以轻松地将结果探索为 df:
 # candidate_results.to_pandas()
 ```
 
-## Comparing the results
+## 比较结果
 
-After running both experiments, you can view them in your dataset:
+运行完两个实验后，您可以在数据集中查看它们：
 
 ![](/langsmith/images/dataset-page.png)
 
-The results reveal an interesting tradeoff between the two models:
+结果揭示了两个模型之间有趣的权衡：
 
-1. GPT-4o shows improved performance in following formatting rules, consistently including the requested number of emojis
-2. However, GPT-4o is less reliable at staying grounded in the provided search results
+1. GPT-4o 在遵循格式规则方面表现出改进的性能，一致地包含所需数量的表情符号。
+2. 然而，GPT-4o 在保持“基于上下文”（grounded）方面不太可靠。
 
-To illustrate the grounding issue: in [this example run](https://smith.langchain.com/public/be060e19-0bc0-4798-94f5-c3d35719a5f6/r/07d43e7a-8632-479d-ae28-c7eac6e54da4), GPT-4o included facts about Abū Bakr Muhammad ibn Zakariyyā al-Rāzī's medical contributions that weren't present in the search results. This demonstrates how it's pulling from its internal knowledge rather than strictly using the provided information.
+为了说明基于上下文的问题：在[这个示例运行](https://smith.langchain.com/public/be060e19-0bc0-4798-94f5-c3d35719a5f6/r/07d43e7a-8632-479d-ae28-c7eac6e54da4)中，GPT-4o 包含了关于阿布·巴克尔·穆罕默德·伊本·扎卡里亚·拉齐（Abū Bakr Muhammad ibn Zakariyyā al-Rāzī）在医学贡献方面的事实，这些事实并不存在于搜索结果中。这证明了它正在调用其内部知识，而不是严格使用提供的信息。
 
-This backtesting exercise revealed that while GPT-4o is generally considered a more capable model, simply upgrading to it wouldn't improve our tweet-writer. To effectively use GPT-4o, we would need to:
+这次回测练习表明，虽然 GPT-4o 通常被认为是一个能力更强的模型，但仅仅升级到它并不能改善我们的推文撰写器。要有效地使用 GPT-4o，我们需要：
 
-* Refine our prompts to more strongly emphasize using only provided information
-* Or modify our system architecture to better constrain the model's outputs
+* 改进我们的提示词，更强烈地强调仅使用提供的信息
+* 或者修改我们的系统架构，以更好地约束模型的输出
 
-This insight demonstrates the value of backtesting - it helped us identify potential issues before deployment.
+这个见解展示了回测的价值——它帮助我们在部署前识别了潜在问题。
 
 ![](/langsmith/images/tutorial-comparison-view.png)
-
-

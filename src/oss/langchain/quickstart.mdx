@@ -1,33 +1,35 @@
 ---
-title: Quickstart
+title: 快速开始
 ---
 
-This quickstart takes you from a simple setup to a fully functional AI agent in just a few minutes.
-
-## Requirements
-
-For these examples, you will need to:
-
-* [Install](/oss/langchain/install) the LangChain package
-* Set up a [Claude (Anthropic)](https://www.anthropic.com/) account and get an API key
-* Set the `ANTHROPIC_API_KEY` environment variable in your terminal
+此快速开始指南将带您在短短几分钟内，从一个简单的设置到一个功能完备的 AI 智能体（Agent）。
 
 <Tip>
-    **LangChain Docs MCP server**
+    **LangChain 文档 MCP 服务器**
 
-    If you're using an AI coding assistant, you should install the [LangChain Docs MCP server](/use-these-docs) to get the most out of it. This ensures your agent has access to the latest documentation and examples.
+    如果您正在使用 AI 编程助手或 IDE（例如 Claude Code 或 Cursor），您应该安装 [LangChain Docs MCP 服务器](/use-these-docs)，以便最大限度地发挥其功能。这可以确保您的智能体能够访问最新的 LangChain 文档和示例。
 </Tip>
 
-## Build a basic agent
+## 环境要求
 
-Start by creating a simple agent that can answer questions and call tools. The agent will use Claude Sonnet 4.5 as its language model, a basic weather function as a tool, and a simple prompt to guide its behavior.
+对于以下示例，您需要：
+
+* [安装](/oss/langchain/install) LangChain 包
+* 设置一个 [Claude (Anthropic)](https://www.anthropic.com/) 账户并获取 API 密钥
+* 在终端中设置 `ANTHROPIC_API_KEY` 环境变量
+
+尽管这些示例使用了 Claude，但您也可以通过更改代码中的模型名称并设置适当的 API 密钥，来使用 [任何受支持的模型](/oss/integrations/providers/overview)。
+
+## 构建基础智能体
+
+首先，创建一个能够回答问题和调用工具的简单智能体。该智能体将使用 Claude Sonnet 4.5 作为其语言模型，一个基础的天气函数作为工具，以及一个简单的提示词（Prompt）来指导其行为。
 
 :::python
 ```python
 from langchain.agents import create_agent
 
 def get_weather(city: str) -> str:
-    """Get weather for a given city."""
+    """获取给定城市的天气信息。"""
     return f"It's always sunny in {city}!"
 
 agent = create_agent(
@@ -36,7 +38,7 @@ agent = create_agent(
     system_prompt="You are a helpful assistant",
 )
 
-# Run the agent
+# 运行智能体
 agent.invoke(
     {"messages": [{"role": "user", "content": "what is the weather in sf"}]}
 )
@@ -52,7 +54,7 @@ const getWeather = tool(
   (input) => `It's always sunny in ${input.city}!`,
   {
     name: "get_weather",
-    description: "Get the weather for a given city",
+    description: "Get weather for a given city",
     schema: z.object({
       city: z.string().describe("The city to get the weather for"),
     }),
@@ -73,25 +75,25 @@ console.log(
 :::
 
 <Tip>
-    To learn how to trace your agent with LangSmith, see the [LangSmith documentation](/langsmith/trace-with-langchain).
+    要了解如何使用 LangSmith 追踪您的智能体，请参阅 [LangSmith 文档](/langsmith/trace-with-langchain)。
 </Tip>
 
-## Build a real-world agent
+## 构建实际应用中的智能体
 
-Next, build a practical weather forecasting agent that demonstrates key production concepts:
+接下来，我们将构建一个实用的天气预报智能体，它将演示以下关键的生产环境概念：
 
-1. **Detailed system prompts** for better agent behavior
-2. **Create tools** that integrate with external data
-3. **Model configuration** for consistent responses
-4. **Structured output** for predictable results
-5. **Conversational memory** for chat-like interactions
-6. **Create and run the agent** create a fully functional agent
+1. **详细的系统提示词**以改善智能体行为
+2. **创建工具**以集成外部数据
+3. **模型配置**以确保响应一致性
+4. **结构化输出**以获得可预测的结果
+5. **对话内存**以实现类似聊天的交互
+6. **创建和运行智能体**以构建一个功能完备的智能体
 
-Let's walk through each step:
+让我们一步步来看：
 
 <Steps>
-    <Step title="Define the system prompt">
-        The system prompt defines your agent’s role and behavior. Keep it specific and actionable:
+    <Step title="定义系统提示词">
+        系统提示词定义了智能体的角色和行为。请确保它具体且具有可操作性：
 
         :::python
         ```python wrap
@@ -119,12 +121,12 @@ Let's walk through each step:
         ```
         :::
     </Step>
-    <Step title="Create tools">
+    <Step title="创建工具">
         :::python
-        [Tools](/oss/langchain/tools) let a model interact with external systems by calling functions you define.
-        Tools can depend on [runtime context](/oss/langchain/runtime) and also interact with [agent memory](/oss/langchain/short-term-memory).
+        [工具](/oss/langchain/tools) 允许模型通过调用您定义的函数与外部系统进行交互。
+        工具可以依赖于[运行时上下文](/oss/langchain/runtime)，也可以与[智能体内存](/oss/langchain/short-term-memory)进行交互。
 
-        Notice below how the `get_user_location` tool uses runtime context:
+        请注意下面 `get_user_location` 工具如何使用运行时上下文：
 
         ```python
         from dataclasses import dataclass
@@ -148,13 +150,13 @@ Let's walk through each step:
         ```
 
         <Tip>
-            Tools should be well-documented: their name, description, and argument names become part of the model's prompt.
-            LangChain's @[`@tool` decorator][@tool] adds metadata and enables runtime injection via the `ToolRuntime` parameter.
+            工具应该有良好的文档记录：它们的名称、描述和参数名称都将成为模型提示词的一部分。
+            LangChain 的 @[`@tool 装饰器][@tool]` 添加了元数据，并通过 `ToolRuntime` 参数实现了运行时注入。
         </Tip>
         :::
 
         :::js
-        [Tools](/oss/langchain/tools) are functions your agent can call. Oftentimes tools will want to connect to external systems, and will rely on runtime configuration to do so. Notice here how the `getUserLocation` tool does exactly that:
+        [工具](/oss/langchain/tools) 是您的智能体可以调用的函数。工具通常需要连接到外部系统，并且依赖运行时配置来完成此操作。请注意，这里的 `getUserLocation` 工具就是这样做的：
 
         ```ts
         import { tool, type ToolRuntime } from "langchain";
@@ -186,11 +188,11 @@ Let's walk through each step:
         ```
 
         <Note>
-            [Zod](https://zod.dev/) is a library for validating and parsing pre-defined schemas. You can use it to define the input schema for your tools to make sure the agent only calls the tool with the correct arguments.
+            [Zod](https://zod.dev/) 是一个用于验证和解析预定义模式的库。您可以使用它来定义工具的输入模式，以确保智能体仅使用正确的参数调用该工具。
 
-            Alternatively, you can define the `schema` property as a [JSON schema](https://json-schema.org/overview/what-is-jsonschema) object. Keep in mind that JSON schemas **won't** be validated at runtime.
+            或者，您可以将 `schema` 属性定义为一个 [JSON schema](https://json-schema.org/overview/what-is-jsonschema) 对象。请记住，JSON 模式**不会**在运行时进行验证。
 
-            <Accordion title="Example: Using JSON schema for tool input">
+            <Accordion title="示例：使用 JSON schema 定义工具输入">
                 ```ts
                 const getWeather = tool(
                   ({ city }) => `It's always sunny in ${city}!`,
@@ -214,8 +216,8 @@ Let's walk through each step:
         </Note>
         :::
     </Step>
-    <Step title="Configure your model">
-        Set up your [language model](/oss/langchain/models) with the right parameters for your use case:
+    <Step title="配置模型">
+        使用适合您用例的参数设置您的[语言模型](/oss/langchain/models)：
 
         :::python
 
@@ -243,30 +245,28 @@ Let's walk through each step:
         ```
         :::
 
-        Depending on the model and provider chosen, initialization parameters may vary; refer to their reference pages for details.
+        根据所选的模型和提供商，初始化参数可能会有所不同；有关详细信息，请参阅其参考页面。
     </Step>
-    <Step title="Define response format">
+    <Step title="定义响应格式">
         :::python
-        Optionally, define a structured response format if you need the agent responses to match
-        a specific schema.
+        如果需要智能体响应匹配特定模式，可以选择定义一个结构化的响应格式。
 
         ```python
         from dataclasses import dataclass
 
-        # We use a dataclass here, but Pydantic models are also supported.
+        # 我们在这里使用一个数据类，但也支持 Pydantic 模型。
         @dataclass
         class ResponseFormat:
             """Response schema for the agent."""
-            # A punny response (always required)
+            # 双关语回复（始终需要）
             punny_response: str
-            # Any interesting information about the weather if available
+            # 如果可用，关于天气状况的任何有趣信息
             weather_conditions: str | None = None
         ```
         :::
 
         :::js
-        Optionally, define a structured response format if you need the agent responses to match
-        a specific schema.
+        如果需要智能体响应匹配特定模式，可以选择定义一个结构化的响应格式。
 
         ```ts
         const responseFormat = z.object({
@@ -276,9 +276,8 @@ Let's walk through each step:
         ```
         :::
     </Step>
-    <Step title="Add memory">
-        Add [memory](/oss/langchain/short-term-memory) to your agent to maintain state across interactions. This allows
-        the agent to remember previous conversations and context.
+    <Step title="添加内存">
+        向您的智能体添加[内存](/oss/langchain/short-term-memory)以在交互中维护状态。这使智能体能够记住先前的对话和上下文。
 
         :::python
         ```python
@@ -297,12 +296,11 @@ Let's walk through each step:
         :::
 
         <Info>
-            In production, use a persistent checkpointer that saves to a database.
-            See [Add and manage memory](/oss/langgraph/add-memory#manage-short-term-memory) for more details.
+            在生产环境中，请使用持久化的检查点机制（保存到数据库）。有关更多详细信息，请参阅[添加和管理内存](/oss/langgraph/add-memory#manage-short-term-memory)。
         </Info>
     </Step>
-    <Step title="Create and run the agent">
-        Now assemble your agent with all the components and run it!
+    <Step title="创建和运行智能体">
+        现在将所有组件组装起来并运行您的智能体！
 
         :::python
 
@@ -318,7 +316,7 @@ Let's walk through each step:
             checkpointer=checkpointer
         )
 
-        # `thread_id` is a unique identifier for a given conversation.
+        # `thread_id` 是给定对话的唯一标识符。
         config = {"configurable": {"thread_id": "1"}}
 
         response = agent.invoke(
@@ -334,7 +332,7 @@ Let's walk through each step:
         # )
 
 
-        # Note that we can continue the conversation using the same `thread_id`.
+        # 注意，我们可以使用相同的 `thread_id` 继续对话。
         response = agent.invoke(
             {"messages": [{"role": "user", "content": "thank you!"}]},
             config=config,
@@ -360,7 +358,7 @@ Let's walk through each step:
           checkpointer,
         });
 
-        // `thread_id` is a unique identifier for a given conversation.
+        // `thread_id` 是给定对话的唯一标识符。
         const config = {
           configurable: { thread_id: "1" },
           context: { user_id: "1" },
@@ -376,7 +374,7 @@ Let's walk through each step:
         //   weather_conditions: "It's always sunny in Florida!"
         // }
 
-        // Note that we can continue the conversation using the same `thread_id`.
+        // 注意，我们可以使用相同的 `thread_id` 继续对话。
         const thankYouResponse = await agent.invoke(
           { messages: [{ role: "user", content: "thank you!" }] },
           config
@@ -391,7 +389,7 @@ Let's walk through each step:
     </Step>
 </Steps>
 
-<Expandable title="Full example code">
+<Expandable title="完整示例代码">
 :::python
 ```python
 from dataclasses import dataclass
@@ -403,7 +401,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langchain.agents.structured_output import ToolStrategy
 
 
-# Define system prompt
+# 定义系统提示词
 SYSTEM_PROMPT = """You are an expert weather forecaster, who speaks in puns.
 
 You have access to two tools:
@@ -413,13 +411,13 @@ You have access to two tools:
 
 If a user asks you for the weather, make sure you know the location. If you can tell from the question that they mean wherever they are, use the get_user_location tool to find their location."""
 
-# Define context schema
+# 定义上下文模式
 @dataclass
 class Context:
     """Custom runtime context schema."""
     user_id: str
 
-# Define tools
+# 定义工具
 @tool
 def get_weather_for_location(city: str) -> str:
     """Get weather for a given city."""
@@ -431,25 +429,25 @@ def get_user_location(runtime: ToolRuntime[Context]) -> str:
     user_id = runtime.context.user_id
     return "Florida" if user_id == "1" else "SF"
 
-# Configure model
+# 配置模型
 model = init_chat_model(
     "claude-sonnet-4-5-20250929",
     temperature=0
 )
 
-# Define response format
+# 定义响应格式
 @dataclass
 class ResponseFormat:
     """Response schema for the agent."""
-    # A punny response (always required)
+    # 双关语回复（始终需要）
     punny_response: str
-    # Any interesting information about the weather if available
+    # 如果可用，关于天气状况的任何有趣信息
     weather_conditions: str | None = None
 
-# Set up memory
+# 设置内存
 checkpointer = InMemorySaver()
 
-# Create agent
+# 创建智能体
 agent = create_agent(
     model=model,
     system_prompt=SYSTEM_PROMPT,
@@ -459,8 +457,8 @@ agent = create_agent(
     checkpointer=checkpointer
 )
 
-# Run agent
-# `thread_id` is a unique identifier for a given conversation.
+# 运行智能体
+# `thread_id` 是给定对话的唯一标识符。
 config = {"configurable": {"thread_id": "1"}}
 
 response = agent.invoke(
@@ -476,7 +474,7 @@ print(response['structured_response'])
 # )
 
 
-# Note that we can continue the conversation using the same `thread_id`.
+# 注意，我们可以使用相同的 `thread_id` 继续对话。
 response = agent.invoke(
     {"messages": [{"role": "user", "content": "thank you!"}]},
     config=config,
@@ -498,7 +496,7 @@ import { createAgent, tool, initChatModel, type ToolRuntime } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
 import * as z from "zod";
 
-// Define system prompt
+// 定义系统提示词
 const systemPrompt = `You are an expert weather forecaster, who speaks in puns.
 
 You have access to two tools:
@@ -508,7 +506,7 @@ You have access to two tools:
 
 If a user asks you for the weather, make sure you know the location. If you can tell from the question that they mean wherever they are, use the get_user_location tool to find their location.`;
 
-// Define tools
+// 定义工具
 const getWeather = tool(
   ({ city }) => `It's always sunny in ${city}!`,
   {
@@ -534,22 +532,22 @@ const getUserLocation = tool(
   }
 );
 
-// Configure model
+// 配置模型
 const model = await initChatModel(
   "claude-sonnet-4-5-20250929",
   { temperature: 0 }
 );
 
-// Define response format
+// 定义响应格式
 const responseFormat = z.object({
   punny_response: z.string(),
   weather_conditions: z.string().optional(),
 });
 
-// Set up memory
+// 设置内存
 const checkpointer = new MemorySaver();
 
-// Create agent
+// 创建智能体
 const agent = createAgent({
   model,
   systemPrompt,
@@ -558,8 +556,8 @@ const agent = createAgent({
   tools: [getUserLocation, getWeather],
 });
 
-// Run agent
-// `thread_id` is a unique identifier for a given conversation.
+// 运行智能体
+// `thread_id` 是给定对话的唯一标识符。
 const config = {
   configurable: { thread_id: "1" },
   context: { user_id: "1" },
@@ -575,7 +573,7 @@ console.log(response.structuredResponse);
 //   weather_conditions: "It's always sunny in Florida!"
 // }
 
-// Note that we can continue the conversation using the same `thread_id`.
+// 注意，我们可以使用相同的 `thread_id` 继续对话。
 const thankYouResponse = await agent.invoke(
   { messages: [{ role: "user", content: "thank you!" }] },
   config
@@ -590,13 +588,13 @@ console.log(thankYouResponse.structuredResponse);
 </Expandable>
 
 <Tip>
-    To learn how to trace your agent with LangSmith, see the [LangSmith documentation](/langsmith/trace-with-langchain).
+    要了解如何使用 LangSmith 追踪您的智能体，请参阅 [LangSmith 文档](/langsmith/trace-with-langchain)。
 </Tip>
 
-Congratulations! You now have an AI agent that can:
+恭喜！您现在有了一个能够执行以下操作的 AI 智能体：
 
-- **Understand context** and remember conversations
-- **Use multiple tools** intelligently
-- **Provide structured responses** in a consistent format
-- **Handle user-specific information** through context
-- **Maintain conversation state** across interactions
+- **理解上下文**并记住对话
+- **智能地使用多个工具**
+- **提供结构化的响应**并保持格式一致
+- **通过上下文处理用户特定信息**
+- **在交互中保持对话状态**

@@ -1,41 +1,43 @@
+```markdown
 ---
 title: ChatTencentHunyuan
+description: LangChain.js 对腾讯混元模型系列的支持
 ---
 
-LangChain.js supports the Tencent Hunyuan family of models.
+LangChain.js 支持腾讯混元（Tencent Hunyuan）模型系列。
 
 https://cloud.tencent.com/document/product/1729/104753
 
-## Setup
+## 设置 (Setup)
 
-1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
-2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
-3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+1. 在 [此处](https://cloud.tencent.com/register) 注册一个腾讯云（Tencent Cloud）账户。
+2. 在 [此处](https://console.cloud.tencent.com/cam/capi) 创建您的 SecretID 和 SecretKey。
+3. 将 SecretID 和 SecretKey 分别设置为名为 `TENCENT_SECRET_ID` 和 `TENCENT_SECRET_KEY` 的环境变量。
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
 npm install @langchain/community @langchain/core
 ```
-If you are using LangChain.js in a browser environment, you'll also need to install the following dependencies:
+如果您在浏览器环境中使用 LangChain.js，则还需要安装以下依赖项：
 
 ```bash npm
 npm install crypto-js
 ```
 
-And then make sure that you import from the `web` as shown below.
+然后确保您像下面所示那样从 `web` 导入：
 
-## Usage
+## 用法 (Usage)
 
-Here's an example:
+这是一个示例：
 
 ```typescript
-// in nodejs environment
+// 在 Node.js 环境中
 import { ChatTencentHunyuan } from "@langchain/community/chat_models/tencent_hunyuan";
 
-// in browser environment
+// 在浏览器环境中
 // import { ChatTencentHunyuan } from "@langchain/community/chat_models/tencent_hunyuan/web";
 
 import { HumanMessage } from "@langchain/core/messages";
@@ -43,7 +45,7 @@ import type { LLMResult } from "@langchain/core/outputs";
 
 const messages = [new HumanMessage("Hello")];
 
-// Default model is hunyuan-pro
+// 默认模型是 hunyuan-pro
 const hunyuanPro = new ChatTencentHunyuan({
   streaming: false,
   temperature: 1,
@@ -64,7 +66,7 @@ AIMessage {
 }
 */
 
-// Use hunyuan-lite
+// 使用 hunyuan-lite
 const hunyuanLite = new ChatTencentHunyuan({
   model: "hunyuan-lite",
   streaming: false,
@@ -85,7 +87,7 @@ AIMessage {
 }
 */
 
-// Use hunyuan-lite with streaming
+// 使用 hunyuan-lite 并开启流式传输 (streaming)
 const hunyuanLiteStream = new ChatTencentHunyuan({
   model: "hunyuan-lite",
   streaming: true,
@@ -145,7 +147,8 @@ hunyuanLiteStream.invoke(messages, {
 });
 ```
 
-## Related
+## 相关资源 (Related)
 
-- Chat model [conceptual guide](/oss/langchain/models)
-- Chat model [how-to guides](/oss/langchain/models)
+- Chat 模型[概念指南](/oss/langchain/models)
+- Chat 模型[操作指南](/oss/langchain/models)
+```

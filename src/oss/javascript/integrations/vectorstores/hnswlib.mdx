@@ -3,26 +3,26 @@ title: HNSWLib
 ---
 
 <Tip>
-**Compatibility**: Only available on Node.js.
+**兼容性**: 仅在 Node.js 上可用。
 </Tip>
 
-HNSWLib is an in-memory vector store that can be saved to a file. It uses the [HNSWLib library](https://github.com/nmslib/hnswlib).
+HNSWLib 是一个内存中的向量存储，可以保存到文件中。它使用了 [HNSWLib 库](https://github.com/nmslib/hnswlib)。
 
-This guide provides a quick overview for getting started with HNSWLib [vector stores](/oss/integrations/vectorstores). For detailed documentation of all `HNSWLib` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html).
+本指南提供了使用 HNSWLib [向量存储](/oss/integrations/vectorstores)的快速入门概述。要了解 `HNSWLib` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | PY support |  Version |
+| 类 | 包 | PY 支持 | 版本 |
 | :--- | :--- | :---: | :---: |
-| [`HNSWLib`](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html) | [`@langchain/community`](https://npmjs.com/@langchain/community) | ❌ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+| [`HNSWLib`](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html) | [`@langchain/community`](https://npmjs.com/@langchain/community) | ❌ | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## Setup
+## 设置
 
-To use HNSWLib vector stores, you'll need to install the `@langchain/community` integration package with the [`hnswlib-node`](https://www.npmjs.com/package/hnswlib-node) package as a peer dependency.
+要使用 HNSWLib 向量存储，您需要安装 `@langchain/community` 集成包，并同时安装 [`hnswlib-node`](https://www.npmjs.com/package/hnswlib-node) 作为对等依赖项（peer dependency）。
 
-This guide will also use [OpenAI embeddings](/oss/integrations/text_embedding/openai), which require you to install the `@langchain/openai` integration package. You can also use [other supported embeddings models](/oss/integrations/text_embedding) if you wish.
+本指南还将使用 [OpenAI 嵌入模型](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果需要，您也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -38,28 +38,28 @@ pnpm add @langchain/community hnswlib-node @langchain/openai @langchain/core
 
 
 <Warning>
-**On Windows**, you might need to install [Visual Studio](https://visualstudio.microsoft.com/downloads/) first in order to properly build the `hnswlib-node` package.**
+**在 Windows 系统上**，您可能首先需要安装 [Visual Studio](https://visualstudio.microsoft.com/downloads/) 才能正确编译 `hnswlib-node` 包。
 </Warning>
 
 
-### Credentials
+### 凭证
 
-Because HNSWLib runs locally, you do not need any credentials to use it.
+由于 HNSWLib 是在本地运行的，因此您不需要任何凭证即可使用它。
 
-If you are using OpenAI embeddings for this guide, you'll need to set your OpenAI key as well:
+如果您在本指南中使用了 OpenAI 嵌入模型，则还需要设置您的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+如果您想获取模型调用的自动化追踪，您也可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
 // process.env.LANGSMITH_API_KEY="your-api-key"
 ```
 
-## Instantiation
+## 实例化
 
 ```typescript
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
@@ -72,30 +72,30 @@ const embeddings = new OpenAIEmbeddings({
 const vectorStore = await HNSWLib.fromDocuments([], embeddings);
 ```
 
-## Manage vector store
+## 管理向量存储
 
-### Add items to vector store
+### 向向量存储添加条目
 
 ```typescript
 import type { Document } from "@langchain/core/documents";
 
 const document1: Document = {
-  pageContent: "The powerhouse of the cell is the mitochondria",
+  pageContent: "The powerhouse of the cell is the mitochondria", // 细胞的能量中心是线粒体
   metadata: { source: "https://example.com" }
 };
 
 const document2: Document = {
-  pageContent: "Buildings are made out of brick",
+  pageContent: "Buildings are made out of brick", // 建筑物由砖块构成
   metadata: { source: "https://example.com" }
 };
 
 const document3: Document = {
-  pageContent: "Mitochondria are made out of lipids",
+  pageContent: "Mitochondria are made out of lipids", // 线粒体由脂质构成
   metadata: { source: "https://example.com" }
 };
 
 const document4: Document = {
-  pageContent: "The 2024 Olympics are in Paris",
+  pageContent: "The 2024 Olympics are in Paris", // 2024 年奥运会在巴黎举行
   metadata: { source: "https://example.com" }
 }
 
@@ -104,15 +104,15 @@ const documents = [document1, document2, document3, document4];
 await vectorStore.addDocuments(documents);
 ```
 
-Deletion and ids for individual documents are not currently supported.
+目前不支持删除单个文档或其 ID。
 
-## Query vector store
+## 查询向量存储
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+一旦您的向量存储被创建并且相关的文档已被添加，您很可能希望在链或代理运行时对其进行查询。
 
-### Query directly
+### 直接查询
 
-Performing a simple similarity search can be done as follows:
+可以通过以下方式执行简单的相似性搜索：
 
 ```typescript
 const filter = (doc) => doc.metadata.source === "https://example.com";
@@ -129,9 +129,9 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-The filter is optional, and must be a predicate function that takes a document as input, and returns `true` or `false` depending on whether the document should be returned.
+过滤器是可选的，它必须是一个接受文档作为输入并根据文档是否应被返回而返回 `true` 或 `false` 的谓词函数。
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似性搜索并接收相应的分数，可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -146,13 +146,13 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.852] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### Query by turning into retriever
+### 通过转换为检索器查询
 
-You can also transform the vector store into a [retriever](/oss/langchain/retrieval) for easier usage in your chains.
+您也可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
-  // Optional filter
+  // 可选的过滤器
   filter: filter,
   k: 2,
 });
@@ -172,36 +172,36 @@ await retriever.invoke("biology");
 ]
 ```
 
-### Usage for retrieval-augmented generation
+### 用于检索增强生成（RAG）的用法
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成（RAG）的指南，请参阅以下部分：
 
-- [Build a RAG app with LangChain](/oss/langchain/rag).
+- [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
 - [Agentic RAG](/oss/langgraph/agentic-rag)
-- [Retrieval docs](/oss/langchain/retrieval)
+- [检索文档](/oss/langchain/retrieval)
 
-## Save to/load from file
+## 保存到/从文件加载
 
-HNSWLib supports saving your index to a file, then reloading it at a later date:
+HNSWLib 支持将索引保存到文件，然后在以后重新加载：
 
 ```typescript
-// Save the vector store to a directory
+// 将向量存储保存到目录
 const directory = "your/directory/here";
 await vectorStore.save(directory);
 
-// Load the vector store from the same directory
+// 从同一目录加载向量存储
 const loadedVectorStore = await HNSWLib.load(directory, new OpenAIEmbeddings());
 
-// vectorStore and loadedVectorStore are identical
+// vectorStore 和 loadedVectorStore 是相同的
 await loadedVectorStore.similaritySearch("hello world", 1);
 ```
 
-### Delete a saved index
+### 删除已保存的索引
 
-You can use the `.delete` method to clear an index saved to a given directory:
+您可以使用 `.delete` 方法清除保存到给定目录的索引：
 
 ```typescript
-// Load the vector store from the same directory
+// 从同一目录加载向量存储
 const savedVectorStore = await HNSWLib.load(directory, new OpenAIEmbeddings());
 
 await savedVectorStore.delete({ directory });
@@ -209,6 +209,6 @@ await savedVectorStore.delete({ directory });
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `HNSWLib` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html).
+要了解 `HNSWLib` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html)。

@@ -2,39 +2,39 @@
 title: ChatCloudflareWorkersAI
 ---
 
-[Workers AI](https://developers.cloudflare.com/workers-ai/) allows you to run machine learning models, on the Cloudflare network, from your own code.
+[Workers AI](https://developers.cloudflare.com/workers-ai/) 允许您在 Cloudflare 网络上，通过您自己的代码运行机器学习模型。
 
-This will help you getting started with Cloudflare Workers AI [chat models](/oss/langchain/models). For detailed documentation of all `ChatCloudflareWorkersAI` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_cloudflare.ChatCloudflareWorkersAI.html).
+这将帮助您快速上手 Cloudflare Workers AI [聊天模型](/oss/langchain/models)。有关 `ChatCloudflareWorkersAI` 所有特性和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_cloudflare.ChatCloudflareWorkersAI.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | PY support | Downloads | Version |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | Python 支持 (PY support) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | [`ChatCloudflareWorkersAI`](https://api.js.langchain.com/classes/langchain_cloudflare.ChatCloudflareWorkersAI.html) | [`@langchain/cloudflare`](https://npmjs.com/@langchain/cloudflare) | ❌ | ✅ | ❌ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/cloudflare?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/cloudflare?style=flat-square&label=%20&) |
 
-### Model features
+### 模型特性
 
-See the links in the table headers below for guides on how to use specific features.
+请参阅下方表格标题中的链接，了解如何使用特定功能的指南。
 
-| [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output) | JSON mode | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
-| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 
-## Setup
+## 设置
 
-To access Cloudflare Workers AI models you'll need to create a Cloudflare account, get an API key, and install the `@langchain/cloudflare` integration package.
+要访问 Cloudflare Workers AI 模型，您需要创建一个 Cloudflare 账户，获取一个 API 密钥，并安装 `@langchain/cloudflare` 集成包。
 
-### Credentials
+### 凭证 (Credentials)
 
-Head [to this page](https://developers.cloudflare.com/workers-ai/) to sign up to Cloudflare and generate an API key. Once you've done this, note your `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
+请访问 [此页面](https://developers.cloudflare.com/workers-ai/) 注册 Cloudflare 并生成 API 密钥。完成此步骤后，记下您的 `CLOUDFLARE_ACCOUNT_ID` 和 `CLOUDFLARE_API_TOKEN`。
 
-Passing a binding within a Cloudflare Worker is not yet supported.
+目前暂不支持在 Cloudflare Worker 中传递绑定 (binding)。
 
-### Installation
+### 安装
 
-The LangChain ChatCloudflareWorkersAI integration lives in the `@langchain/cloudflare` package:
+LangChain 的 ChatCloudflareWorkersAI 集成位于 `@langchain/cloudflare` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -48,9 +48,9 @@ pnpm add @langchain/cloudflare @langchain/core
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```typescript
 // @lc-docs-hide-cell
@@ -65,15 +65,15 @@ const CLOUDFLARE_API_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN");
 import { ChatCloudflareWorkersAI } from "@langchain/cloudflare";
 
 const llm = new ChatCloudflareWorkersAI({
-  model: "@cf/meta/llama-2-7b-chat-int8", // Default value
+  model: "@cf/meta/llama-2-7b-chat-int8", // 默认值
   cloudflareAccountId: CLOUDFLARE_ACCOUNT_ID,
   cloudflareApiToken: CLOUDFLARE_API_TOKEN,
-  // Pass a custom base URL to use Cloudflare AI Gateway
+  // 传递自定义的基础 URL 以使用 Cloudflare AI Gateway
   // baseUrl: `https://gateway.ai.cloudflare.com/v1/{YOUR_ACCOUNT_ID}/{GATEWAY_NAME}/workers-ai/`,
 });
 ```
 
-## Invocation
+## 调用 (Invocation)
 
 ```typescript
 const aiMsg = await llm.invoke([
@@ -122,6 +122,6 @@ I can help with that! The translation of "I love programming" in French is:
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all `ChatCloudflareWorkersAI` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_cloudflare.ChatCloudflareWorkersAI.html).
+有关 `ChatCloudflareWorkersAI` 所有特性和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_cloudflare.ChatCloudflareWorkersAI.html)。

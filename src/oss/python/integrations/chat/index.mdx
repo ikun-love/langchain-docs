@@ -1,18 +1,18 @@
 ---
-title: "Chat models"
+title: "聊天模型"
 mode: wide
 ---
 
-[Chat models](/oss/langchain/models) are language models that use a sequence of [messages](/oss/langchain/messages) as inputs and return messages as outputs <Tooltip tip="Older models that do not follow the chat model interface and instead use an interface that takes a string as input and returns a string as output. These models typically do not include the prefix 'Chat' in their name or include 'LLM' as a suffix.">(as opposed to traditional, plaintext LLMs)</Tooltip>.
+[聊天模型](/oss/langchain/models) 使用一系列 [消息](/oss/langchain/messages) 作为输入，并返回消息作为输出（与传统纯文本 LLM 相对应）。<Tooltip tip="不遵循聊天模型接口的旧模型，它们使用接收字符串输入并返回字符串输出的接口。这些模型通常在其名称中不包含前缀 'Chat'，或以 'LLM' 作为后缀。">（与传统纯文本 LLM 相对应）</Tooltip>
 
-## Featured models
+## 精选模型
 
 <Info>
-    **While these LangChain classes support the indicated advanced feature**, you may need to refer to provider-specific documentation to learn which hosted models or backends support the feature.
+    **尽管这些 LangChain 类支持指示的高级功能**，但您可能需要查阅特定供应商的文档，以了解哪些托管模型或后端支持该功能。
 </Info>
 
-| Model | [Tool calling](/oss/langchain/tools) | [Structured output](/oss/langchain/structured-output/) | JSON mode | Local | [Multimodal](/oss/langchain/messages#multimodal) |
-|-|-|-|-|-|-|
+| 模型 | [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output/) | JSON 模式 | 本地部署 | [多模态](/oss/langchain/messages#multimodal) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
 | [`ChatAnthropic`](/oss/integrations/chat/anthropic) | ✅ | ✅ | ✅ | ❌ | ✅ |
 | [`ChatOpenAI`](/oss/integrations/chat/openai) | ✅ | ✅ | ✅ | ❌ | ✅ |
 | [`AzureChatOpenAI`](/oss/integrations/chat/azure_chat_openai) | ✅ | ✅ | ✅ | ❌ | ✅ |
@@ -34,31 +34,31 @@ mode: wide
 | [`ChatDatabricks`](/oss/integrations/chat/databricks) | ✅ | ✅ | ❌ | ❌ | ❌ |
 | [`ChatPerplexity`](/oss/integrations/chat/perplexity) | ❌ | ✅ | ✅ | ❌ | ✅ |
 
-## Chat Completions API
+## 聊天补全 API (Chat Completions API)
 
-Certain model providers offer endpoints that are compatible with OpenAI's (legacy) [Chat Completions API](https://platform.openai.com/docs/guides/completions). In such case, you can use [`ChatOpenAI`](/oss/integrations/chat/openai) with a custom `base_url` to connect to these endpoints. Note that features built on top of the Chat Completions API may not be fully supported by `ChatOpenAI`; in such cases, consider using a provider-specific class if available (e.g. [`ChatLiteLLM`](https://github.com/Akshay-Dongare/langchain-litellm/) (community-maintained) for [LiteLLM](https://litellm.ai/)).
+某些模型提供商提供与 OpenAI 的（旧版）[Chat Completions API](https://platform.openai.com/docs/guides/completions) 兼容的端点。在这种情况下，您可以使用带有自定义 `base_url` 的 [`ChatOpenAI`](/oss/integrations/chat/openai) 来连接这些端点。请注意，构建在 Chat Completions API 之上的功能可能不会被 `ChatOpenAI` 完全支持；在这种情况下，请考虑使用特定于供应商的类（例如 [LiteLLM](https://litellm.ai/) 的 [`ChatLiteLLM`](https://github.com/Akshay-Dongare/langchain-litellm/)（社区维护））。
 
-<Accordion title="Example: OpenRouter">
-    To use OpenRouter, you will need to sign up for an account and obtain an [API key](https://openrouter.ai/docs/api-reference/authentication).
+<Accordion title="示例：OpenRouter">
+    要使用 OpenRouter，您需要注册一个账户并获取 [API 密钥](https://openrouter.ai/docs/api-reference/authentication)。
 
     ```python
     from langchain_openai import ChatOpenAI
 
     model = ChatOpenAI(
-        model="...",  # Specify a model available on OpenRouter
+        model="...",  # 在 OpenRouter 上指定一个可用模型
         api_key="OPENROUTER_API_KEY",
         base_url="https://openrouter.ai/api/v1",
     )
     ```
 
-    Refer to the [OpenRouter documentation](https://openrouter.ai/docs/quickstart) for more details.
+    有关更多详细信息，请参阅 [OpenRouter 文档](https://openrouter.ai/docs/quickstart)。
 
     <Note>
-        To capture [reasoning tokens](https://openrouter.ai/docs/use-cases/reasoning-tokens),
+        要捕获 [推理令牌](https://openrouter.ai/docs/use-cases/reasoning-tokens)，
 
-        1. Switch imports from `langchain_openai` to `langchain_deepseek`
-        2. Use `ChatDeepSeek` instead of `ChatOpenAI`. You will need to change param `base_url` to `api_base`.
-        3. Adjust reasoning parameters as needed under `extra_body`, e.g.:
+        1. 将导入从 `langchain_openai` 更改为 `langchain_deepseek`
+        2. 使用 `ChatDeepSeek` 而不是 `ChatOpenAI`。您需要将参数 `base_url` 更改为 `api_base`。
+        3. 根据需要在 `extra_body` 下调整推理参数，例如：
 
         ```python
         model = ChatDeepSeek(
@@ -69,11 +69,11 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
         )
         ```
 
-        This is a known limitation with `ChatOpenAI` and will be addressed in a future release.
+        这是 `ChatOpenAI` 的一个已知限制，将在未来的版本中解决。
     </Note>
 </Accordion>
 
-## All chat models
+## 所有聊天模型
 
 <Columns cols={3}>
 <Card
@@ -81,14 +81,14 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/abso"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 <Card
     title="AI21 Labs"
     icon="link"
     href="/oss/integrations/chat/ai21"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -96,7 +96,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/aimlapi"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -104,7 +104,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/alibaba_cloud_pai_eas"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -112,7 +112,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/amazon_nova"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -120,7 +120,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/anthropic"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -128,7 +128,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/azure_ai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -136,7 +136,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/azure_chat_openai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -144,23 +144,23 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/azureml_chat_endpoint"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Baichuan Chat"
+    title="百川聊天 (Baichuan Chat)"
     icon="link"
     href="/oss/integrations/chat/baichuan"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Baidu Qianfan"
+    title="百度千帆 (Baidu Qianfan)"
     icon="link"
     href="/oss/integrations/chat/baidu_qianfan_endpoint"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -168,7 +168,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/baseten"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -176,7 +176,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/bedrock"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -184,7 +184,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/cerebras"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -192,7 +192,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/cloudflare_workersai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -200,7 +200,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/cohere"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -208,15 +208,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/contextual"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Coze Chat"
+    title="Coze 聊天"
     icon="link"
     href="/oss/integrations/chat/coze"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -224,7 +224,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/dappier"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -232,7 +232,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/databricks"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -240,7 +240,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/deepinfra"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -248,7 +248,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/deepseek"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -256,7 +256,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/edenai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -264,7 +264,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/everlyai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -272,7 +272,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/featherless_ai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -280,7 +280,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/fireworks"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -288,7 +288,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/friendli"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -296,7 +296,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/google_generative_ai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -304,7 +304,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/google_vertex_ai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -312,7 +312,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/gpt_router"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -320,7 +320,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/gradientai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -328,7 +328,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/greennode"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -336,7 +336,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/groq"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -344,7 +344,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/huggingface"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -352,7 +352,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/ibm_watsonx"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -360,7 +360,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/jinachat"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -368,7 +368,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/kinetica"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -376,7 +376,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/konko"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -384,15 +384,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/litellm"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Llama 2 Chat"
+    title="Llama 2 聊天"
     icon="link"
     href="/oss/integrations/chat/llama2_chat"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -400,7 +400,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/llama_api"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -408,7 +408,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/llama_edge"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -416,7 +416,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/llamacpp"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -424,7 +424,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/maritalk"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -432,7 +432,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/minimax"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -440,7 +440,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/mistralai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -448,7 +448,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/mlx"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -456,7 +456,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/modelscope_chat_endpoint"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -464,7 +464,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/moonshot"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -472,7 +472,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/naver"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -480,7 +480,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/nebius"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -488,7 +488,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/netmind"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -496,7 +496,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/nvidia_ai_endpoints"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -504,7 +504,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/oci_data_science"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -512,7 +512,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/oci_generative_ai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -520,7 +520,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/octoai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -528,7 +528,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/ollama"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -536,7 +536,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/openai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -544,7 +544,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/outlines"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -552,7 +552,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/perplexity"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -560,7 +560,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/pipeshift"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -568,7 +568,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/predictionguard"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -576,7 +576,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/premai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -584,7 +584,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/promptlayer_chatopenai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -592,7 +592,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/qwq"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -600,7 +600,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/qwen"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -608,15 +608,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/reka"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="RunPod Chat Model"
+    title="RunPod 聊天模型"
     icon="link"
     href="/oss/integrations/chat/runpod"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -624,7 +624,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/sambanova"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -632,7 +632,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/seekrflow"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -640,15 +640,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/snowflake"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="SparkLLM Chat"
+    title="SparkLLM 聊天"
     icon="link"
     href="/oss/integrations/chat/sparkllm"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -656,15 +656,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/symblai_nebula"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Tencent Hunyuan"
+    title="腾讯混元 (Tencent Hunyuan)"
     icon="link"
     href="/oss/integrations/chat/tencent_hunyuan"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -672,15 +672,15 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/together"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Tongyi Qwen"
+    title="通义千问 (Tongyi Qwen)"
     icon="link"
     href="/oss/integrations/chat/tongyi"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -688,23 +688,23 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/upstage"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="vLLM Chat"
+    title="vLLM 聊天"
     icon="link"
     href="/oss/integrations/chat/vllm"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="Volc Engine Maas"
+    title="火山引擎 Maas"
     icon="link"
     href="/oss/integrations/chat/volcengine_maas"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -712,7 +712,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/writer"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -720,7 +720,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/xai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -728,7 +728,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/xinference"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -736,7 +736,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/yandex"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -744,7 +744,7 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/yi"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
@@ -752,19 +752,19 @@ Certain model providers offer endpoints that are compatible with OpenAI's (legac
     icon="link"
     href="/oss/integrations/chat/yuan2"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 <Card
-    title="ZHIPU AI"
+    title="智谱 AI (ZHIPU AI)"
     icon="link"
     href="/oss/integrations/chat/zhipuai"
     arrow="true"
-    cta="View guide"
+    cta="查看指南"
 />
 
 </Columns>
 
 <Info>
-    If you'd like to contribute an integration, see [Contributing integrations](/oss/contributing#add-a-new-integration).
+    如果您想贡献集成，请参阅 [贡献集成](/oss/contributing#add-a-new-integration)。
 </Info>

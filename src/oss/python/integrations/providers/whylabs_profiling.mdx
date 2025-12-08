@@ -2,28 +2,28 @@
 title: WhyLabs
 ---
 
->[WhyLabs](https://docs.whylabs.ai/docs/) is an observability platform designed to monitor data pipelines and ML applications for data quality regressions, data drift, and model performance degradation. Built on top of an open-source package called `whylogs`, the platform enables Data Scientists and Engineers to:
+>[WhyLabs](https://docs.whylabs.ai/docs/) 是一个可观测性平台，旨在监控数据管道和机器学习应用中出现的数据质量回归、数据漂移和模型性能下降等问题。该平台基于一个名为 `whylogs` 的开源包构建，使数据科学家和工程师能够：
 >
->- Set up in minutes: Begin generating statistical profiles of any dataset using whylogs, the lightweight open-source library.
->- Upload dataset profiles to the WhyLabs platform for centralized and customizable monitoring/alerting of dataset features as well as model inputs, outputs, and performance.
->- Integrate seamlessly: interoperable with any data pipeline, ML infrastructure, or framework. Generate real-time insights into your existing data flow. See more about our integrations here.
->- Scale to terabytes: handle your large-scale data, keeping compute requirements low. Integrate with either batch or streaming data pipelines.
->- Maintain data privacy: WhyLabs relies statistical profiles created via whylogs so your actual data never leaves your environment!
-Enable observability to detect inputs and LLM issues faster, deliver continuous improvements, and avoid costly incidents.
+>- 几分钟内即可开始：使用轻量级的开源库 `whylogs` 为任何数据集生成统计分布信息（Profile）。
+>- 将数据集分布信息上传到 WhyLabs 平台：对数据集特征以及模型的输入、输出和性能进行集中化和可定制的监控/告警。
+>- 无缝集成：可与任何数据管道、ML 基础设施或框架互操作。实时了解您现有数据流中的信息。点击此处了解更多关于我们的集成信息。
+>- 扩展至 TB 级别：处理您的大规模数据，同时保持较低的计算资源需求。可与批量或流式数据管道集成。
+>- 维护数据隐私：WhyLabs 依赖于通过 `whylogs` 创建的统计分布信息，因此您的实际数据永远不会离开您的环境！
+实现可观测性，以便更快地检测输入和 LLM 问题，交付持续改进，并避免代价高昂的事件。
 
-## Installation and Setup
+## 安装和设置
 
 ```python
 pip install -qU  langkit langchain-openai langchain
 ```
 
-Make sure to set the required API keys and config required to send telemetry to WhyLabs:
+请确保设置所需的 API 密钥和配置，以便向 WhyLabs 发送遥测数据：
 
-- WhyLabs API Key: [whylabs.ai/whylabs-free-sign-up](https://whylabs.ai/whylabs-free-sign-up)
-- Org and Dataset [https://docs.whylabs.ai/docs/whylabs-onboarding](https://docs.whylabs.ai/docs/whylabs-onboarding#upload-a-profile-to-a-whylabs-project)
-- OpenAI: [platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
+- WhyLabs API 密钥：[whylabs.ai/whylabs-free-sign-up](https://whylabs.ai/whylabs-free-sign-up)
+- 组织和数据集 [https://docs.whylabs.ai/docs/whylabs-onboarding](https://docs.whylabs.ai/docs/whylabs-onboarding#upload-a-profile-to-a-whylabs-project)
+- OpenAI：[platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
 
-Then you can set them like this:
+然后您可以这样设置它们：
 
 ```python
 import os
@@ -34,11 +34,11 @@ os.environ["WHYLABS_DEFAULT_DATASET_ID"] = ""
 os.environ["WHYLABS_API_KEY"] = ""
 ```
 
-> *Note*: the callback supports directly passing in these variables to the callback, when no auth is directly passed in it will default to the environment. Passing in auth directly allows for writing profiles to multiple projects or organizations in WhyLabs.
+> *注意*：当未直接传入任何身份验证信息时，回调（callback）会默认使用环境变量中设置的这些变量。直接传入身份验证信息允许我们将分布信息写入 WhyLabs 中的多个项目或组织。
 
-## Callbacks
+## 回调（Callbacks）
 
-Here's a single LLM integration with OpenAI, which will log various out of the box metrics and send telemetry to WhyLabs for monitoring.
+这是一个与 OpenAI 的单次 LLM 集成示例，它将记录各种开箱即用的指标并将遥测数据发送到 WhyLabs 进行监控。
 
 ```python
 from langchain_community.callbacks import WhyLabsCallbackHandler
@@ -67,7 +67,7 @@ result = llm.generate(
     ]
 )
 print(result)
-# you don't need to call close to write profiles to WhyLabs, upload will occur periodically, but to demo let's not wait.
+# 您不需要调用 close 来将分布信息写入 WhyLabs，上传会定期发生，但为了演示，我们不等待。
 whylabs.close()
 ```
 

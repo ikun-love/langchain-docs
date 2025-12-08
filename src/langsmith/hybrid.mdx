@@ -1,103 +1,103 @@
 ---
-title: Hybrid
-sidebarTitle: Overview
+title: 混合部署
+sidebarTitle: 概览
 ---
 
 <Info>
-**Important**
-The hybrid option requires an [Enterprise](https://langchain.com/pricing) plan.
+**重要提示**
+混合部署模式需要 [企业版](https://langchain.com/pricing) 计划。
 </Info>
 
-The **hybrid** model splits LangSmith infrastructure between LangChain's cloud and yours:
+**混合**部署将 LangSmith 基础设施分割到 LangChain 的云环境和您自己的云环境中：
 
-- **Control plane** (LangSmith UI, APIs, and orchestration) runs in LangChain's cloud, managed by LangChain.
-- **Data plane** (your <Tooltip tip="The server that runs your applications.">Agent Servers</Tooltip> and agent workloads) runs in your cloud, managed by you.
+- **控制平面**（Control plane，即 LangSmith UI、API 和编排服务）在 LangChain 的云中运行，由 LangChain 管理。
+- **数据平面**（Data plane，即您的 <Tooltip tip="运行您的应用程序的服务器">Agent Servers</Tooltip> 和代理工作负载）在您的云中运行，由您自己管理。
 
-This combines the convenience of a managed interface with the flexibility of running workloads in your own environment.
-
-<Note>
-Learn more about the [control plane](/langsmith/control-plane), [data plane](/langsmith/data-plane), and [Agent Server](/langsmith/agent-server) architecture concepts.
-</Note>
-
-| Component      | Responsibilities | Where it runs | Who manages it |
-|----------------|------------------|---------------|----------------|
-| <Tooltip tip="The LangSmith UI and APIs for managing deployments.">Control plane</Tooltip> | <ul><li>UI for creating deployments and revisions</li><li>APIs for managing deployments</li><li>Observability data storage</li></ul> | LangChain's cloud | LangChain |
-| <Tooltip tip="The runtime environment where your Agent Servers and agents execute.">Data plane</Tooltip> | <ul><li>Operator/listener to reconcile deployments</li><li>Agent Servers (agents/graphs)</li><li>Backing services (Postgres, Redis, etc.)</li></ul> | Your cloud | You |
-
-When running LangSmith in a hybrid model, you authenticate with a [LangSmith API key](/langsmith/create-account-api-key).
-
-### Workflow
-
-1. Use the `langgraph-cli` or [Studio](/langsmith/studio) to test your graph locally.
-1. Build a Docker image using the `langgraph build` command.
-1. Deploy your Agent Server from the [control plane UI](/langsmith/control-plane#control-plane-ui).
+这结合了托管界面的便利性与在您自己的环境中运行工作负载的灵活性。
 
 <Note>
-Supported Compute Platforms: [Kubernetes](https://kubernetes.io/).<br></br>
-For setup, refer to the [Hybrid setup guide](/langsmith/deploy-hybrid).
+了解更多关于 [控制平面](/langsmith/control-plane)、[数据平面](/langsmith/data-plane) 和 [Agent Server](/langsmith/agent-server) 架构概念的信息。
 </Note>
 
-### Architecture
+| 组件 | 职责 | 运行位置 | 管理方 |
+|---|---|---|---|
+| <Tooltip tip="用于管理部署的 LangSmith UI 和 API">控制平面</Tooltip> | <ul><li>用于创建部署和版本的 UI</li><li>用于管理部署的 API</li><li>可观测性数据存储</li></ul> | LangChain 的云 | LangChain |
+| <Tooltip tip="Agent Servers 和代理执行的运行时环境">数据平面</Tooltip> | <ul><li>用于协调部署的 Operator/监听器</li><li>Agent Servers（代理/图）</li><li>后端服务（如 Postgres、Redis 等）</li></ul> | 您的云 | 您 |
+
+当以混合模式运行 LangSmith 时，您需要使用 [LangSmith API 密钥](/langsmith/create-account-api-key) 进行身份验证。
+
+### 工作流程
+
+1. 使用 `langgraph-cli` 或 [Studio](/langsmith/studio) 在本地测试您的图（graph）。
+1. 使用 `langgraph build` 命令构建 Docker 镜像。
+1. 从 [控制平面 UI](/langsmith/control-plane#control-plane-ui) 部署您的 Agent Server。
+
+<Note>
+支持的计算平台：[Kubernetes](https://kubernetes.io/)。<br></br>
+关于设置，请参阅 [混合部署设置指南](/langsmith/deploy-hybrid)。
+</Note>
+
+### 架构
 
 <img
     className="block dark:hidden"
     src="/langsmith/images/hybrid-with-deployment-light.png"
-    alt="Hybrid deployment: LangChain-hosted control plane (LangSmith UI/APIs) manages deployments. Your cloud runs a listener, Agent Server instances, and backing stores (Postgres/Redis) on Kubernetes."
+    alt="混合部署：LangChain 托管的控制平面（LangSmith UI/API）管理部署。您的云在 Kubernetes 上运行一个监听器、Agent Server 实例和后端存储（Postgres/Redis）。"
 />
 
 <img
     className="hidden dark:block"
     src="/langsmith/images/hybrid-with-deployment-dark.png"
-    alt="Hybrid deployment: LangChain-hosted control plane (LangSmith UI/APIs) manages deployments. Your cloud runs a listener, Agent Server instances, and backing stores (Postgres/Redis) on Kubernetes."
+    alt="混合部署：LangChain 托管的控制平面（LangSmith UI/API）管理部署。您的云在 Kubernetes 上运行一个监听器、Agent Server 实例和后端存储（Postgres/Redis）。"
 />
 
-### Compute Platforms
+### 计算平台
 
-- **Kubernetes**: Hybrid supports running the data plane on any Kubernetes cluster.
+- **Kubernetes**: 混合模式支持在任何 Kubernetes 集群上运行数据平面。
 
 <Tip>
-For setup in Kubernetes, refer to the [Hybrid setup guide](/langsmith/deploy-hybrid)
+有关在 Kubernetes 中的设置，请参阅 [混合部署设置指南](/langsmith/deploy-hybrid)
 </Tip>
 
-### Egress to LangSmith and the control plane
+### 到 LangSmith 和控制平面的出站通信 (Egress)
 
-In the hybrid deployment model, your self-hosted data plane will send network requests to the control plane to poll for changes that need to be implemented in the data plane. Traces from data plane deployments also get sent to the LangSmith instance integrated with the control plane. This traffic to the control plane is encrypted, over HTTPS. The data plane authenticates with the control plane with a LangSmith API key.
+在混合部署模型中，您自托管的数据平面将向控制平面发送网络请求，以轮询需要在数据平面中实施的更改。来自数据平面部署的追踪信息也会发送到与控制平面集成的 LangSmith 实例。到控制平面的此流量是加密的，通过 HTTPS 传输。数据平面使用 LangSmith API 密钥向控制平面进行身份验证。
 
-In order to enable this egress, you may need to update internal firewall rules or cloud resources (such as Security Groups) to [allow certain IP addresses](/langsmith/cloud#ingress-into-langchain-saas).
+为了启用此出站流量，您可能需要更新内部防火墙规则或云资源（如安全组），以 [允许特定的 IP 地址](/langsmith/cloud#ingress-into-langchain-saas)。
 
 <Warning>
-AWS/Azure PrivateLink or GCP Private Service Connect is currently not supported. This traffic will go over the internet.
+目前不支持 AWS/Azure PrivateLink 或 GCP Private Service Connect。此流量将通过公共互联网传输。
 </Warning>
 
-## Listeners
+## 监听器 (Listeners)
 
-In the hybrid option, one or more ["listener" applications](/langsmith/data-plane#”listener”-application) can run depending on how your LangSmith workspaces and Kubernetes clusters are organized.
+在混合部署选项中，可以运行一个或多个 ["监听器" 应用程序](/langsmith/data-plane#”listener”-application)，具体取决于您的 LangSmith 工作区和 Kubernetes 集群的组织方式。
 
-### Kubernetes cluster organization
-- One or more listeners can run in a Kubernetes cluster.
-- A listener can deploy into one or more namespaces in that cluster.
-- Multiple listeners cannot deploy to the same namespace.
-- Cluster owners are responsible for planning listener layout and Agent Server deployments.
+### Kubernetes 集群组织
+- 一个 Kubernetes 集群中可以运行一个或多个监听器。
+- 一个监听器可以部署到一个或多个命名空间中。
+- 多个监听器不能部署到同一个命名空间。
+- 集群所有者负责规划监听器的布局和 Agent Server 的部署。
 
-### LangSmith workspace organization
-- A workspace can be associated with one or more listeners.
-- A listener can only be associated with one workspace. LangSmith workspace to listener is a one-to-many relationship.
-- A workspace can only deploy to Kubernetes clusters where all of its listeners are deployed.
+### LangSmith 工作区组织
+- 一个工作区可以关联一个或多个监听器。
+- 一个监听器只能关联到一个工作区。LangSmith 工作区到监听器是一个一对多的关系。
+- 一个工作区只能部署到部署了其所有监听器的那些 Kubernetes 集群上。
 
-## Use Cases
+## 使用场景
 
-Here are some common listener configurations (not strict requirements):
+以下是一些常见的监听器配置（并非严格要求）：
 
-### Each LangSmith workspace → separate Kubernetes cluster
-- Cluster `alpha` runs workspace `A`
-- Cluster `beta` runs workspace `B`
+### 每个 LangSmith 工作区 → 独立的 Kubernetes 集群
+- 集群 `alpha` 运行工作区 `A`
+- 集群 `beta` 运行工作区 `B`
 
-### One cluster, one namespace per workspace
-- Cluster `alpha`, namespace `1` runs workspace `A`
-- Cluster `alpha`, namespace `2` runs workspace `B`
+### 单个集群，每个工作区一个命名空间
+- 集群 `alpha`，命名空间 `1` 运行工作区 `A`
+- 集群 `alpha`，命名空间 `2` 运行工作区 `B`
 
-### Separate clusters, with shared “dev” cluster
-- Cluster `alpha` runs workspace `A`
-- Cluster `beta` runs workspace `B`
-- Cluster `dev` runs workspaces `A` and `B`
-- Both workspaces have two listeners; cluster `dev` has two listener deployments
+### 独立的集群，共享一个 “开发” 集群
+- 集群 `alpha` 运行工作区 `A`
+- 集群 `beta` 运行工作区 `B`
+- 集群 `dev` 运行工作区 `A` 和 `B`
+- 两个工作区都有两个监听器；集群 `dev` 进行了两次监听器部署

@@ -1,13 +1,13 @@
-The `wrap_openai`/`wrapOpenAI` methods in Python/TypeScript allow you to wrap your OpenAI client in order to automatically log traces -- no decorator or function wrapping required! Using the wrapper ensures that messages, including tool calls and multimodal content blocks will be rendered nicely in LangSmith. Also note that the wrapper works seamlessly with the `@traceable` decorator or `traceable` function and you can use both in the same application.
+Python/TypeScript 中的 `wrap_openai`/`wrapOpenAI` 方法允许您将 OpenAI 客户端进行包装，从而**自动记录追踪信息**——无需使用装饰器或手动包装函数！使用此包装器可以确保消息（包括工具调用和多模态内容块）在 LangSmith 中得到美观的渲染。此外，请注意，此包装器可以与 `@traceable` 装饰器或 `traceable` 函数无缝协作，您可以在同一个应用程序中同时使用它们。
 
 <Note>
-The `LANGSMITH_TRACING` environment variable must be set to `'true'` in order for traces to be logged to LangSmith, even when using `wrap_openai` or `wrapOpenAI`. This allows you to toggle tracing on and off without changing your code.
+为了将追踪信息记录到 LangSmith，**必须**设置环境变量 `LANGSMITH_TRACING` 为 `'true'`，即使在使用 `wrap_openai` 或 `wrapOpenAI` 时也是如此。这样做的好处是您无需更改代码即可随时开启或关闭追踪功能。
 
-Additionally, you will need to set the `LANGSMITH_API_KEY` environment variable to your API key (see [Setup](/) for more information).
+此外，您还需要设置环境变量 `LANGSMITH_API_KEY` 为您的 API 密钥（更多信息请参阅 [Setup](/])）。
 
-If your LangSmith API key is linked to multiple workspaces, set the `LANGSMITH_WORKSPACE_ID` environment variable to specify which workspace to use.
+如果您的 LangSmith API 密钥关联了多个工作区，请设置环境变量 `LANGSMITH_WORKSPACE_ID` 来指定要使用的工作区。
 
-By default, the traces will be logged to a project named `default`. To log traces to a different project, see [this section](/langsmith/log-traces-to-project).
+默认情况下，追踪信息将记录到名为 `default` 的项目中。要将追踪信息记录到其他项目，请参阅 [此部分](/langsmith/log-traces-to-project)。
 </Note>
 
 <CodeGroup>
@@ -17,6 +17,7 @@ import openai
 from langsmith import traceable
 from langsmith.wrappers import wrap_openai
 
+# 使用 wrap_openai 包装标准的 openai.Client() 实例
 client = wrap_openai(openai.Client())
 
 @traceable(run_type="tool", name="Retrieve Context")
@@ -30,6 +31,7 @@ def chat_pipeline(question: str):
       { "role": "system", "content": "You are a helpful assistant. Please respond to the user's request only based on the given context." },
       { "role": "user", "content": f"Question: {question}\nContext: {context}"}
   ]
+  # 这里的 client 调用会自动被追踪
   chat_completion = client.chat.completions.create(
       model="gpt-4o-mini", messages=messages
   )
@@ -43,12 +45,15 @@ import OpenAI from "openai";
 import { traceable } from "langsmith/traceable";
 import { wrapOpenAI } from "langsmith/wrappers";
 
+// 使用 wrapOpenAI 包装标准的 OpenAI 客户端
 const client = wrapOpenAI(new OpenAI());
 
+// 包装自定义工具函数
 const myTool = traceable(async (question: string) => {
   return "During this morning's meeting, we solved all world conflict.";
 }, { name: "Retrieve Context", run_type: "tool" });
 
+// 包装主聊天流程函数
 const chatPipeline = traceable(async (question: string) => {
   const context = await myTool(question);
   const messages = [
@@ -59,6 +64,7 @@ const chatPipeline = traceable(async (question: string) => {
       },
       { role: "user", content: `Question: ${question} Context: ${context}` },
   ];
+  // 这里的 client 调用会自动被追踪
   const chatCompletion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: messages,

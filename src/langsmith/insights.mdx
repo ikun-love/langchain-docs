@@ -1,44 +1,44 @@
 ---
-title: Discover errors and usage patterns with the Insights Agent
+title: 使用 Insights Agent 发现错误和使用模式
 sidebarTitle: Insights
 ---
 
-The Insights Agent automatically analyzes your traces to detect usage patterns, common agent behaviors and failure modes — without requiring you to manually review thousands of traces.
-Insights uses hierarchical categorization to make sense of your data and highlight actionable trends.
+Insights Agent 会自动分析您的追踪记录（traces），以检测使用模式、常见的 Agent 行为和失败模式——所有这些都无需您手动审查数千条追踪记录。
+Insights 使用分层分类法来解析您的数据，并突出显示可操作的趋势。
 
 <Note>
-Insights is available for LangSmith Plus and Enterprise [plans](https://www.langchain.com/pricing) and is only available for LangSmith SaaS deployments.
+Insights 目前适用于 LangSmith Plus 和 Enterprise [套餐](https://www.langchain.com/pricing)，并且仅在 LangSmith SaaS 部署中可用。
 </Note>
 
-## Prerequisites
+## 先决条件
 
-- An OpenAI API key (generate one [here](https://platform.openai.com/account/api-keys)) or an Anthropic API key (generate one [here](https://console.anthropic.com/settings/keys))
-- Permissions to create rules in LangSmith (required to generate new Insights Reports)
-- Permissions to view tracing projects LangSmith (required to view existing Insights Reports)
+- 一个 OpenAI API 密钥（请在此处 [生成](https://platform.openai.com/account/api-keys)）或一个 Anthropic API 密钥（请在此处 [生成](https://console.anthropic.com/settings/keys)）
+- 在 LangSmith 中创建规则的权限（生成新的 Insights Reports 所需）
+- 查看 LangSmith 追踪项目的权限（查看现有 Insights Reports 所需）
 
-## Generate your first Insights Report
+## 生成您的第一个 Insights Report
 
-<Frame caption="Auto configuration flow for Insights Agent"><img src="/langsmith/images/insights-autogenerate-config.png" /> </Frame>
+<Frame caption="Insights Agent 的自动配置流程"><img src="/langsmith/images/insights-autogenerate-config.png" /> </Frame>
 
-#### From the [LangSmith UI](https://smith.langchain.com):
+#### 从 [LangSmith UI](https://smith.langchain.com) 进行操作：
 
-1. Navigate to **Tracing Projects** in the left-hand menu and select a tracing project.
-2. Click **+New** in the top right corner then **New Insights Report** to generate new insights over the project.
-3. Enter a name for your job.
-4. Click the <Icon icon="key" /> icon in the top right of the job creation pane to set your OpenAI (or Anthropic) API key as a [workspace secret](/langsmith/administration-overview#workspaces). If your workspace already has an OpenAI API key set, you can skip this step.
-5. Answer the guided questions to focus your Insights Report on what you want to learn about your agent, then click **Run job**.
+1. 在左侧菜单中导航到 **Tracing Projects**（追踪项目），然后选择一个追踪项目。
+2. 点击右上角的 **+New**（新建）按钮，然后选择 **New Insights Report**（新建 Insights 报告）以针对该项目生成新的洞察。
+3. 为您的作业（Job）输入一个名称。
+4. 点击作业创建窗格右上角的 <Icon icon="key" /> 图标，将您的 OpenAI（或 Anthropic）API 密钥设置为 [工作区密钥](/langsmith/administration-overview#workspaces)。如果您的工作区已经设置了 OpenAI API 密钥，则可以跳过此步骤。
+5. 回答引导式问题，以便将您的 Insights Report 重点关注您想了解的 Agent 方面的内容，然后点击 **Run job**（运行作业）。
 
-<Tip>Toggle to Manual mode to try [prebuilt configs](#using-a-prebuilt-config) for common use cases or [build your own](#building-a-config-from-scratch).</Tip>
+<Tip>切换到 Manual 模式（手动模式）可以尝试针对常见用例的 [预构建配置](#using-a-prebuilt-config) 或 [从头开始构建配置](#building-a-config-from-scratch)。</Tip>
 
-This will kick off a background Insights Report. Reports can take up to 30 minutes to complete.
+这将启动一个后台的 Insights Report 生成任务。报告可能需要长达 30 分钟才能完成。
 
-#### From the [LangSmith SDK](https://reference.langchain.com/python/langsmith/observability/sdk/client/#langsmith.client.Client):
-You can generate Insights Reports over data stored outside LangSmith using the Python SDK. This allows you to analyze chat histories from your production systems, logs, or other sources.
+#### 从 [LangSmith SDK](https://reference.langchain.com/python/langsmith/observability/sdk/client/#langsmith.client.Client) 进行操作：
+您可以使用 Python SDK 对存储在 LangSmith 之外的数据生成 Insights Reports。这使您能够分析来自生产系统、日志或其他来源的聊天历史记录。
 
-When you call `generate_insights()`, the SDK will:
-1. Upload your chat histories as traces to a new LangSmith project
-2. Generate an Insights Report over those uploaded traces
-3. Return a link to your results in the LangSmith UI
+当您调用 `generate_insights()` 时，SDK 将执行以下操作：
+1. 将您的聊天历史记录作为追踪记录上传到一个新的 LangSmith 项目中
+2. 针对这些上传的追踪记录生成一个 Insights Report
+3. 返回一个指向 LangSmith UI 中结果的链接
 
 <CodeGroup>
 
@@ -72,127 +72,120 @@ report = client.generate_insights(
 
 </CodeGroup>
 
-<Note>Generating insights over 1,000 threads typically costs \$1.00-\$2.00 with OpenAI models and \$3.00-\$4.00 with current Anthropic models. The cost scales with the number of threads sampled and the size of each thread.</Note>
+<Note>使用 OpenAI 模型对 1,000 个会话生成洞察的费用通常为 $1.00-2.00 美元，使用当前的 Anthropic 模型费用约为 $3.00-4.00 美元。费用会随着被采样的会话数量以及每个会话的大小而增加。</Note>
 
 
-## Understand the results
-Once your job has completed, you can navigate to the **Insights** tab where you'll see a table of Insights Report. Each Report contains insights generated over a specific sample of traces from the tracing project.
+## 理解结果
+一旦您的作业完成，您可以导航到 **Insights**（洞察）选项卡，在那里您将看到一个 Insights Report 的表格。每个报告都包含针对追踪项目特定样本生成的洞察。
 
-<Frame caption="Insights Reports for a single tracing project"><img src="/langsmith/images/insights-job-results.png" /> </Frame>
+<Frame caption="单个追踪项目的 Insights Reports"><img src="/langsmith/images/insights-job-results.png" /> </Frame>
 
-Click into your job to see traces organized into a set of auto-generated categories.
-You can drill down through categories and subcategories to view the underlying traces, feedback, and run statistics.
+点击进入您的作业，即可看到按一组自动生成的类别组织的追踪记录。
+您可以深入研究类别和子类别，以查看底层的追踪记录、反馈和运行统计数据。
 
-<Frame caption="Common topics of conversations with the https://chat.langchain.com chatbot"><img src="/langsmith/images/insights-nav.gif" /> </Frame>
+<Frame caption="与 https://chat.langchain.com 聊天机器人对话的常见主题"><img src="/langsmith/images/insights-nav.gif" /> </Frame>
 
-### Top-level categories
-Your traces are automatically grouped into top-level categories that represent the broadest patterns in your data.
+### 顶层类别
+您的追踪记录会自动分组到代表数据中最大模式的顶层类别中。
+分布条显示了每种模式发生的频率，使得很容易发现比预期发生得更多或更少的行为。
 
-The distribution bars show how frequently each pattern occurs, making it easy to spot behaviors that happen more or less than expected.
+每个类别都有一个简短的描述，并显示其所包含追踪记录的聚合指标，包括：
+- 典型的追踪指标（如错误率、延迟、成本）
+- 来自评估者的反馈分数
+- 作为作业的一部分提取的 [属性 (Attributes)](#attributes)
 
-Each category has a brief description and displays aggregated metrics over the traces it contains, including:
-- Typical trace stats (like error rates, latency, cost)
-- Feedback scores from your evaluators
-- [Attributes](#attributes) extracted as part of the job
+### 子类别
+点击任何类别会显示细分到子类别的视图，从而让您对该类别追踪记录中的交互模式有更细粒度的理解。
 
-### Subcategories
-Clicking on any category shows a breakdown into subcategories, which gives you a more granular understanding of interaction patterns in that category of traces.
+在上图中 [Chat Langchain](https://chat.langchain.com) 的示例中，“Data & Retrieval”（数据与检索）下有“Vector Stores”（向量存储）和“Data Ingestion”（数据摄取）等子类别。
 
-In the [Chat Langchain](https://chat.langchain.com) example pictured above, under "Data & Retrieval" there are subcategories like "Vector Stores" and "Data Ingestion".
+### 单个追踪记录
+您可以通过点击进入追踪记录表来查看分配给每个类别或子类别的追踪记录。从那里，您可以点击任何追踪记录以查看完整的对话详情。
 
-### Individual traces
-You can view the traces assigned to each category or subcategory by clicking through to see the traces table. From there, you can click into any trace to see the full conversation details.
+## 配置作业
+您可以通过三种方式创建 Insights Report。从自动生成流程开始以建立基线，然后随着您的完善迭代使用保存的或手动配置。
 
-## Configure a job
-You can create an Insights Report three ways. Start with the auto-generated flow to spin up a baseline, then iterate with saved or manual configs as you refine.
+### 自动生成配置
+1. 打开 **New Insights**（新建洞察），并确保 **Auto**（自动）切换按钮处于激活状态。
+2. 回答有关您的 Agent 的目的、您想了解的内容以及追踪记录的结构等自然语言问题。Insights 将把您的回答转化为一个草稿配置（作业名称、摘要提示、属性和采样默认值）。
+3. 选择一个提供商，然后点击 **Generate config**（生成配置）进行预览，或点击 **Run job**（运行作业）立即启动。
 
-### Autogenerating a config
-1. Open **New Insights** and make sure the **Auto** toggle is active.
-2. Answer the natural-language questions about your agent’s purpose, what you want to learn, and how traces are structured. Insights will translate your answers into
-a draft config (job name, summary prompt, attributes, and sampling defaults).
-3. Choose a provider, then click **Generate config** to preview or **Run job** to launch immediately.
+**提供有用的上下文**
 
-**Providing useful context**
+为获得最佳结果，请为每个提示写一两句话，为 Agent 提供它所需的上下文——您想了解什么，哪些信号或字段最重要，以及您已经知道哪些信息不重要。您对 Agent 的作用及其追踪记录的结构描述得越清晰，Insights Agent 就能以更具体、可操作且与您对数据推理方式一致的方式对示例进行分组。
 
-For best results, write a sentence or two for each prompt that gives the agent the context it needs—what you’re trying to learn, which signals or fields matter most, and anything you
-already know isn’t useful. The clearer you are about what your agent does and how its traces are structured, the more the Insights Agent can group examples in a way
-that’s specific, actionable, and aligned with how you reason about your data.
+**描述您的追踪记录**
 
-**Describing your traces**
+解释您的数据是如何组织的——是单次运行还是多轮对话？哪些输入和输出包含关键信息？这有助于 Insights Agent 生成关注重点的摘要提示和属性。如果需要，您也可以直接在 [摘要提示](#summary-prompt) 部分指定变量。
 
-Explain how your data is organized—are these single runs or multi-turn conversations? Which inputs and outputs contain the key information? This helps the Insights Agent generate summary prompts and attributes that focus on what matters. You can also directly specify variables from the [summary prompt](#summary-prompt) section if needed.
+### 选择模型提供商
 
-### Choose a model provider
+您可以选择 OpenAI 或 Anthropic 模型来支持 Agent。对于您选择的提供商（`OPENAI_API_KEY` 或 `ANTHROPIC_API_KEY`），您必须设置相应的 [工作区密钥](/langsmith/administration-overview#workspaces)。
 
-You can select either OpenAI or Anthropic models to power the agent. You must have the corresponding [workspace secret](/langsmith/administration-overview#workspaces) set for whichever provider you choose (OPENAI_API_KEY or ANTHROPIC_API_KEY).
+请注意，使用当前的 Anthropic 模型比使用 OpenAI 模型贵大约 3 倍。
 
-Note that using current Anthropic models costs ~3x as much as using OpenAI models.
+### 使用预构建配置
 
-### Using a prebuilt config
+<Frame caption="Manual 模式下的预构建配置"><img src="/langsmith/images/insights-manual-config.png" /> </Frame>
 
-<Frame caption="Prebuilt configs in Manual mode"><img src="/langsmith/images/insights-manual-config.png" /> </Frame>
-
-Use the **Saved configurations** dropdown to load presets for common jobs like **Usage Patterns** or **Error Analysis**. Run them directly for a fast start, or adjust filters, prompts, and providers before saving your customized version. To learn more about what you can customize, read the section below.
+使用 **Saved configurations**（已保存的配置）下拉菜单加载常见作业（如 **Usage Patterns**（使用模式）或 **Error Analysis**（错误分析））的预设。您可以直接运行它们以快速开始，或在保存自定义版本之前调整过滤器、提示和提供商。要了解您可以自定义的更多信息，请阅读下面的部分。
 
 
-### Building a config from scratch
-Building your own config helps when you need more control—for example, predefining categories you want your data to be grouped into or targeting traces that match specific feedback scores and filters.
+### 从头开始构建配置
+当您需要更多控制时（例如，预先定义您希望数据分组到的类别，或定位匹配特定反馈分数和过滤器的追踪记录），从头开始构建配置会很有帮助。
 
-#### Select traces
-- **Sample size**: The maximum number of traces to analyze. Currently capped at 1,000
-- **Time range**: Traces are sampled from this time range
-- **Filters**: Additional trace filters. As you adjust filters, you'll see how many traces match your criteria
+#### 选择追踪记录
+- **Sample size**（样本大小）：要分析的最大追踪记录数量。当前限制为 1,000 条
+- **Time range**（时间范围）：从中采样追踪记录的时间范围
+- **Filters**（过滤器）：额外的追踪记录过滤器。当您调整过滤器时，您会看到有多少追踪记录符合您的标准
 
-#### Categories
-By default, top-level categories are automatically generated bottom-up from the underlying traces.
-In some instances, you know specific categories you're interested in upfront and want the job to bucket traces into those predefined categories.
+#### 类别
+默认情况下，顶层类别是根据底层追踪记录自动自下而上生成的。
+在某些情况下，您事先知道自己感兴趣的特定类别，并希望作业将追踪记录归入这些预定义类别中。
 
-The **Categories** section of the config lets you do this by enumerating the names and descriptions of the top-level categories you want to be used.
-Subcategories are still auto-generated by the algorithm within the predefined top-level categories.
+配置的 **Categories**（类别）部分允许您通过枚举所需顶层类别的名称和描述来实现此目的。
+子类别仍然由算法在预定义顶层类别内自动生成。
 
-#### Summary prompt
-The first step of the job is to create a brief summary of every trace — it is these summaries that are then categorized.
-Extracting the right information in the summary is essential for getting useful categories.
-The prompt used to generate these summaries can be edited.
+#### 摘要提示 (Summary prompt)
+作业的第一步是为每条追踪记录创建一个简短摘要——正是这些摘要随后被分类。
+从摘要中提取正确的信息对于获得有用的类别至关重要。
+可以编辑用于生成这些摘要的提示。
 
-The two things to think about when editing the prompt are:
-- Summarization instructions: Any information that isn't in the trace summary won't affect the categories that get generated, so make sure to provide clear instructions on what information is important to extract from each trace.
-- Trace content: Use mustache formatting to specify which parts of each trace are passed to the summarizer. Large traces with lots of inputs and outputs can be expensive and noisy. Reducing the prompt to only include the most relevant parts of the trace can improve your results.
+编辑提示时需要考虑的两点是：
+- 摘要说明：任何不在追踪记录摘要中的信息都不会影响生成哪些类别，因此请确保提供清晰的说明，告知要从每个追踪记录中提取哪些信息。
+- 追踪记录内容：使用胡须模板格式（mustache formatting）指定每个追踪记录的哪些部分传递给摘要器。包含大量输入和输出的大型追踪记录可能既昂贵又容易产生噪音。将提示减少到仅包含追踪记录中最相关部分可以提高您的结果。
 
-The Insights Agent analyzes [threads](https://docs.langchain.com/langsmith/threads) - groups of related traces that represent multi-turn conversations. You must specify what parts of the thread to send to the summarizer using at least one of these template variables:
+Insights Agent 会分析 [Threads（会话）](https://docs.langchain.com/langsmith/threads)——代表多轮对话的相关追踪记录组。您必须使用以下至少一个模板变量来指定要发送给摘要器的会话的哪些部分：
 
-| Variable | Best for | Example |
+| 变量 | 最适合 | 示例 |
 | --- | --- | --- |
-| run.* | Access data from the most recent root run (i.e. final turn) in a thread | `{{run.inputs}}` `{{run.outputs}}` `{{run.error}}`|
+| run.* | 访问最近的根运行（即最后一轮）中的数据 | `{{run.inputs}}` `{{run.outputs}}` `{{run.error}}`|
 
-You can also access nested fields using dot notation. For example, the prompt `"Summarize this: {{run.inputs.foo.bar}}"` will include only the "bar" value within the "foo" value of the last run's inputs.
+您也可以使用点表示法访问嵌套字段。例如，提示 `"Summarize this: {{run.inputs.foo.bar}}"` 将只包含最后一次运行输入中 "foo" 值内的 "bar" 值。
 
-#### Attributes
-Along with a summary, you can define additional categorical, numerical, and boolean attributes to be extracted from each trace.
-These attributes will influence the categorization step — traces with similar attribute values will tend to be categorized together.
-You can also see aggregations of these attributes per category.
+#### 属性 (Attributes)
+除了摘要之外，您还可以定义要从每个追踪记录中提取的附加分类、数值和布尔属性。
+这些属性将影响分类步骤——属性值相似的追踪记录倾向于被归入同一类别。
+您还可以查看每个类别的这些属性的聚合情况。
 
-As an example, you might want to extract the attribute `user_satisfied: boolean` from each trace to steer the algorithm towards categories that split up positive and negative user experiences, and to see the average user satisfaction per category.
+例如，您可能希望从每个追踪记录中提取属性 `user_satisfied: boolean`（用户满意度：布尔值），以引导算法倾向于区分积极和消极用户体验的类别，并查看每个类别的平均用户满意度。
 
-#### Filter attributes
+#### 过滤属性 (Filter attributes)
 
-You can use the `filter_by` parameter on boolean attributes to pre-filter traces before generating insights. When enabled, only traces where the attribute evaluates to `true` are included in the analysis.
+您可以使用布尔属性上的 `filter_by` 参数在生成洞察之前预先过滤追踪记录。启用后，只有评估为 `true` 的属性所在的追踪记录才会被包含在分析中。
 
-This is useful when you want to focus your Insights Report on a specific subset of traces—for example, only analyzing errors, only examining English-language conversations, or only including traces that meet certain quality criteria.
+当您希望将 Insights Report 集中在特定子集的追踪记录上时，这非常有用——例如，只分析错误，只检查英语对话，或者只包含满足特定质量标准的追踪记录。
 
-<Frame caption="Using filter attributes to generate Insights only on traces with agent errors"><img src="/langsmith/images/insights-filter-by-attribute.png" /> </Frame>
+<Frame caption="使用过滤属性仅针对具有 Agent 错误的追踪记录生成 Insights"><img src="/langsmith/images/insights-filter-by-attribute.png" /> </Frame>
 
-**How it works:**
-- Add `"filter_by": true` to any boolean attribute when creating a config for the Insights Agent
-- The LLM evaluates each trace against the attribute description during summarization
-- Traces where the attribute is `false` or missing are excluded before insights are generated
+**工作原理：**
+- 在为 Insights Agent 创建配置时，向任何布尔属性添加 `"filter_by": true`
+- LLM 在摘要过程中根据属性描述评估每个追踪记录
+- 评估为 `false` 或缺失的追踪记录将在生成洞察之前被排除
 
-## Save your config
+## 保存您的配置
 
-You can optionally save configs for future reuse using the 'save as' button.
-This is especially useful if you want to compare Insights Reports over time to identify changes in user and agent behavior.
+您可以选择使用“另存为”按钮来保存配置以供将来重用。
+如果您想比较不同时间的 Insights Reports 以识别用户和 Agent 行为的变化，这一点尤其有用。
 
-Select from previously saved configs in the dropdown in the top-left corner of the pane when creating a new Insights Report.
-
-
-
+在创建新的 Insights Report 时，从左上角窗格的下拉列表中选择先前保存的配置。

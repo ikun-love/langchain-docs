@@ -1,15 +1,17 @@
 ---
-title: Pandas Dataframe
+title: Pandas DataFrame
 ---
 
-This notebook shows how to use agents to interact with a `Pandas DataFrame`. It is mostly optimized for question answering.
+本 Notebook 展示了如何使用 Agent 与 `Pandas DataFrame` 进行交互。它主要针对问答场景进行了优化。
 
-**NOTE: this agent calls the `Python` agent under the hood, which executes LLM generated Python code - this can be bad if the LLM generated Python code is harmful. Use cautiously.**
+**注意：该 Agent 在底层调用了 `Python` Agent，后者会执行 LLM 生成的 Python 代码——如果 LLM 生成的代码存在安全风险，这可能会很危险。请谨慎使用。**
 
-**NOTE: Since langchain migrated to v0.3 you should upgrade langchain_openai and langchain.   This would avoid import errors.**
+**注意：自从 LangChain 迁移到 v0.3 版本后，您应该升级 `langchain_openai` 和 `langchain` 库。这样做可以避免导入错误。**
 
+```bash
 pip install -U langchain_openai
 pip install -U langchain
+```
 
 ```python
 from langchain.agents.agent_types import AgentType
@@ -21,22 +23,23 @@ from langchain_openai import ChatOpenAI
 import pandas as pd
 from langchain_openai import OpenAI
 
+# 从指定的 URL 读取 CSV 文件到 DataFrame 中
 df = pd.read_csv(
     "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv"
 )
 ```
 
-## Using `ZERO_SHOT_REACT_DESCRIPTION`
+## 使用 `ZERO_SHOT_REACT_DESCRIPTION`
 
-This shows how to initialize the agent using the `ZERO_SHOT_REACT_DESCRIPTION` agent type.
+这部分展示了如何使用 `ZERO_SHOT_REACT_DESCRIPTION` 代理类型来初始化 Agent。
 
 ```python
 agent = create_pandas_dataframe_agent(OpenAI(temperature=0), df, verbose=True)
 ```
 
-## Using OpenAI Functions
+## 使用 OpenAI Functions
 
-This shows how to initialize the agent using the OPENAI_FUNCTIONS agent type. Note that this is an alternative to the above.
+这部分展示了如何使用 `OPENAI_FUNCTIONS` 代理类型来初始化 Agent。请注意，这是上述方法的另一种选择。
 
 ```python
 agent = create_pandas_dataframe_agent(
@@ -118,12 +121,13 @@ Final Answer: The square root of the average age is 5.449689683556195.
 'The square root of the average age is 5.449689683556195.'
 ```
 
-## Multi DataFrame Example
+## 多 DataFrame 示例
 
-This next part shows how the agent can interact with multiple dataframes passed in as a list.
+接下来的部分展示了 Agent 如何与传入的多个 DataFrame（以列表形式）进行交互。
 
 ```python
 df1 = df.copy()
+# 使用平均年龄填充 df1 中 'Age' 列的缺失值
 df1["Age"] = df1["Age"].fillna(df1["Age"].mean())
 ```
 

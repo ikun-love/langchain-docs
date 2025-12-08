@@ -2,53 +2,53 @@
 title: TiDB
 ---
 
-> [TiDB Cloud](https://tidbcloud.com/), is a comprehensive Database-as-a-Service (DBaaS) solution, that provides dedicated and serverless options. TiDB Serverless is now integrating a built-in vector search into the MySQL landscape. With this enhancement, you can seamlessly develop AI applications using TiDB Serverless without the need for a new database or additional technical stacks. Be among the first to experience it by joining the waitlist for the private beta at [tidb.cloud/ai](https://tidb.cloud/ai).
+> [TiDB Cloud](https://tidbcloud.com/) 是一个全面的数据库即服务 (DBaaS) 解决方案，提供专用（Dedicated）和无服务器（Serverless）两种选项。TiDB Serverless 目前正在将内置的向量搜索功能集成到 MySQL 生态中。有了这项增强功能，您可以使用 TiDB Serverless 无缝开发 AI 应用程序，而无需引入新的数据库或额外的技术栈。立即加入 [tidb.cloud/ai](https://tidb.cloud/ai) 的私有 Beta 测试等候名单，抢先体验！
 
-This notebook introduces how to use `TiDBLoader` to load data from TiDB in langchain.
+本指南介绍如何使用 `TiDBLoader` 从 TiDB 中加载数据到 LangChain 中。
 
-## Prerequisites
+## 前提条件
 
-Before using the `TiDBLoader`, we will install the following dependencies:
+在使用 `TiDBLoader` 之前，我们需要安装以下依赖项：
 
 ```python
 pip install -qU langchain
 ```
 
-Then, we will configure the connection to a TiDB. In this notebook, we will follow the standard connection method provided by TiDB Cloud to establish a secure and efficient database connection.
+接下来，我们将配置到 TiDB 的连接。在本指南中，我们将遵循 TiDB Cloud 提供的标准连接方法来建立一个安全且高效的数据库连接。
 
 ```python
 import getpass
 
-# copy from tidb cloud console，replace it with your own
+# 从 TiDB Cloud 控制台复制，请替换为您自己的信息
 tidb_connection_string_template = "mysql+pymysql://<USER>:<PASSWORD>@<HOST>:4000/<DB>?ssl_ca=/etc/ssl/cert.pem&ssl_verify_cert=true&ssl_verify_identity=true"
-tidb_password = getpass.getpass("Input your TiDB password:")
+tidb_password = getpass.getpass("输入您的 TiDB 密码:")
 tidb_connection_string = tidb_connection_string_template.replace(
     "<PASSWORD>", tidb_password
 )
 ```
 
-## Load Data from TiDB
+## 从 TiDB 加载数据
 
-Here's a breakdown of some key arguments you can use to customize the behavior of the `TiDBLoader`:
+以下是您可以用来定制 `TiDBLoader` 行为的一些关键参数的说明：
 
-- `query` (str): This is the SQL query to be executed against the TiDB database. The query should select the data you want to load into your @[`Document`] objects.
-    For instance, you might use a query like `"SELECT * FROM my_table"` to fetch all data from `my_table`.
+- `query` (str): 这是将在 TiDB 数据库上执行的 SQL 查询语句。该查询应选择您希望加载到每个 @[`Document`] 对象中的数据。
+    例如，您可以使用 `"SELECT * FROM my_table"` 这样的查询来获取 `my_table` 中的所有数据。
 
-- `page_content_columns` (Optional[List[str]]): Specifies the list of column names whose values should be included in the `page_content` of each @[`Document`] object.
-    If set to `None` (the default), all columns returned by the query are included in `page_content`. This allows you to tailor the content of each document based on specific columns of your data.
+- `page_content_columns` (Optional[List[str]]): 用于指定哪些列的值应该被包含在每个 @[`Document`] 对象的 `page_content`（页面内容）字段中。
+    如果设置为 `None`（默认值），查询返回的所有列都将包含在 `page_content` 中。这使得您可以根据数据的特定列来定制每个文档的内容。
 
-- `metadata_columns` (Optional[List[str]]): Specifies the list of column names whose values should be included in the `metadata` of each @[`Document`] object.
-    By default, this list is empty, meaning no metadata will be included unless explicitly specified. This is useful for including additional information about each document that doesn't form part of the main content but is still valuable for processing or analysis.
+- `metadata_columns` (Optional[List[str]]): 用于指定哪些列的值应该被包含在每个 @[`Document`] 对象的 `metadata`（元数据）字段中。
+    默认情况下，此列表为空，除非明确指定，否则不会包含任何元数据。当您需要包含有关每个文档的额外信息（这些信息不是主要内容，但对后续处理或分析很有价值）时，此参数非常有用。
 
 ```python
 from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine
 
-# Connect to the database
+# 连接到数据库
 engine = create_engine(tidb_connection_string)
 metadata = MetaData()
 table_name = "test_tidb_loader"
 
-# Create a table
+# 创建一个表
 test_table = Table(
     table_name,
     metadata,
@@ -79,7 +79,7 @@ with engine.connect() as connection:
 ```python
 from langchain_community.document_loaders import TiDBLoader
 
-# Setup TiDBLoader to retrieve data
+# 设置 TiDBLoader 以检索数据
 loader = TiDBLoader(
     connection_string=tidb_connection_string,
     query=f"SELECT * FROM {table_name};",
@@ -87,10 +87,10 @@ loader = TiDBLoader(
     metadata_columns=["id"],
 )
 
-# Load data
+# 加载数据
 documents = loader.load()
 
-# Display the loaded documents
+# 打印加载的文档
 for doc in documents:
     print("-" * 30)
     print(f"content: {doc.page_content}\nmetada: {doc.metadata}")

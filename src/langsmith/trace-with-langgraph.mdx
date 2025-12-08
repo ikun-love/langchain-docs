@@ -1,21 +1,22 @@
+```markdown
 ---
-title: Trace with LangGraph
+title: 使用 LangGraph 进行追踪
 sidebarTitle: LangGraph
 ---
 
-LangSmith smoothly integrates with LangGraph (Python and JS) to help you trace agents, whether you're using LangChain modules or other SDKs.
+LangSmith 与 LangGraph（Python 和 JS 版本）无缝集成，可以帮助您追踪 Agent 的运行过程，无论您是在 LangGraph 中使用 LangChain 模块还是其他 SDK。
 
-## With LangChain
+## 使用 LangChain
 
-If you are using LangChain modules within LangGraph, you only need to set a few environment variables to enable tracing.
+如果您在 LangGraph 中使用 LangChain 模块，只需设置几个环境变量即可启用追踪功能。
 
-This guide will walk through a basic example. For more detailed information on configuration, see the [Trace With LangChain](/langsmith/trace-with-langchain) guide.
+本指南将引导您完成一个基础示例。有关配置的更多详细信息，请参阅 [使用 LangChain 追踪](/langsmith/trace-with-langchain) 指南。
 
-### 1. Installation
+### 1. 安装
 
-Install the LangGraph library and the OpenAI integration for Python and JS (we use the OpenAI integration for the code snippets below).
+安装 LangGraph 库以及用于 Python 和 JS 的 OpenAI 集成（我们在以下代码片段中使用了 OpenAI 集成）。
 
-For a full list of packages available, see the [LangChain Python docs](https://python.langchain.com/docs/integrations/platforms/) and [LangChain JS docs](https://js.langchain.com/docs/integrations/platforms/).
+有关可用包的完整列表，请参阅 [LangChain Python 文档](https://python.langchain.com/docs/integrations/platforms/) 和 [LangChain JS 文档](https://js.langchain.com/docs/integrations/platforms/)。
 
 <CodeGroup>
 
@@ -37,32 +38,32 @@ pnpm add @langchain/openai @langchain/langgraph
 
 </CodeGroup>
 
-### 2. Configure your environment
+### 2. 配置您的环境
 
 ```bash wrap
 export LANGSMITH_TRACING=true
 export LANGSMITH_API_KEY=<your-api-key>
-# This example uses OpenAI, but you can use any LLM provider of choice
+# 此示例使用 OpenAI，但您也可以使用任何您选择的 LLM 提供商
 export OPENAI_API_KEY=<your-openai-api-key>
-# For LangSmith API keys linked to multiple workspaces, set the LANGSMITH_WORKSPACE_ID environment variable to specify which workspace to use.
+# 对于链接到多个工作区的 LangSmith API 密钥，请设置 LANGSMITH_WORKSPACE_ID 环境变量以指定要使用的工作区。
 export LANGSMITH_WORKSPACE_ID=<your-workspace-id>
 ```
 
 <Info>
-    If you are using LangChain.js with LangSmith and are not in a serverless environment, we also recommend setting the following explicitly to reduce latency:
+    如果您在非无服务器环境中使用 LangChain.js 和 LangSmith，我们还建议明确设置以下内容以减少延迟：
 
     `export LANGCHAIN_CALLBACKS_BACKGROUND=true`
 
-    If you are in a serverless environment, we recommend setting the reverse to allow tracing to finish before your function ends:
+    如果您处于无服务器环境中，我们建议设置相反的值，以允许追踪在函数结束前完成：
 
     `export LANGCHAIN_CALLBACKS_BACKGROUND=false`
 
-    See [this LangChain.js guide](https://js.langchain.com/docs/how_to/callbacks_serverless) for more information.
+    有关更多信息，请参阅 [此 LangChain.js 指南](https://js.langchain.com/docs/how_to/callbacks_serverless)。
 </Info>
 
-### 3. Log a trace
+### 3. 记录追踪（Log a trace）
 
-Once you've set up your environment, you can call LangChain runnables as normal. LangSmith will infer the proper tracing config:
+设置好环境后，您可以像平常一样调用 LangChain 的可运行对象（runnables）。LangSmith 将自动推断出正确的追踪配置：
 
 <CodeGroup>
 
@@ -95,7 +96,7 @@ def should_continue(state: MessagesState) -> Literal["tools", "__end__"]:
 
 def call_model(state: MessagesState):
     messages = state['messages']
-    # Invoking `model` will automatically infer the correct tracing context
+    # 调用 `model` 将自动推断正确的追踪上下文
     response = model.invoke(messages)
     return {"messages": [response]}
 
@@ -170,7 +171,7 @@ function shouldContinue(state: AgentState) {
 
 async function callModel(state: AgentState) {
   const messages = state.messages;
-  // Invoking `model` will automatically infer the correct tracing context
+  // 调用 `model` 将自动推断正确的追踪上下文
   const response = await model.invoke(messages);
   return { messages: [response] };
 }
@@ -194,19 +195,19 @@ finalState.messages[finalState.messages.length - 1].content;
 
 </CodeGroup>
 
-An example trace from running the above code [looks like this](https://smith.langchain.com/public/10863294-ee79-484a-927f-0558230f1547/r):
+运行上述代码的示例追踪 [如下所示](https://smith.langchain.com/public/10863294-ee79-484a-927f-0558230f1547/r)：
 
 ![Trace tree for a LangGraph run with LangChain](/langsmith/images/langgraph-with-langchain-trace.png)
 
-## Without LangChain
+## 不使用 LangChain
 
-If you are using other SDKs or custom functions within LangGraph, you will need to [wrap or decorate them appropriately](/langsmith/annotate-code#use-traceable--traceable) (with the `@traceable` decorator in Python or the `traceable` function in JS, or something like e.g. `wrap_openai` for SDKs). If you do so, LangSmith will automatically nest traces from those wrapped methods.
+如果您在 LangGraph 中使用其他 SDK 或自定义函数，则需要[使用 `@traceable` 装饰器（Python）或 `traceable` 函数（JS）适当地包装或装饰它们](/langsmith/annotate-code#use-traceable--traceable)（或使用例如 `wrap_openai` 包装 SDK）。如果您这样做，LangSmith 将自动嵌套来自那些被包装方法的追踪信息。
 
-Here's an example. You can also see this page for more information.
+这是一个示例。您也可以参考此页面获取更多信息。
 
-### 1. Installation
+### 1. 安装
 
-Install the LangGraph library and the OpenAI SDK for Python and JS (we use the OpenAI integration for the code snippets below).
+安装 LangGraph 库以及用于 Python 和 JS 的 OpenAI SDK（我们在以下代码片段中使用了 OpenAI 集成）。
 
 <CodeGroup>
 
@@ -228,30 +229,30 @@ pnpm add openai langsmith @langchain/langgraph
 
 </CodeGroup>
 
-### 2. Configure your environment
+### 2. 配置您的环境
 
 ```bash wrap
 export LANGSMITH_TRACING=true
 export LANGSMITH_API_KEY=<your-api-key>
-# This example uses OpenAI, but you can use any LLM provider of choice
+# 此示例使用 OpenAI，但您也可以使用任何您选择的 LLM 提供商
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 <Info>
-    If you are using LangChain.js with LangSmith and are not in a serverless environment, we also recommend setting the following explicitly to reduce latency:
+    如果您在非无服务器环境中使用 LangChain.js 和 LangSmith，我们还建议明确设置以下内容以减少延迟：
 
     `export LANGCHAIN_CALLBACKS_BACKGROUND=true`
 
-    If you are in a serverless environment, we recommend setting the reverse to allow tracing to finish before your function ends:
+    如果您处于无服务器环境中，我们建议设置相反的值，以允许追踪在函数结束前完成：
 
     `export LANGCHAIN_CALLBACKS_BACKGROUND=false`
 
-    See [this LangChain.js guide](https://js.langchain.com/docs/how_to/callbacks_serverless) for more information.
+    有关更多信息，请参阅 [此 LangChain.js 指南](https://js.langchain.com/docs/how_to/callbacks_serverless)。
 </Info>
 
-### 3. Log a trace
+### 3. 记录追踪（Log a trace）
 
-Once you've set up your environment, [wrap or decorate the custom functions/SDKs](/langsmith/annotate-code#use-traceable--traceable) you want to trace. LangSmith will then infer the proper tracing config:
+设置好环境后，[包装或装饰您想要追踪的自定义函数/SDK](/langsmith/annotate-code#use-traceable--traceable)。然后 LangSmith 将自动推断出正确的追踪配置：
 
 <CodeGroup>
 
@@ -280,7 +281,7 @@ tool_schema = {
     },
 }
 
-# Decorating the tool function will automatically trace it with the correct context
+# 装饰工具函数将自动使用正确的上下文对其进行追踪
 @traceable(run_type="tool", name="Search Tool")
 def search(query: str):
     """Call to surf the web."""
@@ -311,13 +312,13 @@ wrapped_client = wrap_openai(openai.Client())
 def should_continue(state: State) -> Literal["tools", "__end__"]:
     messages = state["messages"]
     last_message = messages[-1]
-    if last_message["tool_calls"]:
+    if lastMessage["tool_calls"]:
         return "tools"
     return "__end__"
 
 def call_model(state: State):
     messages = state["messages"]
-    # Calling the wrapped client will automatically infer the correct tracing context
+    # 调用包装后的客户端将自动推断正确的追踪上下文
     response = wrapped_client.chat.completions.create(
         messages=messages, model="gpt-4o-mini", tools=[tool_schema]
     )
@@ -350,7 +351,7 @@ final_state["messages"][-1]["content"]
 ```
 
 ```typescript TypeScript
-**Note:** The below example requires `langsmith>=0.1.39` and `@langchain/langgraph>=0.0.31`
+**注意：** 以下示例需要 `langsmith>=0.1.39` 和 `@langchain/langgraph>=0.0.31`
 
 import OpenAI from "openai";
 import { StateGraph } from "@langchain/langgraph";
@@ -380,7 +381,7 @@ const toolSchema: OpenAI.ChatCompletionTool = {
   }
 };
 
-// Wrapping the tool function will automatically trace it with the correct context
+// 包装工具函数将自动使用正确的上下文对其进行追踪
 const search = traceable(async ({ query }: { query: string }) => {
   if (
     query.toLowerCase().includes("sf") ||
@@ -413,7 +414,7 @@ const callTools = async ({ messages }: GraphState) => {
 };
 
 const callModel = async ({ messages }: GraphState) => {
-  // Calling the wrapped client will automatically infer the correct tracing context
+  // 调用包装后的客户端将自动推断正确的追踪上下文
   const response = await wrappedClient.chat.completions.create({
     messages,
     model: "gpt-4o-mini",
@@ -465,6 +466,7 @@ await graph.invoke({
 
 </CodeGroup>
 
-An example trace from running the above code [looks like this](https://smith.langchain.com/public/353f27da-c221-4b67-b9ec-ede3777f3271/r):
+运行上述代码的示例追踪 [如下所示](https://smith.langchain.com/public/353f27da-c221-4b67-b9ec-ede3777f3271/r)：
 
 ![Trace tree for a LangGraph run without LangChain](/langsmith/images/langgraph-without-langchain-trace.png)
+```

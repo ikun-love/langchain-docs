@@ -2,15 +2,15 @@
 title: GraphQL
 ---
 
->[GraphQL](https://graphql.org/) is a query language for APIs and a runtime for executing those queries against your data. `GraphQL` provides a complete and understandable description of the data in your API, gives clients the power to ask for exactly what they need and nothing more, makes it easier to evolve APIs over time, and enables powerful developer tools.
+>[GraphQL](https://graphql.org/) 是一种用于 API 的查询语言，也是一个运行时环境，用于针对您的数据执行这些查询。`GraphQL` 提供了对 API 中数据的完整且易于理解的描述，赋予客户端只请求其所需而不多余内容的权力，使 API 随时间推移的演进更加轻松，并支持强大的开发者工具。
 
-By including a `BaseGraphQLTool` in the list of tools provided to an Agent, you can grant your Agent the ability to query data from GraphQL APIs for any purposes you need.
+通过将 `BaseGraphQLTool` 包含在提供给 Agent 的工具列表中，您可以授予 Agent 查询 GraphQL API 数据的能力，以满足您的任何需求。
 
-This Jupyter Notebook demonstrates how to use the `GraphQLAPIWrapper` component with an Agent.
+本 Jupyter Notebook 演示了如何将 `GraphQLAPIWrapper` 组件与 Agent 配合使用。
 
-In this example, we'll be using the public `Star Wars GraphQL API` available at the following endpoint: [swapi-graphql.netlify.app/graphql](https://swapi-graphql.netlify.app/graphql) .
+在这个示例中，我们将使用以下端点提供的公共 `Star Wars GraphQL API`：[swapi-graphql.netlify.app/graphql](https://swapi-graphql.netlify.app/graphql) 。
 
-First, you need to install `httpx` and `gql` Python packages.
+首先，您需要安装 `httpx` 和 `gql` Python 包。
 
 ```python
 pip install httpx gql > /dev/null
@@ -20,7 +20,7 @@ pip install httpx gql > /dev/null
 pip install -qU  langchain-community
 ```
 
-Now, let's create a BaseGraphQLTool instance with the specified Star Wars API endpoint and initialize an Agent with the tool.
+现在，让我们使用指定的 Star Wars API 端点创建一个 `BaseGraphQLTool` 实例，并初始化一个带有该工具的 Agent。
 
 ```python
 import os
@@ -44,7 +44,7 @@ from langchain.agents import create_agent
 agent = create_agent("gpt-4.1-mini", tools)
 ```
 
-Now, we can use the Agent to run queries against the Star Wars GraphQL API. Let's ask the Agent to list all the Star Wars films and their release dates.
+现在，我们可以使用 Agent 对 Star Wars GraphQL API 运行查询。让我们要求 Agent 列出所有的星球大战电影及其上映日期。
 
 ```python
 graphql_fields = """allFilms {

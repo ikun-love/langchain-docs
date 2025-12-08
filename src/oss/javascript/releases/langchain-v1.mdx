@@ -1,23 +1,23 @@
 ---
-title: What's new in LangChain v1
+title: LangChain v1 新特性
 sidebarTitle: LangChain v1
 ---
 
-**LangChain v1 is a focused, production-ready foundation for building agents.** We've streamlined the framework around three core improvements:
+**LangChain v1 是一个专注于生产就绪环境的智能体（Agent）构建基础框架。** 我们围绕三个核心改进精简了框架：
 
 <CardGroup cols={1}>
     <Card title="createAgent" icon="robot" href="#create-agent" arrow>
-        A new standard way to build agents in LangChain, replacing `createReactAgent` from LangGraph with a cleaner, more powerful API.
+        在 LangChain 中构建智能体的新标准方式，它取代了 LangGraph 中的 `createReactAgent`，提供了一个更简洁、更强大的 API。
     </Card>
-    <Card title="Standard content blocks" icon="cube" href="#standard-content-blocks" arrow>
-        A new `contentBlocks` property that provides unified access to modern LLM features across all providers.
+    <Card title="标准内容块 (Standard content blocks)" icon="cube" href="#standard-content-blocks" arrow>
+        引入了新的 `contentBlocks` 属性，可跨所有提供商统一访问现代 LLM 的特性。
     </Card>
-    <Card title="Simplified package" icon="sitemap" href="#simplified-package" arrow>
-        The `langchain` package has been streamlined to focus on essential building blocks for agents, with legacy functionality moved to `@langchain/classic`.
+    <Card title="简化的包结构 (Simplified package)" icon="sitemap" href="#simplified-package" arrow>
+        `langchain` 包已精简，专注于智能体的核心构建块，遗留功能已迁移到 `@langchain/classic`。
     </Card>
 </CardGroup>
 
-To upgrade,
+要进行升级，请执行以下操作：
 
 <CodeGroup>
 ```bash npm
@@ -34,11 +34,11 @@ bun add langchain @langchain/core
 ```
 </CodeGroup>
 
-For a complete list of changes, see the [migration guide](/oss/migrate/langchain-v1).
+有关更改的完整列表，请参阅 [迁移指南](/oss/migrate/langchain-v1)。
 
 ## `createAgent`
 
-`createAgent` is the standard way to build agents in LangChain 1.0. It provides a simpler interface than the prebuilt `createReactAgent` exported from LangGraph while offering greater customization potential by using middleware.
+`createAgent` 是 LangChain 1.0 中构建智能体的标准方法。它提供了一个比从 LangGraph 导出的预构建 `createReactAgent` 更简单的接口，同时通过使用中间件提供了更大的定制潜力。
 
 ```ts
 import { createAgent } from "langchain";
@@ -58,31 +58,31 @@ const result = await agent.invoke({
 console.log(result.content);
 ```
 
-Under the hood, `createAgent` is built on the basic agent loop -- calling a model, letting it choose tools to execute, and then finishing when it calls no more tools:
+在底层，`createAgent` 构建在基本的智能体循环之上——调用模型，让模型选择要执行的工具，然后在不再调用工具时结束：
 
 <div style={{ display: "flex", justifyContent: "center" }}>
   <img
     src="/oss/images/core_agent_loop.png"
-    alt="Core agent loop diagram"
+    alt="核心智能体循环图"
     className="rounded-lg"
   />
 </div>
 
-For more information, see [Agents](/oss/langchain/agents).
+有关更多信息，请参阅 [Agents](/oss/langchain/agents)。
 
-### Middleware
+### 中间件 (Middleware)
 
-Middleware is the defining feature of `createAgent`. It makes `createAgent` highly customizable, raising the ceiling for what you can build.
+中间件是 `createAgent` 的决定性特征。它使得 `createAgent` 具有高度可定制性，从而提高了你可以构建的上限。
 
-Great agents require [context engineering](/oss/langchain/context-engineering): getting the right information to the model at the right time. Middleware helps you control dynamic prompts, conversation summarization, selective tool access, state management, and guardrails through a composable abstraction.
+优秀的智能体需要[上下文工程](/oss/langchain/context-engineering)：在正确的时间将正确的信息提供给模型。中间件通过可组合的抽象帮助你控制动态提示、对话摘要、选择性工具访问、状态管理和护栏。
 
-#### Prebuilt middleware
+#### 预构建中间件 (Prebuilt middleware)
 
-LangChain provides a few [prebuilt middlewares](/oss/langchain/middleware#built-in-middleware) for common patterns, including:
+LangChain 为常见模式提供了一些[预构建中间件](/oss/langchain/middleware#built-in-middleware)，包括：
 
-- `summarizationMiddleware`: Condense conversation history when it gets too long
-- `humanInTheLoopMiddleware`: Require approval for sensitive tool calls
-- `piiRedactionMiddleware`: Redact sensitive information before sending to the model
+- `summarizationMiddleware`: 当对话历史记录过长时进行浓缩
+- `humanInTheLoopMiddleware`: 要求对敏感工具调用进行批准
+- `piiRedactionMiddleware`: 在发送给模型之前对敏感信息进行删除或重述
 
 ```ts
 import {
@@ -112,32 +112,32 @@ const agent = createAgent({
 });
 ```
 
-#### Custom middleware
+#### 自定义中间件 (Custom middleware)
 
-You can also build custom middleware to fit your specific needs.
+你也可以构建自定义中间件以满足你的特定需求。
 
-Build custom middleware by implementing any of these hooks using the `createMiddleware` function:
+通过使用 `createMiddleware` 函数实现以下任一钩子来构建自定义中间件：
 
-| Hook              | When it runs             | Use cases                               |
-|-------------------|--------------------------|-----------------------------------------|
-| `beforeAgent`     | Before calling the agent | Load memory, validate input             |
-| `beforeModel`     | Before each LLM call     | Update prompts, trim messages           |
-| `wrapModelCall`   | Around each LLM call     | Intercept and modify requests/responses |
-| `wrapToolCall`    | Around each tool call    | Intercept and modify tool execution     |
-| `afterModel`      | After each LLM response  | Validate output, apply guardrails       |
-| `afterAgent`      | After agent completes    | Save results, cleanup                   |
+| 钩子 (Hook)       | 运行时间                              | 用例                                      |
+|-------------------|---------------------------------------|-------------------------------------------|
+| `beforeAgent`     | 调用智能体之前                     | 加载记忆、验证输入                         |
+| `beforeModel`     | 每次 LLM 调用之前                  | 更新提示、修剪消息                         |
+| `wrapModelCall`   | 围绕每次 LLM 调用                  | 拦截和修改请求/响应                       |
+| `wrapToolCall`    | 围绕每次工具调用                  | 拦截和修改工具执行                         |
+| `afterModel`      | 每次 LLM 响应之后                  | 验证输出、应用护栏                         |
+| `afterAgent`      | 智能体完成后                     | 保存结果、清理                             |
 
 
 <div style={{ display: "flex", justifyContent: "center" }}>
   <img
     src="/oss/images/middleware_final.png"
-    alt="Middleware flow diagram"
+    alt="中间件流程图"
     className="rounded-lg"
   />
 </div>
 
 
-Example custom middleware:
+自定义中间件示例：
 
 ```ts
 import { createMiddleware } from "langchain";
@@ -170,36 +170,36 @@ const agent = createAgent({
 });
 ```
 
-For more information, see [the complete middleware guide](/oss/langchain/middleware).
+有关更多信息，请参阅[完整的中间件指南](/oss/langchain/middleware)。
 
-### Built on LangGraph
+### 基于 LangGraph 构建
 
-Because `createAgent` is built on LangGraph, you automatically get built in support for long running and reliable agents via:
+由于 `createAgent` 是基于 LangGraph 构建的，因此你可以自动获得对长期运行和可靠智能体的内置支持，方法如下：
 
 <CardGroup cols={2}>
-    <Card title="Persistence" icon="database">
-        Conversations automatically persist across sessions with built-in checkpointing
+    <Card title="持久化 (Persistence)" icon="database">
+        对话通过内置的检查点机制自动跨会话持久化
     </Card>
-    <Card title="Streaming" icon="water">
-        Stream tokens, tool calls, and reasoning traces in real-time
+    <Card title="流式传输 (Streaming)" icon="water">
+        实时流式传输 tokens、工具调用和推理追踪
     </Card>
-    <Card title="Human-in-the-loop" icon="hand">
-        Pause agent execution for human approval before sensitive actions
+    <Card title="人工干预 (Human-in-the-loop)" icon="hand">
+        在敏感操作之前暂停智能体执行以等待人工批准
     </Card>
-    <Card title="Time travel" icon="clock-rotate-left">
-        Rewind conversations to any point and explore alternate paths and prompts
+    <Card title="时间旅行 (Time travel)" icon="clock-rotate-left">
+        将对话回溯到任何一点，并探索备用路径和提示
     </Card>
 </CardGroup>
 
-You don't need to learn LangGraph to use these features—they work out of the box.
+你不需要学习 LangGraph 才能使用这些功能——它们开箱即用。
 
-### Structured output
+### 结构化输出
 
-`createAgent` has improved structured output generation:
+`createAgent` 改进了结构化输出生成：
 
-- **Main loop integration**: Structured output is now generated in the main loop instead of requiring an additional LLM call
-- **Structured output strategy**: Models can choose between calling tools or using provider-side structured output generation
-- **Cost reduction**: Eliminates extra expense from additional LLM calls
+- **主循环集成**: 结构化输出现在在主循环中生成，而不是需要额外的 LLM 调用
+- **结构化输出策略**: 模型可以在调用工具和使用提供商侧的结构化输出生成之间进行选择
+- **成本降低**: 消除了由于额外 LLM 调用产生的额外费用
 
 ```ts
 import { createAgent } from "langchain";
@@ -225,55 +225,55 @@ const result = await agent.invoke({
 console.log(result.structuredResponse);
 ```
 
-**Error handling**: Control error handling via the `handleErrors` parameter to `ToolStrategy`:
-- **Parsing errors**: Model generates data that doesn't match desired structure
-- **Multiple tool calls**: Model generates 2+ tool calls for structured output schemas
+**错误处理**: 通过 `ToolStrategy` 的 `handleErrors` 参数控制错误处理：
+- **解析错误**: 模型生成的数据不匹配所需结构
+- **多工具调用**: 模型为结构化输出模式生成 2 个或更多工具调用
 
 ---
 
-## Standard content blocks
+## 标准内容块 (Standard content blocks)
 
 <Note>
-    1.0 releases are available for most packages. Only the following currently support new content blocks:
+    大多数包的 1.0 版本均已发布。目前只有以下包支持新的内容块：
 
     - `langchain`
     - `@langchain/core`
     - `@langchain/anthropic`
     - `@langchain/openai`
 
-    Broader support for content blocks is planned.
+    计划更广泛地支持内容块。
 </Note>
 
-### Benefits
+### 优势
 
-- **Provider agnostic**: Access reasoning traces, citations, built-in tools (web search, code interpreters, etc.), and other features using the same API regardless of provider
-- **Type safe**: Full type hints for all content block types
-- **Backward compatible**: Standard content can be [loaded lazily](/oss/langchain/messages#standard-content-blocks), so there are no associated breaking changes
+- **提供商无关性**: 使用相同的 API 访问推理追踪、引用、内置工具（网络搜索、代码解释器等）和其他特性，而无需关心提供商是谁
+- **类型安全**: 所有内容块类型都提供完整的类型提示
+- **向后兼容**: 标准内容可以被[惰性加载](/oss/langchain/messages#standard-content-blocks)，因此不会产生相关的破坏性更改
 
-For more information, see our guide on [content blocks](/oss/langchain/messages#message-content)
+有关更多信息，请参阅我们关于[内容块](/oss/langchain/messages#message-content)的指南
 
 ---
 
-## Simplified package
+## 简化的包结构 (Simplified package)
 
-LangChain v1 streamlines the `langchain` package namespace to focus on essential building blocks for agents. The package exposes only the most useful and relevant functionality:
+LangChain v1 简化了 `langchain` 包的命名空间，以专注于智能体的核心构建块。该包仅暴露最有用的相关功能：
 
-Most of these are re-exported from `@langchain/core` for convenience, which gives you a focused API surface for building agents.
+其中大多数是从 `@langchain/core` 重新导出的，以提供便利，这为你提供了一个专注于构建智能体的 API 表面。
 
 
 ### `@langchain/classic`
 
-Legacy functionality has moved to [`@langchain/classic`](https://www.npmjs.com/package/@langchain/classic) to keep the core package lean and focused.
+遗留功能已迁移到 [`@langchain/classic`](https://www.npmjs.com/package/@langchain/classic)，以保持核心包的精简和专注。
 
-#### What's in `@langchain/classic`
+#### `@langchain/classic` 中包含的内容
 
-- Legacy chains and chain implementations
-- Retrievers
-- The indexing API
-- [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) exports
-- Other deprecated functionality
+- 遗留链 (Chains) 和链的实现
+- 检索器 (Retrievers)
+- 索引 API
+- [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) 导出
+- 其他已弃用的功能
 
-If you use any of this functionality, install [`@langchain/classic`](https://www.npmjs.com/package/@langchain/classic):
+如果你使用了上述任何功能，请安装 [`@langchain/classic`](https://www.npmjs.com/package/@langchain/classic)：
 
 <CodeGroup>
 ```bash npm
@@ -290,7 +290,7 @@ bun add @langchain/classic
 ```
 </CodeGroup>
 
-Then update your imports:
+然后更新你的导入：
 
 ```typescript
 import { ... } from "langchain"; // [!code --]
@@ -300,34 +300,34 @@ import { ... } from "langchain/chains"; // [!code --]
 import { ... } from "@langchain/classic/chains"; // [!code ++]
 ```
 
-## Reporting issues
+## 报告问题
 
-Please report any issues discovered with 1.0 on [GitHub](https://github.com/langchain-ai/langchainjs/issues) using the [`'v1'` label](https://github.com/langchain-ai/langchainjs/issues?q=state%3Aopen%20label%3Av1).
+请在 [GitHub](https://github.com/langchain-ai/langchainjs/issues) 上使用 [`'v1'` 标签](https://github.com/langchain-ai/langchainjs/issues?q=state%3Aopen%20label%3Av1)报告发现的任何与 1.0 相关的问题。
 
-## Additional resources
+## 附加资源
 
 <CardGroup cols={3}>
     <Card title="LangChain 1.0" icon="rocket" href="https://blog.langchain.com/langchain-langchain-1-0-alpha-releases/">
-        Read the announcement
+        阅读公告
     </Card>
-    <Card title="Middleware guide" icon="puzzle-piece" href="https://blog.langchain.com/agent-middleware/">
-        Deep dive into middleware
+    <Card title="中间件指南" icon="puzzle-piece" href="https://blog.langchain.com/agent-middleware/">
+        深入了解中间件
     </Card>
-    <Card title="Agents Documentation" icon="book" href="/oss/langchain/agents" arrow>
-        Full agent documentation
+    <Card title="智能体文档" icon="book" href="/oss/langchain/agents" arrow>
+        完整的智能体文档
     </Card>
-    <Card title="Message Content" icon="message" href="/oss/langchain/messages#message-content" arrow>
-        New content blocks API
+    <Card title="消息内容" icon="message" href="/oss/langchain/messages#message-content" arrow>
+        新的内容块 API
     </Card>
-    <Card title="Migration guide" icon="arrow-right-arrow-left" href="/oss/migrate/langchain-v1" arrow>
-        How to migrate to LangChain v1
+    <Card title="迁移指南" icon="arrow-right-arrow-left" href="/oss/migrate/langchain-v1" arrow>
+        如何迁移到 LangChain v1
     </Card>
     <Card title="GitHub" icon="github" href="https://github.com/langchain-ai/langchainjs">
-        Report issues or contribute
+        报告问题或贡献
     </Card>
 </CardGroup>
 
-## See also
+## 另请参阅 (See also)
 
-- [Versioning](/oss/versioning) – Understanding version numbers
-- [Release policy](/oss/release-policy) – Detailed release policies
+- [版本控制](/oss/versioning) – 理解版本号
+- [发布策略](/oss/release-policy) – 详细的发布策略

@@ -1,9 +1,9 @@
 ---
-title: Include HTTP headers in server logs
-sidebarTitle: Logging Headers
+title: 在服务器日志中包含 HTTP 标头
+sidebarTitle: 记录标头
 ---
 
-By default, the [Agent Server](/langsmith/agent-server) omits HTTP headers from server logs for privacy reasons. However, logging request and correlation IDs can help you debug issues and trace requests across distributed systems. You can opt-in to logging headers for all API calls by modifying the `logging_headers` section in your [`langgraph.json`](/langsmith/application-structure#configuration-file) file.
+默认情况下，[Agent Server](/langsmith/agent-server) 出于隐私考虑，会从服务器日志中省略 HTTP 标头（Headers）。然而，记录请求 ID（request IDs）和关联 ID（correlation IDs）可以帮助您调试问题，并在分布式系统中追踪请求。您可以通过修改 `[`langgraph.json`](/langsmith/application-structure#configuration-file)` 文件中的 `logging_headers` 部分，选择为所有 API 调用记录标头。
 
 ```json
 {
@@ -17,6 +17,6 @@ By default, the [Agent Server](/langsmith/agent-server) omits HTTP headers from 
 }
 ```
 
-The `includes` and `excludes` lists accept exact header names or glob patterns using `*` as a wildcard to match any number of characters (case-insensitive). For your security, no other pattern types are supported.
+`includes` 和 `excludes` 列表接受精确的标头名称，或者使用 `*` 作为通配符的 glob 模式（匹配任意数量的字符，不区分大小写）。为了您的安全起见，不支持其他任何模式类型。
 
-Note that exclusions take precedence over inclusions. For example, if you include `*-id` but exclude `x-user-id`, the `x-user-id` header will not be logged.
+请注意，排除项的优先级高于包含项。例如，如果您包含了 `*-id`，但同时排除了 `x-user-id`，那么 `x-user-id` 标头将不会被记录。

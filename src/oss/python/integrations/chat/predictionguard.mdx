@@ -2,25 +2,25 @@
 title: ChatPredictionGuard
 ---
 
->[Prediction Guard](https://predictionguard.com) is a secure, scalable GenAI platform that safeguards sensitive data, prevents common AI malfunctions, and runs on affordable hardware.
+>[Prediction Guard](https://predictionguard.com) 是一个安全、可扩展的 GenAI 平台，可以保护敏感数据，防止常见的 AI 故障，并且可以在经济实惠的硬件上运行。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-This integration utilizes the Prediction Guard API, which includes various safeguards and security features.
+此集成使用了 Prediction Guard API，其中包含各种安全保护措施和安全功能。
 
-### Model features
+### 模型特性
 
-The models supported by this integration only feature text-generation currently, along with the input and output checks described here.
+此集成支持的模型目前仅提供文本生成功能，以及此处描述的输入和输出检查。
 
-## Setup
+## 设置
 
-To access Prediction Guard models, contact us [here](https://predictionguard.com/get-started) to get a Prediction Guard API key and get started.
+要访问 Prediction Guard 模型，请在此处 [https://predictionguard.com/get-started](https://predictionguard.com/get-started) 联系我们以获取 Prediction Guard API 密钥并开始使用。
 
-### Credentials
+### 凭证
 
-Once you have a key, you can set it with
+获得密钥后，您可以使用以下代码设置它：
 
 ```python
 import os
@@ -29,26 +29,26 @@ if "PREDICTIONGUARD_API_KEY" not in os.environ:
     os.environ["PREDICTIONGUARD_API_KEY"] = "<Your Prediction Guard API Key>"
 ```
 
-### Installation
+### 安装
 
-Install the Prediction Guard LangChain integration with
+使用以下命令安装 Prediction Guard LangChain 集成：
 
 ```python
 pip install -qU langchain-predictionguard
 ```
 
-## Instantiation
+## 实例化
 
 ```python
 from langchain_predictionguard import ChatPredictionGuard
 ```
 
 ```python
-# If predictionguard_api_key is not passed, default behavior is to use the `PREDICTIONGUARD_API_KEY` environment variable.
+# 如果未传递 predictionguard_api_key，则默认行为是使用 `PREDICTIONGUARD_API_KEY` 环境变量。
 chat = ChatPredictionGuard(model="Hermes-3-Llama-3.1-8B")
 ```
 
-## Invocation
+## 调用
 
 ```python
 messages = [
@@ -72,7 +72,7 @@ print(ai_msg.content)
 Why don't scientists trust atoms? Because they make up everything!
 ```
 
-## Streaming
+## 流式传输 (Streaming)
 
 ```python
 chat = ChatPredictionGuard(model="Hermes-2-Pro-Llama-3-8B")
@@ -87,13 +87,13 @@ Why don't scientists trust atoms?
 Because they make up everything!
 ```
 
-## Tool Calling
+## 工具调用 (Tool Calling)
 
-Prediction Guard has a tool calling API that lets you describe tools and their arguments, which enables the model to return a JSON object with a tool to call and the inputs to that tool. Tool-calling is very useful for building tool-using chains and agents, and for getting structured outputs from models more generally.
+Prediction Guard 具有工具调用 API，它允许您描述工具及其参数，从而使模型能够返回包含要调用的工具及其输入的 JSON 对象。工具调用对于构建使用工具的链和智能体（agents），以及更普遍地从模型中获取结构化输出来说非常有用。
 
 ### ChatPredictionGuard.bind_tools()
 
-Using `ChatPredictionGuard.bind_tools()`, you can pass in Pydantic classes, dict schemas, and LangChain tools as tools to the model, which are then reformatted to allow for use by the model.
+使用 `ChatPredictionGuard.bind_tools()`，您可以将 Pydantic 类、dict 模式和 LangChain 工具作为工具传递给模型，然后这些工具会被重新格式化以便模型使用。
 
 ```python
 from pydantic import BaseModel, Field
@@ -113,7 +113,7 @@ class GetPopulation(BaseModel):
 
 llm_with_tools = chat.bind_tools(
     [GetWeather, GetPopulation]
-    # strict = True  # enforce tool args schema is respected
+    # strict = True  # 强制工具参数模式得到遵守 (enforce tool args schema is respected)
 )
 ```
 
@@ -130,7 +130,7 @@ AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'chatcmpl-tool-b1
 
 ### AIMessage.tool_calls
 
-Notice that the AIMessage has a tool_calls attribute. This contains in a standardized ToolCall format that is model-provider agnostic.
+请注意，`AIMessage` 有一个 `tool_calls` 属性。它以一种标准化的 `ToolCall` 格式包含信息，这种格式与模型提供商无关。
 
 ```python
 ai_msg.tool_calls
@@ -155,11 +155,11 @@ ai_msg.tool_calls
   'type': 'tool_call'}]
 ```
 
-## Process Input
+## 处理输入 (Process Input)
 
-With Prediction Guard, you can guard your model inputs for PII or prompt injections using one of our input checks. See the [Prediction Guard docs](https://docs.predictionguard.com/docs/process-llm-input/) for more information.
+使用 Prediction Guard，您可以使用我们的输入检查功能来保护模型输入，防止个人身份信息 (PII) 泄露或提示注入。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/process-llm-input/)。
 
-### PII
+### PII (个人身份信息)
 
 ```python
 chat = ChatPredictionGuard(
@@ -176,7 +176,7 @@ except ValueError as e:
 Could not make prediction. pii detected
 ```
 
-### Prompt Injection
+### 提示注入 (Prompt Injection)
 
 ```python
 chat = ChatPredictionGuard(
@@ -196,11 +196,11 @@ except ValueError as e:
 Could not make prediction. prompt injection detected
 ```
 
-## Output Validation
+## 输出验证 (Output Validation)
 
-With Prediction Guard, you can check validate the model outputs using factuality to guard against hallucinations and incorrect info, and toxicity to guard against toxic responses (e.g. profanity, hate speech). See the [Prediction Guard docs](https://docs.predictionguard.com/docs/validating-llm-output) for more information.
+使用 Prediction Guard，您可以通过事实性检查来验证模型输出，以防止事实错误引起的“幻觉”和错误信息，并通过毒性检查来防止有害响应（例如脏话、仇恨言论）。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/validating-llm-output)。
 
-### Toxicity
+### 毒性 (Toxicity)
 
 ```python
 chat = ChatPredictionGuard(
@@ -216,7 +216,7 @@ except ValueError as e:
 Could not make prediction. failed toxicity check
 ```
 
-### Factuality
+### 事实性 (Factuality)
 
 ```python
 chat = ChatPredictionGuard(
@@ -233,7 +233,7 @@ except ValueError as e:
 Could not make prediction. failed factuality check
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
 ```python
 from langchain_core.prompts import PromptTemplate
@@ -257,6 +257,6 @@ AIMessage(content='Step 1: Determine the year Justin Bieber was born.\nJustin Bi
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all ChatPredictionGuard features and configurations, check out the API reference: [python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html)
+有关 ChatPredictionGuard 所有功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html)

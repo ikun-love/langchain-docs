@@ -1,60 +1,60 @@
 ---
-title: Self-host standalone servers
-sidebarTitle: Standalone servers
+title: 自托管独立服务器
+sidebarTitle: 独立服务器
 icon: "server"
 ---
 
-This guide shows you how to deploy **standalone <Tooltip tip="The server that runs your LangGraph applications.">Agent Servers</Tooltip>** without the LangSmith UI or control plane. This is the most lightweight self-hosting option for running one or a few agents as independent services.
+本指南将向您展示如何在没有 LangSmith UI 或控制平面（Control Plane）的情况下部署**独立的 <Tooltip tip="运行 LangGraph 应用程序的服务器">Agent Server</Tooltip>**。这是运行一个或少量智能体作为独立服务的最轻量级的自托管选项。
 
 <Warning>
-This deployment option provides flexibility but requires you to manage your own infrastructure and configuration.
+此部署选项提供了灵活性，但要求您自行管理架构和配置。
 
-For production workloads, consider [self-hosting the full LangSmith platform](/langsmith/self-hosted) or [deploying with the control plane](/langsmith/deploy-with-control-plane), which offer standardized deployment patterns and UI-based management.
+对于生产工作负载，请考虑[自托管完整的 LangSmith 平台](/langsmith/self-hosted)或[使用控制平面进行部署](/langsmith/deploy-with-control-plane)，这些方案提供了标准化的部署模式和基于 UI 的管理。
 </Warning>
 
 <Note>
-**This is the setup page for deploying Agent Servers directly without the LangSmith platform.**
+**此设置页面用于直接部署 Agent Server，而无需 LangSmith 平台。**
 
-Review the [self-hosted options](/langsmith/self-hosted) to understand:
-- [Standalone Server](/langsmith/self-hosted#standalone-server): What this guide covers (no UI, just servers).
-- [LangSmith](/langsmith/self-hosted#langsmith): For the full LangSmith platform with UI.
-- [LangSmith Deployment](/langsmith/self-hosted#langsmith-deployment): For UI-based deployment management.
+请查阅[自托管选项](/langsmith/self-hosted)以了解：
+- [独立服务器](/langsmith/self-hosted#standalone-server)：本指南涵盖的内容（无 UI，仅服务器）。
+- [LangSmith](/langsmith/self-hosted#langsmith)：用于带有 UI 的完整 LangSmith 平台。
+- [LangSmith 部署](/langsmith/self-hosted#langsmith-deployment)：用于基于 UI 的部署管理。
 
-Before continuing, review the [standalone server overview](/langsmith/self-hosted#standalone-server).
+在继续之前，请回顾[独立服务器概述](/langsmith/self-hosted#standalone-server)。
 </Note>
 
-## Prerequisites
+## 前提条件
 
-1. Use the [LangGraph CLI](/langsmith/cli) to [test your application locally](/langsmith/local-server).
-2. Use the [LangGraph CLI](/langsmith/cli) to build a Docker image (i.e. `langgraph build`).
-3. The following environment variables are needed for a data plane deployment.
-  1. `REDIS_URI`: Connection details to a Redis instance. Redis will be used as a pub-sub broker to enable streaming real time output from background runs. The value of `REDIS_URI` must be a valid [Redis connection URI](https://redis-py.readthedocs.io/en/stable/connections.html#redis.Redis.from_url).
+1. 使用 [LangGraph CLI](/langsmith/cli) 在本地[测试您的应用程序](/langsmith/local-server)。
+2. 使用 [LangGraph CLI](/langsmith/cli) 构建 Docker 镜像（即执行 `langgraph build`）。
+3. 数据平面部署需要以下环境变量：
+  1. `REDIS_URI`：到 Redis 实例的连接信息。Redis 将用作发布/订阅（pub-sub）代理，以实现后台运行输出的实时流式传输。`REDIS_URI` 的值必须是有效的[Redis 连接 URI](https://redis-py.readthedocs.io/en/stable/connections.html#redis.Redis.from_url)。
         <Note>
-        **Shared Redis Instance**
-        Multiple self-hosted deployments can share the same Redis instance. For example, for `Deployment A`, `REDIS_URI` can be set to `redis://<hostname_1>:<port>/1` and for `Deployment B`, `REDIS_URI` can be set to `redis://<hostname_1>:<port>/2`.
+        **共享 Redis 实例**
+        多个自托管部署可以共享同一个 Redis 实例。例如，对于“部署 A”，`REDIS_URI` 可以设置为 `redis://<hostname_1>:<port>/1`，而对于“部署 B”，`REDIS_URI` 可以设置为 `redis://<hostname_1>:<port>/2`。
 
-        `1` and `2` are different database numbers within the same instance, but `<hostname_1>` is shared. **The same database number cannot be used for separate deployments**.
+        这里的 `1` 和 `2` 是同一实例内不同的**数据库编号**，但主机名 `<hostname_1>` 是共享的。**单独的部署不能使用相同的数据库编号**。
         </Note>
-  2. `DATABASE_URI`: Postgres connection details. Postgres will be used to store assistants, threads, runs, persist thread state and long term memory, and to manage the state of the background task queue with 'exactly once' semantics. The value of `DATABASE_URI` must be a valid [Postgres connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS).
+  2. `DATABASE_URI`：Postgres 连接详细信息。Postgres 将用于存储助理（assistants）、线程（threads）、运行（runs）、持久化线程状态和长期记忆（long term memory），以及以“恰好一次”（exactly once）语义管理后台任务队列的状态。`DATABASE_URI` 的值必须是有效的[Postgres 连接 URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS)。
         <Note>
-        **Shared Postgres Instance**
-        Multiple self-hosted deployments can share the same Postgres instance. For example, for `Deployment A`, `DATABASE_URI` can be set to `postgres://<user>:<password>@/<database_name_1>?host=<hostname_1>` and for `Deployment B`, `DATABASE_URI` can be set to `postgres://<user>:<password>@/<database_name_2>?host=<hostname_1>`.
+        **共享 Postgres 实例**
+        多个自托管部署可以共享同一个 Postgres 实例。例如，对于“部署 A”，`DATABASE_URI` 可以设置为 `postgres://<user>:<password>@/<database_name_1>?host=<hostname_1>`，而对于“部署 B”，`DATABASE_URI` 可以设置为 `postgres://<user>:<password>@/<database_name_2>?host=<hostname_1>`.
 
-        `<database_name_1>` and `database_name_2` are different databases within the same instance, but `<hostname_1>` is shared. **The same database cannot be used for separate deployments**.
+        `<database_name_1>` 和 `<database_name_2>` 是同一实例内不同的**数据库**，但主机名 `<hostname_1>` 是共享的。**不同的部署不能使用相同的数据库**。
         </Note>
-  3. `LANGSMITH_API_KEY`: LangSmith API key.
-  4. `LANGGRAPH_CLOUD_LICENSE_KEY`: LangSmith license key. This will be used to authenticate ONCE at server start up.
-  5. `LANGSMITH_ENDPOINT`: To send traces to a [self-hosted LangSmith](/langsmith/self-hosted) instance, set `LANGSMITH_ENDPOINT` to the hostname of the self-hosted LangSmith instance.
-4. Egress to `https://beacon.langchain.com` from your network. This is required for license verification and usage reporting if not running in air-gapped mode. See the [Egress documentation](/langsmith/self-host-egress) for more details.
+  3. `LANGSMITH_API_KEY`：LangSmith API 密钥。
+  4. `LANGGRAPH_CLOUD_LICENSE_KEY`：LangSmith 许可证密钥。这将在服务器启动时用于进行**一次**身份验证。
+  5. `LANGSMITH_ENDPOINT`：如果需要将追踪数据发送到[自托管的 LangSmith](/langsmith/self-hosted)实例，请将 `LANGSMITH_ENDPOINT` 设置为自托管 LangSmith 实例的主机名。
+4. 您的网络必须能够访问 `https://beacon.langchain.com` 上的出口流量。如果不在隔离部署（air-gapped mode）模式下运行，这是许可证验证和使用情况报告所必需的。有关更多详细信息，请参阅[出口文档](/langsmith/self-host-egress)。
 
 <a id="helm"></a>
 ## Kubernetes
 
-Use this [Helm chart](https://github.com/langchain-ai/helm/blob/main/charts/langgraph-cloud/README.md) to deploy an Agent Server to a Kubernetes cluster.
+使用此 [Helm chart](https://github.com/langchain-ai/helm/blob/main/charts/langgraph-cloud/README.md) 将 Agent Server 部署到 Kubernetes 集群。
 
 ## Docker
 
-Run the following `docker` command:
+运行以下 `docker` 命令：
 
 ```shell
 docker run \
@@ -67,16 +67,16 @@ docker run \
 ```
 
 <Note>
-* You need to replace `my-image` with the name of the image you built in the prerequisite steps (from `langgraph build`)
+* 您需要将 `my-image` 替换为您在前提步骤中构建的镜像名称（即 `langgraph build` 的输出）。
 
-and you should provide appropriate values for `REDIS_URI`, `DATABASE_URI`, and `LANGSMITH_API_KEY`.
+* 您应该为 `REDIS_URI`、`DATABASE_URI` 和 `LANGSMITH_API_KEY` 提供适当的值。
 
-* If your application requires additional environment variables, you can pass them in a similar way.
+* 如果您的应用程序需要其他环境变量，您可以用类似的方式传递它们。
 </Note>
 
 ## Docker Compose
 
-Docker Compose YAML file:
+Docker Compose YAML 文件：
 
 ```yml
 volumes:
@@ -123,15 +123,15 @@ services:
             DATABASE_URI: postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable
 ```
 
-You can run the command `docker compose up` with this Docker Compose file in the same folder.
+您可以在包含此 Docker Compose 文件的同一文件夹中运行命令 `docker compose up`。
 
-This will launch an Agent Server on port `8123` (if you want to change this, you can change this by changing the ports in the `langgraph-api` volume). You can test if the application is healthy by running:
+这将会在端口 `8123` 上启动一个 Agent Server（如果您想更改此端口，可以通过修改 `langgraph-api` 卷中的端口来实现）。您可以通过运行以下命令来测试应用程序是否健康：
 
 ```shell
 curl --request GET --url 0.0.0.0:8123/ok
 ```
 
-Assuming everything is running correctly, you should see a response like:
+假设一切运行正常，您应该会看到如下响应：
 
 ```shell
 {"ok":true}

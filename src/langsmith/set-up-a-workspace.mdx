@@ -1,103 +1,102 @@
 ---
-title: Set up a workspace
-sidebarTitle: Set up a workspace
+title: 设置工作区
+sidebarTitle: 设置工作区
 ---
 
-This page describes setting up and managing your LangSmith [_organization_](/langsmith/administration-overview#organizations) and [_workspaces_](/langsmith/administration-overview#workspaces):
+本页面描述如何设置和管理您的 LangSmith [_组织_](/langsmith/administration-overview#organizations) 和 [_工作区_](/langsmith/administration-overview#workspaces)：
 
-- [Set up an organization](#set-up-an-organization): Create and manage organizations for team collaboration, including user management and role assignments.
-- [Set up a workspace](#set-up-a-workspace): Set up and configure workspaces to organize your LangSmith resources, manage workspace members, and configure settings for team collaboration.
+- [设置组织](#set-up-an-organization)：创建和管理用于团队协作的组织，包括用户管理和角色分配。
+- [设置工作区](#set-up-a-workspace)：设置和配置工作区，用于组织您的 LangSmith 资源、管理工作区成员以及配置团队协作的设置。
 
 <Check>
-You may find it helpful to refer to the [overview on LangSmith resource hierarchy](/langsmith/administration-overview) before you read this setup page.
+在阅读本设置页面之前，您可能参考 [LangSmith 资源层级概述](/langsmith/administration-overview) 会有所帮助。
 </Check>
 
-## Set up an organization
+## 设置组织
 
 <Note>
-If you're interested in managing your organization and workspaces programmatically, see [this how-to guide](/langsmith/manage-organization-by-api).
+如果您有兴趣通过编程方式管理您的组织和工作区，请参阅 [此操作指南](/langsmith/manage-organization-by-api)。
 </Note>
 
-### Create an organization
+### 创建组织
 
-When you log in for the first time, LangSmith will create a personal organization for you automatically. If you'd like to collaborate with others, you can create a separate organization and invite your team members to join.
+首次登录时，LangSmith 会自动为您创建一个个人组织。如果您希望与他人协作，可以创建一个独立的组织并将团队成员邀请加入。
 
-To do this, open the Organizations drawer by clicking your profile icon in the bottom left and click **+ New**. Shared organizations require a credit card before they can be used. You will need to [set up billing](/langsmith/billing#set-up-billing-for-your-account) to proceed.
+为此，请点击左下角的个人资料图标，打开“组织”抽屉，然后点击 **+ New**。共享组织在使用前需要绑定信用卡。您需要 [设置结算信息](/langsmith/billing#set-up-billing-for-your-account) 才能继续操作。
 
-### Manage and navigate workspaces
+### 管理和导航工作区
 
-Once you've subscribed to a plan that allows for multiple users per organization, you can [set up workspaces](/langsmith/administration-overview#workspaces) to collaborate more effectively and isolate LangSmith resources between different groups of users. To navigate between workspaces and access the resources within each workspace (trace projects, annotation queues, etc.), select the desired workspace from the picker in the top left:
+一旦您订阅了允许组织内拥有多个用户的套餐，您就可以 [设置工作区](/langsmith/administration-overview#workspaces) 以更有效地协作，并在不同用户组之间隔离 LangSmith 资源。要在工作区之间导航并访问每个工作区内的资源（如跟踪项目 (trace projects)、标注队列 (annotation queues) 等），请从左上角的选择器中选择所需的工作区：
 
 ![](/langsmith/images/select-workspace.png)
 
-### Manage users
+### 管理用户
 
-Manage membership in your shared organization in the **Members and roles** tabs on the [Settings page](https://smith.langchain.com/settings). Here you can:
+您可以在 [设置页面](https://smith.langchain.com/settings) 的 **Members and roles** 选项卡中管理共享组织中的成员。您可以在此处执行以下操作：
 
-- Invite new users to your organization, selecting workspace membership and (if RBAC is enabled) workspace role.
-- Edit a user's organization role.
-- Remove users from your organization.
+- 邀请新用户加入您的组织，并在这个过程中选择其工作区成员身份和（如果启用了 RBAC）工作区角色。
+- 编辑用户的组织角色。
+- 将用户从您的组织中移除。
 
 ![](/langsmith/images/organization-members-and-roles.png)
 
-Organizations on the Enterprise plan may set up custom workspace roles in the **Roles** tab. For more details, refer to the [access control setup guide](/langsmith/user-management).
+企业版套餐的组织可以在 **Roles** 选项卡中设置自定义工作区角色。有关更多详细信息，请参阅 [访问控制设置指南](/langsmith/user-management)。
 
-#### Organization roles
+#### 组织角色
 
-Organization-scoped roles are used to determine access to organization settings. The role selected also impacts workspace membership:
+组织范围的角色用于确定对组织设置的访问权限。所选角色还会影响工作区成员资格：
 
-- `Organization Admin` grants full access to manage all organization configuration, users, billing, and workspaces. Any `Organization Admin` has `Admin` access to all workspaces in an organization.
-* `Organization User` may read organization information, but cannot execute any write actions at the organization level. You can add an `Organization User` to a subset of workspaces and assigned workspace roles as usual (if RBAC is enabled), which specify permissions at the workspace level.
+* `Organization Admin`（组织管理员）：授予完全权限来管理所有组织配置、用户、结算和工作区。任何 `Organization Admin` 对组织内的所有工作区都拥有 `Admin` 访问权限。
+* `Organization User`（组织用户）：可以读取组织信息，但不能在组织级别执行任何写入操作。您可以将 `Organization User` 添加到工作区的子集，并像往常一样分配工作区角色（如果启用了 RBAC），这些角色指定了工作区级别的权限。
 
 <Info>
-The `Organization User` role is only available in organizations on plans with multiple workspaces. In organizations limited to a single workspace, all users are `Organization Admins`. Custom organization-scoped roles are not available.
+`Organization User` 角色仅在组织套餐包含多个工作区时可用。在仅限于单个工作区的组织中，所有用户都是 `Organization Admins`。并且，自定义组织范围的角色不可用。
 </Info>
 
-For a full list of permissions associated with each role, refer to the [Administration overview](/langsmith/administration-overview#organization-roles) page.
+有关与每个角色关联的权限的完整列表，请参阅 [管理概述](/langsmith/administration-overview#organization-roles) 页面。
 
-## Set up a workspace
+## 设置工作区
 
-When you log in for the first time, a default [workspace](/langsmith/administration-overview#workspaces) will be created for you in your personal organization. Workspaces are often used to separate resources between different teams or business units to establish clear trust boundaries between them. Within each workspace, Role-Based Access Control (RBAC) manages permissions and access levels, which ensures that users only have access to the resources and settings necessary for their role. Most LangSmith activity happens in the context of a workspace, each of which has its own settings and access controls.
+首次登录时，您的个人组织中会自动为您创建一个默认的 [工作区](/langsmith/administration-overview#workspaces)。工作区通常用于在不同团队或业务部门之间隔离资源，从而在它们之间建立明确的信任边界。在每个工作区内，**基于角色的访问控制 (RBAC)** 管理权限和访问级别，确保用户只能访问其角色所需的资源和设置。大多数 LangSmith 活动都在工作区的上下文中进行，每个工作区都有自己的设置和访问控制。
 
-To organize resources within a workspace, you can use [resource tags](/langsmith/set-up-resource-tags).
+要组织工作区内的资源，您可以使用 [资源标签](/langsmith/set-up-resource-tags)。
 
-### Create a workspace
+### 创建工作区
 
-To create a new workspace, navigate to the [Settings page](https://smith.langchain.com/settings) **Workspaces** tab in your shared organization and click **Add Workspace**. Once you have created your workspace, you can manage its members and other configuration by selecting it on this page.
+要创建新工作区，请导航到共享组织中的 [设置页面](https://smith.langchain.com/settings) 的 **Workspaces** 选项卡，然后点击 **Add Workspace**。创建工作区后，您可以从此页面选择它来管理其成员和其他配置。
 
 ![](/langsmith/images/create-workspace.png)
 
 <Note>
-Different plans have different limits placed on the number of workspaces that can be used in an organization. For more information, refer to the [pricing page](https://www.langchain.com/pricing-langsmith).
+不同的套餐对组织中可用的工作区数量有限制。有关更多信息，请参阅 [定价页面](https://www.langchain.com/pricing-langsmith)。
 </Note>
 
-### Manage users
+### 管理用户
 
 <Info>
-Only workspace `Admins` can manage workspace membership and, if RBAC is enabled, change a user's workspace role.
+只有工作区 `Admins`（管理员）才能管理工作区成员身份，并且（如果启用了 RBAC）更改用户的`工作区角色`。
 </Info>
 
-For users that are already members of an organization, a workspace `Admin` may add them to a workspace in the **Workspace members** tab under [Workspaces settings page](https://smith.langchain.com/settings/workspaces). Users may also be invited directly to one or more workspaces when they are [invited to an organization](#manage-users).
+对于已是组织成员的用户，工作区 `Admin`（管理员）可以在 [工作区设置页面](https://smith.langchain.com/settings/workspaces) 的 **Workspace members** 选项卡中将其添加到工作区。当用户被 [邀请加入组织时](#manage-users)，也可以直接邀请他们加入一个或多个工作区。
 
-### Configure workspace settings
+### 配置工作区设置
 
-Workspace configuration exists in the [Workspaces settings page](https://smith.langchain.com/settings/workspaces) tab. Select the workspace to configure and then the desired configuration sub-tab. The following example shows the **API keys**, and other configuration options including secrets, models, and shared URLs are available here as well.
+工作区配置位于 [工作区设置页面](https://smith.langchain.com/settings/workspaces) 选项卡中。选择要配置的工作区，然后选择所需的配置子选项卡。下面的示例显示了 **API keys**，并且此处也提供了包括密钥 (secrets)、模型 (models) 和共享 URL (shared URLs) 在内的其他配置选项。
 
 ![](/langsmith/images/workspace-settings.png)
 
-### Delete a workspace
+### 删除工作区
 
 <Warning>
-Deleting a workspace will permanently delete the workspace and all associated data. This action cannot be undone.
+删除工作区将永久删除该工作区及其所有相关数据。此操作无法撤销。
 </Warning>
 
-You can delete a workspace through the LangSmith UI or via [API](https://api.smith.langchain.com/redoc?#tag/workspaces/operation/delete_workspace_api_v1_workspaces__workspace_id__delete). You must be a workspace `Admin` in order to delete a workspace.
+您可以通过 LangSmith UI 或通过 [API](https://api.smith.langchain.com/redoc?#tag/workspaces/operation/delete_workspace_api_v1_workspaces__workspace_id__delete) 删除工作区。您必须是工作区 `Admin` 才能删除工作区。
 
-### Delete a workspace via the UI
+### 通过 UI 删除工作区
 
-1. Navigate to **Settings**.
-2. Select the workspace you want to delete.
-3. Click **Delete** in the top-right corner of the screen.
+1. 导航到 **Settings**（设置）。
+2. 选择要删除的工作区。
+3. 点击屏幕右上角的 **Delete**（删除）。
 
 ![Delete a workspace](/langsmith/images/delete-workspace.png)
-

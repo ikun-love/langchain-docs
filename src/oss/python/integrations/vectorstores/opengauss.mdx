@@ -1,13 +1,12 @@
 ---
-title: openGauss VectorStore
+title: openGauss 向量存储
 ---
 
-This notebook covers how to get started with the openGauss VectorStore. [openGauss](https://opengauss.org/en/) is a high-performance relational database with native vector storage and retrieval capabilities. This integration enables ACID-compliant vector operations within LangChain applications, combining traditional SQL functionality with modern AI-driven similarity search.
- vector store.
+本 Notebook 介绍如何开始使用 openGauss VectorStore（向量存储）。[openGauss](https://opengauss.org/en/) 是一个高性能的关系型数据库，内置了向量存储和检索能力。通过这种集成，可以在 LangChain 应用程序中实现兼容 ACID 的向量操作，将传统的 SQL 功能与现代的、由 AI 驱动的相似性搜索相结合。vector store 的一个重要特性。
 
-## Setup
+## 设置 (Setup)
 
-### Launch openGauss Container
+### 启动 openGauss 容器
 
 ```bash
 docker run --name opengauss \
@@ -17,30 +16,30 @@ docker run --name opengauss \
   opengauss/opengauss-server:latest
 ```
 
-### Install langchain-opengauss
+### 安装 langchain-opengauss
 
 ```bash
 pip install langchain-opengauss
 ```
 
-**System Requirements**:
+**系统要求 (System Requirements)**:
 
-- openGauss ≥ 7.0.0
-- Python ≥ 3.8
+- openGauss 版本 ≥ 7.0.0
+- Python 版本 ≥ 3.8
 - psycopg2-binary
 
-### Credentials
+### 凭证 (Credentials)
 
-Using your openGauss Credentials
+使用您的 openGauss 凭证。
 
-## Initialization
+## 初始化 (Initialization)
 
 <EmbeddingTabs/>
 
 ```python
 from langchain_opengauss import OpenGauss, OpenGaussSettings
 
-# Configure with schema validation
+# 使用 schema 验证进行配置
 config = OpenGaussSettings(
     table_name="test_langchain",
     embedding_dimension=384,
@@ -50,9 +49,9 @@ config = OpenGaussSettings(
 vector_store = OpenGauss(embedding=embeddings, config=config)
 ```
 
-## Manage vector store
+## 管理向量存储 (Manage vector store)
 
-### Add items to vector store
+### 向向量存储添加条目 (Add items to vector store)
 
 ```python
 from langchain_core.documents import Document
@@ -68,32 +67,32 @@ documents = [document_1, document_2, document_3]
 vector_store.add_documents(documents=documents, ids=["1", "2", "3"])
 ```
 
-### Update items in vector store
+### 更新向量存储中的条目 (Update items in vector store)
 
 ```python
 updated_document = Document(
     page_content="qux", metadata={"source": "https://another-example.com"}
 )
 
-# If the id is already exist, will update the document
+# 如果 ID 已经存在，则会更新该文档
 vector_store.add_documents(document_id="1", document=updated_document)
 ```
 
-### Delete items from vector store
+### 从向量存储中删除条目 (Delete items from vector store)
 
 ```python
 vector_store.delete(ids=["3"])
 ```
 
-## Query vector store
+## 查询向量存储 (Query vector store)
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
+在创建了向量存储并将相关文档添加进去之后，您很可能希望在链或代理的运行过程中对其进行查询。
 
-### Query directly
+### 直接查询 (Query directly)
 
-Performing a simple similarity search can be done as follows:
+可以按如下方式执行简单的相似性搜索：
 
-- TODO: Edit and then run code cell to generate output
+- TODO: 编辑并运行代码单元以生成输出
 
 ```python
 results = vector_store.similarity_search(
@@ -103,7 +102,7 @@ for doc in results:
     print(f"* {doc.page_content} [{doc.metadata}]")
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
+如果您想执行相似性搜索并接收相应的分数，可以运行：
 
 ```python
 results = vector_store.similarity_search_with_score(
@@ -113,83 +112,83 @@ for doc, score in results:
     print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
 ```
 
-### Query by turning into retriever
+### 通过转为检索器查询 (Query by turning into retriever)
 
-You can also transform the vector store into a retriever for easier usage in your chains.
+您也可以将向量存储转换为检索器 (retriever)，以便在链中更方便地使用。
 
-- TODO: Edit and then run code cell to generate output
+- TODO: 编辑并运行代码单元以生成输出
 
 ```python
 retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 1})
 retriever.invoke("thud")
 ```
 
-## Usage for retrieval-augmented generation
+## 用于检索增强生成 (RAG) 的用法
 
-For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
+有关如何将此向量存储用于检索增强生成 (Retrieval-Augmented Generation, RAG) 的指南，请参阅以下部分：
 
-- [Tutorials](/oss/langchain/rag)
-- [How-to: Question and answer with RAG](https://python.langchain.com/docs/how_to/#qa-with-rag)
-- [Retrieval conceptual docs](https://python.langchain.com/docs/concepts/retrieval/)
+- [教程](/oss/langchain/rag)
+- [操作指南：使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
+- [检索概念文档](https://python.langchain.com/docs/concepts/retrieval/)
 
-## Configuration
+## 配置 (Configuration)
 
-### Connection Settings
+### 连接设置 (Connection Settings)
 
-| Parameter           | Default                 | Description                                            |
+| 参数 (Parameter) | 默认值 (Default) | 描述 (Description) |
 |---------------------|-------------------------|--------------------------------------------------------|
-| `host`              | localhost               | Database server address                                |
-| `port`              | 8888                    | Database connection port                               |
-| `user`              | gaussdb                 | Database username                                      |
-| `password`          | -                       | Complex password string                                |
-| `database`          | postgres                | Default database name                                  |
-| `min_connections`   | 1                       | Connection pool minimum size                           |
-| `max_connections`   | 5                       | Connection pool maximum size                           |
-| `table_name`        | langchain_docs          | Name of the table for storing vector data and metadata |
-| `index_type`        | IndexType.HNSW          |Vector index algorithm type. Options: HNSW or IVFFLAT\nDefault is HNSW.|
-| `vector_type`       | VectorType.vector       |Type of vector representation to use. Default is Vector.|
-| `distance_strategy` | DistanceStrategy.COSINE |Vector similarity metric to use for retrieval. Options: euclidean (L2 distance), cosine (angular distance, ideal for text embeddings), manhattan (L1 distance for sparse data), negative_inner_product (dot product for normalized vectors).\n Default is cosine.|
-|`embedding_dimension`| 1536                    |Dimensionality of the vector embeddings.|
+| `host`              | localhost               | 数据库服务器地址 |
+| `port`              | 8888                    | 数据库连接端口 |
+| `user`              | gaussdb                 | 数据库用户名 |
+| `password`          | -                       | 复杂密码字符串 |
+| `database`          | postgres                | 默认数据库名称 |
+| `min_connections`   | 1                       | 连接池最小大小 |
+| `max_connections`   | 5                       | 连接池最大大小 |
+| `table_name`        | langchain_docs          | 用于存储向量数据和元数据的表名称 |
+| `index_type`        | IndexType.HNSW          | 向量索引算法类型。选项包括：HNSW 或 IVFFLAT。默认值为 HNSW。|
+| `vector_type`       | VectorType.vector       | 要使用的向量表示类型。默认为 Vector。|
+| `distance_strategy` | DistanceStrategy.COSINE | 用于检索的向量相似性度量标准。选项包括：euclidean（L2 距离）、cosine（余弦距离，文本嵌入的理想选择）、manhattan（稀疏数据的 L1 距离）、negative_inner_product（归一化向量的点积）。默认值为 cosine。|
+|`embedding_dimension`| 1536                    | 向量嵌入的维度。|
 
-### Supported Combinations
+### 支持的组合 (Supported Combinations)
 
-| Vector Type | Dimensions | Index Types  | Supported Distance Strategies         |
+| 向量类型 (Vector Type) | 维度 (Dimensions) | 索引类型 (Index Types) | 支持的距离策略 (Supported Distance Strategies) |
 |-------------|------------|--------------|---------------------------------------|
 | vector      | ≤2000      | HNSW/IVFFLAT | COSINE/EUCLIDEAN/MANHATTAN/INNER_PROD |
 
-## Performance Optimization
+## 性能优化 (Performance Optimization)
 
-### Index Tuning Guidelines
+### 索引调优指南 (Index Tuning Guidelines)
 
-**HNSW Parameters**:
+**HNSW 参数**:
 
-- `m`: 16-100 (balance between recall and memory)
-- `ef_construction`: 64-1000 (must be > 2*m)
+- `m`: 16-100 (在召回率和内存之间取得平衡)
+- `ef_construction`: 64-1000 (必须大于 2\*m)
 
-**IVFFLAT Recommendations**:
+**IVFFLAT 建议**:
 
 ```python
 import math
 
 lists = min(
     int(math.sqrt(total_rows)) if total_rows > 1e6 else int(total_rows / 1000),
-    2000,  # openGauss maximum
+    2000,  # openGauss 最大值
 )
 ```
 
-### Connection Pooling
+### 连接池 (Connection Pooling)
 
 ```python
 OpenGaussSettings(min_connections=3, max_connections=20)
 ```
 
-## Limitations
+## 限制 (Limitations)
 
-- `bit` and `sparsevec` vector types currently in development
-- Maximum vector dimensions: 2000 for `vector` type
+- `bit` 和 `sparsevec` 向量类型目前正在开发中
+- `vector` 类型的最大向量维度：2000
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all __ModuleName__VectorStore features and configurations head to the API reference: [python.langchain.com/api_reference/en/latest/vectorstores/opengauss.OpenGuass.html](https://python.langchain.com/api_reference/en/latest/vectorstores/opengauss.OpenGuass.html)
+有关所有 __ModuleName__VectorStore 特性和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/en/latest/vectorstores/opengauss.OpenGuass.html](https://python.langchain.com/api_reference/en/latest/vectorstores/opengauss.OpenGuass.html)

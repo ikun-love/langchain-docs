@@ -1,60 +1,60 @@
 ---
-title: A2A endpoint in Agent Server
-sidebarTitle: A2A endpoint in Agent Server
+title: Agent Server 中的 A2A 端点
+sidebarTitle: Agent Server 中的 A2A 端点
 ---
 
-[Agent2Agent (A2A)](https://a2a-protocol.org/latest/) is Google's protocol for enabling communication between conversational AI agents. [LangSmith implements A2A support](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html#tag/a2a/post/a2a/{assistant_id}), allowing your agents to communicate with other A2A-compatible agents through a standardized protocol.
+[Agent2Agent (A2A)](https://a2a-protocol.org/latest/) 是 Google 用于支持对话式 AI 代理之间通信的协议。[LangSmith 实现了 A2A 支持](https://langchain-ai.github.io/langgraph/cloud/reference/api/api_ref.html#tag/a2a/post/a2a/{assistant_id})，允许您的代理通过标准化协议与其他兼容 A2A 的代理进行通信。
 
-The A2A endpoint is available in [Agent Server](/langsmith/agent-server) at `/a2a/{assistant_id}`.
+A2A 端点在 [Agent Server](/langsmith/agent-server) 中位于 `/a2a/{assistant_id}`。
 
-## Supported methods
+## 支持的方法 (Supported methods)
 
-Agent Server supports the following A2A RPC methods:
+Agent Server 支持以下 A2A RPC 方法：
 
-- **message/send**: Send a message to an assistant and receive a complete response
-- **message/stream**: Send a message and stream responses in real-time using Server-Sent Events (SSE)
-- **tasks/get**: Retrieve the status and results of a previously created task
+- **message/send**: 向助手发送消息并接收完整响应。
+- **message/stream**: 发送消息并使用服务器发送事件 (SSE) 实时流式传输响应。
+- **tasks/get**: 检索先前创建的任务的状态和结果。
 
-## Agent Card Discovery
+## Agent Card 发现
 
-Each assistant automatically exposes an A2A Agent Card that describes its capabilities and provides the information needed for other agents to connect. You can retrieve the agent card for any assistant using:
+每个助手会自动暴露一个 A2A Agent Card（代理卡片），用于描述其能力并提供其他代理连接所需的信息。您可以使用以下命令检索任何助手的代理卡片：
 
 ```
 GET /.well-known/agent-card.json?assistant_id={assistant_id}
 ```
 
-The agent card includes the assistant's name, description, available skills, supported input/output modes, and the A2A endpoint URL for communication.
+代理卡片包含助手的名称、描述、可用技能、支持的输入/输出模式，以及用于通信的 A2A 端点 URL。
 
-## Requirements
+## 要求 (Requirements)
 
-To use A2A, ensure you have the following dependencies installed:
+要使用 A2A，请确保已安装以下依赖项：
 
 * `langgraph-api >= 0.4.21`
 
-Install with:
+使用以下命令安装：
 
 ```bash
 pip install "langgraph-api>=0.4.21"
 ```
 
-## Usage overview
+## 用法概述 (Usage overview)
 
-To enable A2A:
+要启用 A2A：
 
-* Upgrade to use langgraph-api>=0.4.21.
-* Deploy your agent with message-based state structure.
-* Connect with other A2A-compatible agents using the endpoint.
+* 将 `langgraph-api` 升级到 `>=0.4.21`。
+* 使用基于消息的状态结构部署您的代理。
+* 使用该端点与另一个兼容 A2A 的代理进行连接。
 
-## Creating an A2A-compatible agent
+## 创建一个兼容 A2A 的代理
 
-This example creates an A2A-compatible agent that processes incoming messages using OpenAI's API and maintains conversational state. The agent defines a message-based state structure and handles the A2A protocol's message format.
+此示例创建一个兼容 A2A 的代理，它使用 OpenAI 的 API 处理传入消息并维护对话状态。该代理定义了一个基于消息的状态结构，并处理 A2A 协议的消息格式。
 
-To be compatible with the [A2A "text" parts](https://a2a-protocol.org/dev/specification/#651-textpart-object), the agent must have a `messages` key in state. Here's an example:
+为了兼容 [A2A 的 "text" 部分](https://a2a-protocol.org/dev/specification/#651-textpart-object)，代理的状态中必须有一个 `messages` 键。下面是一个示例：
 
 ```python
-"""LangGraph A2A conversational agent.
+"""LangGraph A2A 对话代理。
 
-Supports the A2A protocol with messages input for conversational interactions.
+支持带有消息输入的 A2A 协议，以实现对话交互。
 """
 
 from __future__ import annotations
@@ -69,33 +69,33 @@ from openai import AsyncOpenAI
 
 
 class Context(TypedDict):
-    """Context parameters for the agent."""
+    """代理的上下文参数。"""
     my_configurable_param: str
 
 
 @dataclass
 class State:
-    """Input state for the agent.
+    """代理的输入状态。
 
-    Defines the initial structure for A2A conversational messages.
+    为 A2A 对话消息定义初始结构。
     """
     messages: List[Dict[str, Any]]
 
 
 async def call_model(state: State, runtime: Runtime[Context]) -> Dict[str, Any]:
-    """Process conversational messages and returns output using OpenAI."""
-    # Initialize OpenAI client
+    """处理对话消息并使用 OpenAI 返回输出。"""
+    # 初始化 OpenAI 客户端
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    # Process the incoming messages
+    # 处理传入的消息
     latest_message = state.messages[-1] if state.messages else {}
-    user_content = latest_message.get("content", "No message content")
+    user_content = latest_message.get("content", "没有消息内容")
 
-    # Create messages for OpenAI API
+    # 为 OpenAI API 创建消息列表
     openai_messages = [
         {
             "role": "system",
-            "content": "You are a helpful conversational agent. Keep responses brief and engaging."
+            "content": "你是一个有帮助的对话代理。请保持回复简洁且引人入胜。"
         },
         {
             "role": "user",
@@ -104,7 +104,7 @@ async def call_model(state: State, runtime: Runtime[Context]) -> Dict[str, Any]:
     ]
 
     try:
-        # Make OpenAI API call
+        # 调用 OpenAI API
         response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=openai_messages,
@@ -115,9 +115,9 @@ async def call_model(state: State, runtime: Runtime[Context]) -> Dict[str, Any]:
         ai_response = response.choices[0].message.content
 
     except Exception as e:
-        ai_response = f"I received your message but had trouble processing it. Error: {str(e)[:50]}..."
+        ai_response = f"我收到了您的消息，但在处理时遇到问题。错误: {str(e)[:50]}..."
 
-    # Create a response message
+    # 创建一个响应消息
     response_message = {
         "role": "assistant",
         "content": ai_response
@@ -128,7 +128,7 @@ async def call_model(state: State, runtime: Runtime[Context]) -> Dict[str, Any]:
     }
 
 
-# Define the graph
+# 定义图 (Define the graph)
 graph = (
     StateGraph(State, context_schema=Context)
     .add_node(call_model)
@@ -137,22 +137,22 @@ graph = (
 )
 ```
 
-## Agent-to-agent communication
+## 代理间通信 (Agent-to-agent communication)
 
-Once your agents are running locally via `langgraph dev` or [deployed to production](/langsmith/deployments), you can facilitate communication between them using the A2A protocol.
+一旦您的代理通过 `langgraph dev` 在本地运行或[部署到生产环境](/langsmith/deployments)，您就可以使用 A2A 协议促进它们之间的通信。
 
-This example demonstrates how two agents can communicate by sending JSON-RPC messages to each other's A2A endpoints. The script simulates a multi-turn conversation where each agent processes the other's response and continues the dialogue.
+此示例演示了两个代理如何通过向彼此的 A2A 端点发送 JSON-RPC 消息来进行通信。该脚本模拟了一个多轮对话，其中每个代理处理另一个代理的响应并继续对话。
 
 ```python
 #!/usr/bin/env python3
-"""Agent-to-Agent conversation simulation using LangGraph A2A protocol."""
+"""使用 LangGraph A2A 协议进行代理间对话模拟。"""
 
 import asyncio
 import aiohttp
 import os
 
 async def send_message(session, port, assistant_id, text):
-    """Send a message to an agent and return the response text."""
+    """向代理发送消息并返回响应文本。"""
     url = f"http://127.0.0.1:{port}/a2a/{assistant_id}"
     payload = {
         "jsonrpc": "2.0",
@@ -175,31 +175,31 @@ async def send_message(session, port, assistant_id, text):
             return result["result"]["artifacts"][0]["parts"][0]["text"]
         except Exception as e:
             text = await response.text()
-            print(f"Response error from port {port}: {response.status} - {text}")
-            return f"Error from port {port}: {response.status}"
+            print(f"来自端口 {port} 的响应错误: {response.status} - {text}")
+            return f"来自端口 {port} 的错误: {response.status}"
 
 async def simulate_conversation():
-    """Simulate a conversation between two agents."""
+    """模拟两个代理之间的对话。"""
     agent_a_id = os.getenv("AGENT_A_ID")
     agent_b_id = os.getenv("AGENT_B_ID")
 
     if not agent_a_id or not agent_b_id:
-        print("Set AGENT_A_ID and AGENT_B_ID environment variables")
+        print("请设置 AGENT_A_ID 和 AGENT_B_ID 环境变量")
         return
 
-    message = "Hello! Let's have a conversation."
+    message = "你好！让我们开始对话吧。"
 
     async with aiohttp.ClientSession() as session:
         for i in range(3):
-            print(f"--- Round {i + 1} ---")
+            print(f"--- 第 {i + 1} 轮 ---")
 
-            # Agent A responds
+            # 代理 A 回复
             message = await send_message(session, 2024, agent_a_id, message)
-            print(f"🔵 Agent A: {message}")
+            print(f"🔵 代理 A: {message}")
 
-            # Agent B responds
+            # 代理 B 回复
             message = await send_message(session, 2025, agent_b_id, message)
-            print(f"🔴 Agent B: {message}")
+            print(f"🔴 代理 B: {message}")
             print()
 
 if __name__ == "__main__":
@@ -207,9 +207,9 @@ if __name__ == "__main__":
 ```
 
 
-## Disable A2A
+## 禁用 A2A
 
-To disable the A2A endpoint, set `disable_a2a` to `true` in your `langgraph.json` configuration file:
+要禁用 A2A 端点，请在 `langgraph.json` 配置文件中将 `disable_a2a` 设置为 `true`：
 
 ```json
 {

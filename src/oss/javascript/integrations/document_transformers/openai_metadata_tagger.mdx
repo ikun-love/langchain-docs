@@ -1,16 +1,16 @@
 ---
-title: OpenAI functions metadata tagger
+title: OpenAI 函数元数据标记器
 ---
 
-It can often be useful to tag ingested documents with structured metadata, such as the title, tone, or length of a document, to allow for more targeted similarity search later. However, for large numbers of documents, performing this labelling process manually can be tedious.
+通常情况下，为摄取（ingested）的文档标记结构化元数据（例如标题、语气或长度）会非常有用，以便将来进行更有针对性的相似性搜索。然而，对于大量的文档来说，手动执行此标记过程可能会很繁琐。
 
-The `MetadataTagger` document transformer automates this process by extracting metadata from each provided document according to a provided schema. It uses a configurable OpenAI Functions-powered chain under the hood, so if you pass a custom LLM instance, it must be an OpenAI model with functions support.
+`MetadataTagger` 文档转换器通过根据提供的 Schema 从每个文档中提取元数据，实现了这一过程的自动化。它底层使用了一个可配置的、基于 OpenAI Functions 的链（chain），因此，如果你传入一个自定义的 LLM 实例，它必须是支持函数（functions）的 OpenAI 模型。
 
-**Note:** This document transformer works best with complete documents, so it's best to run it first with whole documents before doing any other splitting or processing!
+**注意：** 此文档转换器最适合处理完整的文档，因此最好先用完整的文档运行它，然后再进行任何其他拆分或预处理！
 
-### Usage
+### 用法
 
-For example, let's say you wanted to index a set of movie reviews. You could initialize the document transformer as follows:
+例如，假设您想索引一组电影评论。您可以像下面这样初始化文档转换器：
 
 ```typescript
 import * as z from "zod";
@@ -24,7 +24,7 @@ const zodSchema = z.object({
   tone: z.enum(["positive", "negative"]),
   rating: z
     .optional(z.number())
-    .describe("The number of stars the critic rated the movie"),
+    .describe("评论家给电影打的星数"),
 });
 
 const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
@@ -76,12 +76,12 @@ console.log(taggedDocuments);
 */
 ```
 
-There is an additional `createMetadataTagger` method that accepts a valid JSON Schema object as well.
+还有一个额外的 `createMetadataTagger` 方法，它接受一个有效的 JSON Schema 对象。
 
-### Customization
+### 自定义
 
-You can pass the underlying tagging chain the standard LLMChain arguments in the second options parameter.
-For example, if you wanted to ask the LLM to focus specific details in the input documents, or extract metadata in a certain style, you could pass in a custom prompt:
+您可以在第二个选项参数中将标准的 LLMChain 参数传递给底层的标记链（tagging chain）。
+例如，如果你想让 LLM 专注于输入文档中的特定细节，或者以某种特定风格提取元数据，你可以传入一个自定义的 Prompt：
 
 ```typescript
 import * as z from "zod";
@@ -90,10 +90,10 @@ import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-const taggingChainTemplate = `Extract the desired information from the following passage.
-Anonymous critics are actually Roger Ebert.
+const taggingChainTemplate = `从以下段落中提取所需信息。
+匿名评论家其实是 Roger Ebert。
 
-Passage:
+段落:
 {input}
 `;
 
@@ -103,7 +103,7 @@ const zodSchema = z.object({
   tone: z.enum(["positive", "negative"]),
   rating: z
     .optional(z.number())
-    .describe("The number of stars the critic rated the movie"),
+    .describe("评论家给电影打的星数"),
 });
 
 const metadataTagger = createMetadataTaggerFromZod(zodSchema, {

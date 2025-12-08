@@ -2,46 +2,45 @@
 title: ChatOCIGenAI
 ---
 
-This guide provides a quick overview for getting started with OCIGenAI [chat models](/oss/langchain/models). For detailed documentation of all ChatOCIGenAI features and configurations head to the [API reference](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html).
+本指南为开始使用 OCI Generative AI (OCIGenAI) **聊天模型](/oss/langchain/models)** 提供了快速概览。要了解 ChatOCIGenAI 所有功能和配置的详细文档，请访问 [API 参考](/oss/langchain/models)。
 
-Oracle Cloud Infrastructure (OCI) Generative AI is a fully managed service that provides a set of state-of-the-art, customizable Large Language Models (LLMs) that cover a wide range of use cases, and which is available through a single API.
-Using the OCI Generative AI service you can access ready-to-use pretrained models, or create and host your own fine-tuned custom models based on your own data on dedicated AI clusters. Detailed documentation of the service and API is available __[here](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__ and __[here](https://docs.oracle.com/en-us/iaas/api/#/en/generative-ai/20231130/)__.
+Oracle Cloud Infrastructure (OCI) Generative AI 是一项全托管服务，提供一套尖端、可定制的大型语言模型 (LLMs)，涵盖广泛的使用场景，并且可通过单个 API 访问。使用 OCI Generative AI 服务，您可以访问即用型预训练模型，或者根据您自己的数据在专用的 AI 集群上创建和托管您自己微调的定制模型。有关该服务和 API 的详细文档，请访问 __[此处](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__ 和 __[此处](https://docs.oracle.com/en-us/iaas/api/#/en/generative-ai/20231130/)__。
 
-## Overview
+## 概览
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support](https://js.langchain.com/docs/integrations/chat/oci_generative_ai) |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/chat/oci_generative_ai) |
 | :--- | :--- | :---: | :---: |  :---: |
 | [ChatOCIGenAI](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ❌ | ❌ | ❌ |
 
-### Model features
+### 模型特性
 
-| [Tool calling](/oss/langchain/tools/) | [Structured output](/oss/langchain/structured-output) | [JSON mode](/oss/langchain/structured-output#advanced-specifying-the-method-for-structuring-outputs) | [Image input](/oss/langchain/messages#multimodal) | Audio input | Video input | [Token-level streaming](/oss/langchain/streaming/) | Native async | [Token usage](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools/) | [结构化输出](/oss/langchain/structured-output) | [JSON 模式](/oss/langchain/structured-output#advanced-specifying-the-method-for-structuring-outputs) | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
-## Setup
+## 设置
 
-To access OCIGenAI models you'll need to install the `oci` and `langchain-community` packages.
+要访问 OCIGenAI 模型，您需要安装 `oci` 和 `langchain-community` 软件包。
 
-### Credentials
+### 凭证 (Credentials)
 
-The credentials and authentication methods supported for this integration are equivalent to those used with other OCI services and follow the __[standard SDK authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)__ methods, specifically API Key, session token, instance principal, and resource principal.
+此集成支持的凭证和身份验证方法等同于用于其他 OCI 服务的那些方法，并遵循 __[标准的 SDK 身份验证方法](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)__，特别是 API 密钥、会话令牌 (session token)、实例主体 (instance principal) 和资源主体 (resource principal)。
 
-API key is the default authentication method used in the examples above. The following example demonstrates how to use a different authentication method (session token)
+API 密钥是上面示例中使用的默认身份验证方法。以下示例演示了如何使用不同的身份验证方法（会话令牌）。
 
-### Installation
+### 安装
 
-The LangChain OCIGenAI integration lives in the `langchain-community` package and you will also need to install the `oci` package:
+LangChain 对 OCIGenAI 的集成位于 `langchain-community` 包中，您还需要安装 `oci` 包：
 
 ```python
 pip install -qU langchain-community oci
 ```
 
-## Instantiation
+## 实例化 (Instantiation)
 
-Now we can instantiate our model object and generate chat completions:
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```python
 from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
@@ -55,7 +54,7 @@ chat = ChatOCIGenAI(
 )
 ```
 
-## Invocation
+## 调用 (Invocation)
 
 ```python
 messages = [
@@ -70,6 +69,6 @@ response = chat.invoke(messages)
 print(response.content)
 ```
 
-## API reference
+## API 参考
 
-For detailed documentation of all ChatOCIGenAI features and configurations head to the API reference: [python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html)
+有关 ChatOCIGenAI 所有功能和配置的详细文档，请前往 API 参考：[python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.oci_generative_ai.ChatOCIGenAI.html)

@@ -1,19 +1,19 @@
 ---
-title: How to run multiple agents on the same thread
-sidebarTitle: Run multiple agents on the same thread
+title: 如何在同一线程中运行多个智能体 (Agent)
+sidebarTitle: 在同一线程中运行多个智能体
 ---
-In LangSmith Deployment, a thread is not explicitly associated with a particular agent.
-This means that you can run multiple agents on the same thread, which allows a different agent to continue from an initial agent's progress.
+在 LangSmith 部署中，一个线程并不会显式地绑定到特定的智能体。
+这意味着你可以在**同一个线程**上运行多个智能体，这使得后续的智能体可以基于第一个智能体在线程中产生的进度（Checkpoints）继续工作。
 
-In this example, we will create two agents and then call them both on the same thread.
-You'll see that the second agent will respond using information from the [checkpoint](/oss/langgraph/graph-api#checkpointer-state) generated in the thread by the first agent as context.
+在本示例中，我们将创建两个智能体，然后让它们在相同的线程上被调用。
+你将看到第二个智能体会利用第一个智能体在该线程中通过[检查点 (checkpoint)](/oss/langsmith/deployment#checkpointer-state) 生成的信息作为上下文来进行响应。
 
-## Setup
+## 设置 (Setup)
 
 <Tabs>
     <Tab title="Python">
     ```python
-    from langgraph_sdk import get_client
+    from langsmith_sdk import get_client
 
     client = get_client(url=<DEPLOYMENT_URL>)
 
@@ -21,14 +21,14 @@ You'll see that the second agent will respond using information from the [checkp
         graph_id="agent", config={"configurable": {"model_name": "openai"}}
     )
 
-    # There should always be a default assistant with no configuration
+    # 总是应该有一个没有配置的默认智能体
     assistants = await client.assistants.search()
     default_assistant = [a for a in assistants if not a["config"]][0]
     ```
     </Tab>
     <Tab title="Javascript">
     ```js
-    import { Client } from "@langchain/langgraph-sdk";
+    import { Client } from "@langchain/langsmith-sdk";
 
     const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
 
@@ -60,7 +60,7 @@ You'll see that the second agent will respond using information from the [checkp
     </Tab>
 </Tabs>
 
-We can see that these agents are different:
+我们可以看到这些智能体是不同的：
 
 <Tabs>
     <Tab title="Python">
@@ -81,7 +81,7 @@ We can see that these agents are different:
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 {
@@ -117,7 +117,7 @@ Output:
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 {
@@ -132,11 +132,11 @@ Output:
 }
 ```
 
-## Run assistants on thread
+## 在线程上运行智能体 (Run assistants on thread)
 
-### Run OpenAI assistant
+### 运行 OpenAI 智能体
 
-We can now run the OpenAI assistant on the thread first.
+我们现在首先在线程上运行 OpenAI 智能体。
 
 <Tabs>
     <Tab title="Python">
@@ -221,7 +221,7 @@ We can now run the OpenAI assistant on the thread first.
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 Receiving event of type: metadata
@@ -231,9 +231,9 @@ Receiving event of type: updates
 {'agent': {'messages': [{'content': 'I was created by OpenAI, a research organization focused on developing and advancing artificial intelligence technology.', 'additional_kwargs': {}, 'response_metadata': {'finish_reason': 'stop', 'model_name': 'gpt-4o-2024-05-13', 'system_fingerprint': 'fp_157b3831f5'}, 'type': 'ai', 'name': None, 'id': 'run-f5735b86-b80d-4c71-8dc3-4782b5a9c7c8', 'example': False, 'tool_calls': [], 'invalid_tool_calls': [], 'usage_metadata': None}]}}
 ```
 
-### Run default assistant
+### 运行默认智能体 (Run default assistant)
 
-Now, we can run it on the default assistant and see that this second assistant is aware of the initial question, and can answer the question, "and you?":
+现在，我们可以在默认智能体上运行它，可以看到第二个智能体**了解**了初始问题，并且能够回答“and you?”这个问题：
 
 <Tabs>
     <Tab title="Python">
@@ -312,7 +312,7 @@ Now, we can run it on the default assistant and see that this second assistant i
     </Tab>
 </Tabs>
 
-Output:
+输出：
 
 ```
 Receiving event of type: metadata

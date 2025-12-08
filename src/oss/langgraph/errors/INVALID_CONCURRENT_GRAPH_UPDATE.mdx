@@ -2,11 +2,9 @@
 title: INVALID_CONCURRENT_GRAPH_UPDATE
 ---
 
-A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) received concurrent updates to its state from multiple nodes to a state property that doesn't
-support it.
+LangGraph 的 [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) 接收到了来自多个节点的并发状态更新，但被更新的状态属性（State property）不支持这种并发写入。
 
-One way this can occur is if you are using a [fanout](/oss/langgraph/graph-api#map-reduce-and-the-send-api)
-or other parallel execution in your graph and you have defined a graph like this:
+这种情况可能发生在你使用了图中的 [fanout](/oss/langgraph/graph-api#map-reduce-and-the-send-api) 或其他并行执行逻辑，并且你的图结构定义如下：
 
 :::python
 ```python
@@ -53,18 +51,16 @@ const graph = builder.compile();
 :::
 
 :::python
-If a node in the above graph returns `{ "some_key": "some_string_value" }`, this will overwrite the state value for `"some_key"` with `"some_string_value"`.
-However, if multiple nodes in e.g. a fanout within a single step return values for `"some_key"`, the graph will throw this error because
-there is uncertainty around how to update the internal state.
+如果在上述图结构中，某个节点返回 `{ "some_key": "some_string_value" }`，这将覆盖 `"some_key"` 状态值。
+然而，如果在同一步骤中（例如在 fanout 中），多个节点都返回了 `"some_key"` 的值，图将抛出此错误，因为图无法确定如何合并对内部状态的更新。
 :::
 
 :::js
-If a node in the above graph returns `{ someKey: "some_string_value" }`, this will overwrite the state value for `someKey` with `"some_string_value"`.
-However, if multiple nodes in e.g. a fanout within a single step return values for `someKey`, the graph will throw this error because
-there is uncertainty around how to update the internal state.
+如果在上述图结构中，某个节点返回 `{ someKey: "some_string_value" }`，这将覆盖 `someKey` 状态值。
+然而，如果在同一步骤中（例如在 fanout 中），多个节点都返回了 `someKey` 的值，图将抛出此错误，因为图无法确定如何合并对内部状态的更新。
 :::
 
-To get around this, you can define a reducer that combines multiple values:
+要解决此问题，你可以定义一个“归并器”（reducer）函数来组合多个值：
 
 :::python
 ```python
@@ -72,7 +68,7 @@ import operator
 from typing import Annotated
 
 class State(TypedDict):
-    # The operator.add reducer fn makes this append-only  # [!code highlight]
+    # operator.add 归并函数使得这个键是追加/累加模式（append-only） # [!code highlight]
     some_key: Annotated[list, operator.add]  # [!code highlight]
 ```
 :::
@@ -93,10 +89,10 @@ const State = z.object({  // [!code highlight]
 ```
 :::
 
-This will allow you to define logic that handles the same key returned from multiple nodes executed in parallel.
+这将允许你定义逻辑来处理在并行执行的多个节点中返回的相同键。
 
-## Troubleshooting
+## 故障排除
 
-The following may help resolve this error:
+以下步骤可能有助解决此错误：
 
-* If your graph executes nodes in parallel, make sure you have defined relevant state keys with a reducer.
+* 如果你的图并行执行节点，请确保你为相关的状态键定义了归并器（reducer）。

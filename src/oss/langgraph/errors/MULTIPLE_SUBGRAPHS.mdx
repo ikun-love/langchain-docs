@@ -2,20 +2,20 @@
 title: MULTIPLE_SUBGRAPHS
 ---
 
-You are calling subgraphs multiple times within a single LangGraph node with checkpointing enabled for each subgraph.
+您正在一个启用了检查点（checkpointing）的 LangGraph 节点中多次调用子图（subgraphs）。
 
-This is currently not allowed due to internal restrictions on how checkpoint namespacing for subgraphs works.
+由于关于子图的检查点命名空间（namespacing）的内部限制，目前不允许这样做。
 
-## Troubleshooting
+## 故障排除
 
-The following may help resolve this error:
+以下方法可能有助于解决此错误：
 
 :::python
-* If you don't need to interrupt/resume from a subgraph, pass `checkpointer=False` when compiling it like this: `.compile(checkpointer=False)`
+* 如果您不需要从子图中中断/恢复执行，请在编译子图时传入 `checkpointer=False`，如下所示：`.compile(checkpointer=False)`
 :::
 
 :::js
-* If you don't need to interrupt/resume from a subgraph, pass `checkpointer: false` when compiling it like this: `.compile({ checkpointer: false })`
+* 如果您不需要从子图中中断/恢复执行，请在编译子图时传入 `checkpointer: false`，如下所示：`.compile({ checkpointer: false })`
 :::
 
-* Don't imperatively call graphs multiple times in the same node, and instead use the [`Send`](/oss/langgraph/graph-api#send) API.
+* 不要以命令式（imperative）的方式在同一个节点中多次调用图，而应使用 [`Send`](/oss/langgraph/graph-api#send) API。

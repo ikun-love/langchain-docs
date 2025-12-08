@@ -2,13 +2,11 @@
 title: Couchbase
 ---
 
->[Couchbase](http://couchbase.com/) is an award-winning distributed NoSQL cloud database
-> that delivers unmatched versatility, performance, scalability, and financial value
-> for all of your cloud, mobile, AI, and edge computing applications.
+>[Couchbase](http://couchbase.com/) 是一款屡获殊荣的分布式 NoSQL 云数据库，它为您的所有云、移动、AI 和边缘计算应用程序提供无与伦比的多功能性、性能、可扩展性和财务价值。
 
-## Installation and Setup
+## 安装和设置
 
-We have to install the `langchain-couchbase` package.
+我们需要安装 `langchain-couchbase` 包。
 
 <CodeGroup>
 ```bash pip
@@ -20,23 +18,23 @@ uv add langchain-couchbase
 ```
 </CodeGroup>
 
-## Vector Store
+## 向量存储 (Vector Store)
 
-See a [usage example](/oss/integrations/vectorstores/couchbase).
+请参阅 [使用示例](/oss/integrations/vectorstores/couchbase)。
 
 ```python
 from langchain_couchbase import CouchbaseSearchVectorStore
 
 import getpass
 
-# Constants for the connection
+# 连接的常量
 COUCHBASE_CONNECTION_STRING = getpass.getpass(
-    "Enter the connection string for the Couchbase cluster: "
+    "输入 Couchbase 集群的连接字符串: "
 )
-DB_USERNAME = getpass.getpass("Enter the username for the Couchbase cluster: ")
-DB_PASSWORD = getpass.getpass("Enter the password for the Couchbase cluster: ")
+DB_USERNAME = getpass.getpass("输入 Couchbase 集群的用户名: ")
+DB_PASSWORD = getpass.getpass("输入 Couchbase 集群的密码: ")
 
-# Create Couchbase connection object
+# 创建 Couchbase 连接对象
 from datetime import timedelta
 
 from couchbase.auth import PasswordAuthenticator
@@ -47,7 +45,7 @@ auth = PasswordAuthenticator(DB_USERNAME, DB_PASSWORD)
 options = ClusterOptions(auth)
 cluster = Cluster(COUCHBASE_CONNECTION_STRING, options)
 
-# Wait until the cluster is ready for use.
+# 等待集群准备就绪（最多等待 5 秒）。
 cluster.wait_until_ready(timedelta(seconds=5))
 
 vector_store = CouchbaseSearchVectorStore(
@@ -59,31 +57,31 @@ vector_store = CouchbaseSearchVectorStore(
     index_name=SEARCH_INDEX_NAME,
 )
 
-# Add documents
-texts = ["Couchbase is a NoSQL database", "LangChain is a framework for LLM applications"]
+# 添加文档
+texts = ["Couchbase 是一个 NoSQL 数据库", "LangChain 是一个用于 LLM 应用的框架"]
 vectorstore.add_texts(texts)
 
-# Search
-query = "What is Couchbase?"
+# 搜索
+query = "Couchbase 是什么?"
 docs = vectorstore.similarity_search(query)
 ```
 
-API Reference: [CouchbaseSearchVectorStore](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#module-langchain_couchbase.vectorstores.search_vector_store)
+API 参考: [CouchbaseSearchVectorStore](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#module-langchain_couchbase.vectorstores.search_vector_store)
 
-## Document loader
+## 文档加载器 (Document loader)
 
-See a [usage example](/oss/integrations/document_loaders/couchbase).
+请参阅 [使用示例](/oss/integrations/document_loaders/couchbase)。
 
 ```python
 from langchain_community.document_loaders.couchbase import CouchbaseLoader
 
-connection_string = "couchbase://localhost"  # valid Couchbase connection string
+connection_string = "couchbase://localhost"  # 有效的 Couchbase 连接字符串
 db_username = (
-    "Administrator"  # valid database user with read access to the bucket being queried
+    "Administrator"  # 对正在查询的存储桶具有读取访问权限的有效数据库用户
 )
-db_password = "Password"  # password for the database user
+db_password = "Password"  # 数据库用户的密码
 
-# query is a valid SQL++ query
+# query 是一个有效的 SQL++ 查询
 query = """
     SELECT h.* FROM `travel-sample`.inventory.hotel h
         WHERE h.country = 'United States'
@@ -101,17 +99,17 @@ docs = loader.load()
 
 ```
 
-## LLM Caches
+## LLM 缓存 (LLM Caches)
 
 ### CouchbaseCache
-Use Couchbase as a cache for prompts and responses.
+使用 Couchbase 作为提示 (prompt) 和响应的缓存。
 
-To import this cache:
+导入此缓存：
 ```python
 from langchain_couchbase.cache import CouchbaseCache
 ```
 
-To use this cache with your LLMs:
+将此缓存与您的 LLM 一起使用：
 ```python
 from langchain_core.globals import set_llm_cache
 
@@ -127,22 +125,22 @@ set_llm_cache(
 )
 ```
 
-API Reference: [CouchbaseCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseCache)
+API 参考: [CouchbaseCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseCache)
 
 ### CouchbaseSemanticCache
-Semantic caching allows users to retrieve cached prompts based on the semantic similarity between the user input and previously cached inputs. Under the hood it uses Couchbase as both a cache and a vectorstore.
-The CouchbaseSemanticCache needs a Search Index defined to work. Please look at the [usage example](/oss/integrations/vectorstores/couchbase) on how to set up the index.
+语义缓存允许用户根据用户输入与先前缓存的输入之间的**语义相似性**来检索缓存的提示。在底层，它使用 Couchbase 作为缓存和向量存储。
+`CouchbaseSemanticCache` 需要定义一个搜索索引 (Search Index) 才能工作。请查看 [使用示例](/oss/integrations/vectorstores/couchbase) 如何设置索引。
 
-To import this cache:
+导入此缓存：
 ```python
 from langchain_couchbase.cache import CouchbaseSemanticCache
 ```
 
-To use this cache with your LLMs:
+将此缓存与您的 LLM 一起使用：
 ```python
 from langchain_core.globals import set_llm_cache
 
-# use any embedding provider...
+# 使用任何嵌入提供程序...
 from langchain_openai.Embeddings import OpenAIEmbeddings
 
 embeddings = OpenAIEmbeddings()
@@ -160,5 +158,4 @@ set_llm_cache(
 )
 ```
 
-API Reference: [CouchbaseSemanticCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseSemanticCache)
-
+API 参考: [CouchbaseSemanticCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseSemanticCache)

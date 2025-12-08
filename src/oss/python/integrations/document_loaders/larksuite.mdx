@@ -1,12 +1,12 @@
 ---
-title: LarkSuite (FeiShu)
+title: 飞书 (LarkSuite)
 ---
 
->[LarkSuite](https://www.larksuite.com/) is an enterprise collaboration platform developed by ByteDance.
+>[LarkSuite](https://www.larksuite.com/) 是字节跳动开发的、面向企业的一体化协作平台。
 
-This notebook covers how to load data from the `LarkSuite` REST API into a format that can be ingested into LangChain, along with example usage for text summarization.
+本指南介绍了如何从 `LarkSuite` REST API 加载数据，并将其转换为可被 LangChain 摄取（Ingest）的格式，同时提供了文本摘要任务的示例用法。
 
-The LarkSuite API requires an access token (tenant_access_token or user_access_token), checkout [LarkSuite open platform document](https://open.larksuite.com/document) for API details.
+LarkSuite API 需要一个访问令牌（`tenant_access_token` 或 `user_access_token`）。有关 API 的详细信息，请参见 [LarkSuite 开放平台文档](https://open.larksuite.com/document)。
 
 ```python
 from getpass import getpass
@@ -16,12 +16,12 @@ from langchain_community.document_loaders.larksuite import (
     LarkSuiteWikiLoader,
 )
 
-DOMAIN = input("larksuite domain")
-ACCESS_TOKEN = getpass("larksuite tenant_access_token or user_access_token")
-DOCUMENT_ID = input("larksuite document id")
+DOMAIN = input("飞书域名 (larksuite domain)")
+ACCESS_TOKEN = getpass("飞书租户访问令牌或用户访问令牌 (larksuite tenant_access_token or user_access_token)")
+DOCUMENT_ID = input("飞书文档 ID (larksuite document id)")
 ```
 
-## Load From Document
+## 从文档加载 (Load From Document)
 
 ```python
 from pprint import pprint
@@ -36,12 +36,12 @@ pprint(docs)
 [Document(page_content='Test Doc\nThis is a Test Doc\n\n1\n2\n3\n\n', metadata={'document_id': 'V76kdbd2HoBbYJxdiNNccajunPf', 'revision_id': 11, 'title': 'Test Doc'})]
 ```
 
-## Load From Wiki
+## 从 Wiki 加载 (Load From Wiki)
 
 ```python
 from pprint import pprint
 
-DOCUMENT_ID = input("larksuite wiki id")
+DOCUMENT_ID = input("飞书 Wiki ID (larksuite wiki id)")
 larksuite_loader = LarkSuiteWikiLoader(DOMAIN, ACCESS_TOKEN, DOCUMENT_ID)
 docs = larksuite_loader.load()
 
@@ -53,7 +53,7 @@ pprint(docs)
 ```
 
 ```python
-# see https://python.langchain.com/docs/use_cases/summarization for more details
+# 更多详情请参见 https://python.langchain.com/docs/use_cases/summarization
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.llms.fake import FakeListLLM
 

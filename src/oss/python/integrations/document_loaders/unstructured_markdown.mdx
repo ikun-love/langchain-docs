@@ -2,50 +2,50 @@
 title: UnstructuredMarkdownLoader
 ---
 
-This guide provides a quick overview for getting started with UnstructuredMarkdown [document loader](https://python.langchain.com/docs/concepts/document_loaders). For detailed documentation of all __ModuleName__Loader features and configurations head to the [API reference](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html).
+本指南快速概述了如何开始使用 UnstructuredMarkdown [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)。有关 __ModuleName__Loader 所有功能和配置的详细文档，请查阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class | Package | Local | Serializable | [JS support](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
-| :--- | :--- | :---: | :---: |  :---: |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
+| :--- | :--- | :---: | :---: | :---: |
 | [UnstructuredMarkdownLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ❌ | ❌ | ✅ |
 
-### Loader features
+### 加载器特性
 
-| Source | Document Lazy Loading | Native Async Support
+| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
 | :---: | :---: | :---: |
 | UnstructuredMarkdownLoader | ✅ | ❌ |
 
-## Setup
+## 设置
 
-To access UnstructuredMarkdownLoader document loader you'll need to install the `langchain-community` integration package and the `unstructured` python package.
+要使用 UnstructuredMarkdownLoader 文档加载器，您需要安装 `langchain-community` 集成包和 `unstructured` Python 包。
 
-### Credentials
+### 凭证
 
-No credentials are needed to use this loader.
+使用此加载器**不需要**任何凭证。
 
-To enable automated tracing of your model calls, set your [LangSmith](https://docs.smith.langchain.com/) API key:
+要启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-### Installation
+### 安装
 
-Install **langchain_community** and **unstructured**
+安装 **langchain_community** 和 **unstructured**
 
 ```python
 pip install -qU langchain_community unstructured
 ```
 
-## Initialization
+## 初始化
 
-Now we can instantiate our model object and load documents.
+现在我们可以实例化我们的模型对象并加载文档。
 
-You can run the loader in one of two modes: "single" and "elements". If you use "single" mode, the document will be returned as a single @[`Document`] object. If you use "elements" mode, the unstructured library will split the document into elements such as `Title` and `NarrativeText`. You can pass in additional `unstructured` kwargs after mode to apply different `unstructured` settings.
+您可以通过两种模式运行加载器："single"（单个）和 "elements"（元素）。如果您使用 "single" 模式，文档将以单个 @[`Document`] 对象的形式返回。如果您使用 "elements" 模式，`unstructured` 库将把文档拆分成如 `Title` 和 `NarrativeText` 等元素。您可以在 `mode` 之后传入额外的 `unstructured` kwargs，以应用不同的 `unstructured` 设置。
 
 ```python
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
@@ -57,7 +57,7 @@ loader = UnstructuredMarkdownLoader(
 )
 ```
 
-## Load
+## 加载
 
 ```python
 docs = loader.load()
@@ -76,14 +76,14 @@ print(docs[0].metadata)
 {'source': './example_data/example.md'}
 ```
 
-## Lazy Load
+## 延迟加载 (Lazy Load)
 
 ```python
 page = []
 for doc in loader.lazy_load():
     page.append(doc)
     if len(page) >= 10:
-        # do some paged operation, e.g.
+        # 执行一些分页操作，例如：
         # index.upsert(page)
 
         page = []
@@ -94,9 +94,9 @@ page[0]
 Document(metadata={'source': './example_data/example.md', 'link_texts': ['OpenAI'], 'link_urls': ['https://www.openai.com'], 'last_modified': '2024-08-14T15:04:18', 'languages': ['eng'], 'parent_id': 'de1f74bf226224377ab4d8b54f215bb9', 'filetype': 'text/markdown', 'file_directory': './example_data', 'filename': 'example.md', 'category': 'NarrativeText', 'element_id': '898a542a261f7dc65e0072d1e847d535'}, page_content='OpenAI is an AI research organization.')
 ```
 
-## Load Elements
+## 加载元素 (Load Elements)
 
-In this example we will load in the `elements` mode, which will return a list of the different elements in the markdown document:
+在此示例中，我们将使用 `elements` 模式加载，该模式将返回 markdown 文档中不同元素的列表：
 
 ```python
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
@@ -115,7 +115,7 @@ len(docs)
 29
 ```
 
-As you see there are 29 elements that were pulled from the `example.md` file. The first element is the title of the document as expected:
+正如您所见，从 `example.md` 文件中提取了 29 个元素。第一个元素如预期的那样是文档的标题：
 
 ```python
 docs[0].page_content
@@ -127,6 +127,6 @@ docs[0].page_content
 
 ---
 
-## API reference
+## API 参考
 
-For detailed documentation of all UnstructuredMarkdownLoader features and configurations head to the API reference: [python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)
+有关 UnstructuredMarkdownLoader 所有功能和配置的详细文档，请查阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)

@@ -1,23 +1,22 @@
 ---
-title: Baidu Qianfan
+title: 百度千帆
 ---
 
-Baidu AI Cloud Qianfan Platform is a one-stop large model development and service operation platform for enterprise developers. Qianfan not only provides including the model of Wenxin Yiyan (ERNIE-Bot) and the third-party open-source models, but also provides various AI development tools and the whole set of development environment, which facilitates customers to use and develop large model applications easily.
+百度 AI 云千帆平台是面向企业开发者的 **一站式大模型开发与服务运营平台**。千帆不仅提供了包括文心一言（ERNIE-Bot）及第三方开源模型在内的模型服务，还提供了丰富的 AI 开发工具和全套开发环境，从而方便客户轻松地使用和开发大模型应用。
 
-Basically, those model are split into the following type:
+从基本功能上来说，这些模型被划分为以下类型：
 
-- Embedding
-- Chat
-- Completion
+- Embedding（嵌入）
+- Chat（对话）
+- Completion（补全）
 
-In this notebook, we will introduce how to use langchain with [Qianfan](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html) mainly in `Embedding` corresponding
- to the package `langchain/embeddings` in langchain:
+在本教程（Notebook）中，我们将主要介绍如何使用 `langchain` 结合 [Qianfan（千帆）](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)，重点关注 `langchain` 包 `langchain/embeddings` 中对应的 `Embedding` 功能。
 
-## API Initialization
+## API 初始化
 
-To use the LLM services based on Baidu Qianfan, you have to initialize these parameters:
+要使用基于百度千帆的 LLM 服务，您需要初始化以下参数：
 
-You could either choose to init the AK,SK in environment variables or init params:
+您可以选择在环境变量中初始化 `AK`（Access Key）和 `SK`（Secret Key），或者直接在代码中初始化参数：
 
 ```base
 export QIANFAN_AK=XXX
@@ -25,7 +24,7 @@ export QIANFAN_SK=XXX
 ```
 
 ```python
-"""For basic init and call"""
+"""基础初始化和调用"""
 import os
 
 from langchain_community.embeddings import QianfanEmbeddingsEndpoint
@@ -41,6 +40,7 @@ res = embed.embed_documents(["hi", "world"])
 
 
 async def aioEmbed():
+    # 异步查询单个文本进行嵌入
     res = await embed.aembed_query("qianfan")
     print(res[:8])
 
@@ -49,6 +49,7 @@ await aioEmbed()
 
 
 async def aioEmbedDocs():
+    # 异步查询文档列表进行嵌入
     res = await embed.aembed_documents(["hi", "world"])
     for r in res:
         print("", r[:8])
@@ -58,11 +59,11 @@ await aioEmbedDocs()
 ```
 
 ```output
-[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: trying to refresh access_token
-[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: successfully refresh access_token
-[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: requesting llm api endpoint: /embeddings/embedding-v1
-[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: async requesting llm api endpoint: /embeddings/embedding-v1
-[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: async requesting llm api endpoint: /embeddings/embedding-v1
+[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: 尝试刷新 access_token
+[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: 成功刷新 access_token
+[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: 请求 llm api 端点: /embeddings/embedding-v1
+[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: 异步请求 llm api 端点: /embeddings/embedding-v1
+[INFO] [09-15 20:01:35] logging.py:55 [t:140292313159488]: 异步请求 llm api 端点: /embeddings/embedding-v1
 ```
 ```output
 [-0.03313107788562775, 0.052325375378131866, 0.04951248690485954, 0.0077608139254152775, -0.05907672271132469, -0.010798933915793896, 0.03741293027997017, 0.013969100080430508]
@@ -70,12 +71,12 @@ await aioEmbedDocs()
  [0.03803155943751335, -0.013231384567916393, 0.0032379645854234695, 0.015074018388986588, -0.006529552862048149, -0.13813287019729614, 0.03297128155827522, 0.044519297778606415]
 ```
 
-## Use different models in Qianfan
+## 在千帆中使用不同的模型
 
-In the case you want to deploy your own model based on Ernie Bot or third-party open sources model, you could follow these steps:
+如果您想部署基于文心大模型（Ernie Bot）或第三方开源模型，您可以按照以下步骤操作：
 
-- 1. （Optional, if the model are included in the default models, skip it）Deploy your model in Qianfan Console, get your own customized deploy endpoint.
-- 2. Set up the field called `endpoint` in the initialization:
+- 1. （可选，如果模型包含在默认模型列表中，则跳过此步骤）在千帆控制台部署您的模型，获取自定义的部署端点（deploy endpoint）。
+- 2. 在初始化时设置 `endpoint` 字段：
 
 ```python
 embed = QianfanEmbeddingsEndpoint(model="bge_large_zh", endpoint="bge_large_zh")
@@ -86,7 +87,7 @@ for r in res:
 ```
 
 ```output
-[INFO] [09-15 20:01:40] logging.py:55 [t:140292313159488]: requesting llm api endpoint: /embeddings/bge_large_zh
+[INFO] [09-15 20:01:40] logging.py:55 [t:140292313159488]: 请求 llm api 端点: /embeddings/bge_large_zh
 ```
 ```output
 [-0.0001582596160005778, -0.025089964270591736, -0.03997539356350899, 0.013156415894627571, 0.000135212714667432, 0.012428865768015385, 0.016216561198234558, -0.04126659780740738]

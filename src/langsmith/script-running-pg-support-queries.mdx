@@ -1,77 +1,77 @@
 ---
-title: Run support queries against PostgreSQL
-sidebarTitle: Run support queries against PostgreSQL
+title: 对 PostgreSQL 运行支持查询
+sidebarTitle: 对 PostgreSQL 运行支持查询
 ---
 
-This Helm repository contains queries to produce output that the LangSmith UI does not currently support directly (e.g. obtaining trace counts for multiple organizations in a single query).
+此 Helm 仓库包含的查询可以产生 LangSmith UI 当前不支持直接输出的结果（例如，在一个查询中获取多个组织的追踪计数）。
 
-This command takes a postgres connection string that contains an embedded name and password (which can be passed in from a call to a secrets manager) and executes a query from an input file. In the example below, we are using the `pg_get_trace_counts_daily.sql` input file in the `support_queries/postgres` directory.
+此命令接受一个包含嵌入的用户名和密码（可以从调用密钥管理服务的结果中传入）的 PostgreSQL 连接字符串，并执行来自输入文件的查询。在下面的示例中，我们使用了 `support_queries/postgres` 目录中的 `pg_get_trace_counts_daily.sql` 输入文件。
 
-## Prerequisites
+## 先决条件
 
-Ensure you have the following tools/items ready.
+确保您已准备好以下工具/项目。
 
 1. kubectl
 
    * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
 
-2. PostgreSQL client
+2. PostgreSQL 客户端
 
    * [https://www.postgresql.org/download/](https://www.postgresql.org/download/)
 
-3. PostgreSQL database connection:
+3. PostgreSQL 数据库连接信息：
 
-   * Host
-   * Port
-   * Username
-     * If using the bundled version, this is `postgres`
-   * Password
-     * If using the bundled version, this is `postgres`
-   * Database name
-     * If using the bundled version, this is `postgres`
+   * 主机 (Host)
+   * 端口 (Port)
+   * 用户名 (Username)
+     * 如果使用捆绑版本，则为 `postgres`
+   * 密码 (Password)
+     * 如果使用捆绑版本，则为 `postgres`
+   * 数据库名称 (Database name)
+     * 如果使用捆绑版本，则为 `postgres`
 
-4. Connectivity to the PostgreSQL database from the machine you will be running the migration script on.
+4. 从您将运行迁移脚本的机器到 PostgreSQL 数据库的网络连通性。
 
-   * If you are using the bundled version, you may need to port forward the postgresql service to your local machine.
-   * Run `kubectl port-forward svc/langsmith-postgres 5432:5432` to port forward the postgresql service to your local machine.
+   * 如果您使用的是捆绑版本，您可能需要将 postgresql 服务端口转发到本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-postgres 5432:5432` 将 postgresql 服务端口转发到本地机器。
 
-5. The script to run a support query
+5. 用于运行支持查询的脚本
 
-   * You can download the script from [here](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/run_support_query_pg.sh)
+   * 您可以从 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/run_support_query_pg.sh) 下载该脚本
 
-## Running the query script
+## 运行查询脚本
 
-Run the following command to run the desired query:
+运行以下命令来执行所需的查询：
 
 ```bash
 sh run_support_query_pg.sh <postgres_url> --input path/to/query.sql
 ```
 
-For example, if you are using the bundled version with port-forwarding, the command might look like:
+例如，如果您正在使用并已进行端口转发的捆绑版本，该命令可能如下所示：
 
 ```bash
 sh run_support_query_pg.sh "postgres://postgres:postgres@localhost:5432/postgres" --input support_queries/pg_get_trace_counts_daily.sql
 ```
 
-which will output the count of daily traces by workspace ID and organization ID. To extract this to a file add the flag `--output path/to/file.csv`
+这将输出按工作区 ID 和组织 ID 分类的每日追踪数量。要将此结果提取到文件中，请添加标志 `--output path/to/file.csv`。
 
-## Export usage data
+## 导出使用数据
 
 <Note>
-Exporting usage data requires running Helm chart version 0.11.4 or later.
+导出使用数据需要运行 Helm chart 版本 0.11.4 或更高版本。
 </Note>
 
-### Get customer information
+### 获取客户信息
 
-You need to retrieve your customer information from the LangSmith API before running the export scripts. This information is required as input for the export scripts.
+在运行导出脚本之前，您需要从 LangSmith API 中检索客户信息。这些信息是导出脚本的输入要求。
 
 ```bash
 curl https://<langsmith_url>/api/v1/info
-# if configured with a subdomain / path prefix:
+# 如果配置了子域名/路径前缀：
 curl http://<langsmith_url/prefix/api/v1/info
 ```
 
-This will return a JSON response containing your customer information:
+这将返回一个包含您的客户信息的 JSON 响应：
 
 ```json
 {
@@ -84,29 +84,29 @@ This will return a JSON response containing your customer information:
 }
 ```
 
-Extract the `customer_id` and `customer_name` from this response to use as input for the export scripts.
+从该响应中提取 `customer_id` 和 `customer_name`，以便将它们作为输入用于导出脚本。
 
-### Process the API response with jq
+### 使用 jq 处理 API 响应
 
-You can use [jq](https://jqlang.org/download) to parse the JSON response and set bash variables for use in your scripts:
+您可以使用 [jq](https://jqlang.org/download) 来解析 JSON 响应，并为您的脚本设置 bash 变量：
 
 ```bash
-# Get the API response and extract customer information
+# 获取 API 响应并提取客户信息
 export LANGSMITH_URL="<your_langsmith_url>"
 response=$(curl -s $LANGSMITH_URL/api/v1/info)
 
-# Extract customer_id and customer_name using jq
+# 使用 jq 提取 customer_id 和 customer_name
 export CUSTOMER_ID=$(echo "$response" | jq -r '.customer_info.customer_id')
 export CUSTOMER_NAME=$(echo "$response" | jq -r '.customer_info.customer_name')
 
-# Verify the variables are set
+# 验证变量是否已设置
 echo "Customer ID: $CUSTOMER_ID"
 echo "Customer Name: $CUSTOMER_NAME"
 ```
 
-You can then use these environment variables in your export scripts or other commands.
+然后，您可以在导出脚本或其他命令中使用这些环境变量。
 
-If you don't have `jq`, run these commands to set the environment variables based on the curl output:
+如果您没有 `jq`，可以运行以下命令根据 curl 输出设置环境变量：
 
 ```bash
 curl -s $LANGSMITH_URL/api/v1/info
@@ -114,20 +114,20 @@ export CUSTOMER_ID="<id>"
 export CUSTOMER_NAME="<name>"
 ```
 
-### Initial export
+### 初始导出
 
-These scripts export usage data to a CSV for reporting to LangChain. They additionally track the export by assigning a backfill ID and timestamp.
+这些脚本将使用数据导出到 CSV 文件中，用于向 LangChain 进行报告。它们还通过分配回填 ID (backfill ID) 和时间戳来跟踪导出。
 
-To export LangSmith trace usage:
+要导出 LangSmith 追踪使用情况：
 
 ```bash
-# Get customer information from the API
+# 从 API 获取客户信息
 export LANGSMITH_URL="<your_langsmith_url>"
 export response=$(curl -s $LANGSMITH_URL/api/v1/info)
 export CUSTOMER_ID=$(echo "$response" | jq -r '.customer_info.customer_id') && echo "Customer ID: $CUSTOMER_ID"
 export CUSTOMER_NAME=$(echo "$response" | jq -r '.customer_info.customer_name') && echo "Customer name: $CUSTOMER_NAME"
 
-# Run the export script with customer information as variables
+# 使用客户信息作为变量运行导出脚本
 sh run_support_query_pg.sh <postgres_url> \
   --input support_queries/postgres/pg_usage_traces_backfill_export.sql \
   --output ls_export.csv \
@@ -135,7 +135,7 @@ sh run_support_query_pg.sh <postgres_url> \
   -v customer_name=$CUSTOMER_NAME
 ```
 
-To export LangSmith usage:
+要导出 LangSmith 使用情况：
 
 ```bash
 sh run_support_query_pg.sh <postgres_url> \
@@ -145,19 +145,19 @@ sh run_support_query_pg.sh <postgres_url> \
   -v customer_name=$CUSTOMER_NAME
 ```
 
-### Status update
+### 状态更新
 
-These scripts update the status of usage events in your installation to reflect that the events have been successfully processed by LangChain.
+这些脚本将更新您安装中的使用事件状态，以反映事件已由 LangChain 成功处理。
 
-The scripts require passing in the corresponding `backfill_id`, which will be confirmed by your LangChain rep.
+脚本要求传入相应的 `backfill_id`，该 ID 将由您的 LangChain 代表确认。
 
-To update LangSmith trace usage:
+要更新 LangSmith 追踪使用情况：
 
 ```bash
 sh run_support_query_pg.sh <postgres_url> --input support_queries/postgres/pg_usage_traces_backfill_update.sql --output export.csv -v backfill_id=<backfill_id>
 ```
 
-To update LangSmith usage:
+要更新 LangSmith 使用情况：
 
 ```bash
 sh run_support_query_pg.sh <postgres_url> --input support_queries/postgres/pg_usage_nodes_backfill_update.sql --output export.csv -v backfill_id=<backfill_id>

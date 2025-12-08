@@ -1,29 +1,29 @@
 ---
-title: Dria Retriever
+title: Dria 检索器
 ---
 
-The [Dria](https://dria.co/) retriever allows an agent to perform a text-based search across a comprehensive knowledge hub.
+[Dria](https://dria.co/) 检索器（Retriever）允许智能体（Agent）在全面的知识中心（Knowledge Hub）上执行基于文本的搜索。
 
-## Setup
+## 设置 (Setup)
 
-To use Dria retriever, first install Dria JS client:
+要使用 Dria 检索器，首先需要安装 Dria JS 客户端：
 
 ```bash npm
 npm install dria
 ```
-You need to provide two things to the retriever:
+你需要为检索器提供两项信息：
 
-- **API Key**: you can get yours at your [profile page](https://dria.co/) when you create an account.
-- **Contract ID**: accessible at the top of the page when viewing a knowledge or in its URL.
-  For example, the Bitcoin whitepaper is uploaded on Dria at https://dria.co/knowledge/2KxNbEb040GKQ1DSDNDsA-Fsj_BlQIEAlzBNuiapBR0, so its contract ID is `2KxNbEb040GKQ1DSDNDsA-Fsj_BlQIEAlzBNuiapBR0`.
-    Contract ID can be omitted during instantiation, and later be set via `dria.contractId = "your-contract"`
+- **API 密钥 (API Key)**：您在创建账户后，可以在您的 [个人资料页面](https://dria.co/) 获取。
+- **合约 ID (Contract ID)**：在查看知识文档时，可以在页面顶部或其 URL 中找到该 ID。
+  例如，比特币白皮书上传在 Dria 上的地址是 https://dria.co/knowledge/2KxNbEb040GKQ1DSDNDsA-Fsj_BlQIEAlzBNuiapBR0，因此其合约 ID 是 `2KxNbEb040GKQ1DSDNDsA-Fsj_BlQIEAlzBNuiapBR0`。
+    您也可以在实例化时省略合约 ID，稍后通过 `dria.contractId = "your-contract"` 进行设置。
 
-Dria retriever exposes the underlying [Dria client](https://npmjs.com/package/dria) as well, refer to the [Dria documentation](https://github.com/firstbatchxyz/dria-js-client?tab=readme-ov-file#usage) to learn more about the client.
+Dria 检索器也暴露了底层的 [Dria 客户端](https://npmjs.com/package/dria)，请参考 [Dria 文档](https://github.com/firstbatchxyz/dria-js-client?tab=readme-ov-file#usage) 了解更多关于该客户端的信息。
 
-## Usage
+## 使用 (Usage)
 
 <Tip>
-See [this section for general instructions on installing LangChain packages](/oss/langchain/install).
+关于安装 LangChain 包的通用说明，请参阅 [此处](/oss/langchain/install)。
 </Tip>
 
 ```bash npm
@@ -33,20 +33,20 @@ npm install dria @langchain/community @langchain/core
 ```typescript
 import { DriaRetriever } from "@langchain/community/retrievers/dria";
 
-// contract of TypeScript Handbook v4.9 uploaded to Dria
+// TypeScript Handbook v4.9 上传到 Dria 的合约 ID
 // https://dria.co/knowledge/-B64DjhUtCwBdXSpsRytlRQCu-bie-vSTvTIT8Ap3g0
 const contractId = "-B64DjhUtCwBdXSpsRytlRQCu-bie-vSTvTIT8Ap3g0";
 
 const retriever = new DriaRetriever({
-  contractId, // a knowledge to connect to
-  apiKey: "DRIA_API_KEY", // if not provided, will check env for `DRIA_API_KEY`
-  topK: 15, // optional: default value is 10
+  contractId, // 要连接的知识文档的合约 ID
+  apiKey: "DRIA_API_KEY", // 如果未提供，将检查环境变量 `DRIA_API_KEY`
+  topK: 15, // 可选：默认值为 10
 });
 
 const docs = await retriever.invoke("What is a union type?");
 console.log(docs);
 ```
 
-## Related
+## 相关 (Related)
 
-- [Retrieval guide](/oss/langchain/retrieval)
+- [检索指南](/oss/langchain/retrieval)

@@ -2,19 +2,19 @@
 title: FalkorDB
 ---
 
->[FalkorDB](https://www.falkordb.com/) is a low-latency Graph Database that delivers knowledge to GenAI.
+>[FalkorDB](https://www.falkordb.com/) 是一种低延迟的图数据库，可为生成式 AI（GenAI）提供知识。
 
-This notebook shows how to use LLMs to provide a natural language interface to `FalkorDB` database.
+本示例 Notebook 展示了如何使用大型语言模型（LLM）为 `FalkorDB` 数据库提供自然语言界面。
 
-## Setting up
+## 设置（Setting up）
 
-You can run the `falkordb` Docker container locally:
+您可以在本地运行 `falkordb` Docker 容器：
 
 ```bash
 docker run -p 6379:6379 -it --rm falkordb/falkordb
 ```
 
-Once launched, you create a database on the local machine and connect to it.
+启动后，您需要连接到本地创建的数据库。
 
 ```python
 from langchain.chains import FalkorDBQAChain
@@ -22,7 +22,7 @@ from langchain_community.graphs import FalkorDBGraph
 from langchain_openai import ChatOpenAI
 ```
 
-## Create a graph connection and insert the demo data
+## 创建图连接并插入示例数据
 
 ```python
 graph = FalkorDBGraph(database="movies")
@@ -60,7 +60,7 @@ graph.query(
 []
 ```
 
-## Creating FalkorDBQAChain
+## 创建 FalkorDBQAChain
 
 ```python
 graph.refresh_schema()
@@ -81,7 +81,7 @@ Relationships: [['(:Person)-[:ACTED_IN]->(:Movie)']]
 chain = FalkorDBQAChain.from_llm(ChatOpenAI(temperature=0), graph=graph, verbose=True)
 ```
 
-## Querying the graph
+## 查询图数据库
 
 ```python
 chain.run("Who played in Top Gun?")

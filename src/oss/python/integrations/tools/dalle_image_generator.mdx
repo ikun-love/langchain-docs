@@ -1,10 +1,10 @@
 ---
-title: Dall-E Image Generator
+title: Dall-E 图像生成器
 ---
 
->[OpenAI Dall-E](https://openai.com/dall-e-3) are text-to-image models developed by OpenAI using deep learning methodologies to generate digital images from natural language descriptions, called "prompts".
+> [OpenAI Dall-E](https://openai.com/dall-e-3) 是由 OpenAI 利用深度学习方法开发的文本到图像模型集合，它能根据自然语言描述（称为“提示词”，即 "prompts"）来生成数字图像。
 
-This notebook shows how you can generate images from a prompt synthesized using an OpenAI LLM. The images are generated using `Dall-E`, which uses the same OpenAI API key as the LLM.
+本示例 Notebook（笔记本）将展示如何使用一个由 OpenAI LLM（大语言模型）合成的提示词来生成图像。图像的生成过程使用的是 `Dall-E`，它与 LLM 使用相同的 OpenAI API 密钥。
 
 ```python
 pip install -qU  opencv-python scikit-image langchain-community
@@ -17,7 +17,7 @@ from langchain_openai import OpenAI
 os.environ["OPENAI_API_KEY"] = "insertapikey"
 ```
 
-## Run as a chain
+## 作为链（Chain）运行
 
 ```python
 from langchain.chains import LLMChain
@@ -28,7 +28,7 @@ from langchain_openai import OpenAI
 llm = OpenAI(temperature=0.9)
 prompt = PromptTemplate(
     input_variables=["image_desc"],
-    template="Generate a detailed prompt to generate an image based on the following description: {image_desc}",
+    template="根据以下描述生成一个用于生成图像的详细提示词：{image_desc}",
 )
 chain = LLMChain(llm=llm, prompt=prompt)
 ```
@@ -42,7 +42,7 @@ image_url
 ```
 
 ```python
-# You can click on the link above to display the image
+# 您可以点击上方的链接来显示生成的图像
 
 try:
     import google.colab
@@ -52,7 +52,7 @@ except ImportError:
     IN_COLAB = False
 
 if IN_COLAB:
-    from google.colab.patches import cv2_imshow  # for image display
+    from google.colab.patches import cv2_imshow  # 用于在 Colab 中显示图像
     from skimage import io
 
     image = io.imread(image_url)
@@ -63,11 +63,11 @@ else:
 
     image = io.imread(image_url)
     cv2.imshow("image", image)
-    cv2.waitKey(0)  # wait for a keyboard input
+    cv2.waitKey(0)  # 等待键盘输入
     cv2.destroyAllWindows()
 ```
 
-## Run as a tool with an agent
+## 作为工具（Tool）与智能体（Agent）一起运行
 
 ```python
 from langchain_community.tools.openai_dalle_image_generation import (
@@ -86,16 +86,16 @@ tools = [dalle_tool]
 
 agent = create_agent(llm, tools, debug=True)
 
-# User prompt
+# 用户提示词
 prompt = "Create an image of a halloween night at a haunted museum"
 
 messages = [
-    # "role": "user" Indicates message is coming from user
-    # "content": prompt is where the user's input is placed
+    # "role": "user" 表示消息来自用户
+    # "content": prompt 包含用户的输入内容
     {"role": "user", "content": prompt}
 ]
 
-# Sending the message to be processed and adjusted by ChatGPT, after which is sent through DALL-E
+# 将消息发送给 ChatGPT 处理和调整后，再发送给 DALL-E
 response = agent.invoke({"messages": messages})
 
 print(response)

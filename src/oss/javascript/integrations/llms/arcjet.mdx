@@ -2,23 +2,23 @@
 title: Arcjet Redact
 ---
 
-The [Arcjet](https://arcjet.com) redact integration allows you to redact sensitive user information from your prompts before sending it to an LLM.
+[Arcjet](https://arcjet.com) 的 redact（内容屏蔽）集成允许你在将用户提示发送给大型语言模型（LLM）之前，**屏蔽**其中敏感的用户信息。
 
-Arcjet Redact runs entirely on your own machine and never sends data anywhere else, ensuring best in class privacy and performance.
+Arcjet Redact 完全在您自己的机器上运行，绝不会将数据发送到其他任何地方，从而确保了顶级的隐私和性能保障。
 
-The Arcjet Redact object is not an LLM itself, instead it wraps an LLM. It redacts the text that is inputted to it and then unredacts the output of the wrapped LLM before returning it.
+Arcjet Redact 对象本身并不是一个 LLM，而是**包装**了一个 LLM。它会对输入给它的文本进行屏蔽（redact），然后对被包装的 LLM 的输出进行去屏蔽（unredact）操作，最后才返回结果。
 
-## Overview
+## 概览 (Overview)
 
-### Integration details
+### 集成详情 (Integration details)
 
-| Class | Package | Local | Serializable | PY Support | Downloads | Version |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | Python 支持 (PY Support) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | Arcjet | @langchain/community | ❌ | ✅ | ❌ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-### Installation
+### 安装 (Installation)
 
-Install the Arcjet Redaction Library:
+安装 Arcjet 内容屏蔽库 (Redaction Library)：
 
 <CodeGroup>
 ```bash npm
@@ -32,7 +32,7 @@ pnpm add @arcjet/redact
 ```
 </CodeGroup>
 
-And install LangChain Community:
+然后安装 LangChain Community 库：
 
 <CodeGroup>
 ```bash npm
@@ -46,10 +46,9 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-And now you're ready to start protecting your LLM calls with Arcjet Redaction!
+现在，您已准备好开始使用 Arcjet 内容屏蔽功能来保护您的 LLM 调用了！
 
-
-## Usage
+## 用法 (Usage)
 
 ```typescript
 import {
@@ -58,33 +57,33 @@ import {
 } from "@langchain/community/llms/arcjet";
 import { OpenAI } from "@langchain/openai";
 
-// Create an instance of another LLM for Arcjet to wrap
+// 创建另一个 LLM 实例供 Arcjet 包装调用
 const openai = new OpenAI({
   modelName: "gpt-3.5-turbo-instruct",
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
 const arcjetRedactOptions = {
-  // Specify a LLM that Arcjet Redact will call once it has redacted the input.
+  // 指定一个 LLM 实例，Arcjet Redact 在屏蔽输入内容后将调用此 LLM。
   llm: openai,
 
-  // Specify the list of entities that should be redacted.
-  // If this isn't specified then all entities will be redacted.
+  // 指定需要被屏蔽的实体类型列表。
+  // 如果未指定此项，则所有支持的实体类型都将被屏蔽。
   entities: ["email", "phone-number", "ip-address", "credit-card"] as ArcjetSensitiveInfoType[],
 
-  // You can provide a custom detect function to detect entities that we don't support yet.
-  // It takes a list of tokens and you return a list of identified types or undefined.
-  // The undefined types that you return should be added to the entities list if used.
+  // 您可以提供一个自定义的检测函数 (detect function) 来识别我们尚未支持的实体。
+  // 该函数接收一个 token 列表，并返回一个已识别类型的列表或 undefined。
+  // 如果返回了 undefined 类型，那么这些类型应该被添加到 entities 列表中才能生效。
   detect: (tokens: string[]) => {
     return tokens.map((t) => t === "some-sensitive-info" ? "custom-entity" : undefined)
   },
 
-  // The number of tokens to provide to the custom detect function. This defaults to 1.
-  // It can be used to provide additional context when detecting custom entity types.
+  // 传递给自定义 detect 函数的 token 数量。默认为 1。
+  // 当检测自定义实体类型时，可以使用此参数提供额外的上下文信息。
   contextWindowSize: 1,
 
-  // This allows you to provide custom replacements when redacting. Please ensure
-  // that the replacements are unique so that unredaction works as expected.
+  // 允许您在屏蔽时提供自定义的替换值。请确保
+  // 替换值是唯一的，以便去屏蔽操作能按预期工作。
   replace: (identifiedType: string) => {
     return identifiedType === "email" ? "redacted@example.com" : undefined;
   },

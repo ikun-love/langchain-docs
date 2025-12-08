@@ -2,17 +2,17 @@
 title: Cloudflare Workers AI
 ---
 
->[Cloudflare, Inc. (Wikipedia)](https://en.wikipedia.org/wiki/Cloudflare) is an American company that provides content delivery network services, cloud cybersecurity, DDoS mitigation, and ICANN-accredited domain registration services.
+> [Cloudflare, Inc. (Wikipedia)](https://en.wikipedia.org/wiki/Cloudflare) 是一家美国公司，提供内容分发网络 (CDN) 服务、云网络安全、DDoS 缓解以及 ICANN（互联网名称与数字地址分配机构）认可的域名注册服务。
 
->[Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) allows you to run machine learning models, on the `Cloudflare` network, from your code via REST API.
+> [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) 允许您通过 REST API，在 `Cloudflare` 网络上，从您的代码中运行机器学习模型。
 
->[Workers AI Developer Docs](https://developers.cloudflare.com/workers-ai/models/text-embeddings/) lists all text embeddings models available.
+> [Workers AI 开发者文档](https://developers.cloudflare.com/workers-ai/models/text-embeddings/) 列出了所有可用的文本嵌入模型。
 
-## Setting up
+## 设置 (Setting up)
 
-Both a Cloudflare Account ID and Workers AI API token are required. Find how to obtain them from [this document](https://developers.cloudflare.com/workers-ai/get-started/rest-api/).
+需要 Cloudflare 账户 ID (Account ID) 和 Workers AI API 令牌 (API token)。您可以在 [此文档](https://developers.cloudflare.com/workers-ai/get-started/rest-api/) 中找到获取这些信息的方法。
 
-You can pass these parameters explicitly or define as environmental variables.
+您可以显式地传递这些参数，或者将它们定义为环境变量。
 
 ```python
 import os
@@ -26,7 +26,7 @@ cf_acct_id = os.getenv("CF_ACCOUNT_ID")
 cf_ai_token = os.getenv("CF_AI_API_TOKEN")
 ```
 
-## Example
+## 示例 (Example)
 
 ```python
 from langchain_cloudflare.embeddings import (
@@ -40,7 +40,7 @@ embeddings = CloudflareWorkersAIEmbeddings(
     api_token=cf_ai_token,
     model_name="@cf/baai/bge-small-en-v1.5",
 )
-# single string embeddings
+# 单个字符串嵌入
 query_result = embeddings.embed_query("test")
 len(query_result), query_result[:3]
 ```
@@ -50,7 +50,7 @@ len(query_result), query_result[:3]
 ```
 
 ```python
-# string embeddings in batches
+# 批量字符串嵌入
 batch_query_result = embeddings.embed_documents(["test1", "test2", "test3"])
 len(batch_query_result), len(batch_query_result[0])
 ```

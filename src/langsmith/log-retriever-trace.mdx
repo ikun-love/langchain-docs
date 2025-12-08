@@ -1,23 +1,23 @@
 ---
-title: Log retriever traces
-sidebarTitle: Log retriever traces
+title: 检索器追踪
+sidebarTitle: 检索器追踪
 ---
 
 <Note>
-Nothing will break if you don't log retriever traces in the correct format and data will still be logged. However, the data will not be rendered in a way that is specific to retriever steps.
+如果检索器追踪（retriever traces）没有以正确的格式记录日志，系统不会出错，数据仍然会被记录。但是，数据将不会以特定于检索步骤的方式进行渲染展示。
 </Note>
 
-Many LLM applications require looking up documents from vector databases, knowledge graphs, or other types of indexes. Retriever traces are a way to log the documents that are retrieved by the retriever. LangSmith provides special rendering for retrieval steps in traces to make it easier to understand and diagnose retrieval issues. In order for retrieval steps to be rendered correctly, a few small steps need to be taken.
+许多大型语言模型（LLM）应用需要从向量数据库、知识图谱或其他类型的索引中查找文档。检索器追踪是一种记录检索器（retriever）所检索到的文档的方式。LangSmith 为追踪中的检索步骤提供了特殊的渲染功能，以便更容易理解和诊断检索相关问题。为了让检索步骤能够正确渲染，需要执行以下几个小步骤：
 
-1. Annotate the retriever step with `run_type="retriever"`.
+1.  使用 `run_type="retriever"` 来注解（Annotate）该检索器步骤。
 
-2. Return a list of Python dictionaries or TypeScript objects from the retriever step. Each dictionary should contain the following keys:
+2.  从检索器步骤返回一个 Python 字典列表或 TypeScript 对象列表。每个字典（或对象）应包含以下键（Keys）：
 
-   * `page_content`: The text of the document.
-   * `type`: This should always be "Document".
-   * `metadata`: A python dictionary or TypeScript object containing metadata about the document. This metadata will be displayed in the trace.
+    *   `page_content`: 文档的文本内容。
+    *   `type`: 此值应始终为 `"Document"`。
+    *   `metadata`: 一个 Python 字典或 TypeScript 对象，包含有关该文档的元数据（metadata）。这些元数据将在追踪（trace）中显示出来。
 
-The following code snippets show how to log a retrieval steps in Python and TypeScript.
+下面的代码片段展示了如何在 Python 和 TypeScript 中记录检索步骤。
 
 <CodeGroup>
 
@@ -36,8 +36,8 @@ def _convert_docs(results):
 
 @traceable(run_type="retriever")
 def retrieve_docs(query):
-    # Foo retriever returning hardcoded dummy documents.
-    # In production, this could be a real vector datatabase or other document index.
+    # Foo 检索器返回硬编码的虚拟文档。
+    # 在生产环境中，这可能是一个真正的向量数据库或其他文档索引。
     contents = ["Document contents 1", "Document contents 2", "Document contents 3"]
     return _convert_docs(contents)
 
@@ -62,14 +62,14 @@ function convertDocs(results: string[]): Document[] {
 }
 
 const retrieveDocs = traceable((query: string): Document[] => {
-    // Foo retriever returning hardcoded dummy documents.
-    // In production, this could be a real vector database or other document index.
+    // Foo 检索器返回硬编码的虚拟文档。
+    // 在生产环境中，这可能是一个真正的向量数据库或其他文档索引。
     const contents = ["Document contents 1", "Document contents 2", "Document contents 3"];
     return convertDocs(contents);
 },{
     name: "retrieveDocs",
     run_type: "retriever"
-} // Configuration for traceable
+} // traceable 的配置参数
 );
 
 await retrieveDocs("User query");
@@ -77,6 +77,6 @@ await retrieveDocs("User query");
 
 </CodeGroup>
 
-The following image shows how a retriever step is rendered in a trace. The contents along with the metadata are displayed with each document.
+下图展示了检索器步骤在追踪中是如何渲染的。每个文档的内容及其元数据都会被展示出来。
 
 ![](/langsmith/images/retriever-trace.png)

@@ -3,42 +3,42 @@ title: UnstructuredLoader
 ---
 
 <Tip>
-**Compatibility**: Only available on Node.js.
+**兼容性**: 仅在 Node.js 上可用。
 </Tip>
 
-This notebook provides a quick overview for getting started with `UnstructuredLoader` [document loaders](/oss/integrations/document_loaders). For detailed documentation of all `UnstructuredLoader` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html).
+本笔记提供了有关如何开始使用 `UnstructuredLoader` [文档加载器](/oss/integrations/document_loaders)的快速概览。如需了解 `UnstructuredLoader` 所有特性和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html)。
 
-## Overview
+## 概览 (Overview)
 
-### Integration details
+### 集成详情 (Integration details)
 
-| Class | Package | Compatibility | Local | [PY support](https://python.langchain.com/docs/integrations/document_loaders/unstructured_file) |
-| :--- | :--- | :---: | :---: |  :---: |
-| [UnstructuredLoader](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_document_loaders_fs_unstructured.html) | Node-only | ✅ | ✅ |
+| 类 (Class) | 包 (Package) | 兼容性 (Compatibility) | 本地 (Local) | [PY 支持](https://python.langchain.com/docs/integrations/document_loaders/unstructured_file) |
+| :--- | :--- | :---: | :---: | :---: |
+| [UnstructuredLoader](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_document_loaders_fs_unstructured.html) | 仅限 Node | ✅ | ✅ |
 
-## Setup
+## 设置 (Setup)
 
-To access `UnstructuredLoader` document loader you'll need to install the `@langchain/community` integration package, and create an Unstructured account and get an API key.
+要访问 `UnstructuredLoader` 文档加载器，您需要安装 `@langchain/community` 集成包，并创建一个 Unstructured 账户以获取 API 密钥。
 
-### Local
+### 本地部署 (Local)
 
-You can run Unstructured locally in your computer using Docker. To do so, you need to have Docker installed. You can find the instructions to install Docker [here](https://docs.docker.com/get-docker/).
+您可以使用 Docker 在本地计算机上运行 Unstructured。为此，您需要安装 Docker。您可以在[此处](https://docs.docker.com/get-docker/)找到安装 Docker 的说明。
 
 ```bash
 docker run -p 8000:8000 -d --rm --name unstructured-api downloads.unstructured.io/unstructured-io/unstructured-api:latest --port 8000 --host 0.0.0.0
 ```
 
-### Credentials
+### 凭证 (Credentials)
 
-Head to [unstructured.io](https://unstructured.io/api-key-hosted) to sign up to Unstructured and generate an API key. Once you've done this set the `UNSTRUCTURED_API_KEY` environment variable:
+请访问 [unstructured.io](https://unstructured.io/api-key-hosted) 注册 Unstructured 并生成 API 密钥。生成密钥后，设置 `UNSTRUCTURED_API_KEY` 环境变量：
 
 ```bash
 export UNSTRUCTURED_API_KEY="your-api-key"
 ```
 
-### Installation
+### 安装 (Installation)
 
-The LangChain UnstructuredLoader integration lives in the `@langchain/community` package:
+LangChain UnstructuredLoader 集成位于 `@langchain/community` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -52,9 +52,9 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-## Instantiation
+## 实例化 (Instantiation)
 
-Now we can instantiate our model object and load documents:
+现在我们可以实例化我们的模型对象并加载文档：
 
 ```typescript
 import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured"
@@ -62,7 +62,7 @@ import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/uns
 const loader = new UnstructuredLoader("../../../../../../examples/src/document_loaders/example_data/notion.mdx")
 ```
 
-## Load
+## 加载 (Load)
 
 ```typescript
 const docs = await loader.load()
@@ -95,9 +95,9 @@ console.log(docs[0].metadata)
 }
 ```
 
-## Directories
+## 目录 (Directories)
 
-You can also load all of the files in the directory using [`UnstructuredDirectoryLoader`](https://api.js.langchain.com/classes/langchain.document_loaders_fs_unstructured.UnstructuredDirectoryLoader.html), which inherits from [`DirectoryLoader`](/oss/integrations/document_loaders/file_loaders/directory):
+您也可以使用 [`UnstructuredDirectoryLoader`](https://api.js.langchain.com/classes/langchain.document_loaders_fs_unstructured.UnstructuredDirectoryLoader.html) 加载目录中的所有文件，该加载器继承自 [`DirectoryLoader`](/oss/integrations/document_loaders/file_loaders/directory)：
 
 ```typescript
 import { UnstructuredDirectoryLoader } from "@langchain/community/document_loaders/fs/unstructured";
@@ -133,6 +133,6 @@ Document {
 
 ---
 
-## API reference
+## API 参考 (API reference)
 
-For detailed documentation of all UnstructuredLoader features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html).
+如需了解 `UnstructuredLoader` 所有特性和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html)。

@@ -2,26 +2,23 @@
 title: PolarisAIDataInsightLoader
 ---
 
-> [Polaris AI DataInsight](https://datainsight.polarisoffice.com/playground) is a document parser
-> that extracts document elements (text, images, complex tables, charts, etc.) from various file formats
-> into structured JSON, making them easy to integrate into RAG systems.
+> [Polaris AI DataInsight](https://datainsight.polarisoffice.com/playground) 是一个文档解析器，它能从各种文件格式中提取文档元素（文本、图像、复杂表格、图表等）并将其转换为结构化的 JSON 格式，从而使其易于集成到 RAG（检索增强生成）系统中。
 
-## Installation
+## 安装
 
-Install `langchain-polaris-ai-datainsight` package.
+安装 `langchain-polaris-ai-datainsight` 包。
 
 ```bash
 pip install langchain-polaris-ai-datainsight
 ```
 
-## Environment Setup
+## 环境变量设置
 
-Make sure to set the following environment variables:
+请确保设置以下环境变量：
 
-- `POLARIS_AI_DATA_INSIGHT_API_KEY`: Your Polaris AI DataInsight API key. Read [Polaris AI DataInsight Documentation](https://datainsight.polarisoffice.com/api/keys) to get your API key.
+- `POLARIS_AI_DATA_INSIGHT_API_KEY`：您的 Polaris AI DataInsight API 密钥。请阅读[Polaris AI DataInsight 文档](https://datainsight.polarisoffice.com/api/keys)以获取您的 API 密钥。
 
-
-## Usage
+## 用法
 
 ```python
 import getpass
@@ -38,10 +35,10 @@ from langchain_polaris_ai_datainsight import PolarisAIDataInsightLoader
 loader = PolarisAIDataInsightLoader(
     file_path="example_data/polaris_ai_example.docx",
     resources_dir="example_data/tmp",
-    mode="page",  # "element", "page", or "single". (default is "single")
+    mode="page",  # 可选值："element"（元素级）、"page"（页级）或 "single"（单个）。(默认是 "single")
 )
 
-docs = loader.load()  # or loader.lazy_load()
+docs = loader.load()  # 或者使用 loader.lazy_load()
 
 for doc in docs[:3]:
     print(" --------- < Page Content > --------- ")
@@ -51,8 +48,7 @@ for doc in docs[:3]:
     print("\n")
 ```
 
-
-Then, you will see the extracted content and metadata from the document as below:
+然后，您将看到如下提取的文档内容和元数据：
 
 ```output
 --------- < Page Content > ---------
@@ -62,7 +58,7 @@ I. Funding Information by Track
 
 1. Beginning and Advanced Track Comparison Overview
 
-<table><tbody><tr><td>Category</td><td>Beginning Track*</td><td>Advanced Track*</td></tr><tr><td>Funding target</td><td>A university located outside Korea that has a Central Grant Management Department, an existing Korean Studies infrastructure, and plans to establish an education foundation.</td><td>A non-Korean university with a Central Grant Management Department, at least one full-time Korean Studies faculty member, an undergraduate Korean Studies major or department, and commitment to supporting Korean Studies.</td></tr><tr><td>Funding period</td><td>3 years</td><td>5 years<3+2years></td></tr><tr><td>Funding size</td><td>Maximum possible funding depends on the applicant university’s country<br><table><tbody><tr><td>Country Group*</td><td>Maximum Funding**</td></tr><tr><td>A</td><td>Up to KRW 200 million</td></tr><tr><td>B</td><td>Up to KRW 50 million</td></tr></tbody></table></td><td>Maximum possible funding depends on the applicant university’s country<br><table><tbody><tr><td>Country Group*</td><td>Maximum Funding**</td></tr><tr><td>A</td><td>Up to KRW 150 million</td></tr><tr><td>B</td><td>Up to KRW 90 million</td></tr></tbody></table></td></tr><tr><td>Required project content</td><td>·	Fund 2 or more scholarship students<br>·	Offer 1 or more regular Korean Studies lecture courses (Excluding Korean language courses)<br>·	Hold 1 or more workshops per year in which that students may participate</td><td>·	Hire 1 or more Korean Studies full-time faculty<br>·	Fund 1 or more scholarship student for Korean Studies<br>·	Offer 2 or more regular graduate-level Korean Studies lecture courses (Excluding Korean language courses)<br>·	Hold 1 or more international Korean Studies conference<br>·	Establish and manage a website, blog, or social media relating to the program </td></tr><tr><td>Recommended content</td><td>·	Foster talent (education)<br>·	Establish a Korean Studies research institute/center<br>·	Establish Korean Studies undergraduate department/major & program<br>·	Develop Korean Studies textbooks<br>·	Hold academic activities</td><td>·	Foster talent (education)<br>·	Establish a Korean Studies research institute/center<br>·	Establish Korean Studies M.A/Ph.D. department/major & program<br>·	Develop Korean Studies textbooks<br>·	Hold academic activities</td></tr></tbody></table>
+<table><tbody><tr><td>Category</td><td>Beginning Track*</td><td>Advanced Track*</td></tr><tr><td>Funding target</td><td>A university located outside Korea that has a Central Grant Management Department, an existing Korean Studies infrastructure, and plans to establish an education foundation.</td><td>A non-Korean university with a Central Grant Management Department, at least one full-time Korean Studies faculty member, an undergraduate Korean Studies major or department, and commitment to supporting Korean Studies.</td></tr><tr><td>Funding period</td><td>3 years</td><td>5 years<3+2years></td></tr><tr><td>Funding size</td><td>Maximum possible funding depends on the applicant university’s country<br><table><tbody><tr><td>Country Group*</td><td>Maximum Funding**</td></tr><tr><td>A</td><td>Up to KRW 200 million</td></tr><tr><td>B</td><td>Up to KRW 50 million</td></tr></tbody></table></td><td>Maximum possible funding depends on the applicant university’s country<br><table><tbody><tr><td>Country Group*</td><td>Maximum Funding**</td></tr><tr><td>A</td><td>Up to KRW 150 million</td></tr><tr><td>B</td><td>Up to KRW 90 million</td></tr></tbody></table></td></tr><tr><td>Required project content</td><td>·	Fund 2 or more scholarship students<br>·	Offer 1 or more regular Korean Studies lecture courses (Excluding Korean language courses)<br>·	Hold 1 or more workshops per year in which that students may participate</td><td>·	Hire 1 or more Korean Studies full-time faculty<br>·	Fund 1 or more scholarship student for Korean Studies<br>·	Offer 2 or more regular graduate-level Korean Studies lecture courses (Excluding Korean language courses)<br>·	Hold 1 or more international Korean Studies conference<br>·	Establish and manage a website, blog, or social media relating to the program </td></tr><tr><td>Recommended content</td><td>·	Foster talent (education)<br>·	Establish a Korean Studies research institute/center<br>·	Establish Korean Studies undergraduate department/major &amp; program<br>·	Develop Korean Studies textbooks<br>·	Hold academic activities</td><td>·	Foster talent (education)<br>·	Establish a Korean Studies research institute/center<br>·	Establish Korean Studies M.A/Ph.D. department/major &amp; program<br>·	Develop Korean Studies textbooks<br>·	Hold academic activities</td></tr></tbody></table>
 
 <img id="di.image.im12" data-category="image"/>
 
@@ -163,4 +159,3 @@ Conducted by Expert Review Team
 
  --------- < Metadata > ---------
 {'di.text.he2te0': {'id': 'di.text.he2te0', 'type': 'text'}, 'di.table.ta29': {'id': 'di.table.ta29', 'type': 'table'}, 'di.text.fo3te0': {'id': 'di.text.fo3te0', 'type': 'text'}}
-```
