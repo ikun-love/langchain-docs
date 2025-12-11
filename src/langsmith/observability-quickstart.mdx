@@ -1,41 +1,40 @@
-```markdown
 ---
-title: 快速入门追踪
+title: 快速入门：跟踪 (Tracing)
 sidebarTitle: 快速入门
 ---
 
-[_可观测性_](/langsmith/observability-concepts) (Observability) 是使用大型语言模型 (LLM) 构建应用程序的关键要求。LLM 是非确定性的，这意味着相同的提示可能会产生不同的响应。这种行为使得调试和监控比传统软件更具挑战性。
+[_可观测性_](/langsmith/observability-concepts) 是使用大型语言模型（LLM）构建的应用程序的关键要求。LLM 的行为具有**非确定性**，这意味着相同的提示可能会产生不同的响应。这种特性使得调试和监控比传统软件更具挑战性。
 
-LangSmith 通过提供对应用程序如何处理请求的端到端可见性来解决此问题。每个请求都会生成一个 [_追踪_](/langsmith/observability-concepts#traces) (trace)，其中捕获了发生的完整记录。在追踪内部是个别的 [_运行_](/langsmith/observability-concepts#runs) (runs)，即应用程序执行的具体操作，例如 LLM 调用或检索步骤。追踪运行后，您可以检查、调试和验证应用程序的行为。
+LangSmith 通过提供对应用程序处理请求方式的端到端可见性来解决这个问题。每次请求都会生成一个 [_跟踪 (trace)_](/langsmith/observability-concepts#traces)，其中捕获了发生的所有事件的完整记录。在一个 Trace 中，包含了个别的 [_运行 (runs)_](/langsmith/observability-concepts#runs)，即应用程序执行的具体操作，例如 LLM 调用或检索步骤。跟踪运行（Tracing runs）允许您检查、调试和验证应用程序的行为。
 
-在本快速入门中，您将设置一个最小的 [_检索增强生成 (RAG)_](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-retrieval-augmented-generation-rag) 应用程序，并使用 LangSmith 添加追踪。您将：
+在本快速入门指南中，您将设置一个最小化的 [_检索增强生成 (RAG)_](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-retrieval-augmented-generation-rag) 应用程序，并使用 LangSmith 添加跟踪功能。您将完成以下操作：
 
-1. 配置您的环境。
-1. 创建一个检索上下文并调用 LLM 的应用程序。
-1. 启用追踪以捕获检索步骤和 LLM 调用。
-1. 在 LangSmith UI 中查看生成的追踪。
+1.  配置您的环境。
+1.  创建一个检索上下文并调用 LLM 的应用程序。
+1.  启用跟踪以捕获检索步骤和 LLM 调用。
+1.  在 LangSmith UI 中查看生成的结果 Trace。
 
 <Tip>
-如果您更喜欢观看关于追踪入门的视频，请参阅快速入门 [视频指南](#video-guide)。
+如果您更喜欢通过视频学习入门跟踪，请参阅快速入门 [视频指南](#video-guide)。
 </Tip>
 
-## 前提条件
+## 先决条件
 
-在开始之前，请确保您拥有：
+在开始之前，请确保您已准备好以下项：
 
-- **LangSmith 账户**: 在 [smith.langchain.com](https://smith.langchain.com) 注册或登录。
-- **LangSmith API 密钥**: 按照 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南操作。
-- **OpenAI API 密钥**: 从 [OpenAI 仪表板](https://platform.openai.com/account/api-keys) 生成。
+*   **一个 LangSmith 账户**：请在 [smith.langchain.com](https://smith.langchain.com) 注册或登录。
+*   **一个 LangSmith API 密钥**：请按照 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南操作。
+*   **一个 OpenAI API 密钥**：请从 [OpenAI 仪表板](https://platform.openai.com/account/api-keys) 生成。
 
-本快速入门中的示例应用将使用 OpenAI 作为 LLM 提供商。您可以将此示例适配到您应用程序所使用的 LLM 提供商。
+本快速入门示例应用将使用 OpenAI 作为 LLM 提供商。您可以根据您应用程序使用的 LLM 提供商来修改此示例。
 
 <Tip>
-如果您正在使用 [LangChain](https://python.langchain.com/docs/introduction/) 或 [LangGraph](https://langchain-ai.github.io/langgraph/) 构建应用程序，只需一个环境变量即可启用 LangSmith 追踪。请阅读 [使用 LangChain 进行追踪](/langsmith/trace-with-langchain) 或 [使用 LangGraph 进行追踪](/langsmith/trace-with-langgraph) 指南，了解如何开始。
+如果您正在使用 [LangChain](https://python.langchain.com/docs/introduction/) 或 [LangGraph](https://langchain-ai.github.io/langgraph/) 构建应用程序，您只需一个环境变量即可启用 LangSmith 跟踪。请阅读有关使用 [LangChain](/langsmith/trace-with-langchain) 或使用 [LangGraph](/langsmith/trace-with-langgraph) 进行跟踪的指南以开始操作。
 </Tip>
 
 ## 1. 创建目录并安装依赖项
 
-在您的终端中，为您的项目创建一个目录并在环境中安装所需的依赖项：
+在您的终端中，为您的项目创建一个目录，并在您的环境中安装所需的依赖项：
 
 <CodeGroup>
 
@@ -59,10 +58,10 @@ npx tsc --init
 
 设置以下环境变量：
 
-- `LANGSMITH_TRACING`
-- `LANGSMITH_API_KEY`
-- `OPENAI_API_KEY`（或您的 LLM 提供商的 API 密钥）
-- (可选) `LANGSMITH_WORKSPACE_ID`: 如果您的 LangSmith API 密钥链接到多个工作区，请设置此变量以指定要使用的工作区。
+*   `LANGSMITH_TRACING`
+*   `LANGSMITH_API_KEY`
+*   `OPENAI_API_KEY`（或您的 LLM 提供商的 API 密钥）
+*   （可选）`LANGSMITH_WORKSPACE_ID`：如果您的 LangSmith API 密钥链接到多个工作区，请设置此变量以指定要使用的工作区。
 
 ``` bash
 export LANGSMITH_TRACING=true
@@ -71,19 +70,19 @@ export OPENAI_API_KEY="<your-openai-api-key>"
 export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
 ```
 
-如果您使用 Anthropic，请使用 [Anthropic 包装器](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) 来追踪您的调用。对于其他提供商，请使用 [可追踪包装器](/langsmith/annotate-code#use-%40traceable-%2F-traceable)。
+如果您使用 Anthropic，请使用 [Anthropic 封装器](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) 来跟踪您的调用。对于其他提供商，请使用 [可跟踪封装器](/langsmith/annotate-code#use-%40traceable-%2F-traceable)。
 
 ## 3. 定义您的应用程序
 
-您可以使用本步骤中概述的示例应用代码来工具化一个 RAG 应用程序。或者，您可以使用自己的应用程序代码，只要其中包含 LLM 调用即可。
+您可以使用此步骤中概述的示例应用代码来仪器化 RAG 应用程序。或者，您也可以使用自己的包含 LLM 调用的应用程序代码。
 
-这是一个最小的 RAG 应用，它直接使用 OpenAI SDK，尚未添加任何 LangSmith 追踪。它包含三个主要部分：
+这是一个使用 OpenAI SDK 直接实现（尚未添加任何 LangSmith 跟踪）的最小 RAG 应用。它包含三个主要部分：
 
-- **检索器函数 (Retriever function)**: 模拟文档检索，总是返回相同的字符串。
-- **OpenAI 客户端 (OpenAI client)**: 实例化一个普通的 OpenAI 客户端以发送聊天补全请求。
-- **RAG 函数 (RAG function)**: 将检索到的文档与用户的问题组合成一个系统提示，使用 `gpt-4o-mini` 调用 `chat.completions.create()` 端点，并返回助手的响应。
+*   **检索器函数 (Retriever function)**：模拟文档检索，总是返回相同的字符串。
+*   **OpenAI 客户端 (OpenAI client)**：实例化一个普通的 OpenAI 客户端来发送聊天补全请求。
+*   **RAG 函数 (RAG function)**：将检索到的文档与用户的问题组合成系统提示，使用 `gpt-4o-mini` 调用 `chat.completions.create()` 端点，并返回助手的响应。
 
-将以下代码添加到您的应用文件（例如 `app.py` 或 `app.ts`）：
+将以下代码添加到您的应用文件（例如 `app.py` 或 `app.ts`）中：
 
 <CodeGroup>
 
@@ -91,10 +90,10 @@ export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
 from openai import OpenAI
 
 def retriever(query: str):
-    # Minimal example retriever
+    # 最小示例检索器
     return ["Harrison worked at Kensho"]
 
-# OpenAI client call (no wrapping yet)
+# OpenAI 客户端调用（尚未封装）
 client = OpenAI()
 
 def rag(question: str) -> str:
@@ -104,7 +103,7 @@ def rag(question: str) -> str:
         + "\n".join(docs)
     )
 
-    # This call is not traced yet
+    # 此调用尚未被跟踪
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -122,12 +121,12 @@ if __name__ == "__main__":
 import "dotenv/config";
 import OpenAI from "openai";
 
-// Minimal example retriever
+// 最小示例检索器
 function retriever(query: string): string[] {
     return ["Harrison worked at Kensho"];
 }
 
-// OpenAI client call (no wrapping yet)
+// OpenAI 客户端调用（尚未封装）
 const client = new OpenAI();
 
 async function rag(question: string) {
@@ -136,7 +135,7 @@ async function rag(question: string) {
         "Answer the user's question using only the provided information below:\n" +
         docs.join("\n");
 
-    // This call is not traced yet
+    // 此调用尚未被跟踪
     const resp = await client.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -155,27 +154,27 @@ async function rag(question: string) {
 
 </CodeGroup>
 
-## 4. 追踪 LLM 调用
+## 4. 跟踪 LLM 调用
 
-首先，您将追踪所有的 OpenAI 调用。LangSmith 提供了包装器：
+首先，您需要跟踪所有的 OpenAI 调用。LangSmith 提供了封装器（Wrappers）：
 
-- Python: [`wrap_openai`](https://docs.smith.langchain.com/reference/python/wrappers/langsmith.wrappers._openai.wrap_openai)
-- TypeScript: [`wrapOpenAI`](https://docs.smith.langchain.com/reference/js/functions/wrappers_openai.wrapOpenAI)
+*   Python：[`wrap_openai`](https://docs.smith.langchain.com/reference/python/wrappers/langsmith.wrappers._openai.wrap_openai)
+*   TypeScript：[`wrapOpenAI`](https://docs.smith.langchain.com/reference/js/functions/wrappers_openai.wrapOpenAI)
 
-此代码片段包装了 OpenAI 客户端，以便所有后续的模型调用都会自动记录在 LangSmith 中，成为一个被追踪的子运行 (child run)。
+此代码片段封装了 OpenAI 客户端，使得后续的每一次模型调用都会自动作为子运行（child run）被记录到 LangSmith 中。
 
-1. 在您的应用文件中包含高亮显示的行：
+1.  在您的应用文件中包含高亮显示的行：
 
     <CodeGroup>
 
     ```python Python highlight={2,7}
     from openai import OpenAI
-    from langsmith.wrappers import wrap_openai  # traces openai calls
+    from langsmith.wrappers import wrap_openai  # 跟踪 openai 调用
 
     def retriever(query: str):
         return ["Harrison worked at Kensho"]
 
-    client = wrap_openai(OpenAI())  # log traces by wrapping the model calls
+    client = wrap_openai(OpenAI())  # 通过封装模型调用来记录跟踪
 
     def rag(question: str) -> str:
         docs = retriever(question)
@@ -199,13 +198,13 @@ async function rag(question: string) {
     ```typescript TypeScript highlight={3,9}
     import "dotenv/config";
     import OpenAI from "openai";
-    import { wrapOpenAI } from "langsmith/wrappers"; // traces openai calls
+    import { wrapOpenAI } from "langsmith/wrappers"; // 跟踪 openai 调用
 
     function retriever(query: string): string[] {
         return ["Harrison worked at Kensho"];
     }
 
-    const client = wrapOpenAI(new OpenAI()); // log traces by wrapping the model calls
+    const client = wrapOpenAI(new OpenAI()); // 通过封装模型调用来记录跟踪
 
     async function rag(question: string) {
         const docs = retriever(question);
@@ -231,7 +230,7 @@ async function rag(question: string) {
 
     </CodeGroup>
 
-1. 调用您的应用程序：
+1.  调用您的应用程序：
 
     <CodeGroup>
 
@@ -252,7 +251,7 @@ async function rag(question: string) {
     Harrison worked at Kensho.
     ```
 
-1. 在 [LangSmith UI](https://smith.langchain.com) 中，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的workspace）。您将看到刚刚注入追踪的 OpenAI 调用。
+1.  在 [LangSmith UI](https://smith.langchain.com) 中，导航到您工作区的**默认**跟踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的项目）。您将看到刚刚仪器化（instrumented）的 OpenAI 调用记录。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -268,11 +267,11 @@ async function rag(question: string) {
 />
 </div>
 
-## 5. 追踪整个应用程序
+## 5. 跟踪整个应用程序
 
-您也可以使用 `traceable` 装饰器（适用于 [Python](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable) 或 [TypeScript](https://langsmith-docs-bdk0fivr6-langchain.vercel.app/reference/js/functions/traceable.traceable)）来追踪整个应用程序，而不是仅追踪 LLM 调用。
+您也可以使用 `traceable` 装饰器（Python 的 [Python](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable) 或 TypeScript 的 [TypeScript](https://langsmith-docs-bdk0fivr6-langchain.vercel.app/reference/js/functions/traceable.traceable)）来跟踪整个应用程序，而不是仅仅跟踪 LLM 调用。
 
-1. 将高亮显示的代码包含在您的应用文件中：
+1.  将高亮显示的代码包含在您的应用文件中：
 
     <CodeGroup>
 
@@ -284,7 +283,7 @@ async function rag(question: string) {
     def retriever(query: str):
         return ["Harrison worked at Kensho"]
 
-    client = wrap_openai(OpenAI())  # keep this to capture the prompt and response from the LLM
+    client = wrap_openai(OpenAI())  # 保留此项以捕获来自 LLM 的提示和响应
 
     @traceable
     def rag(question: str) -> str:
@@ -315,7 +314,7 @@ async function rag(question: string) {
         return ["Harrison worked at Kensho"];
     }
 
-    const client = wrapOpenAI(new OpenAI()); // keep this to capture the prompt and response from the LLM
+    const client = wrapOpenAI(new OpenAI()); // 保留此项以捕获来自 LLM 的提示和响应
 
     const rag = traceable(async (question: string) => {
         const docs = retriever(question);
@@ -341,7 +340,7 @@ async function rag(question: string) {
 
     </CodeGroup>
 
-1. 再次调用应用程序以创建一次运行：
+1.  再次调用应用程序以创建运行（run）：
 
     <CodeGroup>
 
@@ -355,7 +354,7 @@ async function rag(question: string) {
 
     </CodeGroup>
 
-1. 返回 [LangSmith UI](https://smith.langchain.com)，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的 workspace）。您将找到整个应用管道的追踪，其中包含 **rag** 步骤和 **ChatOpenAI** LLM 调用。
+1.  返回 [LangSmith UI](https://smith.langchain.com)，导航到您工作区的**默认**跟踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的项目）。您将找到整个应用流程的 Trace，其中包含 **rag** 步骤和 **ChatOpenAI** 的 LLM 调用。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -375,10 +374,14 @@ async function rag(question: string) {
 
 以下是一些您可能希望接下来探索的主题：
 
-- [追踪集成](/langsmith/trace-with-langchain) 为各种 LLM 提供商和智能体框架提供支持。
-- [过滤追踪](/langsmith/filter-traces-in-application) 可以帮助您有效地浏览和分析包含大量数据的追踪项目中。
-- [追踪 RAG 应用程序](/langsmith/observability-llm-tutorial) 是一个完整的教程，它从开发到生产为应用程序添加可观测性。
-- [将追踪发送到特定项目](/langsmith/log-traces-to-project) 将更改追踪的目的地项目。
+*   [跟踪集成](/langsmith/trace-with-langchain) 为各种 LLM 提供商和代理框架提供支持。
+*   [过滤跟踪](/langsmith/filter-traces-in-application) 可以帮助您有效地浏览和分析包含大量数据的跟踪项目中。
+*   [跟踪 RAG 应用程序](/langsmith/observability-llm-tutorial) 是一个完整的教程，它为应用程序从开发到生产提供了可观测性。
+*   [将跟踪发送到特定项目](/langsmith/log-traces-to-project) 可以更改跟踪的目标项目。
+
+<Callout type="info" icon="bird">
+记录跟踪后，使用 **[Polly](/langsmith/polly)** 来分析它们并获取由 AI 驱动的关于应用程序性能的见解。
+</Callout>
 
 ## 视频指南
 <iframe
@@ -389,4 +392,3 @@ async function rag(question: string) {
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
-```

@@ -6,13 +6,13 @@ title: ChatNVIDIA
 
 ## 概述
 
-`langchain-nvidia-ai-endpoints` 包包含了 LangChain 集成，用于使用 NVIDIA NIM 推理微服务上的模型来构建应用程序。NIM 支持来自社区和 NVIDIA 的跨越聊天、嵌入和重排序等领域的模型。这些模型经过 NVIDIA 优化，可在 NVIDIA 加速基础设施上提供最佳性能，并作为 NIM 部署，NIM 是一种易于使用的预构建容器，可通过 NVIDIA 加速基础设施上的单个命令在任何地方部署。
+`langchain-nvidia-ai-endpoints` 包包含了 LangChain 的集成功能，用于使用 NVIDIA NIM 推理微服务上的模型来构建应用程序。NIM 支持来自社区和 NVIDIA 的跨越聊天、嵌入和重排序等领域的模型。这些模型经过 NVIDIA 优化，可在 NVIDIA 加速基础设施上提供最佳性能，并作为 NIM 部署。NIM 是易于使用的预构建容器，只需在 NVIDIA 加速基础设施上使用一条命令，即可在任何地方进行部署。
 
-NVIDIA 托管的 NIM 部署可在 [NVIDIA API 目录](https://build.nvidia.com/) 上进行测试。测试后，可以使用 NVIDIA AI Enterprise 许可证从 NVIDIA API 目录导出 NIM，并在本地或云端运行，从而使企业能够拥有并完全控制其知识产权 (IP) 和 AI 应用程序。
+NVIDIA 托管的 NIM 部署可在 [NVIDIA API 目录](https://build.nvidia.com/) 上进行测试。测试后，NIMs 可以使用 NVIDIA AI Enterprise 许可证从 NVIDIA 的 API 目录导出，并在本地或云端运行，从而使企业能够拥有并完全控制其知识产权 (IP) 和 AI 应用程序。
 
-NIM 是按模型打包成容器镜像的，并通过 NVIDIA NGC Catalog 作为 NGC 容器镜像分发。从本质上讲，NIM 为在 AI 模型上运行推理提供了简单、一致且熟悉的应用编程接口 (API)。
+NIMs 按模型进行打包，作为容器镜像，并通过 NVIDIA NGC Catalog 作为 NGC 容器镜像分发。从本质上讲，NIMs 为在 AI 模型上运行推理提供了简单、一致且熟悉的工作流程 API。
 
-此示例将介绍如何使用 LangChain 通过 `ChatNVIDIA` 类与 NVIDIA 支持的服务进行交互。
+本示例演示了如何使用 `ChatNVIDIA` 类通过 LangChain 与 NVIDIA 支持的模型进行交互。
 
 有关通过此 API 访问聊天模型的更多信息，请查看 [ChatNVIDIA](https://python.langchain.com/docs/integrations/chat/nvidia_ai_endpoints/) 文档。
 
@@ -24,21 +24,21 @@ NIM 是按模型打包成容器镜像的，并通过 NVIDIA NGC Catalog 作为 N
 
 ### 模型特性
 
-| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 (JSON mode) | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 (Audio input) | 视频输入 (Video input) | [Token 级别流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [逐 Token 流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
-## 设置 (Setup)
+## 设置
 
-**开始步骤：**
+**入门指南：**
 
-1. 在 [NVIDIA](https://build.nvidia.com/) 创建一个免费账户，这里托管了 NVIDIA AI 基础模型 (Foundation models)。
+1. 在 [NVIDIA](https://build.nvidia.com/) 创建一个免费账户，NVIDIA 托管着 NVIDIA AI 基础模型。
 
 2. 点击您选择的模型。
 
-3. 在 `Input` 下，选择 `Python` 标签页，然后点击 `Get API Key`。接着点击 `Generate Key`。
+3. 在 `Input`（输入）下选择 `Python` 选项卡，然后点击 `Get API Key`（获取 API 密钥）。接着点击 `Generate Key`（生成密钥）。
 
-4. 复制生成的密钥并将其保存为 `NVIDIA_API_KEY`。至此，您应该就能访问这些端点了。
+4. 复制生成的密钥并将其保存为 `NVIDIA_API_KEY`。这样您就应该可以访问相应的 API 端点了。
 
 ### 凭证 (Credentials)
 
@@ -48,17 +48,17 @@ import os
 
 if not os.getenv("NVIDIA_API_KEY"):
     # 注意：API 密钥应以 "nvapi-" 开头
-    os.environ["NVIDIA_API_KEY"] = getpass.getpass("Enter your NVIDIA API key: ")
+    os.environ["NVIDIA_API_KEY"] = getpass.getpass("输入您的 NVIDIA API 密钥: ")
 ```
 
-要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
 ```
 
-### 安装 (Installation)
+### 安装
 
 LangChain NVIDIA AI Endpoints 集成位于 `langchain-nvidia-ai-endpoints` 包中：
 
@@ -66,7 +66,7 @@ LangChain NVIDIA AI Endpoints 集成位于 `langchain-nvidia-ai-endpoints` 包�
 pip install -qU langchain-nvidia-ai-endpoints
 ```
 
-## 实例化 (Instantiation)
+## 实例化
 
 现在我们可以访问 NVIDIA API 目录中的模型了：
 
@@ -80,49 +80,49 @@ llm = ChatNVIDIA(model="mistralai/mixtral-8x7b-instruct-v0.1")
 ## 调用 (Invocation)
 
 ```python
-result = llm.invoke("Write a ballad about LangChain.")
+result = llm.invoke("写一首关于 LangChain 的歌谣。")
 print(result.content)
 ```
 
-## 使用 NVIDIA NIM
+## 使用 NVIDIA NIMs
 
-当准备好部署时，您可以使用 NVIDIA NIM（包含在 NVIDIA AI Enterprise 软件许可中）在本地托管模型，并在任何地方运行它们，从而拥有您自定义的所有权，并完全控制您的知识产权 (IP) 和 AI 应用程序。
+当您准备好部署时，您可以使用 NVIDIA NIM（包含在 NVIDIA AI Enterprise 软件许可证中）自托管模型，并在任何地方运行它们，从而实现对自定义内容的拥有和对知识产权 (IP) 及 AI 应用程序的完全控制。
 
 [了解有关 NIM 的更多信息](https://developer.nvidia.com/blog/nvidia-nim-offers-optimized-inference-microservices-for-deploying-ai-models-at-scale/)
 
 ```python
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
-# 连接到一个在 localhost:8000 上运行的嵌入式 NIM，并指定特定模型
+# 连接到在 localhost:8000 上运行的 embedding NIM，并指定特定模型
 llm = ChatNVIDIA(base_url="http://localhost:8000/v1", model="meta/llama3-8b-instruct")
 ```
 
-## Stream、Batch 和 Async
+## 流式传输 (Stream)、批处理 (Batch) 和异步 (Async)
 
-这些模型原生支持流式传输 (streaming)，并且与所有 LangChain LLM 一样，它们暴露了一个 `batch` 方法来处理并发请求，以及用于 `invoke`、`stream` 和 `batch` 的异步方法。以下是一些示例。
+这些模型原生支持流式传输，并且像所有 LangChain LLM 一样，它们暴露了一个 `batch` 方法来处理并发请求，以及用于 `invoke`、`stream` 和 `batch` 的异步方法。下面是一些示例。
 
 ```python
-print(llm.batch(["What's 2*3?", "What's 2*6?"]))
+print(llm.batch(["2*3等于多少？", "2*6等于多少？"]))
 # 或者通过异步 API
-# await llm.abatch(["What's 2*3?", "What's 2*6?"])
+# await llm.abatch(["2*3等于多少？", "2*6等于多少？"])
 ```
 
 ```python
-for chunk in llm.stream("How far can a seagull fly in one day?"):
-    # 显示 token 分隔
+for chunk in llm.stream("海鸥一天能飞多远？"):
+    # 显示 Token 分隔
     print(chunk.content, end="|")
 ```
 
 ```python
 async for chunk in llm.astream(
-    "How long does it take for monarch butterflies to migrate?"
+    "帝王蝶迁徙需要多长时间？"
 ):
     print(chunk.content, end="|")
 ```
 
-## 支持的模型 (Supported models)
+## 支持的模型
 
-查询 `available_models` 仍将为您提供您的 API 凭证提供的所有其他模型。
+查询 `available_models` 仍将显示您的 API 凭证提供的所有其他模型。
 
 `playground_` 前缀是可选的。
 
@@ -131,17 +131,17 @@ ChatNVIDIA.get_available_models()
 # llm.get_available_models()
 ```
 
-## 模型类型 (Model types)
+## 模型类型
 
-上述所有这些模型都受支持，并且可以通过 `ChatNVIDIA` 访问。
+以上所有这些模型都受支持，并且可以通过 `ChatNVIDIA` 访问。
 
-某些模型类型支持独特的提示技术和聊天消息。我们将在下面回顾一些重要的类型。
+某些模型类型支持独特的提示技巧和聊天消息格式。我们将在下面回顾一些重要的类型。
 
-**要了解有关特定模型的更多信息，请导航至 AI 基础模型 [此处链接](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/ai-foundation/models/codellama-13b/api) 的 API 部分。**
+**要了解特定模型的更多信息，请导航至 AI 基础模型 [此链接中指示的](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/ai-foundation/models/codellama-13b/api) API 部分。**
 
-### 通用聊天 (General Chat)
+### 常规聊天 (General Chat)
 
-像 `meta/llama3-8b-instruct` 和 `mistralai/mixtral-8x22b-instruct-v0.1` 这样的模型是通用的优秀模型，可用于任何 LangChain 聊天消息。下面是一个示例。
+`meta/llama3-8b-instruct` 和 `mistralai/mixtral-8x22b-instruct-v0.1` 等模型是很好的全能模型，可用于任何 LangChain 聊天消息。以下是示例。
 
 ```python
 from langchain_core.output_parsers import StrOutputParser
@@ -149,45 +149,45 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
 prompt = ChatPromptTemplate.from_messages(
-    [("system", "You are a helpful AI assistant named Fred."), ("user", "{input}")]
+    [("system", "你是一个名叫 Fred 的乐于助人的 AI 助手。"), ("user", "{input}")]
 )
 chain = prompt | ChatNVIDIA(model="meta/llama3-8b-instruct") | StrOutputParser()
 
-for txt in chain.stream({"input": "What's your name?"}):
+for txt in chain.stream({"input": "你叫什么名字？"}):
     print(txt, end="")
 ```
 
 ### 代码生成 (Code Generation)
 
-这些模型接受与常规聊天模型相同的参数和输入结构，但它们在代码生成和结构化代码任务上往往表现更好。`meta/codellama-70b` 就是一个例子。
+这些模型接受与常规聊天模型相同的参数和输入结构，但它们在代码生成和结构化代码任务上通常表现更好。`meta/codellama-70b` 就是一个例子。
 
 ```python
 prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are an expert coding AI. Respond only in valid python; no narration whatsoever.",
+            "你是一位专业的编程 AI。只用有效的 python 回答；不要有任何叙述。",
         ),
         ("user", "{input}"),
     ]
 )
 chain = prompt | ChatNVIDIA(model="meta/codellama-70b") | StrOutputParser()
 
-for txt in chain.stream({"input": "How do I solve this fizz buzz problem?"}):
+for txt in chain.stream({"input": "我该如何解决这个 Fizz Buzz 问题？"}):
     print(txt, end="")
 ```
 
 ## 多模态 (Multimodal)
 
-NVIDIA 还支持多模态输入，这意味着您可以提供图像和文本供模型进行推理。支持多模态输入的示例模型是 `nvidia/neva-22b`。
+NVIDIA 也支持多模态输入，这意味着您可以同时提供图像和文本供模型推理。支持多模态输入的示例模型是 `nvidia/neva-22b`。
 
-以下是一个使用示例：
+用法示例如下：
 
 ```python
 import IPython
 import requests
 
-image_url = "https://www.nvidia.com/content/dam/en-zz/Solutions/research/ai-playground/nvidia-picasso-3c33-p@2x.jpg"  ## 大型图像 (Large Image)
+image_url = "https://www.nvidia.com/content/dam/en-zz/Solutions/research/ai-playground/nvidia-picasso-3c33-p@2x.jpg"  ## 大图
 image_content = requests.get(image_url).content
 
 IPython.display.Image(image_content)
@@ -208,7 +208,7 @@ llm.invoke(
     [
         HumanMessage(
             content=[
-                {"type": "text", "text": "Describe this image:"},
+                {"type": "text", "text": "描述这张图片："},
                 {"type": "image_url", "image_url": {"url": image_url}},
             ]
         )
@@ -216,9 +216,9 @@ llm.invoke(
 )
 ```
 
-#### 作为 base64 编码字符串传递图像
+#### 通过 base64 编码字符串传递图像
 
-目前，一些额外的客户端处理会发生，以支持像上面那样的大型图像。但对于较小的图像（并更好地说明底层过程），我们可以直接像下面那样传入图像：
+目前，为了支持像上面那样的较大图像，客户端会执行一些额外的处理。但是，对于较小的图像（并且为了更好地说明底层过程），我们可以直接传递图像，如以下所示：
 
 ```python
 import IPython
@@ -235,14 +235,14 @@ import base64
 
 from langchain.messages import HumanMessage
 
-## 适用于更简单的图像。对于更大的图像，请参阅实际实现
+## 适用于更简单的图像。对于较大的图像，请参阅实际实现
 b64_string = base64.b64encode(image_content).decode("utf-8")
 
 llm.invoke(
     [
         HumanMessage(
             content=[
-                {"type": "text", "text": "Describe this image:"},
+                {"type": "text", "text": "描述这张图片："},
                 {
                     "type": "image_url",
                     "image_url": {"url": f"data:image/png;base64,{b64_string}"},
@@ -255,16 +255,16 @@ llm.invoke(
 
 #### 直接在字符串中内联
 
-NVIDIA API 独特之处在于它接受 base64 图像，这些图像内联在 `<img/>` HTML 标签中。虽然这与其他 LLM 不可互操作，但您可以直接按此方式向模型提问。
+NVIDIA API 独特地支持将图像作为 base64 图像内联在 `<img/>` HTML 标签中。虽然这与其他 LLM 不可互操作，但您可以直接按此方式向模型发出提示。
 
 ```python
 base64_with_mime_type = f"data:image/png;base64,{b64_string}"
-llm.invoke(f'What\'s in this image?\n<img src="{base64_with_mime_type}" />')
+llm.invoke(f'这张图片里有什么？\n<img src="{base64_with_mime_type}" />')
 ```
 
 ## 在 RunnableWithMessageHistory 中的示例用法
 
-与任何其他集成一样，ChatNVIDIA 支持聊天实用工具，如 `RunnableWithMessageHistory`，它类似于使用 `ConversationChain`。下面，我们展示了应用于 `mistralai/mixtral-8x22b-instruct-v0.1` 模型的 [LangChain RunnableWithMessageHistory](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html) 示例。
+与任何其他集成一样，ChatNVIDIA 完全支持像 `RunnableWithMessageHistory` 这样的聊天实用程序，它类似于使用 `ConversationChain`。下面，我们展示了应用于 `mistralai/mixtral-8x22b-instruct-v0.1` 模型的 [LangChain RunnableWithMessageHistory](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html) 示例。
 
 ```python
 pip install -qU langchain
@@ -274,11 +274,11 @@ pip install -qU langchain
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# store 是一个将会话 ID 映射到其相应聊天历史记录的字典。
-store = {}  # 内存保存在链之外
+# store 是一个字典，将会话 ID 映射到其对应的聊天历史。
+store = {}  # 内存状态在链之外维护
 
 
-# 一个返回给定会话 ID 聊天历史记录的函数。
+# 一个返回给定会话 ID 聊天历史的函数。
 def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
     if session_id not in store:
         store[session_id] = InMemoryChatMessageHistory()
@@ -292,7 +292,7 @@ chat = ChatNVIDIA(
     top_p=1.0,
 )
 
-# 定义一个 RunnableConfig 对象，其中包含一个 `configurable` 键。session_id 决定了线程
+# 定义一个 RunnableConfig 对象，带有一个 `configurable` 键。session_id 决定了线程
 config = {"configurable": {"session_id": "1"}}
 
 conversation = RunnableWithMessageHistory(
@@ -301,21 +301,21 @@ conversation = RunnableWithMessageHistory(
 )
 
 conversation.invoke(
-    "Hi I'm Srijan Dubey.",  # 输入或查询
+    "嗨，我是 Srijan Dubey。",  # 输入或查询
     config=config,
 )
 ```
 
 ```python
 conversation.invoke(
-    "I'm doing well! Just having a conversation with an AI.",
+    "我很好！只是在和一个 AI 聊天。",
     config=config,
 )
 ```
 
 ```python
 conversation.invoke(
-    "Tell me about yourself.",
+    "告诉我关于你自己。",
     config=config,
 )
 ```
@@ -324,7 +324,7 @@ conversation.invoke(
 
 从 v0.2 版本开始，`ChatNVIDIA` 支持 [bind_tools](https://python.langchain.com/api_reference/core/language_models/langchain_core.language_models.chat_models.BaseChatModel.html#langchain_core.language_models.chat_models.BaseChatModel.bind_tools)。
 
-`ChatNVIDIA` 提供了与 [build.nvidia.com](https://build.nvidia.com) 上的各种模型以及本地 NIM 的集成。并非所有这些模型都经过工具调用的训练。请确保选择一个支持工具调用的模型用于您的实验和应用程序。
+`ChatNVIDIA` 提供了与 [build.nvidia.com](https://build.nvidia.com) 上的各种模型以及本地 NIM 的集成。并非所有这些模型都经过工具调用的训练。在您的实验和应用程序中，请务必选择支持工具调用的模型。
 
 您可以使用以下方法获取支持工具调用的模型列表：
 
@@ -335,7 +335,7 @@ tool_models = [
 tool_models
 ```
 
-对于支持工具的模型，
+对于支持工具调用的模型：
 
 ```python
 from langchain.tools import tool
@@ -344,18 +344,18 @@ from pydantic import Field
 
 @tool
 def get_current_weather(
-    location: str = Field(..., description="The location to get the weather for."),
+    location: str = Field(..., description="获取天气信息的地点。"),
 ):
-    """Get the current weather for a location."""
+    """获取某一地点的当前天气。"""
     ...
 
 
 llm = ChatNVIDIA(model=tool_models[0].id).bind_tools(tools=[get_current_weather])
-response = llm.invoke("What is the weather in Boston?")
+response = llm.invoke("波士顿的天气怎么样？")
 response.tool_calls
 ```
 
-有关其他示例，请参阅 [如何使用聊天模型调用工具](/oss/langchain/tools)。
+有关使用聊天模型调用工具的更多示例，请参阅 [如何使用聊天模型调用工具](/oss/langchain/tools)。
 
 ---
 

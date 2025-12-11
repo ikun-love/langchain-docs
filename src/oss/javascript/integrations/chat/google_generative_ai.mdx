@@ -2,21 +2,21 @@
 title: ChatGoogleGenerativeAI
 ---
 
-[Google AI](https://ai.google.dev/) 提供了多种聊天模型，包括强大的 Gemini 系列。有关最新模型、特性、上下文窗口等方面的信息，请参阅 [Google AI 文档](https://ai.google.dev/gemini-api/docs/models/gemini)。
+[Google AI](https://ai.google.dev/) 提供多种聊天模型，包括强大的 Gemini 系列。有关最新模型、其功能、上下文窗口等方面的信息，请访问 [Google AI 文档](https://ai.google.dev/gemini-api/docs/models/gemini)。
 
-本指南将帮助您开始使用 `ChatGoogleGenerativeAI` [聊天模型](/oss/langchain/models)。有关 `ChatGoogleGenerativeAI` 所有特性和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。
+这将帮助您开始使用 `ChatGoogleGenerativeAI` [聊天模型](/oss/langchain/models)。有关 `ChatGoogleGenerativeAI` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。
 
 ## 概述
 
 ### 集成详情
 
-| 类名 | 包名 | 本地 | 可序列化 | [Python 支持](https://python.langchain.com/docs/integrations/chat/google_generative_ai) | 下载量 | 版本 |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| 类 | 包名 | 本地 | 可序列化 | [PY 支持](https://python.langchain.com/docs/integrations/chat/google_generative_ai) | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | [ChatGoogleGenerativeAI](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html) | [@langchain/google-genai](https://api.js.langchain.com/modules/langchain_google_genai.html) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/google-genai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/google-genai?style=flat-square&label=%20&) |
 
 ### 模型特性
 
-请查看下方表格标题中的链接，以获取关于如何使用特定功能的指南。
+有关如何使用特定功能的指南，请参阅下方表格中的链接。
 
 | [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
@@ -24,15 +24,16 @@ title: ChatGoogleGenerativeAI
 
 ## 设置
 
-您可以通过 `@langchain/google-genai` 集成包中的 `ChatGoogleGenerativeAI` 类来访问 LangChain 中的 Google `gemini` 和 `gemini-vision` 模型，以及其他生成式模型。
+您可以通过 `@langchain/google-genai` 集成包中的 `ChatGoogleGenerativeAI` 类，在 LangChain 中访问 Google 的 `gemini` 和 `gemini-vision` 模型以及其他生成模型。
+
 
 <Tip>
-您还可以通过 LangChain 的 VertexAI 和 VertexAI-web 集成来访问 Google 的 `gemini` 系列模型。点击 [此处](/oss/integrations/chat/google_vertex_ai) 阅读文档。
+您也可以通过 LangChain 的 VertexAI 和 VertexAI-web 集成来访问 Google 的 `gemini` 系列模型。点击 [此处](/oss/integrations/chat/google_vertex_ai) 阅读文档。
 </Tip>
 
 ### 凭证 (Credentials)
 
-请在此处获取 API 密钥：[https://ai.google.dev/tutorials/setup](https://ai.google.dev/tutorials/setup)
+在此处获取 API 密钥：[https://ai.google.dev/tutorials/setup](https://ai.google.dev/tutorials/setup)
 
 然后设置 `GOOGLE_API_KEY` 环境变量：
 
@@ -40,7 +41,7 @@ title: ChatGoogleGenerativeAI
 export GOOGLE_API_KEY="your-api-key"
 ```
 
-如果您希望对模型调用进行自动追踪（tracing），您也可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型的调用进行自动跟踪，也可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -49,7 +50,7 @@ export GOOGLE_API_KEY="your-api-key"
 
 ### 安装
 
-LangChain 的 `ChatGoogleGenerativeAI` 集成位于 `@langchain/google-genai` 包中：
+LangChain `ChatGoogleGenerativeAI` 集成位于 `@langchain/google-genai` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -65,7 +66,7 @@ pnpm add @langchain/google-genai @langchain/core
 
 ## 实例化
 
-现在我们可以实例化模型对象并生成聊天补全（chat completions）：
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
@@ -158,7 +159,7 @@ J'adore programmer.
 
 ## 安全设置 (Safety settings)
 
-Gemini 模型具有默认的安全设置，可以被覆盖。如果您从模型收到大量“安全警告”（Safety Warnings），可以尝试调整模型的 `safety_settings` 属性。例如，要关闭对危险内容的安全性阻止，可以从 `@google/generative-ai` 包中导入枚举 (enums)，然后像下面这样构建您的 LLM：
+Gemini 模型具有默认的安全设置，可以被覆盖。如果您的模型返回大量“安全警告”，您可以尝试调整模型的 `safety_settings` 属性。例如，要关闭对危险内容的安全性阻止，可以从 `@google/generative-ai` 包导入枚举，然后按如下方式构建您的 LLM：
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
@@ -179,9 +180,9 @@ const llmWithSafetySettings = new ChatGoogleGenerativeAI({
 
 ## 工具调用 (Tool calling)
 
-Google AI 的工具调用与 [其他模型的工具调用](/oss/langchain/tools) 大多相同，但在 Schema 方面有一些限制。
+Google AI 的工具调用与[其他模型的工具调用](/oss/langchain/tools)大部分相同，但在 Schema 方面有一些限制。
 
-Google AI API 不允许工具 Schema 包含具有未知属性的对象。例如，以下 Zod Schema 会抛出错误：
+Google AI API 不允许工具 Schema 包含具有未知属性的对象。例如，以下 Zod Schema 将会引发错误：
 
 `const invalidSchema = z.object({ properties: z.record(z.unknown()) });`
 
@@ -189,7 +190,7 @@ Google AI API 不允许工具 Schema 包含具有未知属性的对象。例如�
 
 `const invalidSchema2 = z.record(z.unknown());`
 
-相反，您应该明确定义对象字段的属性。下面是一个示例：
+相反，您应该明确定义对象字段的属性。示例如下：
 
 ```typescript
 import { tool } from "@langchain/core/tools";
@@ -237,7 +238,7 @@ console.log(toolRes.tool_calls);
 
 ### 内置 Google 搜索检索 (Built in Google Search Retrieval)
 
-Google 还提供了一个内置的搜索工具，可用于根据现实世界信息来确定内容生成的依据。以下是如何使用它的示例：
+Google 还提供了一个内置的搜索工具，可用于将内容生成与现实世界信息联系起来。以下是如何使用它的示例：
 
 ```typescript
 import { DynamicRetrievalMode, GoogleSearchRetrievalTool } from "@google/generative-ai";
@@ -440,14 +441,14 @@ console.dir(searchRetrievalResult.response_metadata?.groundingMetadata, { depth:
 
 ### 代码执行 (Code execution)
 
-Google Generative AI 也支持代码执行。使用内置的 `CodeExecutionTool`，您可以让模型生成代码、执行代码，并将结果用于最终的补全中：
+Google Generative AI 也支持代码执行。使用内置的 `CodeExecutionTool`，您可以让模型生成代码、执行它，并将结果用于最终的补全中：
 
 ```typescript
 import { CodeExecutionTool } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const codeExecutionTool: CodeExecutionTool = {
-  codeExecution: {}, // 仅需传入一个空对象即可启用它。
+  codeExecution: {}, // 仅需传递一个空对象以启用它。
 };
 const codeExecutionModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-pro",
@@ -498,7 +499,7 @@ console.dir(codeExecutionResult.content, { depth: null });
 ]
 ```
 
-您也可以将此生成内容作为聊天历史传递回模型：
+您也可以将此生成内容作为聊天历史传递给模型：
 
 ```typescript
 const codeExecutionExplanation = await codeExecutionModel.invoke([
@@ -539,7 +540,7 @@ Therefore, the answer to your question is 21.
 
 ## 上下文缓存 (Context caching)
 
-上下文缓存允许您首先向模型提供某些内容，缓存输入的 Token，然后对后续请求引用缓存的 Token，以降低成本。您可以使用 `GoogleAICacheManager` 类创建 `CachedContent` 对象，然后使用 `enableCachedContent()` 方法将 `CachedContent` 对象传递给 `ChatGoogleGenerativeAIModel`。
+上下文缓存允许您一次性将某些内容传递给模型，缓存输入的 token，然后在后续请求中引用这些缓存的 token 以减少费用。您可以使用 `GoogleAICacheManager` 类创建一个 `CachedContent` 对象，然后使用 `enableCachedContent()` 方法将 `CachedContent` 对象传递给您的 `ChatGoogleGenerativeAIModel`。
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
@@ -551,7 +552,7 @@ import {
 const fileManager = new GoogleAIFileManager(process.env.GOOGLE_API_KEY);
 const cacheManager = new GoogleAICacheManager(process.env.GOOGLE_API_KEY);
 
-// 上传文件用于缓存
+// 上传用于缓存的文件
 const pathToVideoFile = "/path/to/video/file";
 const displayName = "example-video";
 const fileResult = await fileManager.uploadFile(pathToVideoFile, {
@@ -591,19 +592,19 @@ await model.invoke("Summarize the video");
 
 **注意**
 
-- 上下文缓存的最小输入 Token 数为 32,768，最大输入 Token 数与给定模型的最大 Token 数相同。
+- 上下文缓存的最小输入 token 数量是 32,768，最大数量与给定模型的最大值相同。
 
 ## Gemini 提示词常见问题 (Gemini prompting FAQs)
 
-在本文撰写之时（2023/12/12），Gemini 对其接受的提示词的类型和结构有一些限制。具体来说：
+截至本文档撰写时（2023/12/12），Gemini 对其接受的提示词的类型和结构有一些限制。具体来说：
 
-1. 当提供多模态（图像）输入时，您被限制最多只能有一个 “human”（用户）类型的消息。您不能传递多条消息（尽管单条 human 消息可以包含多个内容条目）。
-2. 系统消息 (System messages) 不受原生支持，如果存在，它们将被合并到第一条 human 消息中。
-3. 对于常规的对话（chat）场景，消息必须遵循 human/ai/human/ai 交替模式。您不能连续提供两条 AI 或 human 消息。
-4. 如果消息违反了 LLM 的安全检查，可能会被阻止。在这种情况下，模型将返回一个空响应。
+1. 在提供多模态（图像）输入时，您最多只能提供 1 条“user”（用户）类型的消息。您不能传递多条消息（尽管单条用户消息可以包含多个内容条目）。
+2. 系统消息不被原生支持，如果存在，它们将与第一条用户消息合并。
+3. 对于常规聊天对话，消息必须遵循人/AI/人/AI 的交替模式。您不能连续提供 2 条 AI 消息或 2 条用户消息。
+4. 如果消息违反了 LLM 的安全检查，它们可能会被阻止。在这种情况下，模型将返回一个空响应。
 
 ---
 
 ## API 参考
 
-有关 `ChatGoogleGenerativeAI` 所有特性和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。
+有关 `ChatGoogleGenerativeAI` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_genai.ChatGoogleGenerativeAI.html)。

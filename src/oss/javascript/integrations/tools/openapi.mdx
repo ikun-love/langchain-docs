@@ -1,35 +1,35 @@
 ---
-title: OpenAPI 工具包
+title: OpenApi 工具包
 ---
 
 
 <Warning>
-此智能体可以向外部 API 发出请求。请谨慎使用，尤其是在授予用户访问权限时。
+此 Agent 可以向外部 API 发出请求。请谨慎使用，尤其是在授予用户访问权限时。
 
-请注意，该智能体理论上可能会使用提供的凭证或其他敏感数据向未经证实或潜在恶意的 URL 发送请求——尽管理论上它永远不应该这样做。
+请注意，此 Agent 理论上可能会使用提供的凭证或其他敏感数据向未经核实或潜在恶意性的 URL 发送请求——尽管它理论上不应该这样做。
 
-考虑为智能体可以执行的操作、它可以访问的 API、可以传递的标头等添加限制。
+请考虑限制 Agent 可以执行的操作、它可以访问的 API、可以传递的 Header 等。
 
-此外，请考虑实施措施来验证 URL，然后再发送请求，并安全地处理和保护凭证等敏感数据。
+此外，请考虑实施措施在发送请求前验证 URL，并安全地处理和保护凭证等敏感数据。
 
 </Warning>
 
 
-这将帮助您开始使用 [OpenApiToolkit](/oss/langchain/tools#toolkits)。有关所有 OpenApiToolkit 功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain.agents.OpenApiToolkit.html)。
+这将帮助您开始使用 [OpenApiToolkit](/oss/langchain/tools#toolkits)。有关 `OpenApiToolkit` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain.agents.OpenApiToolkit.html)。
 
-`OpenAPIToolkit` 具有以下工具的访问权限：
+`OpenAPIToolkit` 可以访问以下工具：
 
 | 名称 | 描述 |
 |---|---|
-| `requests_get` | 互联网的门户。当您需要从网站获取特定内容时使用它。输入应为 URL 字符串（例如 "[www.google.com](https://www.google.com)"）。输出将是 GET 请求的文本响应。 |
-| `requests_post` | 当您想向网站发送 POST 请求时使用。输入应是一个 JSON 字符串，其中包含两个键："url" 和 "data"。 "url" 的值应为字符串，"data" 的值应为您想作为 JSON 主体 POST 到该 URL 的键值对的字典。请务必始终在 JSON 字符串中使用双引号。输出将是 POST 请求的文本响应。 |
-| `json_explorer` | 可用于回答有关 API 的 openapi 规范的问题。在尝试发出请求之前，请始终使用此工具。此工具的示例输入：'What are the required query parameters for a GET request to the /bar endpoint?'（对 /bar 端点进行 GET 请求所需的查询参数是什么？）'What are the required parameters in the request body for a POST request to the /foo endpoint?'（对 /foo 端点进行 POST 请求所需的请求体参数是什么？）始终为此工具提供一个具体的问题。 |
+| `requests_get` | 互联网的门户。当您需要从网站获取特定内容时使用此工具。输入应为 URL 字符串（例如 `[www.google.com](https://www.google.com)`）。输出将是 GET 请求的文本响应。 |
+| `requests_post` | 当您想向网站发送 POST 请求时使用此工具。输入应为包含两个键的 JSON 字符串：“url”和“data”。“url”的值应为字符串，“data”的值应为包含您想作为 JSON Body 发送到该 URL 的键值对的字典。请务必对 JSON 字符串中的字符串使用双引号。输出将是 POST 请求的文本响应。 |
+| `json_explorer` | 可用于回答有关 API 的 openapi 规范的问题。在尝试发出请求之前，请务必先使用此工具。此工具的示例输入包括：‘对 /bar 端点进行 GET 请求所需的查询参数是什么？’ ‘对 /foo 端点进行 POST 请求所需的请求体参数是什么？’ 始终向此工具提供一个具体的问题。 |
 
 ## 设置
 
 此工具包需要一个 OpenAPI 规范文件。LangChain.js 仓库在 `examples` 目录中有一个 [示例 OpenAPI 规范文件](https://github.com/langchain-ai/langchainjs/blob/cc21aa29102571204f4443a40b53d28581a12e30/examples/openai_openapi.yaml)。您可以使用此文件来测试该工具包。
 
-如果您想从单个工具的运行中获得自动跟踪，您可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想从运行单个工具中获得自动化的追踪，您可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```typescript
 process.env.LANGSMITH_TRACING="true"
@@ -54,7 +54,7 @@ pnpm add langchain @langchain/core
 
 ## 实例化
 
-现在我们可以实例化我们的工具包。首先，我们需要定义我们想在工具包中使用的 LLM。
+现在我们可以实例化我们的工具包。首先，我们需要定义要在工具包中使用的 LLM（大型语言模型）。
 
 ```typescript
 // @lc-docs-hide-cell
@@ -72,14 +72,14 @@ import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { JsonSpec, JsonObject } from "@langchain/classic/tools";
 
-// 从 YAML 加载并转换为 JSON。
+// 从 YAML 加载并转换为 JSON 格式的 OpenAPI 规范。
 const yamlFile = fs.readFileSync("../../../../../examples/openai_openapi.yaml", "utf8");
 const data = yaml.load(yamlFile) as JsonObject;
 if (!data) {
   throw new Error("Failed to load OpenAPI spec");
 }
 
-// 定义 API 请求的标头。
+// 定义 API 请求的 Header。
 const headers = {
   "Content-Type": "application/json",
   Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -105,32 +105,34 @@ console.log(tools.map((tool) => ({
 [
   {
     name: 'requests_get',
-    description: '互联网的门户。当您需要从网站获取特定内容时使用它。\n' +
-      '  输入应为 URL 字符串（例如 "https://www.google.com"）。输出将是 GET 请求的文本响应。'
+    description: 'A portal to the internet. Use this when you need to get specific content from a website.\n' +
+      '  Input should be a url string (i.e. "https://www.google.com"). The output will be the text response of the GET request.'
   },
   {
     name: 'requests_post',
-    description: '当您想向网站发送 POST 请求时使用。\n' +
-      '  输入应是一个 JSON 字符串，包含两个键："url" 和 "data"。 \n' +
-      '  "url" 的值应为字符串，"data" 的值应是您想作为 JSON 主体 POST 到该 URL 的键值对的字典。\n' +
-      '  请务必始终在 JSON 字符串中使用双引号\n' +
-      '  输出将是 POST 请求的文本响应。'
+    description: 'Use this when you want to POST to a website.\n' +
+      '  Input should be a json string with two keys: "url" and "data".\n' +
+      '  The value of "url" should be a string, and the value of "data" should be a dictionary of\n' +
+      '  key-value pairs you want to POST to the url as a JSON body.\n' +
+      '  Be careful to always use double quotes for strings in the json string\n' +
+      '  The output will be the text response of the POST request.'
   },
   {
     name: 'json_explorer',
     description: '\n' +
-      '可用于回答有关 API openapi 规范的问题。在尝试发出请求之前，请始终使用此工具。 \n' +
-      '此工具的示例输入： \n' +
+      'Can be used to answer questions about the openapi spec for the API. Always use this tool before trying to make a request. \n' +
+      'Example inputs to this tool: \n' +
       "    'What are the required query parameters for a GET request to the /bar endpoint?'\n" +
       "    'What are the required parameters in the request body for a POST request to the /foo endpoint?'\n" +
-      '始终为此工具提供一个具体的问题。'
+      'Always give this tool a specific question.'
   }
 ]
 ```
 
-## 在智能体中使用
+## 在 Agent 中使用
 
 首先，确保您已安装 LangGraph：
+
 
 <CodeGroup>
 ```bash npm
@@ -143,6 +145,7 @@ yarn add @langchain/langgraph
 pnpm add @langchain/langgraph
 ```
 </CodeGroup>
+
 
 ```typescript
 import { createAgent } from "@langchain/classic"
@@ -176,7 +179,7 @@ for await (const event of events) {
       input: '{"url":"https://api.openai.com/v1/chat/completions","data":{"model":"gpt-4o-mini","messages":[{"role":"user","content":"tell me a joke."}]}}'
     },
     type: 'tool_call',
-    id: 'call_1HqyZrbYgKFwQRfAtsZA2uL5'
+    id: 'call_1HqyZrbYgKFwQRfAtsZA2uL4'
   }
 ]
 {
@@ -213,4 +216,4 @@ They don't have the guts!
 
 ## API 参考
 
-有关所有 OpenApiToolkit 功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain.agents.OpenApiToolkit.html)。
+有关 `OpenApiToolkit` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain.agents.OpenApiToolkit.html)。

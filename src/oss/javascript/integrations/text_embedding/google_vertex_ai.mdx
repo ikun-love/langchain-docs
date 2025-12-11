@@ -3,23 +3,23 @@
 title: VertexAIEmbeddings
 ---
 
-[Google Vertex](https://cloud.google.com/vertex-ai) 是一项服务，用于暴露 Google Cloud 中所有可用的基础模型（foundation models）。
+[Google Vertex](https://cloud.google.com/vertex-ai) 是一项服务，用于公开 Google Cloud 中所有可用的基础模型（Foundation Models）。
 
-这将帮助您使用 LangChain 开始使用 Google Vertex AI 的 [嵌入模型](/oss/integrations/text_embedding)。有关 `VertexAIEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html)。
+本文将帮助您使用 LangChain 开始使用 Google Vertex AI 的 [嵌入模型](/oss/integrations/text_embedding)。有关 `VertexAIEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html)。
 
 ## 概述
 
 ### 集成详情
 
-| 类名 (Class) | 包 (Package) | 本地 (Local) | Py 支持 | 下载量 (Downloads) | 版本 (Version) |
+| 类名 | 包名 | 本地 | Py 支持 | 下载量 | 版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [`VertexAIEmbeddings`](https://api.js.langchain.com/classes/langchain_google_vertexai.GoogleVertexAIEmbeddings.html) | [`@langchain/google-vertexai`](https://npmjs.com/@langchain/google-vertexai) | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/google-vertexai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/google-vertexai?style=flat-square&label=%20&) |
 
 ## 设置
 
-LangChain.js 支持两种不同的身份验证方法，具体取决于您是在 Node.js 环境中运行还是在 Web 环境中运行。
+LangChain.js 支持两种不同的身份验证方法，具体取决于您是在 Node.js 环境还是 Web 环境中运行。
 
-要访问 `ChatVertexAI` 模型，您需要在 Google Cloud Platform (GCP) 账户中设置 Google VertexAI，保存凭证文件，并安装 `@langchain/google-vertexai` 集成包。
+要访问 `ChatVertexAI` 模型，您需要在您的 Google Cloud Platform (GCP) 账户中设置 Google VertexAI，保存凭证文件，并安装 `@langchain/google-vertexai` 集成包。
 
 ### 凭证 (Credentials)
 
@@ -29,20 +29,20 @@ LangChain.js 支持两种不同的身份验证方法，具体取决于您是在 
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
 ```
 
-如果在 Web 环境中运行，您应该将 `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` 环境变量设置为一个 JSON 字符串化的对象，并安装 `@langchain/google-vertexai-web` 包：
+如果在 Web 环境中运行，您应该将 `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` 环境变量设置为 JSON 字符串化的对象，并安装 `@langchain/google-vertexai-web` 包：
 
 ```bash
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
 ```
 
-如果您希望对模型调用进行自动化的调用追踪，您还可以取消注释下方内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动追踪，您也可以取消注释以下行来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### 安装 (Installation)
+### 安装
 
 LangChain 的 `VertexAIEmbeddings` 集成位于 `@langchain/google-vertexai` 包中：
 
@@ -60,7 +60,7 @@ pnpm add @langchain/google-vertexai @langchain/core
 
 ## 实例化
 
-现在我们可以实例化我们的模型对象并嵌入文本：
+现在我们可以实例化模型对象并嵌入文本了：
 
 ```typescript
 import { VertexAIEmbeddings } from "@langchain/google-vertexai";
@@ -75,9 +75,9 @@ const embeddings = new VertexAIEmbeddings({
 
 ## 索引和检索
 
-嵌入模型通常用于检索增强生成 (RAG) 工作流中，既可以作为数据索引的一部分，也可以在后续检索时使用。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡](/oss/learn/) 下的 RAG 教程。
+嵌入模型通常用于检索增强生成（RAG）流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅 [**学习** 选项卡](/oss/learn/) 下的 RAG 教程。
 
-下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用演示 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
+下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在这个例子中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
 // 使用示例文本创建一个向量存储
@@ -90,7 +90,7 @@ const vectorstore = await MemoryVectorStore.fromDocuments(
   embeddings,
 );
 
-// 将向量存储用作检索器，返回单个文档
+// 使用向量存储作为检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
 // 检索最相似的文本
@@ -105,7 +105,7 @@ LangChain is the framework for building context-aware reasoning applications
 
 ## 直接使用
 
-在底层，向量存储和检索器的实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 使用的文本和检索器的 `invoke` 操作创建嵌入向量。
+在底层，向量存储和检索器的实现分别调用了 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 使用的文本和检索器的 `invoke` 操作使用的文本生成嵌入向量。
 
 您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
@@ -160,7 +160,7 @@ console.log(singleVector.slice(0, 100));
 
 ### 嵌入多个文本
 
-您可以使用 `embedDocuments` 嵌入要索引的多个文本。此方法中使用的内部机制可能（但不一定）与嵌入查询的方式不同：
+您可以使用 `embedDocuments` 来嵌入多个文本用于索引。此方法使用的内部机制可能（但不一定）与嵌入查询的方法不同：
 
 ```typescript
 const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
@@ -208,9 +208,6 @@ console.log(vectors[1].slice(0, 100));
    -0.022546149790287018,  0.0053468807600438595,   0.03879072889685631,
      0.03238753229379654
 ]
-```
-
-```output
 [
   -0.00007261172140715644,    0.03209814056754112,  -0.10099327564239502,
    -0.0017932605696842074, -0.0016863049240782857,  0.009428824298083782,
@@ -237,4 +234,5 @@ console.log(vectors[1].slice(0, 100));
      -0.05852395296096802,   0.020076945424079895, -0.033808667212724686,
     -0.008225022815167904,  -0.014589417725801468,  -0.01408824510872364,
      -0.06293410807847977,   0.026668129488825798,  -0.01397104375064373,
-    -0.017627086490392685,   -0.0340922027826309
+    -0.017627086490392685,   -0.03409220278263092, -0.018559949472546577,
+      0.07

@@ -2,25 +2,25 @@
 title: SupabaseVectorStore
 ---
 
-[Supabase](https://supabase.com/docs) 是一个开源的 Firebase 替代方案。Supabase 基于 PostgreSQL 构建，后者提供了强大的 SQL 查询能力，并支持与现有工具和框架的简单集成。
+[Supabase](https://supabase.com/docs) 是一个开源的 Firebase 替代品。Supabase 基于 PostgreSQL 构建，后者提供了强大的 SQL 查询能力，并支持与现有工具和框架进行轻松的接口集成。
 
-LangChain.js 支持使用 Supabase Postgres 数据库作为向量存储（vector store），它使用了 [`pgvector`](https://github.com/pgvector/pgvector) 扩展。有关更多信息，请参阅 [Supabase 博客文章](https://supabase.com/blog/openai-embeddings-postgres-vector)。
+LangChain.js 支持使用 Supabase Postgres 数据库作为向量存储（vector store），这需要用到 [`pgvector`](https://github.com/pgvector/pgvector) 扩展。有关更多信息，请参阅 [Supabase 博文](https://supabase.com/blog/openai-embeddings-postgres-vector)。
 
-本指南提供了关于如何开始使用 Supabase [向量存储](/oss/integrations/vectorstores) 的快速概述。有关 `SupabaseVectorStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_supabase.SupabaseVectorStore.html)。
+本指南将快速概述 Supabase [向量存储](/oss/integrations/vectorstores)的入门方法。有关 `SupabaseVectorStore` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_supabase.SupabaseVectorStore.html)。
 
-## 概述 (Overview)
+## 概述
 
-### 集成详情 (Integration details)
+### 集成详情
 
-| 类 (Class) | 包 (Package) | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/supabase/) | 版本 (Version) |
+| 类名 | 包名 | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/supabase/) | 版本 |
 | :--- | :--- | :---: | :---: |
 | [`SupabaseVectorStore`](https://api.js.langchain.com/classes/langchain_community_vectorstores_supabase.SupabaseVectorStore.html) | [`@langchain/community`](https://npmjs.com/@langchain/community) | ✅ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## 设置 (Setup)
+## 设置
 
-要使用 Supabase 向量存储，您需要设置一个 Supabase 数据库，并安装 `@langchain/community` 集成包。您还需要将官方的 [`@supabase/supabase-js`](https://www.npmjs.com/package/@supabase/supabase-js) SDK 作为对等依赖项（peer dependency）安装。
+要使用 Supabase 向量存储，你需要设置一个 Supabase 数据库，并安装 `@langchain/community` 集成包。你还需要将官方的 [`@supabase/supabase-js`](https://www.npmjs.com/package/@supabase/supabase-js) SDK 作为对等依赖项（peer dependency）安装。
 
-本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果需要，您也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
+本指南还将使用 [OpenAI 嵌入模型](/oss/integrations/text_embedding/openai)，这要求你安装 `@langchain/openai` 集成包。如果你愿意，也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -34,13 +34,13 @@ pnpm add @langchain/community @langchain/core @supabase/supabase-js @langchain/o
 ```
 </CodeGroup>
 
-创建数据库后，运行以下 SQL 语句来设置 [`pgvector`](https://github.com/pgvector/pgvector) 并创建必要的表和函数：
+创建数据库后，运行以下 SQL 命令以设置 [`pgvector`](https://github.com/pgvector/pgvector) 并创建必要的表和函数：
 
 ```sql
 -- 启用 pgvector 扩展以处理嵌入向量
 create extension vector;
 
--- 创建一个表来存储您的文档
+-- 创建一个表来存储你的文档
 create table documents (
   id bigserial primary key,
   content text, -- 对应 Document.pageContent
@@ -71,7 +71,6 @@ begin
     content,
     metadata,
     (embedding::text)::jsonb as embedding,
-    -- 计算相似度：1 减去余弦距离 (cosine distance)
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
   where metadata @> filter
@@ -83,27 +82,27 @@ $$;
 
 ### 凭证 (Credentials)
 
-完成上述操作后，请设置 `SUPABASE_PRIVATE_KEY` 和 `SUPABASE_URL` 环境变量：
+完成上述设置后，设置 `SUPABASE_PRIVATE_KEY` 和 `SUPABASE_URL` 环境变量：
 
 ```typescript
 process.env.SUPABASE_PRIVATE_KEY = "your-api-key";
 process.env.SUPABASE_URL = "your-supabase-db-url";
 ```
 
-如果您在本指南中使用 OpenAI 嵌入，还需要设置您的 OpenAI 密钥：
+如果你本指南中使用 OpenAI 嵌入模型，你也需要设置你的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-如果您想自动跟踪模型调用，可以通过取消注释以下行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果你想对模型调用进行自动化的追踪，你也可以通过取消注释以下代码来设置你的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
 // process.env.LANGSMITH_API_KEY="your-api-key"
 ```
 
-## 实例化 (Instantiation)
+## 实例化
 
 ```typescript
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
@@ -127,9 +126,9 @@ const vectorStore = new SupabaseVectorStore(embeddings, {
 });
 ```
 
-## 管理向量存储 (Manage vector store)
+## 管理向量存储
 
-### 向向量存储添加条目 (Add items to vector store)
+### 向向量存储添加条目
 
 ```typescript
 import type { Document } from "@langchain/core/documents";
@@ -163,19 +162,19 @@ await vectorStore.addDocuments(documents, { ids: ["1", "2", "3", "4"] });
 [ 1, 2, 3, 4 ]
 ```
 
-### 从向量存储中删除条目 (Delete items from vector store)
+### 从向量存储中删除条目
 
 ```typescript
 await vectorStore.delete({ ids: ["4"] });
 ```
 
-## 查询向量存储 (Query vector store)
+## 查询向量存储
 
-一旦您的向量存储创建完成并且相关的文档已添加，在运行您的链或代理时，您很可能会希望对其进行查询。
+一旦创建了向量存储并将相关文档添加进去后，在你运行链或代理的过程中，你很可能会希望对其进行查询。
 
-### 直接查询 (Query directly)
+### 直接查询
 
-可以执行简单的相似性搜索，如下所示：
+执行简单的相似性搜索可以按如下方式完成：
 
 ```typescript
 const filter = { source: "https://example.com" };
@@ -192,7 +191,7 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-如果您想执行相似性搜索并接收相应的分数，可以运行：
+如果你想执行相似性搜索并接收相应的分数，可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -207,9 +206,9 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.148] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### 元数据查询构建器过滤 (Metadata Query Builder Filtering)
+### 元数据查询构建器过滤
 
-您还可以使用查询构建器风格的过滤，类似于 [Supabase JavaScript 库](https://supabase.com/docs/reference/javascript/using-filters) 的工作方式，而不是传递一个对象。注意，由于大多数过滤属性都在 `metadata` 列中，您需要使用箭头运算符（`->` 用于整数或 `->>` 用于文本），如 [Postgrest API 文档](https://postgrest.org/en/stable/references/api/tables_views.html#json-columns) 中定义的那样，并指定属性的数据类型（例如，该列看起来应该像 `metadata->some_int_prop_name::int`）。
+你也可以使用查询构建器样式的过滤，类似于 [Supabase JavaScript 库](https://supabase.com/docs/reference/javascript/using-filters) 的工作方式，而不是传递一个对象。请注意，由于大多数过滤属性都在 `metadata` 列中，你需要使用箭头运算符（`->` 用于整数或 `->>` 用于文本），如 [Postgrest API 文档](https://postgrest.org/en/stable/references/api/tables_views.html#json-columns) 中定义的那样，并指定属性的数据类型（例如：该列看起来应该像 `metadata->some_int_prop_name::int`）。
 
 ```typescript
 import { SupabaseFilterRPCCall } from "@langchain/community/vectorstores/supabase";
@@ -229,9 +228,9 @@ for (const doc of funcFilterSearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### 通过转换为检索器进行查询 (Query by turning into retriever)
+### 通过转换为检索器进行查询
 
-您还可以将向量存储转换为 [检索器 (retriever)](/oss/langchain/retrieval)，以便在链中使用更加方便。
+你也可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
@@ -257,7 +256,7 @@ await retriever.invoke("biology");
 ]
 ```
 
-### 用于检索增强生成 (RAG) 的用法 (Usage for retrieval-augmented generation)
+### 用于检索增强生成 (RAG) 的用法
 
 有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
@@ -267,6 +266,6 @@ await retriever.invoke("biology");
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 `SupabaseVectorStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_supabase.SupabaseVectorStore.html)。
+有关 `SupabaseVectorStore` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_vectorstores_supabase.SupabaseVectorStore.html)。

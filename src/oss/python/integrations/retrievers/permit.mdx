@@ -1,29 +1,28 @@
-```markdown
 ---
-title: 权限许可
+title: 权限 (Permit)
 ---
 
-Permit 是一个访问控制平台，它使用 RBAC、ABAC 和 ReBAC 等各种模型，提供细粒度的实时权限管理。它使组织能够在其应用程序中实施动态策略，确保只有经过授权的用户才能访问特定的资源。
+Permit 是一个访问控制平台，它使用 RBAC（基于角色的访问控制）、ABAC（基于属性的访问控制）和 ReBAC（基于关系的角色访问控制）等各种模型，提供细粒度的实时权限管理。它使组织能够在其应用程序中执行动态策略，确保只有经过授权的用户才能访问特定的资源。
 
 ### 集成详情
 
-本笔记本演示了如何将 [Permit.io](https://permit.io/) 权限集成到 LangChain 的检索器（retrievers）中。
+本 Notebook 演示了如何将 [Permit.io](https://permit.io/) 的权限集成到 LangChain 的检索器（Retrievers）中。
 
 我们提供了两个自定义检索器：
 
-- PermitSelfQueryRetriever – 使用自查询（self-query）方法来解析用户的自然语言提示，从 Permit 中获取用户已授权的资源 ID，并在向量存储搜索中自动应用该过滤器。
+- PermitSelfQueryRetriever – 使用“自查询”方法来解析用户的自然语言提示，从 Permit 中获取用户被授权的资源 ID，并在向量存储搜索中自动应用该过滤器。
 
-- PermitEnsembleRetriever – 通过 LangChain 的 `EnsembleRetriever` 将多个底层检索器（例如 BM25 + 向量）结合起来，然后使用 Permit.io 过滤合并后的结果。
+- PermitEnsembleRetriever – 通过 LangChain 的 EnsembleRetriever 将多个底层检索器（例如 BM25 + 向量）组合起来，然后使用 Permit.io 对合并的结果进行筛选。
 
 ## 设置
 
-使用以下命令安装包：
+使用以下命令安装软件包：
 
 ```bash
 pip install langchain-permit
 ```
 
-如果你想从单个查询中获取自动化的跟踪信息，你还可以设置你的 [LangSmith](https://docs.smith.langchain.com/) API 密钥，取消下面代码的注释：
+如果你想从单个查询中获取自动化的追踪记录，可以取消注释以下代码行来设置你的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -44,8 +43,8 @@ PERMIT_PDP_URL= # 或者你的真实部署地址
 OPENAI_API_KEY=sk-...
 ```
 
-- 一个正在运行的 Permit PDP（策略决策点）。有关设置策略和容器的详细信息，请参阅 [Permit 文档](https://docs.permit.io/)。
-- 我们可以包装的向量存储或多个检索器。
+- 一个正在运行的 Permit PDP（权限决策点）。有关设置策略和容器的详细信息，请参阅 [Permit 文档](https://docs.permit.io/)。
+- 我们可以进行包装的向量存储或多个检索器。
 
 ```python
 pip install -qU langchain-permit
@@ -55,11 +54,11 @@ pip install -qU langchain-permit
 
 ### PermitSelfQueryRetriever
 
-#### 基本说明
+#### 基本解释
 
-1. 从 Permit 检索已授权的文档 ID。
+1. 从 Permit 中检索被授权的文档 ID。
 
-2. 使用 LLM 解析你的查询并构建一个“结构化过滤器”，确保只考虑那些具有已授权 ID 的文档。
+2. 使用 LLM 解析你的查询并构建一个“结构化过滤器”，确保只考虑那些 ID 在被授权列表中的文档。
 
 #### 基本用法
 
@@ -68,12 +67,12 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_permit.retrievers import PermitSelfQueryRetriever
 
-# 步骤 1：创建/加载一些文档并构建向量存储
+# 步骤 1: 创建/加载一些文档并构建向量存储
 docs = [...]
 embeddings = OpenAIEmbeddings()
 vectorstore = FAISS.from_documents(docs, embeddings)
 
-# 步骤 2：初始化检索器
+# 步骤 2: 初始化检索器
 retriever = PermitSelfQueryRetriever(
     api_key="...",
     pdp_url="...",
@@ -85,7 +84,7 @@ retriever = PermitSelfQueryRetriever(
     enable_limit=True,      # 可选
 )
 
-# 步骤 3：查询
+# 步骤 3: 查询
 query = "Give me docs about cats"
 results = retriever.get_relevant_documents(query)
 for doc in results:
@@ -94,10 +93,10 @@ for doc in results:
 
 ### PermitEnsembleRetriever
 
-#### 基本说明
+#### 基本解释
 
-1. 使用 LangChain 的 `EnsembleRetriever` 从多个子检索器（例如基于向量的、BM25 等）中收集文档。
-2. 在检索完文档后，它会调用 Permit 上的 `filter_objects` 来排除用户无权查看的任何文档。
+1. 使用 LangChain 的 EnsembleRetriever 从多个子检索器（例如基于向量的、BM25 等）收集文档。
+2. 在检索完文档后，它会调用 Permit 上的 `filter_objects` 方法，以清除用户无权查看的任何文档。
 
 #### 基本用法
 
@@ -127,16 +126,16 @@ for doc in docs:
 
 有关更完整的演示，请查看 `/langchain_permit/examples/demo_scripts` 文件夹：
 
-1. demo_self_query.py – 演示 `PermitSelfQueryRetriever`。
-2. demo_ensemble.py – 演示 `PermitEnsembleRetriever`。
+1. demo_self_query.py – 演示 PermitSelfQueryRetriever。
+2. demo_ensemble.py – 演示 PermitEnsembleRetriever。
 
 每个脚本都展示了如何构建或加载文档、配置 Permit 以及运行查询。
 
 ### 结论
 
-使用这些自定义检索器，你可以将 Permit.io 的权限检查无缝集成到 LangChain 的检索工作流程中。你可以在保持应用程序向量搜索逻辑的同时，确保只返回授权的文档。
+通过这些自定义检索器，你可以将 Permit.io 的权限检查无缝集成到 LangChain 的检索工作流程中。你可以在保持应用程序向量搜索逻辑的同时，确保只返回授权的文档。
 
-有关设置 Permit 策略的更多详细信息，请参阅官方 Permit 文档。如果你想将这些与其它工具（如 JWT 验证或更广泛的 RAG 管道）结合使用，请查看 `examples` 文件夹中的 `docs/tools.ipynb`。
+有关设置 Permit 策略的更多详细信息，请参阅官方 Permit 文档。如果你想将这些与其他工具（如 JWT 验证或更广泛的 RAG 管道）结合使用，请查看 `examples` 文件夹中的 `docs/tools.ipynb`。
 
 ```python
 from langchain_permit import PermitRetriever
@@ -154,11 +153,11 @@ query = "..."
 retriever.invoke(query)
 ```
 
-## 在链（chain）中使用
+## 在链中使用
 
-像其他检索器一样，可以通过 [链（chains）](https://docs.permit.io/) 将 `PermitRetriever` 纳入 LLM 应用程序中。
+与其它检索器一样，PermitRetriever 可以通过[链 (Chains)](https://docs.permit.io/) 整合到 LLM 应用程序中。
 
-我们将需要一个 LLM 或聊天模型：
+我们需要一个 LLM 或聊天模型：
 
 <ChatModelTabs customVarName="llm" />
 
@@ -206,4 +205,3 @@ chain.invoke("...")
 ## API 参考
 
 有关所有 PermitRetriever 功能和配置的详细文档，请前往 [仓库](https://github.com/permitio/langchain-permit/tree/master/langchain_permit/examples/demo_scripts)。
-```

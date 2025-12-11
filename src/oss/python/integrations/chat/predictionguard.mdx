@@ -2,13 +2,13 @@
 title: ChatPredictionGuard
 ---
 
->[Prediction Guard](https://predictionguard.com) 是一个安全、可扩展的 GenAI 平台，可以保护敏感数据，防止常见的 AI 故障，并且可以在经济实惠的硬件上运行。
+>[Prediction Guard](https://predictionguard.com) 是一个安全、可扩展的 GenAI 平台，可以保护敏感数据、防止常见的 AI 故障，并且运行在经济实惠的硬件上。
 
 ## 概述
 
 ### 集成详情
 
-此集成使用了 Prediction Guard API，其中包含各种安全保护措施和安全功能。
+此集成利用了 Prediction Guard API，其中包含各种安全防护和安全功能。
 
 ### 模型特性
 
@@ -16,11 +16,11 @@ title: ChatPredictionGuard
 
 ## 设置
 
-要访问 Prediction Guard 模型，请在此处 [https://predictionguard.com/get-started](https://predictionguard.com/get-started) 联系我们以获取 Prediction Guard API 密钥并开始使用。
+要访问 Prediction Guard 模型，请在此处 [here](https://predictionguard.com/get-started) 与我们联系，以获取 Prediction Guard API 密钥并开始使用。
 
 ### 凭证
 
-获得密钥后，您可以使用以下代码设置它：
+获取密钥后，您可以使用以下代码设置它：
 
 ```python
 import os
@@ -44,7 +44,7 @@ from langchain_predictionguard import ChatPredictionGuard
 ```
 
 ```python
-# 如果未传递 predictionguard_api_key，则默认行为是使用 `PREDICTIONGUARD_API_KEY` 环境变量。
+# 如果未传递 predictionguard_api_key，则默认行为是使用环境变量 `PREDICTIONGUARD_API_KEY`。
 chat = ChatPredictionGuard(model="Hermes-3-Llama-3.1-8B")
 ```
 
@@ -89,11 +89,11 @@ Because they make up everything!
 
 ## 工具调用 (Tool Calling)
 
-Prediction Guard 具有工具调用 API，它允许您描述工具及其参数，从而使模型能够返回包含要调用的工具及其输入的 JSON 对象。工具调用对于构建使用工具的链和智能体（agents），以及更普遍地从模型中获取结构化输出来说非常有用。
+Prediction Guard 拥有一个工具调用 API，它允许您描述工具及其参数。这使模型能够返回一个包含要调用的工具及其输入的 JSON 对象。工具调用对于构建使用工具的链和代理，以及更 সাধারণভাবে从模型中获取结构化输出非常有用。
 
 ### ChatPredictionGuard.bind_tools()
 
-使用 `ChatPredictionGuard.bind_tools()`，您可以将 Pydantic 类、dict 模式和 LangChain 工具作为工具传递给模型，然后这些工具会被重新格式化以便模型使用。
+使用 `ChatPredictionGuard.bind_tools()`，您可以将 Pydantic 类、dict 模式（schema）和 LangChain 工具作为工具传递给模型，这些工具随后会被重新格式化以供模型使用。
 
 ```python
 from pydantic import BaseModel, Field
@@ -113,7 +113,7 @@ class GetPopulation(BaseModel):
 
 llm_with_tools = chat.bind_tools(
     [GetWeather, GetPopulation]
-    # strict = True  # 强制工具参数模式得到遵守 (enforce tool args schema is respected)
+    # strict = True  # enforce tool args schema is respected
 )
 ```
 
@@ -128,9 +128,9 @@ ai_msg
 AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'chatcmpl-tool-b1204a3c70b44cd8802579df48df0c8c', 'type': 'function', 'index': 0, 'function': {'name': 'GetWeather', 'arguments': '{"location": "Los Angeles, CA"}'}}, {'id': 'chatcmpl-tool-e299116c05bf4ce498cd6042928ae080', 'type': 'function', 'index': 0, 'function': {'name': 'GetWeather', 'arguments': '{"location": "New York, NY"}'}}, {'id': 'chatcmpl-tool-19502a60f30348669ffbac00ff503388', 'type': 'function', 'index': 0, 'function': {'name': 'GetPopulation', 'arguments': '{"location": "Los Angeles, CA"}'}}, {'id': 'chatcmpl-tool-4b8d56ef067f447795d9146a56e43510', 'type': 'function', 'index': 0, 'function': {'name': 'GetPopulation', 'arguments': '{"location": "New York, NY"}'}}]}, response_metadata={}, id='run-4630cfa9-4e95-42dd-8e4a-45db78180a10-0', tool_calls=[{'name': 'GetWeather', 'args': {'location': 'Los Angeles, CA'}, 'id': 'chatcmpl-tool-b1204a3c70b44cd8802579df48df0c8c', 'type': 'tool_call'}, {'name': 'GetWeather', 'args': {'location': 'New York, NY'}, 'id': 'chatcmpl-tool-e299116c05bf4ce498cd6042928ae080', 'type': 'tool_call'}, {'name': 'GetPopulation', 'args': {'location': 'Los Angeles, CA'}, 'id': 'chatcmpl-tool-19502a60f30348669ffbac00ff503388', 'type': 'tool_call'}, {'name': 'GetPopulation', 'args': {'location': 'New York, NY'}, 'id': 'chatcmpl-tool-4b8d56ef067f447795d9146a56e43510', 'type': 'tool_call'}])
 ```
 
-### AIMessage.tool_calls
+### AIMessage.tool\_calls
 
-请注意，`AIMessage` 有一个 `tool_calls` 属性。它以一种标准化的 `ToolCall` 格式包含信息，这种格式与模型提供商无关。
+请注意，`AIMessage` 具有一个 `@[`tool\_calls`][AIMessage.tool_calls]` 属性。它以一种标准化的 `ToolCall` 格式包含数据，这种格式与模型提供商无关。
 
 ```python
 ai_msg.tool_calls
@@ -157,9 +157,9 @@ ai_msg.tool_calls
 
 ## 处理输入 (Process Input)
 
-使用 Prediction Guard，您可以使用我们的输入检查功能来保护模型输入，防止个人身份信息 (PII) 泄露或提示注入。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/process-llm-input/)。
+使用 Prediction Guard，您可以使用我们的输入检查来保护模型的输入，防止出现个人身份信息 (PII) 或提示注入 (prompt injections)。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/process-llm-input/)。
 
-### PII (个人身份信息)
+### PII
 
 ```python
 chat = ChatPredictionGuard(
@@ -198,7 +198,7 @@ Could not make prediction. prompt injection detected
 
 ## 输出验证 (Output Validation)
 
-使用 Prediction Guard，您可以通过事实性检查来验证模型输出，以防止事实错误引起的“幻觉”和错误信息，并通过毒性检查来防止有害响应（例如脏话、仇恨言论）。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/validating-llm-output)。
+使用 Prediction Guard，您可以使用事实性检查来验证模型输出，以防止出现事实性错误或不准确信息，并使用毒性检查来防止出现有害响应（例如脏话、仇恨言论）。有关更多信息，请参阅 [Prediction Guard 文档](https://docs.predictionguard.com/docs/validating-llm-output)。
 
 ### 毒性 (Toxicity)
 
@@ -259,4 +259,4 @@ AIMessage(content='Step 1: Determine the year Justin Bieber was born.\nJustin Bi
 
 ## API 参考
 
-有关 ChatPredictionGuard 所有功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html)
+有关 ChatPredictionGuard 所有功能和配置的详细文档，请查看 API 参考：[python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.predictionguard.ChatPredictionGuard.html)

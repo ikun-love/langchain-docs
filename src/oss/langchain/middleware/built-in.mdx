@@ -3,9 +3,9 @@ title: 内置中间件
 description: 针对常见 Agent 用例的预构建中间件
 ---
 
-LangChain 提供针对常见用例的预构建中间件。每个中间件都已准备好投入生产环境，并且可以根据您的具体需求进行配置。
+LangChain 提供针对常见用例的预构建（Prebuilt）中间件。每个中间件都已准备好投入生产环境，并可根据您的具体需求进行配置。
 
-## 提供商无关的中间件
+## 与提供商无关的中间件
 
 以下中间件可与任何 LLM 提供商配合使用：
 
@@ -13,20 +13,20 @@ LangChain 提供针对常见用例的预构建中间件。每个中间件都已�
 
 | 中间件 | 描述 |
 |------------|-------------|
-| [摘要生成](#summarization) | 在接近 Token 限制时自动总结对话历史。 |
-| [人工干预](#human-in-the-loop) | 暂停执行，等待人工批准工具调用。 |
-| [模型调用限制](#model-call-limit) | 限制模型调用次数，以防止产生过多费用。 |
-| [工具调用限制](#tool-call-limit) | 通过限制调用次数来控制工具执行。 |
-| [模型回退](#model-fallback) | 当主模型失败时，自动回退到备用模型。 |
-| [PII 检测](#pii-detection) | 检测并处理个人身份信息 (PII)。 |
-| [待办事项列表](#to-do-list) | 为 Agent 配备任务规划和跟踪能力。 |
-| [LLM 工具选择器](#llm-tool-selector) | 在调用主模型之前，使用 LLM 选择相关的工具。 |
-| [工具重试](#tool-retry) | 使用指数退避（exponential backoff）自动重试失败的工具调用。 |
-| [模型重试](#model-retry) | 使用指数退避自动重试失败的模型调用。 |
-| [LLM 工具模拟器](#llm-tool-emulator) | 使用 LLM 模拟工具执行，用于测试目的。 |
-| [上下文编辑](#context-editing) | 通过修剪或清除工具使用来管理对话上下文。 |
-| [Shell 工具](#shell-tool) | 向 Agent 暴露一个持久的 shell 会话，用于命令执行。 |
-| [文件搜索](#file-search) | 对文件系统文件提供 Glob 和 Grep 搜索工具。 |
+| [摘要 (Summarization)](#summarization) | 在接近 Token 限制时自动总结对话历史。 |
+| [人机协同 (Human-in-the-loop)](#human-in-the-loop) | 在工具调用执行前暂停执行，等待人工批准。 |
+| [模型调用限制 (Model call limit)](#model-call-limit) | 限制模型调用次数，以防止产生过高的费用。 |
+| [工具调用限制 (Tool call limit)](#tool-call-limit) | 通过限制调用次数来控制工具执行。 |
+| [模型回退 (Model fallback)](#model-fallback) | 当主模型失败时，自动回退到备用模型。 |
+| [PII 检测 (PII detection)](#pii-detection) | 检测并处理个人身份信息 (PII)。 |
+| [待办事项列表 (To-do list)](#to-do-list) | 为 Agent 提供任务规划和跟踪能力。 |
+| [LLM 工具选择器 (LLM tool selector)](#llm-tool-selector) | 在调用主模型之前，使用 LLM 来选择相关的工具。 |
+| [工具重试 (Tool retry)](#tool-retry) | 使用指数退避（exponential backoff）策略自动重试失败的工具调用。 |
+| [模型重试 (Model retry)](#model-retry) | 使用指数退避策略自动重试失败的模型调用。 |
+| [LLM 工具模拟器 (LLM tool emulator)](#llm-tool-emulator) | 使用 LLM 模拟工具执行，用于测试目的。 |
+| [上下文编辑 (Context editing)](#context-editing) | 通过修剪或清除工具使用记录来管理对话上下文。 |
+| [Shell 工具 (Shell tool)](#shell-tool) | 向 Agent 暴露一个持久化的 Shell 会话，用于命令执行。 |
+| [文件搜索 (File search)](#file-search) | 提供文件系统文件的 Glob 和 Grep 搜索工具。 |
 
 :::
 
@@ -34,27 +34,27 @@ LangChain 提供针对常见用例的预构建中间件。每个中间件都已�
 
 | 中间件 | 描述 |
 |------------|-------------|
-| [摘要生成](#summarization) | 在接近 Token 限制时自动总结对话历史。 |
-| [人工干预](#human-in-the-loop) | 暂停执行，等待人工批准工具调用。 |
-| [模型调用限制](#model-call-limit) | 限制模型调用次数，以防止产生过多费用。 |
-| [工具调用限制](#tool-call-limit) | 通过限制调用次数来控制工具执行。 |
-| [模型回退](#model-fallback) | 当主模型失败时，自动回退到备用模型。 |
-| [PII 检测](#pii-detection) | 检测并处理个人身份信息 (PII)。 |
-| [待办事项列表](#to-do-list) | 为 Agent 配备任务规划和跟踪能力。 |
-| [LLM 工具选择器](#llm-tool-selector) | 在调用主模型之前，使用 LLM 选择相关的工具。 |
-| [工具重试](#tool-retry) | 使用指数退避（exponential backoff）自动重试失败的工具调用。 |
-| [模型重试](#model-retry) | 使用指数退避自动重试失败的模型调用。 |
-| [LLM 工具模拟器](#llm-tool-emulator) | 使用 LLM 模拟工具执行，用于测试目的。 |
-| [上下文编辑](#context-editing) | 通过修剪或清除工具使用来管理对话上下文。 |
+| [摘要 (Summarization)](#summarization) | 在接近 Token 限制时自动总结对话历史。 |
+| [人机协同 (Human-in-the-loop)](#human-in-the-loop) | 在工具调用执行前暂停执行，等待人工批准。 |
+| [模型调用限制 (Model call limit)](#model-call-limit) | 限制模型调用次数，以防止产生过高的费用。 |
+| [工具调用限制 (Tool call limit)](#tool-call-limit) | 通过限制调用次数来控制工具执行。 |
+| [模型回退 (Model fallback)](#model-fallback) | 当主模型失败时，自动回退到备用模型。 |
+| [PII 检测 (PII detection)](#pii-detection) | 检测并处理个人身份信息 (PII)。 |
+| [待办事项列表 (To-do list)](#to-do-list) | 为 Agent 提供任务规划和跟踪能力。 |
+| [LLM 工具选择器 (LLM tool selector)](#llm-tool-selector) | 在调用主模型之前，使用 LLM 来选择相关的工具。 |
+| [工具重试 (Tool retry)](#tool-retry) | 使用指数退避（exponential backoff）策略自动重试失败的工具调用。 |
+| [模型重试 (Model retry)](#model-retry) | 使用指数退避策略自动重试失败的模型调用。 |
+| [LLM 工具模拟器 (LLM tool emulator)](#llm-tool-emulator) | 使用 LLM 模拟工具执行，用于测试目的。 |
+| [上下文编辑 (Context editing)](#context-editing) | 通过修剪或清除工具使用记录来管理对话上下文。 |
 
 :::
 
-### 摘要生成 (Summarization)
+### Summarization (摘要)
 
-当接近 Token 限制时，自动总结对话历史，保留最近的消息同时压缩较早的上下文。摘要生成在以下场景中很有用：
+在接近 Token 限制时自动总结对话历史，保留最近的消息同时压缩旧的上下文。摘要功能在以下情况很有用：
 - 超过上下文窗口的长期对话。
-- 包含大量历史的多轮对话。
-- 应用程序中上下文保留很重要的情况。
+- 具有广泛历史记录的多轮对话。
+- 需要保留完整对话上下文的应用程序。
 
 :::python
 **API 参考:** @[`SummarizationMiddleware`]
@@ -98,9 +98,8 @@ const agent = createAgent({
 <Accordion title="配置选项">
 
 :::python
-
 <Tip>
-    如果使用 `langchain>=1.1`，`trigger` 和 `keep` 的 `fraction` 条件依赖于聊天模型的 [模型配置文件](/oss/langchain/models#model-profiles)。如果数据不可用，请使用其他条件或手动指定：
+    如果使用 `langchain>=1.1`，`trigger` 和 `keep` 的 `fraction` 条件依赖于聊天模型的[模型配置数据](/oss/langchain/models#model-profiles)。如果数据不可用，请使用其他条件或手动指定：
 
     ```python
     from langchain.chat_models import init_chat_model
@@ -114,7 +113,7 @@ const agent = createAgent({
 </Tip>
 
 <ParamField body="model" type="string | BaseChatModel" required>
-    用于生成摘要的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
+    用于生成摘要的模型。可以是一个模型标识符字符串（例如 `'openai:gpt-4o-mini'`）或一个 `BaseChatModel` 实例。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
 </ParamField>
 
 <ParamField body="trigger" type="ContextSize | list[ContextSize] | None">
@@ -123,7 +122,7 @@ const agent = createAgent({
     - 单个 @[`ContextSize`] 字典（所有属性必须满足 - AND 逻辑）
     - @[`ContextSize`] 字典列表（任何条件满足即可 - OR 逻辑）
 
-    每个条件可以包括：
+    每个条件可以包含：
 
     - `fraction` (float): 模型上下文大小的比例 (0-1)
     - `tokens` (int): 绝对 Token 计数
@@ -135,11 +134,11 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="keep" type="ContextSize" default="{messages: 20}">
-    摘要后要保留的上下文量。必须恰好指定以下之一：
+    摘要后保留的上下文量。精确指定以下之一：
 
     - `fraction` (float): 要保留的模型上下文大小的比例 (0-1)
     - `tokens` (int): 要保留的绝对 Token 计数
-    - `messages` (int): 要保留的最近消息数量
+    - `messages` (int): 要保留的最近消息数
 
     有关更多信息，请参阅 @[`ContextSize`] 的 API 参考。
 </ParamField>
@@ -149,15 +148,15 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="summary_prompt" type="string">
-    用于摘要的自定义提示模板。如果未指定，则使用内置模板。该模板应包含 `{messages}` 占位符，对话历史将插入到此处。
+    用于摘要的自定义提示模板。如果未指定，则使用内置模板。模板应包含 `{messages}` 占位符，对话历史将插入到此处。
 </ParamField>
 
 <ParamField body="trim_tokens_to_summarize" type="number" default="4000">
-    生成摘要时包含的最大 Token 数。消息将在摘要前被修剪以适应此限制。
+    生成摘要时包含的最大 Token 数。在进行摘要之前，消息将被修剪以适应此限制。
 </ParamField>
 
 <ParamField body="summary_prefix" type="string">
-    添加到摘要消息的前缀。如果未提供，则使用默认前缀。
+    添加到摘要消息中的前缀。如果未提供，则使用默认前缀。
 </ParamField>
 
 <ParamField body="max_tokens_before_summary" type="number" deprecated>
@@ -165,13 +164,13 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="messages_to_keep" type="number" deprecated>
-    **已弃用:** 请使用 `keep: {"messages": value}` 代替。要保留的最近消息数量。
+    **已弃用:** 请使用 `keep: {"messages": value}` 代替。要保留的最近消息数。
 </ParamField>
 :::
 
 :::js
 <Tip>
-    如果使用 `langchain@1.1.0`，`trigger` 和 `keep` 的 `fraction` 条件依赖于聊天模型的 [模型配置文件](/oss/langchain/models#model-profiles)。如果数据不可用，请使用其他条件或手动指定：
+    如果使用 `langchain@1.1.0`，`trigger` 和 `keep` 的 `fraction` 条件依赖于聊天模型的[模型配置数据](/oss/langchain/models#model-profiles)。如果数据不可用，请使用其他条件或手动指定：
     ```typescript
     const customProfile: ModelProfile = {
         maxInputTokens: 100_000,
@@ -184,7 +183,7 @@ const agent = createAgent({
 </Tip>
 
 <ParamField body="model" type="string | BaseChatModel" required>
-    用于生成摘要的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。
+    用于生成摘要的模型。可以是一个模型标识符字符串（例如 `'openai:gpt-4o-mini'`）或一个 `BaseChatModel` 实例。
 </ParamField>
 
 <ParamField body="trigger" type="object | object[]">
@@ -193,7 +192,7 @@ const agent = createAgent({
     - 单个条件对象（所有属性必须满足 - AND 逻辑）
     - 条件对象数组（任何条件满足即可 - OR 逻辑）
 
-    每个条件可以包括：
+    每个条件可以包含：
     - `fraction` (number): 模型上下文大小的比例 (0-1)
     - `tokens` (number): 绝对 Token 计数
     - `messages` (number): 消息计数
@@ -202,11 +201,11 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="keep" type="object" default="{messages: 20}">
-    摘要后要保留的上下文量。必须恰好指定以下之一：
+    摘要后保留的上下文量。精确指定以下之一：
 
     - `fraction` (number): 要保留的模型上下文大小的比例 (0-1)
     - `tokens` (number): 要保留的绝对 Token 计数
-    - `messages` (number): 要保留的最近消息数量
+    - `messages` (number): 要保留的最近消息数
 </ParamField>
 
 <ParamField body="tokenCounter" type="function">
@@ -214,15 +213,15 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="summaryPrompt" type="string">
-    用于摘要的自定义提示模板。如果未指定，则使用内置模板。该模板应包含 `{messages}` 占位符，对话历史将插入到此处。
+    用于摘要的自定义提示模板。如果未指定，则使用内置模板。模板应包含 `{messages}` 占位符，对话历史将插入到此处。
 </ParamField>
 
 <ParamField body="trimTokensToSummarize" type="number" default="4000">
-    生成摘要时包含的最大 Token 数。消息将在摘要前被修剪以适应此限制。
+    生成摘要时包含的最大 Token 数。在进行摘要之前，消息将被修剪以适应此限制。
 </ParamField>
 
 <ParamField body="summaryPrefix" type="string">
-    添加到摘要消息的前缀。如果未提供，则使用默认前缀。
+    添加到摘要消息中的前缀。如果未提供，则使用默认前缀。
 </ParamField>
 
 <ParamField body="maxTokensBeforeSummary" type="number" deprecated>
@@ -230,7 +229,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="messagesToKeep" type="number" deprecated>
-    **已弃用:** 请使用 `keep: { messages: value }` 代替。要保留的最近消息数量。
+    **已弃用:** 请使用 `keep: { messages: value }` 代替。要保留的最近消息数。
 </ParamField>
 :::
 
@@ -238,17 +237,17 @@ const agent = createAgent({
 
 <Accordion title="完整示例">
 
-摘要中间件会监控消息 Token 计数，并在达到阈值时自动总结较早的消息。
+摘要中间件会监控消息 Token 计数，并在达到阈值时自动总结较早的消息，同时保留最近的消息并压缩较旧的上下文。
 
-**触发条件 (Trigger conditions)** 控制摘要运行的时机：
+**触发条件**控制摘要运行的时间：
 - 单个条件对象（所有属性必须满足 - AND 逻辑）
 - 条件对象数组（任何条件满足即可 - OR 逻辑）
-- 每个条件都可以使用 `fraction`（占模型上下文大小的比例）、`tokens`（绝对计数）或 `messages`（消息计数）
+- 每个条件可以使用 `fraction`（模型上下文大小的比例）、`tokens`（绝对计数） 或 `messages`（消息计数）
 
-**保留条件 (Keep conditions)** 控制保留多少上下文（恰好指定一个）：
+**保留条件**控制保留多少上下文（精确指定一个）：
 - `fraction` - 要保留的模型上下文大小的比例
 - `tokens` - 要保留的绝对 Token 计数
-- `messages` - 要保留的最近消息数量
+- `messages` - 要保留的最近消息数
 
 :::python
 ```python
@@ -256,7 +255,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import SummarizationMiddleware
 
 
-# 单个条件：当 tokens >= 4000 且 messages >= 10 时触发
+# 单一条件：当 tokens >= 4000 且 messages >= 10 时触发
 agent = create_agent(
     model="gpt-4o",
     tools=[your_weather_tool, your_calculator_tool],
@@ -304,7 +303,7 @@ agent3 = create_agent(
 ```typescript
 import { createAgent, summarizationMiddleware } from "langchain";
 
-// 单个条件
+// 单一条件
 const agent = createAgent({
   model: "gpt-4o",
   tools: [weatherTool, calculatorTool],
@@ -349,20 +348,20 @@ const agent3 = createAgent({
 
 </Accordion>
 
-### 人工干预 (Human-in-the-loop)
+### Human-in-the-loop (人机协同)
 
-在工具调用执行之前，暂停 Agent 执行以供人工批准、编辑或拒绝工具调用。[人工干预](/oss/langchain/human-in-the-loop) 在以下场景中很有用：
+在工具调用执行前暂停 Agent 执行，以供人工批准、编辑或拒绝工具调用。[人机协同](/oss/langchain/human-in-the-loop) 在以下情况很有用：
 
-- 需要人工批准的高风险操作（例如数据库写入、金融交易）。
-- 必须有人工监督的合规工作流程。
-- 在较长的对话中，人工反馈指导 Agent 的继续方向。
+- 需要人工批准的高风险操作（例如：数据库写入、金融交易）。
+- 强制要求人工监督的合规工作流程。
+- 依赖人工反馈来指导 Agent 的长期对话。
 
 :::python
 **API 参考:** @[`HumanInTheLoopMiddleware`]
 :::
 
 <Warning>
-    人工干预中间件需要一个 [检查点 (checkpointer)](/oss/langgraph/persistence#checkpoints) 来在中断期间维护状态。
+    人机协同中间件需要一个[检查点 (checkpointer)](/oss/langgraph/persistence#checkpoints) 来在中断期间维护状态。
 </Warning>
 
 :::python
@@ -373,11 +372,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 
 def read_email_tool(email_id: str) -> str:
-    """模拟函数：通过 ID 读取电子邮件。"""
+    """模拟函数：通过 ID 读取邮件。"""
     return f"Email content for ID: {email_id}"
 
 def send_email_tool(recipient: str, subject: str, body: str) -> str:
-    """模拟函数：发送一封电子邮件。"""
+    """模拟函数：发送邮件。"""
     return f"Email sent to {recipient} with subject '{subject}'"
 
 agent = create_agent(
@@ -403,12 +402,12 @@ agent = create_agent(
 import { createAgent, humanInTheLoopMiddleware } from "langchain";
 
 function readEmailTool(emailId: string): string {
-  /** 模拟函数：通过 ID 读取电子邮件。 */
+  /** 模拟函数：通过 ID 读取邮件。 */
   return `Email content for ID: ${emailId}`;
 }
 
 function sendEmailTool(recipient: string, subject: string, body: string): string {
-  /** 模拟函数：发送一封电子邮件。 */
+  /** 模拟函数：发送邮件。 */
   return `Email sent to ${recipient} with subject '${subject}'`;
 }
 
@@ -432,28 +431,28 @@ const agent = createAgent({
 :::
 
 <Tip>
-    有关完整的示例、配置选项和集成模式，请参阅 [人工干预文档](/oss/langchain/human-in-the-loop)。
+    有关完整的示例、配置选项和集成模式，请参阅[人机协同文档](/oss/langchain/human-in-the-loop)。
 </Tip>
 
 :::python
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=SpfT6-YAVPk)，了解人工干预中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=SpfT6-YAVPk)，了解人机协同中间件的行为。
 </Callout>
 :::
 
 :::js
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=tdOeUVERukA)，了解人工干预中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=tdOeUVERukA)，了解人机协同中间件的行为。
 </Callout>
 :::
 
-### 模型调用限制 (Model call limit)
+### Model call limit (模型调用限制)
 
-限制模型调用次数，以防止无限循环或产生过多费用。模型调用限制在以下场景中很有用：
+限制模型调用的次数，以防止无限循环或产生过多费用。模型调用限制在以下情况很有用：
 
-- 防止失控的 Agent 进行过多 API 调用。
+- 防止失控的 Agent 进行过多的 API 调用。
 - 在生产部署中实施成本控制。
-- 在特定调用预算内测试 Agent 行为。
+- 在特定调用预算内测试 Agent 的行为。
 
 :::python
 **API 参考:** @[`ModelCallLimitMiddleware`]
@@ -496,13 +495,13 @@ const agent = createAgent({
 
 :::python
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=nJEER0uaNkE)，了解模型调用限制中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=nJEER0uaNkE)，了解模型调用限制中间件的行为。
 </Callout>
 :::
 
 :::js
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=x5jLQTFXR0Y)，了解模型调用限制中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=x5jLQTFXR0Y)，了解模型调用限制中间件的行为。
 </Callout>
 :::
 
@@ -510,11 +509,11 @@ const agent = createAgent({
 
 :::python
 <ParamField body="thread_limit" type="number">
-    线程中所有运行的总模型调用次数限制。默认无限制。
+    线程中所有运行的总模型调用次数限制。默认为无限制。
 </ParamField>
 
 <ParamField body="run_limit" type="number">
-    单次调用（一次用户消息 → 响应周期）的最大模型调用次数。默认无限制。
+    单次调用的最大模型调用次数。默认为无限制。
 </ParamField>
 
 <ParamField body="exit_behavior" type="string" default="end">
@@ -524,11 +523,11 @@ const agent = createAgent({
 
 :::js
 <ParamField body="threadLimit" type="number">
-    线程中所有运行的总模型调用次数限制。默认无限制。
+    线程中所有运行的总模型调用次数限制。默认为无限制。
 </ParamField>
 
 <ParamField body="runLimit" type="number">
-    单次调用（一次用户消息 → 响应周期）的最大模型调用次数。默认无限制。
+    单次调用的最大模型调用次数。默认为无限制。
 </ParamField>
 
 <ParamField body="exitBehavior" type="string" default="end">
@@ -539,14 +538,14 @@ const agent = createAgent({
 </Accordion>
 
 
-### 工具调用限制 (Tool call limit)
+### Tool call limit (工具调用限制)
 
-通过限制工具调用的次数来控制 Agent 的执行，可以全局限制所有工具，也可以针对特定工具进行限制。工具调用限制在以下场景中很有用：
+通过限制工具调用的次数来控制 Agent 的执行，可以全局限制或针对特定工具进行限制。工具调用限制在以下情况很有用：
 
 - 防止对昂贵的外部 API 进行过多调用。
 - 限制网络搜索或数据库查询。
 - 对特定工具的使用强制执行速率限制。
-- 防止 Agent 陷入无限循环。
+- 防止 Agent 陷入失控的循环。
 
 :::python
 **API 参考:** @[`ToolCallLimitMiddleware`]
@@ -593,13 +592,13 @@ const agent = createAgent({
 
 :::python
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=6gYlaJJ8t0w)，了解工具调用限制中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=6gYlaJJ8t0w)，了解工具调用限制中间件的行为。
 </Callout>
 :::
 
 :::js
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=oL6am5UqODY)，了解工具调用限制中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=oL6am5UqODY)，了解工具调用限制中间件的行为。
 </Callout>
 :::
 
@@ -611,11 +610,11 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="thread_limit" type="number">
-    线程中所有运行的总工具调用次数限制（即对话）。在具有相同线程 ID 的多次调用中保持不变。需要检查点 (checkpointer) 来维护状态。`None` 表示无线程限制。
+    线程中所有运行的总工具调用次数限制（即对话中）。跨具有相同线程 ID 的多次调用持久化。需要检查点才能维护状态。`None` 表示无线程限制。
 </ParamField>
 
 <ParamField body="run_limit" type="number">
-    单次调用（一个用户消息 → 响应周期）的最大工具调用次数。每次新用户消息都会重置。`None` 表示无运行限制。
+    单次调用（一次用户消息 → 响应周期）的最大工具调用次数。每次新用户消息都会重置。`None` 表示无运行限制。
 
     **注意:** 必须指定 `thread_limit` 或 `run_limit` 中的至少一个。
 </ParamField>
@@ -623,9 +622,9 @@ const agent = createAgent({
 <ParamField body="exit_behavior" type="string" default="continue">
     达到限制时的行为：
 
-    - `'continue'` (默认) - 使用错误消息阻止超出的工具调用，让其他工具和模型继续执行。模型根据错误消息决定何时结束。
-    - `'error'` - 抛出 `ToolCallLimitExceededError` 异常，立即停止执行
-    - `'end'` - 使用一个 `ToolMessage` 和 AI 消息立即停止执行，仅在限制单个工具时有效；如果其他工具仍有待处理的调用，则会引发 `NotImplementedError`。
+    - `'continue'`（默认）- 使用错误消息阻止超出的工具调用，让其他工具和模型继续执行。模型根据错误消息决定何时结束。
+    - `'error'` - 引发 `ToolCallLimitExceededError` 异常，立即停止执行
+    - `'end'` - 立即使用 `ToolMessage` 和 AI 消息停止执行，对应超限的工具调用。仅当限制单个工具时有效；如果其他工具有待处理的调用，则会引发 `NotImplementedError`。
 </ParamField>
 :::
 
@@ -635,11 +634,11 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="threadLimit" type="number">
-    线程中所有运行的总工具调用次数限制（即对话）。在具有相同线程 ID 的多次调用中保持不变。需要检查点 (checkpointer) 来维护状态。`undefined` 表示无线程限制。
+    线程中所有运行的总工具调用次数限制（即对话中）。跨具有相同线程 ID 的多次调用持久化。需要检查点才能维护状态。`undefined` 表示无线程限制。
 </ParamField>
 
 <ParamField body="runLimit" type="number">
-    单次调用（一个用户消息 → 响应周期）的最大工具调用次数。每次新用户消息都会重置。`undefined` 表示无运行限制。
+    单次调用（一次用户消息 → 响应周期）的最大工具调用次数。每次新用户消息都会重置。`undefined` 表示无运行限制。
 
     **注意:** 必须指定 `threadLimit` 或 `runLimit` 中的至少一个。
 </ParamField>
@@ -647,9 +646,9 @@ const agent = createAgent({
 <ParamField body="exitBehavior" type="string" default="continue">
     达到限制时的行为：
 
-    - `'continue'` (默认) - 使用错误消息阻止超出的工具调用，让其他工具和模型继续执行。模型根据错误消息决定何时结束。
+    - `'continue'`（默认）- 使用错误消息阻止超出的工具调用，让其他工具和模型继续执行。模型根据错误消息决定何时结束。
     - `'error'` - 抛出 `ToolCallLimitExceededError` 异常，立即停止执行
-    - `'end'` - 使用 ToolMessage 和 AI 消息立即停止执行，仅在限制单个工具时有效；如果其他工具仍有待处理的调用，则会抛出错误。
+    - `'end'` - 立即使用 ToolMessage 和 AI 消息停止执行，对应超限的工具调用。仅当限制单个工具时有效；如果其他工具有待处理的调用，则会抛出错误。
 </ParamField>
 :::
 
@@ -657,13 +656,13 @@ const agent = createAgent({
 
 <Accordion title="完整示例">
 
-使用以下配置指定限制：
+指定限制方式：
 - **线程限制 (Thread limit)** - 对话中所有运行的最大调用次数（需要检查点）
 - **运行限制 (Run limit)** - 单次调用中的最大调用次数（每次轮次重置）
 
 退出行为：
-- `'continue'` (默认) - 用错误消息阻止超出的调用，Agent 继续执行
-- `'error'` - 立即抛出异常
+- `'continue'`（默认）- 使用错误消息阻止超限调用，Agent 继续执行
+- `'error'` - 立即引发异常
 - `'end'` - 使用 ToolMessage + AI 消息停止（仅限单工具场景）
 
 :::python
@@ -705,13 +704,13 @@ const agent = createAgent({
 </Accordion>
 
 
-### 模型回退 (Model fallback)
+### Model fallback (模型回退)
 
-当主模型失败时，自动回退到备用模型。模型回退在以下场景中很有用：
+当主模型失败时，自动回退到备用模型。模型回退在以下情况很有用：
 
-- 构建可从模型中断中恢复的弹性 Agent。
-- 通过回退到更便宜的模型来实现成本优化。
-- 跨 OpenAI、Anthropic 等提供商实现提供商冗余。
+- 构建能处理模型停机的弹性 Agent。
+- 通过回退到更便宜的模型来进行成本优化。
+- 在 OpenAI、Anthropic 等提供商之间实现冗余。
 
 :::python
 **API 参考:** @[`ModelFallbackMiddleware`]
@@ -752,7 +751,7 @@ const agent = createAgent({
 
 :::python
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=8rCRO0DUeIM)，了解模型回退中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=8rCRO0DUeIM)，了解模型回退中间件的行为。
 </Callout>
 :::
 
@@ -760,11 +759,11 @@ const agent = createAgent({
 
 :::python
 <ParamField body="first_model" type="string | BaseChatModel" required>
-    当主模型失败时首先尝试的回退模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。
+    当主模型失败时尝试的第一个回退模型。可以是模型标识符字符串（例如 `'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。
 </ParamField>
 
 <ParamField body="*additional_models" type="string | BaseChatModel">
-    如果前面的模型失败，按顺序尝试的其他回退模型
+    如果前一个模型失败，按顺序尝试的其他回退模型
 </ParamField>
 :::
 
@@ -772,13 +771,13 @@ const agent = createAgent({
 The middleware accepts a variable number of string arguments representing fallback models in order:
 
 <ParamField body="...models" type="string[]" required>
-  一个或多个按顺序尝试的回退模型字符串，以防主模型失败
+  当主模型失败时按顺序尝试的一个或多个回退模型字符串
 
   ```typescript
   modelFallbackMiddleware(
     "first-fallback-model",
     "second-fallback-model",
-    // ... 更多模型
+    // ... more models
   )
   ```
 </ParamField>
@@ -786,13 +785,13 @@ The middleware accepts a variable number of string arguments representing fallba
 
 </Accordion>
 
-### PII 检测 (PII detection)
+### PII detection (PII 检测)
 
-使用可配置的策略来检测和处理对话中的个人身份信息 (PII)。PII 检测在以下场景中很有用：
+使用可配置的策略检测和处理对话中的个人身份信息 (PII)。PII 检测在以下情况很有用：
 
 - 具有合规性要求的医疗保健和金融应用程序。
 - 需要清理日志的客户服务 Agent。
-- 任何处理敏感用户数据的应用程序。
+- 处理敏感用户数据的任何应用程序。
 
 :::python
 **API 参考:** @[`PIIMiddleware`]
@@ -827,11 +826,11 @@ const agent = createAgent({
 ```
 :::
 
-#### 自定义 PII 类型 (Custom PII types)
+#### Custom PII types (自定义 PII 类型)
 
-您可以提供一个 `detector` 参数来创建自定义 PII 类型。这允许您检测除内置类型之外，特定于用例的模式。
+您可以提供 `detector` 参数来创建自定义的 PII 类型。这允许您检测超出内置类型的特定于用例的模式。
 
-**创建自定义检测器的三种方法：**
+**创建自定义检测器的三种方式：**
 
 1. **正则表达式模式字符串** - 简单的模式匹配
 :::js
@@ -874,16 +873,16 @@ agent2 = create_agent(
 
 # 方法 3：自定义检测函数
 def detect_ssn(content: str) -> list[dict[str, str | int]]:
-    """检测带有验证的 SSN（社会安全号码）。
+    """使用验证检测 SSN。
 
-    返回一个包含 'text'、'start' 和 'end' 键的字典列表。
+    返回一个包含 'text', 'start', 和 'end' 键的字典列表。
     """
     import re
     matches = []
     pattern = r"\d{3}-\d{2}-\d{4}"
     for match in re.finditer(pattern, content):
         ssn = match.group(0)
-        # 验证：前三位数字不应是 000、666 或 900-999
+        # 验证：前三位数字不应是 000, 666, 或 900-999
         first_three = int(ssn[:3])
         if first_three not in [0, 666] and not (900 <= first_three <= 999):
             matches.append({
@@ -911,7 +910,7 @@ agent3 = create_agent(
 ```typescript
 import { createAgent, piiMiddleware, type PIIMatch } from "langchain";
 
-// 方法 1: 正则表达式模式字符串
+// 方法 1：正则表达式模式字符串
 const agent1 = createAgent({
   model: "gpt-4o",
   tools: [],
@@ -923,7 +922,7 @@ const agent1 = createAgent({
   ],
 });
 
-// 方法 2: RegExp 对象
+// 方法 2：RegExp 对象
 const agent2 = createAgent({
   model: "gpt-4o",
   tools: [],
@@ -935,7 +934,7 @@ const agent2 = createAgent({
   ],
 });
 
-// 方法 3: 自定义检测函数
+// 方法 3：自定义检测函数
 function detectSSN(content: string): PIIMatch[] {
   const matches: PIIMatch[] = [];
   const pattern = /\d{3}-\d{2}-\d{4}/g;
@@ -943,7 +942,7 @@ function detectSSN(content: string): PIIMatch[] {
 
   while ((match = pattern.exec(content)) !== null) {
     const ssn = match[0];
-    // 验证：前三位数字不应是 000、666 或 900-999
+    // 验证：前三位数字不应是 000, 666, 或 900-999
     const firstThree = parseInt(ssn.substring(0, 3), 10);
     if (firstThree !== 0 && firstThree !== 666 && !(firstThree >= 900 && firstThree <= 999)) {
       matches.push({
@@ -979,7 +978,7 @@ const agent3 = createAgent({
 def detector(content: str) -> list[dict[str, str | int]]:
     return [
         {"text": "matched_text", "start": 0, "end": 12},
-        # ... 更多匹配项
+        # ... more matches
     ]
 ```
 :::
@@ -988,14 +987,14 @@ def detector(content: str) -> list[dict[str, str | int]]:
 ```typescript
 interface PIIMatch {
   text: string;    // 匹配到的文本
-  start: number;   // 在 content 中的起始索引
-  end: number;      // 在 content 中的结束索引
+  start: number;   // content 中的起始索引
+  end: number;      // content 中的结束索引
 }
 
 function detector(content: string): PIIMatch[] {
   return [
     { text: "matched_text", start: 0, end: 12 },
-    // ... 更多匹配项
+    // ... more matches
   ];
 }
 ```
@@ -1005,29 +1004,29 @@ function detector(content: string): PIIMatch[] {
     对于自定义检测器：
 
     - 使用正则表达式字符串进行简单模式匹配
-    - 当您需要标志（例如，不区分大小写的匹配）时，使用 RegExp 对象
-    - 当您需要超出模式匹配的验证逻辑时，使用自定义函数
-    - 自定义函数让您可以完全控制检测逻辑，并可以实现复杂的验证规则
+    - 当你需要标志（例如忽略大小写的匹配）时，使用 RegExp 对象
+    - 当你需要超出模式匹配的验证逻辑时，使用自定义函数
+    - 自定义函数提供了对检测逻辑的完全控制，可以实现复杂的验证规则
 </Tip>
 
 <Accordion title="配置选项">
 
 :::python
 <ParamField body="pii_type" type="string" required>
-    要检测的 PII 类型。可以是内置类型（`email`、`credit_card`、`ip`、`mac_address`、`url`）或自定义类型名称。
+    要检测的 PII 类型。可以是内置类型（`email`, `credit_card`, `ip`, `mac_address`, `url`）或自定义类型名称。
 </ParamField>
 
 <ParamField body="strategy" type="string" default="redact">
-    如何处理检测到的 PII。选项：
+    处理检测到的 PII 的方式。选项：
 
     - `'block'` - 检测到时引发异常
-    - `'redact'` - 替换为 `[REDACTED_TYPE]`
-    - `'mask'` - 部分屏蔽（例如，`****-****-****-1234`）
+    - `'redact'` - 替换为 `[REDACTED_{PII_TYPE}]`
+    - `'mask'` - 部分掩蔽（例如 `****-****-****-1234`）
     - `'hash'` - 替换为确定性哈希值
 </ParamField>
 
 <ParamField body="detector" type="function | regex">
-    自定义检测函数或正则表达式。如果未提供，则使用内置的 PII 类型检测器。
+    自定义检测函数或正则表达式模式。如果未提供，则使用内置 PII 类型的检测器。
 </ParamField>
 
 <ParamField body="apply_to_input" type="boolean" default="True">
@@ -1045,26 +1044,26 @@ function detector(content: string): PIIMatch[] {
 
 :::js
 <ParamField body="piiType" type="string" required>
-    要检测的 PII 类型。可以是内置类型（`email`、`credit_card`、`ip`、`mac_address`、`url`）或自定义类型名称。
+    要检测的 PII 类型。可以是内置类型（`email`, `credit_card`, `ip`, `mac_address`, `url`）或自定义类型名称。
 </ParamField>
 
 <ParamField body="strategy" type="string" default="redact">
-    如何处理检测到的 PII。选项：
+    处理检测到的 PII 的方式。选项：
 
     - `'block'` - 检测到时抛出错误
     - `'redact'` - 替换为 `[REDACTED_TYPE]`
-    - `'mask'` - 部分屏蔽（例如，`****-****-****-1234`）
-    - `'hash'` - 替换为确定性哈希值（例如，`<email_hash:a1b2c3d4>`）
+    - `'mask'` - 部分掩蔽（例如 `****-****-****-1234`）
+    - `'hash'` - 替换为确定性哈希值（例如 `<email_hash:a1b2c3d4>`）
 </ParamField>
 
 <ParamField body="detector" type="RegExp | string | function">
     自定义检测器。可以是：
 
     - `RegExp` - 用于匹配的正则表达式模式
-    - `string` - 正则表达式模式字符串（例如，`"sk-[a-zA-Z0-9]{32}"`）
+    - `string` - 正则表达式模式字符串（例如 `"sk-[a-zA-Z0-9]{32}"`）
     - `function` - 自定义检测函数 `(content: string) => PIIMatch[]`
 
-    如果未提供，则使用内置的 PII 类型检测器。
+    如果未提供，则使用内置 PII 类型的检测器。
 </ParamField>
 
 <ParamField body="applyToInput" type="boolean" default="true">
@@ -1082,12 +1081,12 @@ function detector(content: string): PIIMatch[] {
 
 </Accordion>
 
-### 待办事项列表 (To-do list)
+### To-do list (待办事项列表)
 
-为 Agent 配备任务规划和跟踪能力，以处理复杂的多步骤任务。待办事项列表在以下场景中很有用：
+为 Agent 提供任务规划和跟踪能力，以处理复杂的多步骤任务。待办事项列表在以下情况很有用：
 
 - 需要跨多个工具协调的复杂多步骤任务。
-- 进度可见性很重要的长期操作。
+- 对进度可见性很重要的长期运行操作。
 
 <Note>
     此中间件会自动为 Agent 提供一个 `write_todos` 工具和系统提示，以指导有效的任务规划。
@@ -1122,13 +1121,13 @@ const agent = createAgent({
 
 :::python
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=yTWocbVKQxw)，了解待办事项列表中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=yTWocbVKQxw)，了解待办事项列表中间件的行为。
 </Callout>
 :::
 
 :::js
 <Callout icon="circle-play" iconType="solid">
-    观看此 [视频指南](https://www.youtube.com/watch?v=dwvhZ1z_Pas)，了解待办事项列表中间件的行为。
+    观看此[视频指南](https://www.youtube.com/watch?v=dwvhZ1z_Pas)，了解待办事项列表中间件的行为。
 </Callout>
 :::
 
@@ -1136,7 +1135,7 @@ const agent = createAgent({
 
 :::python
 <ParamField body="system_prompt" type="string">
-    用于指导待办事项用法的自定义系统提示。如果未指定，则使用内置提示。
+    用于指导待办事项使用的自定义系统提示。如果未指定，则使用内置提示。
 </ParamField>
 
 <ParamField body="tool_description" type="string">
@@ -1151,15 +1150,15 @@ No configuration options available (uses defaults).
 </Accordion>
 
 
-### LLM 工具选择器 (LLM tool selector)
+### LLM tool selector (LLM 工具选择器)
 
-在调用主模型之前，使用 LLM 智能地选择相关工具。LLM 工具选择器在以下场景中很有用：
+使用 LLM 在调用主模型之前智能地选择相关工具。LLM 工具选择器在以下情况很有用：
 
-- 工具很多（10+）但大多数与查询不相关的 Agent。
+- 工具数量很多（10 个以上）且大部分工具与查询不相关的 Agent。
 - 通过过滤不相关的工具来减少 Token 使用量。
 - 提高模型的注意力和准确性。
 
-此中间件使用结构化输出来要求 LLM 选择当前查询最相关的工具。结构化输出模式定义了可用的工具名称和描述。模型提供商通常在后台将此结构化输出信息添加到系统提示中。
+此中间件使用结构化输出来询问 LLM 哪些工具与当前查询最相关。结构化输出模式定义了可用的工具名称和描述。模型提供商通常会在后台将此结构化输出信息添加到系统提示中。
 
 :::python
 **API 参考:** @[`LLMToolSelectorMiddleware`]
@@ -1204,52 +1203,52 @@ const agent = createAgent({
 
 :::python
 <ParamField body="model" type="string | BaseChatModel">
-    用于工具选择的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
+    用于工具选择的模型。可以是一个模型标识符字符串（例如 `'openai:gpt-4o-mini'`）或一个 `BaseChatModel` 实例。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
 
     默认为 Agent 的主模型。
 </ParamField>
 
 <ParamField body="system_prompt" type="string">
-    选择模型的指令。如果未指定，则使用内置提示。
+    给选择模型的指令。如果未指定，则使用内置提示。
 </ParamField>
 
 <ParamField body="max_tools" type="number">
-    要选择的最大工具数量。如果模型选择的工具超过此数量，将只使用前 `max_tools` 个。如果未指定，则无限制。
+    要选择的最大工具数量。如果模型选择的工具超过此数量，则只使用前 max_tools 个。如果未指定，则无限制。
 </ParamField>
 
 <ParamField body="always_include" type="list[string]">
-    无论选择如何都应包含的工具名称。这些不计入 `max_tools` 限制。
+    无论选择如何都始终包含的工具名称。这些不计入 max_tools 的限制。
 </ParamField>
 :::
 
 :::js
 <ParamField body="model" type="string | BaseChatModel">
-    用于工具选择的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。默认为 Agent 的主模型。
+    用于工具选择的模型。可以是一个模型标识符字符串（例如 `'openai:gpt-4o-mini'`）或一个 `BaseChatModel` 实例。默认为 Agent 的主模型。
 </ParamField>
 
 <ParamField body="systemPrompt" type="string">
-    选择模型的指令。如果未指定，则使用内置提示。
+    给选择模型的指令。如果未指定，则使用内置提示。
 </ParamField>
 
 <ParamField body="maxTools" type="number">
-    要选择的最大工具数量。如果模型选择的工具超过此数量，将只使用前 `maxTools` 个。如果未指定，则无限制。
+    要选择的最大工具数量。如果模型选择的工具超过此数量，则只使用前 maxTools 个。如果未指定，则无限制。
 </ParamField>
 
 <ParamField body="alwaysInclude" type="string[]">
-    无论选择如何都应包含的工具名称。这些不计入 `maxTools` 限制。
+    无论选择如何都始终包含的工具名称。这些不计入 maxTools 的限制。
 </ParamField>
 :::
 
 </Accordion>
 
 
-### 工具重试 (Tool retry)
+### Tool retry (工具重试)
 
-使用可配置的指数退避（exponential backoff）自动重试失败的工具调用。工具重试在以下场景中很有用：
+使用可配置的指数退避策略自动重试失败的工具调用。工具重试在以下情况很有用：
 
-- 处理外部 API 调用中的瞬态（暂时性）故障。
+- 处理外部 API 调用中的瞬态（临时）故障。
 - 提高网络依赖型工具的可靠性。
-- 构建在出现临时错误时能优雅处理故障的弹性 Agent。
+- 构建能优雅处理临时错误的弹性 Agent。
 
 :::python
 **API 参考:** @[`ToolRetryMiddleware`]
@@ -1296,66 +1295,66 @@ const agent = createAgent({
 
 :::python
 <ParamField body="max_retries" type="number" default="2">
-    初始调用后最大重试次数（默认总共 3 次尝试）
+    初始调用后的最大重试次数（默认总共 3 次尝试）
 </ParamField>
 
 <ParamField body="tools" type="list[BaseTool | str]">
-    可选的工具列表或工具名称，用于应用重试逻辑。如果为 `None`，则应用于所有工具。
+    可选列表，指定要应用重试逻辑的工具或工具名称。如果为 `None`，则应用于所有工具。
 </ParamField>
 
 <ParamField body="retry_on" type="tuple[type[Exception], ...] | callable" default="(Exception,)">
-    是应重试的异常类型元组，还是一个接受异常并返回 `True` 表示应重试的可调用对象。
+    要么是应重试的异常类型元组，要么是一个接受异常并返回 `True`（如果应重试）的可调用对象。
 </ParamField>
 
 <ParamField body="on_failure" type="string | callable" default="return_message">
-    所有重试用尽后的行为。选项：
+    所有重试耗尽时的行为。选项：
     - `'return_message'` - 返回包含错误详情的 `ToolMessage`（允许 LLM 处理失败）
-    - `'raise'` - 重新引发异常（停止 Agent 执行）
+    - `'raise'` - 重新抛出异常（停止 Agent 执行）
     - 自定义可调用对象 - 接受异常并返回 `ToolMessage` 内容字符串的函数
 </ParamField>
 
 <ParamField body="backoff_factor" type="number" default="2.0">
-    指数退避的乘数。每次重试等待时间为 `initial_delay * (backoff_factor ** retry_number)` 秒。设为 `0.0` 表示恒定延迟。
+    指数退避的乘数。每次重试等待 `initial_delay * (backoff_factor ** retry_number)` 秒。设置为 `0.0` 表示恒定延迟。
 </ParamField>
 
 <ParamField body="initial_delay" type="number" default="1.0">
-    首次重试前的初始延迟（秒）。
+    首次重试前的初始延迟（秒）
 </ParamField>
 
 <ParamField body="max_delay" type="number" default="60.0">
-    重试之间的最大延迟（秒）（限制指数退避的增长）。
+    重试之间的最大延迟（秒）（限制指数退避的增长）
 </ParamField>
 
 <ParamField body="jitter" type="boolean" default="true">
-    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应（thundering herd）。
+    是否添加随机抖动（`±25%`）延迟以避免“惊群效应”(thundering herd)
 </ParamField>
 :::
 
 :::js
 <ParamField body="maxRetries" type="number" default="2">
-    初始调用后最大重试次数（默认总共 3 次尝试）。必须 >= 0。
+    初始调用后的最大重试次数（默认总共 3 次尝试）。必须 >= 0。
 </ParamField>
 
 <ParamField body="tools" type="(ClientTool | ServerTool | string)[]">
-    可选的工具或工具名称数组，用于应用重试逻辑。可以是 `BaseTool` 实例或工具名称字符串列表。如果为 `undefined`，则应用于所有工具。
+    可选数组，指定要应用重试逻辑的工具或工具名称。可以是 `BaseTool` 实例或工具名称字符串列表。如果为 `undefined`，则应用于所有工具。
 </ParamField>
 
 <ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
-    应重试的错误构造函数数组，或一个接受错误并返回 `true` 表示应重试的函数。默认为重试所有错误。
+    要么是应重试的错误构造函数数组，要么是一个接受错误并返回 `true`（如果应重试）的函数。默认为重试所有错误。
 </ParamField>
 
 <ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
-    所有重试用尽后的行为。选项：
+    所有重试耗尽时的行为。选项：
 
-    - `'continue'` (默认) - 返回包含错误详情的 `ToolMessage`，允许 LLM 处理失败并可能恢复
+    - `'continue'`（默认）- 返回包含错误详情的 `ToolMessage`，允许 LLM 处理失败并可能恢复
     - `'error'` - 重新抛出异常，停止 Agent 执行
-    - 自定义函数 - 一个接受异常并返回 `ToolMessage` 内容字符串的函数，允许自定义错误格式化
+    - 自定义函数 - 接受异常并返回一个字符串作为 `ToolMessage` 内容的函数，允许自定义错误格式
 
-    **已弃用值:** `'raise'`（使用 `'error'` 代替）和 `'return_message'`（使用 `'continue'` 代替）。这些已弃用的值仍然有效，但会显示警告。
+    **已弃用值:** `'raise'` (使用 `'error'` 代替) 和 `'return_message'` (使用 `'continue'` 代替)。这些已弃用的值仍然有效，但会显示警告。
 </ParamField>
 
 <ParamField body="backoffFactor" type="number" default="2.0">
-    指数退避的乘数。每次重试等待时间为 `initialDelayMs * (backoffFactor ** retryNumber)` 毫秒。设为 `0.0` 表示恒定延迟。必须 >= 0。
+    指数退避的乘数。每次重试等待 `initialDelayMs * (backoffFactor ** retryNumber)` 毫秒。设置为 `0.0` 表示恒定延迟。必须 >= 0。
 </ParamField>
 
 <ParamField body="initialDelayMs" type="number" default="1000">
@@ -1367,7 +1366,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="jitter" type="boolean" default="true">
-    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应。
+    是否添加随机抖动（`±25%`）延迟以避免“惊群效应”(thundering herd)
 </ParamField>
 :::
 
@@ -1378,29 +1377,29 @@ const agent = createAgent({
 中间件自动使用指数退避重试失败的工具调用。
 
 :::python
-**关键配置:**
+**关键配置：**
 - `max_retries` - 重试次数（默认：2）
 - `backoff_factor` - 指数退避的乘数（默认：2.0）
-- `initial_delay` - 起始延迟（秒）（默认：1.0）
-- `max_delay` - 延迟增长的上限（默认：60.0）
-- `jitter` - 是否添加随机变动（默认：True）
+- `initial_delay` - 初始延迟（秒）（默认：1.0）
+- `max_delay` - 延迟增长上限（默认：60.0）
+- `jitter` - 添加随机变化（默认：True）
 
-**失败处理:**
+**失败处理：**
 - `on_failure='return_message'` - 返回错误消息
-- `on_failure='raise'` - 重新抛出异常
+- `on_failure='raise'` - 引发异常
 - 自定义函数 - 返回错误消息的函数
 :::
 :::js
-**关键配置:**
+**关键配置：**
 - `maxRetries` - 重试次数（默认：2）
 - `backoffFactor` - 指数退避的乘数（默认：2.0）
-- `initialDelayMs` - 起始延迟（毫秒）（默认：1000ms）
-- `maxDelayMs` - 延迟增长的上限（默认：60000ms）
-- `jitter` - 是否添加随机变动（默认：true）
+- `initialDelayMs` - 初始延迟（毫秒）（默认：1000ms）
+- `maxDelayMs` - 延迟增长上限（默认：60000ms）
+- `jitter` - 添加随机变化（默认：true）
 
-**失败处理:**
-- `onFailure: "continue"` (默认) - 返回错误消息
-- `onFailure: "error"` - 重新抛出异常
+**失败处理：**
+- `onFailure: "continue"`（默认）- 返回错误消息
+- `onFailure: "error"` - 引发异常
 - 自定义函数 - 返回错误消息的函数
 :::
 
@@ -1435,7 +1434,7 @@ import { createAgent, toolRetryMiddleware } from "langchain";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-// 使用默认设置的基本用法（2 次重试，指数退避）
+// 基本用法，使用默认设置（2 次重试，指数退避）
 const agent = createAgent({
   model: "gpt-4o",
   tools: [searchTool, databaseTool],
@@ -1451,7 +1450,7 @@ const retry = toolRetryMiddleware({
 
 // 自定义异常过滤
 function shouldRetry(error: Error): boolean {
-  // 仅在 5xx 错误时重试
+  // 仅重试 5xx 错误
   if (error.name === "HTTPError" && "statusCode" in error) {
     const statusCode = (error as any).statusCode;
     return 500 <= statusCode && statusCode < 600;
@@ -1464,7 +1463,7 @@ const retryWithFilter = toolRetryMiddleware({
   retryOn: shouldRetry,
 });
 
-// 应用于特定工具，带有自定义错误处理
+// 应用于特定工具，并设置自定义错误处理
 const formatError = (error: Error) =>
   "Database temporarily unavailable. Please try again later.";
 
@@ -1477,7 +1476,7 @@ const retrySpecificTools = toolRetryMiddleware({
 // 应用于特定工具，传递 BaseTool 实例
 const searchDatabase = tool(
   async ({ query }) => {
-    // 搜索实现
+    // Search implementation
     return results;
   },
   {
@@ -1496,10 +1495,10 @@ const retryWithToolInstance = toolRetryMiddleware({
 const constantBackoff = toolRetryMiddleware({
   maxRetries: 5,
   backoffFactor: 0.0, // 无指数增长
-  initialDelayMs: 2000, // 固定等待 2 秒
+  initialDelayMs: 2000, // 始终等待 2 秒
 });
 
-// 失败时抛出异常
+// 失败时引发异常
 const strictRetry = toolRetryMiddleware({
   maxRetries: 2,
   onFailure: "error", // 重新抛出异常而不是返回消息
@@ -1509,13 +1508,13 @@ const strictRetry = toolRetryMiddleware({
 
 </Accordion>
 
-### 模型重试 (Model retry)
+### Model retry (模型重试)
 
-使用可配置的指数退避自动重试失败的模型调用。模型重试在以下场景中很有用：
+使用可配置的指数退避策略自动重试失败的模型调用。模型重试在以下情况很有用：
 
-- 处理模型 API 调用中的瞬态（暂时性）故障。
+- 处理模型 API 调用中的瞬态（临时）故障。
 - 提高网络依赖型模型请求的可靠性。
-- 构建能在出现临时模型错误时优雅处理故障的弹性 Agent。
+- 构建能优雅处理临时模型错误的弹性 Agent。
 
 :::python
 **API 参考:** @[`ModelRetryMiddleware`]
@@ -1562,55 +1561,55 @@ const agent = createAgent({
 
 :::python
 <ParamField body="max_retries" type="number" default="2">
-    初始调用后最大重试次数（默认总共 3 次尝试）
+    初始调用后的最大重试次数（默认总共 3 次尝试）
 </ParamField>
 
 <ParamField body="retry_on" type="tuple[type[Exception], ...] | callable" default="(Exception,)">
-    是应重试的异常类型元组，还是一个接受异常并返回 `True` 表示应重试的可调用对象。
+    要么是应重试的异常类型元组，要么是一个接受异常并返回 `True`（如果应重试）的可调用对象。
 </ParamField>
 
 <ParamField body="on_failure" type="string | callable" default="continue">
-    所有重试用尽后的行为。选项：
-    - `'continue'` (默认) - 返回包含错误详情的 `AIMessage`（允许 Agent 潜在地处理失败）
+    所有重试耗尽时的行为。选项：
+    - `'continue'`（默认）- 返回包含错误详情的 `AIMessage`（允许 Agent 潜在地优雅地处理失败）
     - `'error'` - 重新抛出异常（停止 Agent 执行）
     - 自定义可调用对象 - 接受异常并返回 `AIMessage` 内容字符串的函数
 </ParamField>
 
 <ParamField body="backoff_factor" type="number" default="2.0">
-    指数退避的乘数。每次重试等待时间为 `initial_delay * (backoff_factor ** retry_number)` 秒。设为 `0.0` 表示恒定延迟。
+    指数退避的乘数。每次重试等待 `initial_delay * (backoff_factor ** retry_number)` 秒。设置为 `0.0` 表示恒定延迟。
 </ParamField>
 
 <ParamField body="initial_delay" type="number" default="1.0">
-    首次重试前的初始延迟（秒）。
+    首次重试前的初始延迟（秒）
 </ParamField>
 
 <ParamField body="max_delay" type="number" default="60.0">
-    重试之间的最大延迟（秒）（限制指数退避的增长）。
+    重试之间的最大延迟（秒）（限制指数退避的增长）
 </ParamField>
 
 <ParamField body="jitter" type="boolean" default="true">
-    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应（thundering herd）。
+    是否添加随机抖动（`±25%`）延迟以避免“惊群效应”(thundering herd)
 </ParamField>
 :::
 
 :::js
 <ParamField body="maxRetries" type="number" default="2">
-    初始调用后最大重试次数（默认总共 3 次尝试）。必须 >= 0。
+    初始调用后的最大重试次数（默认总共 3 次尝试）。必须 >= 0。
 </ParamField>
 
 <ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
-    应重试的错误构造函数数组，或一个接受错误并返回 `true` 表示应重试的函数。默认为重试所有错误。
+    要么是应重试的错误构造函数数组，要么是一个接受错误并返回 `true`（如果应重试）的函数。默认为重试所有错误。
 </ParamField>
 
 <ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
-    所有重试用尽后的行为。选项：
-    - `'continue'` (默认) - 返回包含错误详情的 `AIMessage`，允许 Agent 潜在地处理失败
+    所有重试耗尽时的行为。选项：
+    - `'continue'`（默认）- 返回包含错误详情的 `AIMessage`，允许 Agent 潜在地优雅地处理失败
     - `'error'` - 重新抛出异常，停止 Agent 执行
-    - 自定义函数 - 一个接受异常并返回 `AIMessage` 内容字符串的函数，允许自定义错误格式化
+    - 自定义函数 - 接受异常并返回一个字符串作为 `AIMessage` 内容的函数，允许自定义错误格式
 </ParamField>
 
 <ParamField body="backoffFactor" type="number" default="2.0">
-    指数退避的乘数。每次重试等待时间为 `initialDelayMs * (backoffFactor ** retryNumber)` 毫秒。设为 `0.0` 表示恒定延迟。必须 >= 0。
+    指数退避的乘数。每次重试等待 `initialDelayMs * (backoffFactor ** retryNumber)` 毫秒。设置为 `0.0` 表示恒定延迟。必须 >= 0。
 </ParamField>
 
 <ParamField body="initialDelayMs" type="number" default="1000">
@@ -1622,7 +1621,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="jitter" type="boolean" default="true">
-    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应。
+    是否添加随机抖动（`±25%`）延迟以避免“惊群效应”(thundering herd)
 </ParamField>
 :::
 
@@ -1630,7 +1629,7 @@ const agent = createAgent({
 
 <Accordion title="完整示例">
 
-中间件自动使用指数退避重试失败的模型调用。
+中间件自动使用指数退避重试失败的模型（LLM）调用。
 
 :::python
 ```python
@@ -1638,7 +1637,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import ModelRetryMiddleware
 
 
-# 使用默认设置的基本用法（2 次重试，指数退避）
+# 基本用法，使用默认设置（2 次重试，指数退避）
 agent = create_agent(
     model="gpt-4o",
     tools=[search_tool],
@@ -1647,11 +1646,11 @@ agent = create_agent(
 
 # 自定义异常过滤
 class TimeoutError(Exception):
-    """模型超时错误。"""
+    """Custom exception for timeout errors."""
     pass
 
 class ConnectionError(Exception):
-    """连接错误。"""
+    """Custom exception for connection errors."""
     pass
 
 # 仅重试特定异常
@@ -1663,10 +1662,10 @@ retry = ModelRetryMiddleware(
 
 
 def should_retry(error: Exception) -> bool:
-    # 仅在超时错误时重试
+    # 仅在达到速率限制错误时重试
     if isinstance(error, TimeoutError):
         return True
-    # 或检查特定的 HTTP 状态码
+    # 或者检查特定的 HTTP 状态码
     if hasattr(error, "status_code"):
         return error.status_code in (429, 503)
     return False
@@ -1679,12 +1678,12 @@ retry_with_filter = ModelRetryMiddleware(
 # 失败时返回错误消息而不是引发异常
 retry_continue = ModelRetryMiddleware(
     max_retries=4,
-    on_failure="continue",  # 返回 AIMessage 包含错误，而不是引发异常
+    on_failure="continue",  # 失败时返回 AIMessage 错误详情而不是引发异常
 )
 
 # 自定义错误消息格式化
 def format_error(error: Exception) -> str:
-    return f"模型调用失败: {error}。请稍后再试。"
+    return f"Model call failed: {error}. Please try again later."
 
 retry_with_formatter = ModelRetryMiddleware(
     max_retries=4,
@@ -1709,8 +1708,10 @@ strict_retry = ModelRetryMiddleware(
 :::js
 ```typescript
 import { createAgent, modelRetryMiddleware } from "langchain";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 
-// 使用默认设置的基本用法（2 次重试，指数退避）
+// 基本用法，使用默认设置（2 次重试，指数退避）
 const agent = createAgent({
   model: "gpt-4o",
   tools: [searchTool],
@@ -1733,11 +1734,11 @@ const retry = modelRetryMiddleware({
 
 // 自定义异常过滤
 function shouldRetry(error: Error): boolean {
-  // 仅在速率限制错误时重试
+  // 仅重试速率限制错误
   if (error.name === "RateLimitError") {
     return true;
   }
-  // 或检查特定的 HTTP 状态码
+  // 或者检查特定的 HTTP 状态码
   if (error.name === "HTTPError" && "statusCode" in error) {
     const statusCode = (error as any).statusCode;
     return statusCode === 429 || statusCode === 503;
@@ -1753,12 +1754,12 @@ const retryWithFilter = modelRetryMiddleware({
 // 失败时返回错误消息而不是抛出
 const retryContinue = modelRetryMiddleware({
   maxRetries: 4,
-  onFailure: "continue", // 返回包含错误的 AIMessage 而不是抛出异常
+  onFailure: "continue", // 失败时返回 AIMessage 错误详情而不是抛出
 });
 
 // 自定义错误消息格式化
 const formatError = (error: Error) =>
-  `模型调用失败: ${error.message}。请稍后再试。`;
+  `Model call failed: ${error.message}. Please try again later.`;
 
 const retryWithFormatter = modelRetryMiddleware({
   maxRetries: 4,
@@ -1769,7 +1770,7 @@ const retryWithFormatter = modelRetryMiddleware({
 const constantBackoff = modelRetryMiddleware({
   maxRetries: 5,
   backoffFactor: 0.0, // 无指数增长
-  initialDelayMs: 2000, // 固定等待 2 秒
+  initialDelayMs: 2000, // 始终等待 2 秒
 });
 
 // 失败时抛出异常
@@ -1782,13 +1783,13 @@ const strictRetry = modelRetryMiddleware({
 
 </Accordion>
 
-### LLM 工具模拟器 (LLM tool emulator)
+### LLM tool emulator (LLM 工具模拟器)
 
-使用 LLM 模拟工具执行，替换实际的工具调用，生成 AI 生成的响应。LLM 工具模拟器在以下场景中很有用：
+使用 LLM 模拟工具执行，而不是实际执行工具调用，从而用于测试目的。LLM 工具模拟器在以下情况很有用：
 
-- 在不执行真实工具的情况下测试 Agent 行为。
-- 在外部工具不可用或成本高昂时开发 Agent。
-- 在实现实际工具之前，对 Agent 工作流程进行原型设计。
+- 在不执行真实工具的情况下测试 Agent 的行为。
+- 在外部工具不可用或昂贵时开发 Agent。
+- 在实现实际工具之前原型设计 Agent 工作流程。
 
 :::python
 **API 参考:** @[`LLMToolEmulator`]
@@ -1825,21 +1826,21 @@ const agent = createAgent({
 
 :::python
 <ParamField body="tools" type="list[str | BaseTool]">
-    要模拟的工具名称（str）或 BaseTool 实例列表。如果为 `None`（默认），则**所有**工具都将被模拟。如果为空列表 `[]`，则不模拟任何工具。如果包含工具名称/实例的数组，则仅模拟这些工具。
+    要模拟的工具名称（str）或 BaseTool 实例列表。如果为 `None`（默认），将模拟**所有**工具。如果为空列表 `[]`，则不模拟任何工具。如果包含工具名称/实例的数组，则仅模拟这些工具。
 </ParamField>
 
 <ParamField body="model" type="string | BaseChatModel">
-    用于生成模拟工具响应的模型。可以是模型标识符字符串（例如，`'anthropic:claude-sonnet-4-5-20250929'`）或 `BaseChatModel` 实例。如果未指定，则默认为 Agent 的模型。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
+    用于生成模拟工具响应的模型。可以是模型标识符字符串（例如 `'anthropic:claude-sonnet-4-5-20250929'`）或 `BaseChatModel` 实例。如果未指定，则默认为 Agent 的模型。有关更多信息，请参阅 @[`init_chat_model`][init_chat_model(model)]。
 </ParamField>
 :::
 
 :::js
 <ParamField body="tools" type="(string | ClientTool | ServerTool)[]">
-    要模拟的工具名称（string）或工具实例列表。如果为 `undefined`（默认），则模拟所有工具。如果为空数组 `[]`，则不模拟任何工具。如果包含工具名称/实例的数组，则仅模拟这些工具。
+    要模拟的工具名称（string）或工具实例列表。如果为 `undefined`（默认），将模拟**所有**工具。如果为空数组 `[]`，则不模拟任何工具。如果包含工具名称/实例的数组，则仅模拟这些工具。
 </ParamField>
 
 <ParamField body="model" type="string | BaseChatModel">
-    用于生成模拟工具响应的模型。可以是模型标识符字符串（例如，`'anthropic:claude-sonnet-4-5-20250929'`）或 `BaseChatModel` 实例。如果未指定，则默认为 Agent 的模型。
+    用于生成模拟工具响应的模型。可以是模型标识符字符串（例如 `'anthropic:claude-sonnet-4-5-20250929'`）或 `BaseChatModel` 实例。如果未指定，则默认为 Agent 的模型。
 </ParamField>
 :::
 
@@ -1847,7 +1848,7 @@ const agent = createAgent({
 
 <Accordion title="完整示例">
 
-该中间件使用 LLM 为工具调用生成合理的响应，而不是执行实际工具。
+该中间件使用 LLM 为工具调用生成合理（Plausible）的响应，而不是执行实际工具。
 
 :::python
 ```python
@@ -1935,7 +1936,7 @@ const agent2 = createAgent({
   ],
 });
 
-// 通过传递工具实例模拟特定工具
+// 通过传递工具实例来模拟特定工具
 const agent3 = createAgent({
   model: "gpt-4o",
   tools: [getWeather, sendEmail],
@@ -1961,13 +1962,13 @@ const agent5 = createAgent({
 
 </Accordion>
 
-### 上下文编辑 (Context editing)
+### Context editing (上下文编辑)
 
-当达到 Token 限制时，通过清除较旧的工具调用输出来管理对话上下文，同时保留最近的结果。这有助于在具有大量工具调用的长期对话中保持上下文窗口的可管理性。上下文编辑在以下场景中很有用：
+当达到 Token 限制时，通过清除较早的工具调用输出来管理对话上下文，同时保留最近的结果。这有助于在包含大量工具调用的长期对话中保持上下文窗口的可管理性。上下文编辑在以下情况很有用：
 
-- 具有大量工具调用并超出 Token 限制的长期对话
+- 包含大量工具调用的长期对话，超过 Token 限制
 - 通过删除不再相关的旧工具输出来降低 Token 成本
-- 仅在上下文中保留最近 N 个工具结果
+- 仅在上下文中保留最近的 N 个工具结果
 
 :::python
 **API 参考:** @[`ContextEditingMiddleware`], @[`ClearToolUsesEdit`]
@@ -2032,15 +2033,15 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="clear_at_least" type="number" default="0">
-    编辑运行时要回收的最小 Token 数。如果设置为 0，则清除所需的所有内容。
+    运行编辑时要回收的最小 Token 数。如果设置为 0，则清除所需的一切。
 </ParamField>
 
 <ParamField body="keep" type="number" default="3">
-    必须保留的最近工具结果的数量。这些永远不会被清除。
+    必须保留的最近工具结果的数量。这些将永远不会被清除。
 </ParamField>
 
 <ParamField body="clear_tool_inputs" type="boolean" default="False">
-    在 AI 消息中是否清除原始工具调用参数。如果为 `True`，工具调用参数将替换为空对象。
+    是否清除 AI 消息上原始的工具调用参数。如果为 `True`，则工具调用参数将被替换为空对象。
 </ParamField>
 
 <ParamField body="exclude_tools" type="list[string]" default="()">
@@ -2048,7 +2049,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="placeholder" type="string" default="[cleared]">
-    插入到被清除的工具输出中的占位符文本。这会替换原始工具消息内容。
+    插入到已清除工具输出中的占位符文本。它会替换原始工具消息内容。
 </ParamField>
 :::
 
@@ -2064,15 +2065,15 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="clearAtLeast" type="number" default="0">
-    编辑运行时要回收的最小 Token 数。如果设置为 0，则清除所需的所有内容。
+    运行编辑时要回收的最小 Token 数。如果设置为 0，则清除所需的一切。
 </ParamField>
 
 <ParamField body="keep" type="number" default="3">
-    必须保留的最近工具结果的数量。这些永远不会被清除。
+    必须保留的最近工具结果的数量。这些将永远不会被清除。
 </ParamField>
 
 <ParamField body="clearToolInputs" type="boolean" default="false">
-    在 AI 消息中是否清除原始工具调用参数。如果为 `true`，工具调用参数将替换为空对象。
+    是否清除 AI 消息上原始的工具调用参数。如果为 `true`，工具调用参数将被替换为空对象。
 </ParamField>
 
 <ParamField body="excludeTools" type="string[]" default="[]">
@@ -2080,7 +2081,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="placeholder" type="string" default="[cleared]">
-    插入到被清除的工具输出中的占位符文本。这会替换原始工具消息内容。
+    插入到已清除工具输出中的占位符文本。它会替换原始工具消息内容。
 </ParamField>
 :::
 
@@ -2088,12 +2089,12 @@ const agent = createAgent({
 
 <Accordion title="完整示例">
 
-中间件在达到 Token 限制时应用上下文编辑策略。最常见的策略是 `ClearToolUsesEdit`，它在保留最新结果的同时清除较旧的工具结果。
+中间件在达到 Token 限制时应用上下文编辑策略。最常见的策略是 `ClearToolUsesEdit`，它在保留最近结果的同时清除较旧的工具结果。
 
-**工作原理:**
+**工作原理：**
 1. 监控对话中的 Token 计数
-2. 达到阈值时，清除旧的工具输出
-3. 保留最近的 N 个工具结果
+2. 达到阈值时，清除较旧的工具输出
+3. 保留最近 N 个工具结果
 4. 可选：为上下文保留工具调用参数
 
 :::python
@@ -2149,21 +2150,21 @@ const agent = createAgent({
 </Accordion>
 
 :::python
-### Shell 工具 (Shell tool)
+### Shell tool (Shell 工具)
 
-向 Agent 暴露一个持久的 shell 会话，用于命令执行。Shell 工具中间件在以下场景中很有用：
+向 Agent 暴露一个持久化的 Shell 会话，用于命令执行。Shell 工具中间件在以下情况很有用：
 
 - 需要执行系统命令的 Agent。
 - 开发和部署自动化任务。
 - 测试和验证工作流程。
-- 需要文件发现的文件系统操作和脚本执行。
+- 文件系统操作和脚本执行。
 
 <Warning>
-    **安全注意事项**: 使用适当的执行策略（`HostExecutionPolicy`、`DockerExecutionPolicy` 或 `CodexSandboxExecutionPolicy`）以匹配部署的安全要求。
+    **安全考虑**: 使用适当的执行策略（`HostExecutionPolicy`, `DockerExecutionPolicy`, 或 `CodexSandboxExecutionPolicy`）以匹配部署环境的安全要求。
 </Warning>
 
 <Note>
-    **限制**: 持久 shell 会话目前与中断（人工干预）不兼容。我们预计未来会增加对此的支持。
+    **限制**: 持久化 Shell 会话目前不支持中断（人机协同）。我们预计未来会增加对该功能的支持。
 </Note>
 
 **API 参考:** @[`ShellToolMiddleware`]
@@ -2190,7 +2191,7 @@ agent = create_agent(
 <Accordion title="配置选项">
 
 <ParamField body="workspace_root" type="str | Path | None">
-    Shell 会话的基础目录。如果省略，Agent 启动时会创建一个临时目录，Agent 结束时会被移除。
+    Shell 会话的基础目录。如果省略，Agent 启动时会创建一个临时目录，并在 Agent 结束时删除。
 </ParamField>
 
 <ParamField body="startup_commands" type="tuple[str, ...] | list[str] | str | None">
@@ -2198,41 +2199,41 @@ agent = create_agent(
 </ParamField>
 
 <ParamField body="shutdown_commands" type="tuple[str, ...] | list[str] | str | None">
-    在会话关闭前执行的可选命令
+    会话关闭前执行的可选命令
 </ParamField>
 
 <ParamField body="execution_policy" type="BaseExecutionPolicy | None">
     控制超时、输出限制和资源配置的执行策略。选项：
 
-    - `HostExecutionPolicy` - 完全主机访问（默认）；最适合 Agent 已经在容器或 VM 中运行的可信环境
-    - `DockerExecutionPolicy` - 为每次 Agent 运行启动一个单独的 Docker 容器，提供更硬的隔离
-    - `CodexSandboxExecutionPolicy` - 通过 Codex CLI 沙箱进行重用，以提供额外的系统调用/文件系统限制
+    - `HostExecutionPolicy` - 完整主机访问（默认）；最适用于 Agent 已在容器或 VM 内部运行的可信环境
+    - `DockerExecutionPolicy` - 为每次 Agent 运行启动一个单独的 Docker 容器，提供更强的隔离
+    - `CodexSandboxExecutionPolicy` - 重用 Codex CLI 沙箱以提供额外的系统调用/文件系统限制
 </ParamField>
 
 <ParamField body="redaction_rules" type="tuple[RedactionRule, ...] | list[RedactionRule] | None">
-    可选的混淆规则，用于清理命令输出后再返回给模型
+    可选的清理规则，用于在将命令输出返回给模型前对其进行消毒
 </ParamField>
 
 <ParamField body="tool_description" type="str | None">
-    可选的覆盖项，用于覆盖已注册的 shell 工具描述
+    注册的 Shell 工具描述的可选覆盖值
 </ParamField>
 
 <ParamField body="shell_command" type="Sequence[str] | str | None">
-    用于启动持久会话的可选 shell 可执行文件（字符串）或参数序列。默认为 `/bin/bash`。
+    用于启动持久化会话的可选 Shell 可执行文件（字符串）或参数序列。默认为 `/bin/bash`。
 </ParamField>
 
 <ParamField body="env" type="Mapping[str, Any] | None">
-    可选的环境变量，提供给 shell 会话。值在命令执行前被强制转换为字符串。
+    可选的环境变量，用于提供给 Shell 会话。值在命令执行前被强制转换为字符串。
 </ParamField>
 
 </Accordion>
 
 <Accordion title="完整示例">
 
-中间件提供了一个持久的 shell 会话，Agent 可以用它来顺序执行命令。
+该中间件为 Agent 提供了一个单一的持久化 Shell 会话，可用于按顺序执行命令。
 
-**执行策略:**
-- `HostExecutionPolicy` (默认) - 具有完全主机访问权限的原生执行
+**执行策略：**
+- `HostExecutionPolicy`（默认）- 具有完整主机访问权限的本机执行
 - `DockerExecutionPolicy` - 隔离的 Docker 容器执行
 - `CodexSandboxExecutionPolicy` - 通过 Codex CLI 进行沙箱执行
 
@@ -2246,7 +2247,7 @@ from langchain.agents.middleware import (
 )
 
 
-# 带主机执行的基本 shell 工具
+# 使用主机执行的基本 Shell 工具
 agent = create_agent(
     model="gpt-4o",
     tools=[search_tool],
@@ -2258,7 +2259,7 @@ agent = create_agent(
     ],
 )
 
-# Docker 隔离与启动命令
+# 使用启动命令的 Docker 隔离
 agent_docker = create_agent(
     model="gpt-4o",
     tools=[],
@@ -2274,7 +2275,7 @@ agent_docker = create_agent(
     ],
 )
 
-# 带有输出混淆
+# 带有输出清理的配置
 agent_redacted = create_agent(
     model="gpt-4o",
     tools=[],
@@ -2291,9 +2292,9 @@ agent_redacted = create_agent(
 
 </Accordion>
 
-### 文件搜索 (File search)
+### File search (文件搜索)
 
-对文件系统文件提供 Glob 和 Grep 搜索工具。文件搜索中间件在以下场景中很有用：
+提供对文件系统的 Glob 和 Grep 搜索工具。文件搜索中间件在以下情况很有用：
 
 - 代码探索和分析
 - 按名称模式查找文件
@@ -2329,23 +2330,23 @@ agent = create_agent(
 </ParamField>
 
 <ParamField body="max_file_size_mb" type="int" default="10">
-    要搜索的最大文件大小（MB）。大于此大小的文件将被跳过。
+    要搜索的最大文件大小（MB）。跳过大于此大小的文件。
 </ParamField>
 
 </Accordion>
 
 <Accordion title="完整示例">
 
-该中间件向 Agent 添加了两个搜索工具：
+该中间件向 Agent 添加两个搜索工具：
 
 **Glob 工具** - 快速文件模式匹配：
-- 支持如 `**/*.py`、`src/**/*.ts` 这样的模式
+- 支持 `**/*.py`, `src/**/*.ts` 等模式
 - 返回按修改时间排序的匹配文件路径
 
-**Grep 工具** - 带正则表达式的内容搜索：
-- 完全支持正则表达式语法
-- 可使用 `include` 参数按文件模式过滤
-- 三种输出模式：`files_with_matches`（带匹配项的文件）、`content`（内容）、`count`（计数）
+**Grep 工具** - 使用正则表达式的内容搜索：
+- 支持完整的正则表达式语法
+- 使用 `include` 参数按文件模式过滤
+- 三种输出模式：`files_with_matches`（带匹配的文件）、`content`（内容） 或 `count`（计数）
 
 ```python
 from langchain.agents import create_agent
@@ -2367,7 +2368,7 @@ agent = create_agent(
 
 # Agent 现在可以使用 glob_search 和 grep_search 工具
 result = agent.invoke({
-    "messages": [HumanMessage("查找包含 'async def' 的所有 Python 文件")]
+    "messages": [HumanMessage("Find all Python files containing 'async def'")]
 })
 
 # Agent 将使用：
@@ -2378,9 +2379,9 @@ result = agent.invoke({
 
 :::
 
-## 针对特定提供商的中间件 (Provider-specific middleware)
+## Provider-specific middleware (特定于提供商的中间件)
 
-这些中间件针对特定的 LLM 提供商进行了优化。请参阅每个提供商的文档以获取完整的详细信息和示例。
+这些中间件针对特定的 LLM 提供商进行了优化。有关完整的详细信息和示例，请参阅每个提供商的文档。
 
 <Columns cols={2}>
 
@@ -2389,7 +2390,7 @@ result = agent.invoke({
         Claude 模型的提示缓存、bash 工具、文本编辑器、内存和文件搜索中间件。
     </Card>
     <Card title="OpenAI" href="/oss/integrations/middleware/openai" icon="openai" arrow>
-        OpenAI 模型的**内容审核**中间件。
+        用于 OpenAI 模型的（OpenAI models）内容审核中间件。
     </Card>
 :::
 

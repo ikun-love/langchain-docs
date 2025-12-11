@@ -1,9 +1,8 @@
-```markdown
 ---
 title: ChatPerplexity
 ---
 
-本指南将帮助您开始使用 Perplexity 的 [chat 模型](/oss/langchain/models)。有关 `ChatPerplexity` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。
+本指南将帮助您开始使用 Perplexity 的 [聊天模型](/oss/langchain/models)。有关所有 `ChatPerplexity` 功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。
 
 ## 概述
 
@@ -15,19 +14,19 @@ title: ChatPerplexity
 
 ### 模型特性
 
-有关如何使用特定功能的指南，请参阅下方表格标题中的链接。
+请参阅下表中标题的链接，了解如何使用特定功能的指南。
 
 | [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
 | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
 
-请注意，在撰写本文时，Perplexity 仅在某些使用层级上支持结构化输出 (structured outputs)。
+请注意，在撰写本文时，Perplexity 仅在某些使用层级上支持结构化输出。
 
-## 设置 (Setup)
+## 设置
 
 要访问 Perplexity 模型，您需要创建一个 Perplexity 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成包。
 
-### 凭证 (Credentials)
+### 凭据 (Credentials)
 
 请访问 [https://perplexity.ai](https://perplexity.ai) 注册 Perplexity 并生成 API 密钥。完成此操作后，设置 `PERPLEXITY_API_KEY` 环境变量：
 
@@ -35,16 +34,16 @@ title: ChatPerplexity
 export PERPLEXITY_API_KEY="your-api-key"
 ```
 
-如果您想为模型调用获取自动化的跟踪记录，也可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想获取模型调用的自动跟踪，您还可以通过取消注释以下行来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### 安装 (Installation)
+### 安装
 
-LangChain 的 Perplexity 集成位于 `@langchain/community` 包中：
+LangChain Perplexity 集成位于 `@langchain/community` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -58,9 +57,9 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-## 实例化 (Instantiation)
+## 实例化
 
-现在，我们可以实例化模型对象并生成聊天补全 (chat completions)：
+现在我们可以实例化模型对象并生成聊天补全（completions）：
 
 ```typescript
 import { ChatPerplexity } from "@langchain/community/chat_models/perplexity"
@@ -71,7 +70,7 @@ const llm = new ChatPerplexity({
   maxTokens: undefined,
   timeout: undefined,
   maxRetries: 2,
-  // other params... (其他参数...)
+  // other params...
 })
 ```
 
@@ -81,7 +80,7 @@ const llm = new ChatPerplexity({
 const aiMsg = await llm.invoke([
   {
     role: "system",
-    content: "你是一个乐于助人的助手，负责将英语翻译成法语。请翻译用户输入的句子。",
+    content: "You are a helpful assistant that translates English to French. Translate the user sentence.",
   },
   {
     role: "user",
@@ -126,7 +125,6 @@ J'adore la programmation.
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 ChatPerplexity 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。
-```
+有关所有 ChatPerplexity 功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。

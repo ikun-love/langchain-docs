@@ -1,23 +1,22 @@
-```markdown
 ---
 title: NomicEmbeddings
 ---
 
-本文将指导您开始使用 LangChain 中的 Nomic 嵌入模型（Nomic embedding models）。有关 `NomicEmbeddings` 的功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。
+这将帮助您开始使用 LangChain 中的 Nomic 嵌入模型。有关 `NomicEmbeddings` 特性和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。
 
-## 概览 (Overview)
+## 概述
 
-### 集成详情 (Integration details)
+### 集成详情
 
 <ItemTable category="text_embedding" item="Nomic" />
 
-## 设置 (Setup)
+## 设置
 
-要访问 Nomic 嵌入模型，您需要创建一个 Nomic 账户，获取一个 API 密钥，并安装 `langchain-nomic` 集成包。
+要访问 Nomic 嵌入模型，您需要创建一个 Nomic 账户，获取 API 密钥，并安装 `langchain-nomic` 集成包。
 
-### 凭证 (Credentials)
+### 凭证
 
-前往 [https://atlas.nomic.ai/](https://atlas.nomic.ai/) 注册 Nomic 账户并生成 API 密钥。完成此操作后，设置 `NOMIC_API_KEY` 环境变量：
+前往 [https://atlas.nomic.ai/](https://atlas.nomic.ai/) 注册 Nomic 并生成 API 密钥。完成此操作后，设置 `NOMIC_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -27,24 +26,24 @@ if not os.getenv("NOMIC_API_KEY"):
     os.environ["NOMIC_API_KEY"] = getpass.getpass("Enter your Nomic API key: ")
 ```
 
-要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### 安装 (Installation)
+### 安装
 
-LangChain 的 Nomic 集成位于 `langchain-nomic` 包中：
+LangChain Nomic 集成位于 `langchain-nomic` 包中：
 
-```bash
+```python
 pip install -qU langchain-nomic
 ```
 
-## 实例化 (Instantiation)
+## 实例化
 
-现在我们可以实例化模型对象并生成文本嵌入：
+现在我们可以实例化模型对象并生成嵌入：
 
 ```python
 from langchain_nomic import NomicEmbeddings
@@ -52,26 +51,26 @@ from langchain_nomic import NomicEmbeddings
 embeddings = NomicEmbeddings(
     model="nomic-embed-text-v1.5",
     # dimensionality=256,
-    # Nomic 的 `nomic-embed-text-v1.5` 模型是[使用 Matryoshka 学习训练的](https://blog.nomic.ai/posts/nomic-embed-matryoshka)
-    # 以支持使用单个模型进行可变长度嵌入。
+    # Nomic 的 `nomic-embed-text-v1.5` 模型是使用 [Matryoshka 学习](https://blog.nomic.ai/posts/nomic-embed-matryoshka) 训练的
+    # 以支持使用单个模型实现可变长度的嵌入。
     # 这意味着您可以在推理时指定嵌入的维度（dimensionality）。
-    # 该模型支持的维度范围是 64 到 768。
+    # 该模型支持 64 到 768 之间的维度。
     # inference_mode="remote",
-    # 可选值包括 `remote`（远程），`local` (Embed4All)，或 `dynamic`（自动）。默认为 `remote`。
+    # 可选 `remote`、`local` (Embed4All) 或 `dynamic` (自动)。默认为 `remote`。
     # api_key=... , # 如果使用远程推理，
     # device="cpu",
     # 用于本地嵌入的设备。选项包括
-    # `cpu`, `gpu`, `nvidia`, `amd`，或特定的设备名称。请参阅
+    # `cpu`、`gpu`、`nvidia`、`amd` 或特定的设备名称。请参阅
     # `GPT4All.__init__` 的文档字符串以获取更多信息。通常
-    # 默认为 CPU。在 macOS 上请勿使用此设置。
+    # 默认为 CPU。在 macOS 上请勿使用。
 )
 ```
 
-## 索引和检索 (Indexing and Retrieval)
+## 索引和检索
 
-嵌入模型通常用于检索增强生成 (RAG) 流程中，既用于索引数据，也用于后续的检索。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
+嵌入模型通常用于检索增强生成 (RAG) 工作流中，既可以作为数据索引的一部分，也可以在之后的检索中使用。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-下面是如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将索引并检索一个示例文档到 `InMemoryVectorStore` 中。
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在这个示例中，我们将使用 `InMemoryVectorStore` 索引和检索一个示例文档。
 
 ```python
 # 使用示例文本创建一个向量存储
@@ -98,13 +97,13 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## 直接使用 (Direct Usage)
+## 直接使用
 
-在底层，向量存储和检索器的实现会调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来分别为用于 `from_texts` 和检索 `invoke` 操作的文本创建嵌入。
+在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 和检索 `invoke` 操作中使用的文本创建嵌入。
 
-您可以直接调用这些方法来获取用于您自己用例的嵌入。
+您可以直接调用这些方法来获取嵌入，以用于您自己的用例。
 
-### 嵌入单个文本 (Embed single texts)
+### 嵌入单个文本
 
 您可以使用 `embed_query` 来嵌入单个文本或文档：
 
@@ -117,7 +116,7 @@ print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 [0.024642944, 0.029083252, -0.14013672, -0.09082031, 0.058898926, -0.07489014, -0.0138168335, 0.0037
 ```
 
-### 嵌入多个文本 (Embed multiple texts)
+### 嵌入多个文本
 
 您可以使用 `embed_documents` 来嵌入多个文本：
 
@@ -137,7 +136,6 @@ for vector in two_vectors:
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 `NomicEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。
-```
+有关 `NomicEmbeddings` 特性和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/nomic/embeddings/langchain_nomic.embeddings.NomicEmbeddings.html)。

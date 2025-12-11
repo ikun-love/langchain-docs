@@ -1,38 +1,42 @@
-```markdown
 ---
-title: Google Vertex AI 嵌入（Embeddings）
-sidebarTitle: VertexAIEmbeddings
+title: VertexAIEmbeddings
 ---
 
-本文将指导您如何使用 LangChain 集成 Google Vertex AI 的嵌入模型。有关 `Google Vertex AI Embeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/google_vertexai/embeddings/langchain_google_vertexai.embeddings.VertexAIEmbeddings.html)。
+<Danger>
+    **已弃用**
 
-## 概述 (Overview)
+    此集成已被弃用，并将在未来的版本中移除。请改用 [`GoogleGenerativeAIEmbeddings`](/oss/integrations/text_embedding/google_generative_ai)。请参阅完整的 [发布说明和迁移指南](https://github.com/langchain-ai/langchain-google/discussions/1422)。
+</Danger>
 
-### 集成详情 (Integration details)
+本文将帮助您使用 LangChain 入门 Google Vertex AI Embeddings 模型。有关 `Google Vertex AI Embeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/google_vertexai/embeddings/langchain_google_vertexai.embeddings.VertexAIEmbeddings.html)。
 
-| 提供商 (Provider) | 包 (Package) |
-|:--------:|:-------:|
+## 概述
+
+### 集成详情
+
+| 提供方 (Provider) | 包 (Package) |
+|:-----------------:|:-------------:|
 | [Google](https://python.langchain.com/docs/integrations/providers/google/) | [langchain-google-vertexai](https://python.langchain.com/api_reference/google_vertexai/embeddings/langchain_google_vertexai.embeddings.VertexAIEmbeddings.html) |
 
-## 设置 (Setup)
+## 设置
 
-要访问 Google Vertex AI 嵌入模型，您需要：
+要访问 Google Vertex AI Embeddings 模型，您需要：
 
 - 创建一个 Google Cloud 账户
 - 安装 `langchain-google-vertexai` 集成包。
 
 ### 凭证 (Credentials)
 
-前往 [Google Cloud](https://cloud.google.com/free/) 注册以创建您的账户。完成此操作后，请设置 `GOOGLE_APPLICATION_CREDENTIALS` 环境变量：
+请访问 [Google Cloud](https://cloud.google.com/free/) 注册以创建账户。完成此操作后，设置 `GOOGLE_APPLICATION_CREDENTIALS` 环境变量：
 
 更多信息，请参阅：
 
 [cloud.google.com/docs/authentication/application-default-credentials#GAC](https://cloud.google.com/docs/authentication/application-default-credentials#GAC)
 [googleapis.dev/python/google-auth/latest/reference/google.auth.html#module-google.auth](https://googleapis.dev/python/google-auth/latest/reference/google.auth.html#module-google.auth)
 
-**可选：为您的 Notebook 环境进行认证（仅限 Colab）**
+**可选：对您的 Notebook 环境进行身份验证（仅限 Colab）**
 
-如果您在 Google Colab 上运行此 Notebook，请运行以下代码 Cell 来认证您的环境。
+如果您在 Google Colab 上运行此 Notebook，请运行以下单元格以验证您的环境。
 
 ```python
 import sys
@@ -45,9 +49,9 @@ if "google.colab" in sys.modules:
 
 **设置 Google Cloud 项目信息并初始化 Vertex AI SDK**
 
-要开始使用 Vertex AI，您必须拥有一个现有的 Google Cloud 项目，并 [启用 Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com)。
+要开始使用 Vertex AI，您必须拥有一个现有的 Google Cloud 项目，并[启用 Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com)。
 
-了解更多关于 [设置项目和开发环境](https://cloud.google.com/vertex-ai/docs/start/cloud-environment) 的信息。
+了解有关[设置项目和开发环境](https://cloud.google.com/vertex-ai/docs/start/cloud-environment)的更多信息。
 
 ```python
 PROJECT_ID = "[your-project-id]"  # @param {type:"string"}
@@ -58,25 +62,25 @@ import vertexai
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 ```
 
-要启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### 安装 (Installation)
+### 安装
 
-LangChain Google Vertex AI 嵌入集成位于 `langchain-google-vertexai` 包中：
+LangChain Google Vertex AI Embeddings 集成位于 `langchain-google-vertexai` 包中：
 
 ```python
 pip install -qU langchain-google-vertexai
 ```
 
-## 实例化 (Instantiation)
+## 实例化
 
 现在我们可以实例化模型对象并生成嵌入向量：
->请查看 [支持的模型列表](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported-models)
+>查看[支持的模型列表](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported-models)
 
 ```python
 from langchain_google_vertexai import VertexAIEmbeddings
@@ -85,11 +89,11 @@ from langchain_google_vertexai import VertexAIEmbeddings
 embeddings = VertexAIEmbeddings(model_name="gemini-embedding-001")
 ```
 
-## 索引和检索 (Indexing and Retrieval)
+## 索引和检索
 
-嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索时使用。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既作为索引数据的组成部分，又用于后续的数据检索。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-下方展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 索引和检索一个示例文档。
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 索引和检索一个示例文档。
 
 ```python
 # 使用示例文本创建一个向量存储
@@ -116,15 +120,15 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## 直接使用 (Direct Usage)
+## 直接使用
 
-在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 和检索 `invoke` 操作中使用的文本生成嵌入向量。
+在底层，向量存储和检索器的实现分别调用了 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 和检索 `invoke` 操作中使用的文本创建嵌入向量。
 
-您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
+您可以直接调用这些方法以用于您自己的用例。
 
-### 嵌入单个文本 (Embed single texts)
+### 嵌入单个文本
 
-您可以使用 `embed_query` 来嵌入单个文本或文档：
+您可以使用 `embed_query` 嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
@@ -135,9 +139,9 @@ print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 [-0.02831101417541504, 0.022063178941607475, -0.07454229146242142, 0.006448323838412762, 0.001955120
 ```
 
-### 嵌入多个文本 (Embed multiple texts)
+### 嵌入多个文本
 
-您可以使用 `embed_documents` 来嵌入多个文本：
+您可以使用 `embed_documents` 嵌入多个文本：
 
 ```python
 text2 = (
@@ -155,7 +159,6 @@ for vector in two_vectors:
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
 有关 `Google Vertex AI Embeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/google_vertexai/embeddings/langchain_google_vertexai.embeddings.VertexAIEmbeddings.html)。
-```

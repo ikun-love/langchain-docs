@@ -1,15 +1,15 @@
 ---
-title: 内存
+title: 内存管理
 ---
 
-AI 应用为了在多次交互中共享上下文，需要**内存**（[Memory](/oss/concepts/memory)）。在 LangGraph 中，您可以添加两种类型的内存：
+AI 应用需要[内存](/oss/concepts/memory)来在多次交互中共享上下文。在 LangGraph 中，你可以添加两种类型的内存：
 
-* 将**短期记忆**（Short-term memory）作为代理[状态](/oss/langgraph/graph-api#state)的一部分，以启用多轮对话。
-* 添加**长期记忆**（Long-term memory）以跨会话存储特定于用户或特定于应用程序的数据。
+* 将[短期内存](#add-short-term-memory)作为代理[状态](/oss/langgraph/graph-api#state)的一部分，以支持多轮对话。
+* 添加[长期内存](#add-long-term-memory)以跨会话存储特定于用户或应用层的数据。
 
-## 添加短期记忆
+## 添加短期内存
 
-**短期**记忆（线程级[持久化](/oss/langgraph/persistence)）使代理能够跟踪多轮对话。要添加短期记忆：
+**短期**内存（线程级别[持久化](/oss/langgraph/persistence)）使代理能够跟踪多轮对话。要添加短期内存，请执行以下操作：
 
 :::python
 ```python
@@ -44,9 +44,9 @@ await graph.invoke(
 ```
 :::
 
-### 生产环境中使用
+### 在生产环境中使用
 
-在生产环境中，请使用由数据库支持的 checkpointer：
+在生产环境中，请使用由数据库支持的 Checkpointer：
 
 :::python
 ```python
@@ -71,18 +71,18 @@ const graph = builder.compile({ checkpointer });
 ```
 :::
 
-<Accordion title="示例：使用 Postgres checkpointer">
+<Accordion title="示例：使用 Postgres 检查点">
   :::python
   ```
   pip install -U "psycopg[binary,pool]" langgraph langgraph-checkpoint-postgres
   ```
 
     <Tip>
-    首次使用 Postgres checkpointer 时，您需要调用 `checkpointer.setup()`
+    首次使用 Postgres 检查点时，你需要调用 `checkpointer.setup()`
     </Tip>
 
     <Tabs>
-        <Tab title="Sync">
+        <Tab title="同步 (Sync)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -125,7 +125,7 @@ const graph = builder.compile({ checkpointer });
               chunk["messages"][-1].pretty_print()
 ```
         </Tab>
-        <Tab title="Async">
+        <Tab title="异步 (Async)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -177,7 +177,7 @@ const graph = builder.compile({ checkpointer });
   ```
 
     <Tip>
-    首次使用 Postgres checkpointer 时，您需要调用 `checkpointer.setup()`
+    首次使用 Postgres 检查点时，你需要调用 `checkpointer.setup()`
     </Tip>
 
   ```typescript
@@ -233,18 +233,18 @@ const graph = builder.compile({ checkpointer });
 </Accordion>
 
 :::python
-<Accordion title="示例：使用 MongoDB checkpointer">
+<Accordion title="示例：使用 [MongoDB](https://pypi.org/project/langgraph-checkpoint-mongodb/) 检查点">
   ```
   pip install -U pymongo langgraph langgraph-checkpoint-mongodb
   ```
 
     <Note>
     **设置**
-    要使用 MongoDB checkpointer，您需要一个 MongoDB 集群。如果您还没有集群，请遵循[此指南](https://www.mongodb.com/docs/guides/atlas/cluster/)创建集群。
+    要使用 MongoDB 检查点，你需要一个 MongoDB 集群。如果你还没有，请遵循[此指南](https://www.mongodb.com/docs/guides/atlas/cluster/)来创建一个集群。
     </Note>
 
     <Tabs>
-        <Tab title="Sync">
+        <Tab title="同步 (Sync)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -286,7 +286,7 @@ const graph = builder.compile({ checkpointer });
               chunk["messages"][-1].pretty_print()
 ```
         </Tab>
-        <Tab title="Async">
+        <Tab title="异步 (Async)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -331,17 +331,17 @@ const graph = builder.compile({ checkpointer });
     </Tabs>
 </Accordion>
 
-<Accordion title="示例：使用 Redis checkpointer">
+<Accordion title="示例：使用 Redis 检查点">
   ```
   pip install -U langgraph langgraph-checkpoint-redis
   ```
 
     <Tip>
-    首次使用 Redis checkpointer 时，您需要调用 `checkpointer.setup()`。
+    首次使用 Redis 检查点时，你需要调用 `checkpointer.setup()`。
     </Tip>
 
     <Tabs>
-        <Tab title="Sync">
+        <Tab title="同步 (Sync)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -384,7 +384,7 @@ const graph = builder.compile({ checkpointer });
               chunk["messages"][-1].pretty_print()
 ```
         </Tab>
-        <Tab title="Async">
+        <Tab title="异步 (Async)">
       ```python
       from langchain.chat_models import init_chat_model
       from langgraph.graph import StateGraph, MessagesState, START
@@ -431,9 +431,9 @@ const graph = builder.compile({ checkpointer });
 </Accordion>
 :::
 
-### 在子图中用作
+### 在子图中使用
 
-如果您的图包含[子图](/oss/langgraph/use-subgraphs)，则只需在编译父图时提供 checkpointer 即可。LangGraph 会自动将 checkpointer 传播给子图。
+如果你的图包含[子图](/oss/langgraph/use-subgraphs)，你只需要在编译父图时提供 checkpointer。LangGraph 将自动将 checkpointer 传播给子图。
 
 :::python
 ```python
@@ -488,7 +488,7 @@ const graph = builder.compile({ checkpointer });
 ```
 :::
 
-如果您希望子图拥有自己的内存，可以为它编译时提供适当的 checkpointer 选项。这在[多代理](/oss/langchain/multi-agent)系统中很有用，如果您希望代理跟踪其内部消息历史记录，这一点就尤为重要。
+如果你希望子图拥有自己的内存，你可以用适当的 checkpointer 选项编译它。这在[多代理](/oss/langchain/multi-agent)系统中很有用，如果你希望代理能够跟踪它们内部的消息历史记录。
 
 :::python
 ```python
@@ -504,9 +504,9 @@ const subgraph = subgraphBuilder.compile({ checkpointer: true });  // [!code hig
 ```
 :::
 
-## 添加长期记忆
+## 添加长期内存
 
-使用长期记忆来存储特定于用户或特定于应用程序的数据，使其在不同的对话中保持持久。
+使用长期内存来存储特定于用户或应用程序的数据，并跨对话会话持久化。
 
 :::python
 ```python
@@ -531,9 +531,9 @@ const graph = builder.compile({ store });
 ```
 :::
 
-### 生产环境中使用
+### 在生产环境中使用
 
-在生产环境中，请使用由数据库支持的 store：
+在生产环境中，请使用由数据库支持的 Store：
 
 :::python
 ```python
@@ -565,11 +565,11 @@ const graph = builder.compile({ store });
   ```
 
     <Tip>
-    首次使用 Postgres 存储时，您需要调用 `store.setup()`
+    首次使用 Postgres 存储时，你需要调用 `store.setup()`
     </Tip>
 
     <Tabs>
-        <Tab title="Sync">
+        <Tab title="同步 (Sync)">
       ```python
       from langchain_core.runnables import RunnableConfig
       from langchain.chat_models import init_chat_model
@@ -601,7 +601,7 @@ const graph = builder.compile({ store });
               info = "\n".join([d.value["data"] for d in memories])
               system_msg = f"You are a helpful assistant talking to the user. User info: {info}"
 
-              # Store new memories if the user asks the model to remember
+              # 如果用户要求模型记忆，则存储新的记忆
               last_message = state["messages"][-1]
               if "remember" in last_message.content.lower():
                   memory = "User name is Bob"
@@ -649,7 +649,7 @@ const graph = builder.compile({ store });
               chunk["messages"][-1].pretty_print()
 ```
         </Tab>
-        <Tab title="Async">
+        <Tab title="异步 (Async)">
       ```python
       from langchain_core.runnables import RunnableConfig
       from langchain.chat_models import init_chat_model
@@ -681,7 +681,7 @@ const graph = builder.compile({ store });
               info = "\n".join([d.value["data"] for d in memories])
               system_msg = f"You are a helpful assistant talking to the user. User info: {info}"
 
-              # Store new memories if the user asks the model to remember
+              # 如果用户要求模型记忆，则存储新的记忆
               last_message = state["messages"][-1]
               if "remember" in last_message.content.lower():
                   memory = "User name is Bob"
@@ -738,18 +738,18 @@ const graph = builder.compile({ store });
   ```
 
     <Tip>
-    首次使用 Postgres 存储时，您需要调用 `store.setup()`
+    首次使用 Postgres 存储时，你需要调用 `store.setup()`
     </Tip>
 
   ```typescript
   import { ChatAnthropic } from "@langchain/anthropic";
-  import { StateGraph, MessagesZodMeta, START, LangGraphRunnableConfig } from "@langchain/langgraph";
-  import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
-  import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+  import { StateGraph, MessagesZodMeta, START } from "@langchain/langgraph";
   import { BaseMessage } from "@langchain/core/messages";
   import { registry } from "@langchain/langgraph/zod";
   import * as z from "zod";
-  import { v4 as uuidv4 } from "uuid";
+  import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+  import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+  import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
   const MessagesZodState = z.object({
     messages: z
@@ -838,11 +838,11 @@ const graph = builder.compile({ store });
   ```
 
     <Tip>
-    首次使用[Redis 存储](https://pypi.org/project/langgraph-checkpoint-redis/)时，您需要调用 `store.setup()`。
+    首次使用 [Redis 存储](https://pypi.org/project/langgraph-checkpoint-redis/)时，你需要调用 `store.setup()`。
     </Tip>
 
     <Tabs>
-        <Tab title="Sync">
+        <Tab title="同步 (Sync)">
       ```python
       from langchain_core.runnables import RunnableConfig
       from langchain.chat_models import init_chat_model
@@ -874,7 +874,7 @@ const graph = builder.compile({ store });
               info = "\n".join([d.value["data"] for d in memories])
               system_msg = f"You are a helpful assistant talking to the user. User info: {info}"
 
-              # Store new memories if the user asks the model to remember
+              # 如果用户要求模型记忆，则存储新的记忆
               last_message = state["messages"][-1]
               if "remember" in last_message.content.lower():
                   memory = "User name is Bob"
@@ -922,7 +922,7 @@ const graph = builder.compile({ store });
               chunk["messages"][-1].pretty_print()
 ```
         </Tab>
-        <Tab title="Async">
+        <Tab title="异步 (Async)">
       ```python
       from langchain_core.runnables import RunnableConfig
       from langchain.chat_models import init_chat_model
@@ -954,7 +954,7 @@ const graph = builder.compile({ store });
               info = "\n".join([d.value["data"] for d in memories])
               system_msg = f"You are a helpful assistant talking to the user. User info: {info}"
 
-              # Store new memories if the user asks the model to remember
+              # 如果用户要求模型记忆，则存储新的记忆
               last_message = state["messages"][-1]
               if "remember" in last_message.content.lower():
                   memory = "User name is Bob"
@@ -1008,14 +1008,14 @@ const graph = builder.compile({ store });
 
 ### 使用语义搜索
 
-在图的内存存储中启用语义搜索，让图代理可以通过语义相似性搜索存储中的项目。
+在图的内存存储中启用语义搜索，以便图代理可以通过语义相似性搜索存储中的项。
 
 :::python
 ```python
 from langchain.embeddings import init_embeddings
 from langgraph.store.memory import InMemoryStore
 
-# 创建启用了语义搜索的存储
+# 创建一个启用语义搜索的存储
 embeddings = init_embeddings("openai:text-embedding-3-small")
 store = InMemoryStore(
     index={
@@ -1038,7 +1038,7 @@ items = store.search(
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { InMemoryStore } from "@langchain/langgraph";
 
-// Create store with semantic search enabled
+// 创建一个启用语义搜索的存储
 const embeddings = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
 const store = new InMemoryStore({
   index: {
@@ -1057,7 +1057,7 @@ const items = await store.search(["user_123", "memories"], {
 ```
 :::
 
-<Accordion title="使用语义搜索的长期记忆">
+<Accordion title="带语义搜索的长期内存">
     :::python
 
     ```python
@@ -1174,29 +1174,29 @@ const items = await store.search(["user_123", "memories"], {
     :::
 </Accordion>
 
-## 管理短期记忆
+## 管理短期内存
 
-启用[短期记忆](#add-short-term-memory)后，长时间的对话可能会超出 LLM 的上下文窗口。常见解决方案包括：
+启用了[短期内存](#add-short-term-memory)后，长对话可能会超出 LLM 的上下文窗口。常见解决方案包括：
 
-* [修剪消息](#trim-messages)：在调用 LLM 之前移除前 N 条或后 N 条消息。
-* 从 LangGraph 状态中永久[删除消息](#delete-messages)。
-* [总结消息](#summarize-messages)：使用聊天模型总结历史消息，并用摘要替换它们。
-* 使用[管理检查点](#manage-checkpoints)来存储和检索消息历史记录。
-* 自定义策略（例如消息过滤等）。
+* [修剪消息](#trim-messages)：在调用 LLM 之前移除前 N 条或后 N 条消息
+* 从 LangGraph 状态中永久[删除消息](#delete-messages)
+* 对历史消息进行[摘要](#summarize-messages)替换，用摘要代替早期消息
+* 使用[管理检查点](#manage-checkpoints)来存储和检索消息历史记录
+* 自定义策略（例如，消息过滤等）
 
 这使得代理能够在不超出 LLM 上下文窗口的情况下跟踪对话。
 
-### 修剪消息 (Trim messages)
+### 修剪消息
 
 :::python
-大多数 LLM 都有一个最大支持的上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果您使用的是 LangChain，您可以使用 `trim_messages` 工具，指定要从列表中保留的 token 数量，以及用于处理边界的 `strategy`（例如，保留最后 N 个 `max_tokens`）。
+大多数 LLM 都有一个最大的支持上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果你使用的是 LangChain，你可以使用 `trim_messages` 工具，并指定要保留的 token 数量，以及处理边界时使用的`strategy`（例如 `keep the last max_tokens`）。
 :::
 :::js
-大多数 LLM 都有一个最大支持的上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果您使用的是 LangChain，您可以使用 `trimMessages` 工具，指定要从列表中保留的 token 数量，以及用于处理边界的 `strategy`（例如，保留最后 N 个 `maxTokens`）。
+大多数 LLM 都有一个最大的支持上下文窗口（以 token 为单位）。决定何时截断消息的一种方法是计算消息历史中的 token 数量，并在接近该限制时进行截断。如果你使用的是 LangChain，你可以使用 `trimMessages` 工具，并指定要保留的 token 数量，以及处理边界时使用的`strategy`（例如 `keep the last maxTokens`）。
 :::
 
 :::python
-要修剪消息历史记录，请使用 [`trim_messages`](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.trim_messages.html) 函数：
+要修剪消息历史，请使用 [`trim_messages`](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.trim_messages.html) 函数：
 
 ```python
 from langchain_core.messages.utils import (  # [!code highlight]
@@ -1223,7 +1223,7 @@ builder.add_node(call_model)
 :::
 
 :::js
-要修剪消息历史记录，请使用 [`trimMessages`](https://js.langchain.com/docs/how_to/trim_messages/) 函数：
+要修剪消息历史，请使用 [`trimMessages`](https://js.langchain.com/docs/how_to/trim_messages/) 函数：
 
 ```typescript
 import { trimMessages } from "@langchain/core/messages";
@@ -1343,10 +1343,10 @@ const builder = new StateGraph(MessagesZodState)
 
 ### 删除消息
 
-您可以从图状态中删除消息以管理消息历史记录。当您想移除特定消息或清除整个消息历史记录时，这很有用。
+你可以从图状态中删除消息以管理消息历史记录。当你想要移除特定消息或清除整个消息历史记录时，这很有用。
 
 :::python
-要从图状态中删除消息，可以使用 `RemoveMessage`。要使 `RemoveMessage` 工作，您需要使用带有 @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 [`MessagesState`](/oss/langgraph/graph-api#messagesstate)。
+要从图状态中删除消息，你可以使用 `RemoveMessage`。为了使 `RemoveMessage` 生效，你需要使用带有 @[`add_messages`] [Reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 [`MessagesState`](/oss/langgraph/graph-api#messagesstate)。
 
 要移除特定消息：
 
@@ -1356,11 +1356,11 @@ from langchain.messages import RemoveMessage  # [!code highlight]
 def delete_messages(state):
     messages = state["messages"]
     if len(messages) > 2:
-        # remove the earliest two messages
+        # 移除最早的两条消息
         return {"messages": [RemoveMessage(id=m.id) for m in messages[:2]]}  # [!code highlight]
 ```
 
-要移除**所有**消息：
+要删除**所有**消息：
 
 ```python
 from langgraph.graph.message import REMOVE_ALL_MESSAGES  # [!code highlight]
@@ -1371,7 +1371,7 @@ def delete_messages(state):
 :::
 
 :::js
-要从图状态中删除消息，您可以使用 `RemoveMessage`。要使 `RemoveMessage` 工作，您需要使用带有 @[`messagesStateReducer`][messagesStateReducer] [reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 `MessagesZodState`。
+要从图状态中删除消息，你可以使用 `RemoveMessage`。为了使 `RemoveMessage` 生效，你需要使用带有 @[`messagesStateReducer`][messagesStateReducer] [Reducer](/oss/langgraph/graph-api#reducers) 的状态键，例如 `MessagesZodState`。
 
 要移除特定消息：
 
@@ -1381,7 +1381,7 @@ import { RemoveMessage } from "@langchain/core/messages";
 const deleteMessages = (state) => {
   const messages = state.messages;
   if (messages.length > 2) {
-    // remove the earliest two messages
+    // 移除最早的两条消息
     return {
       messages: messages
         .slice(0, 2)
@@ -1393,10 +1393,10 @@ const deleteMessages = (state) => {
 :::
 
 <Warning>
-删除消息时，请**确保**由此产生的消息历史记录是有效的。检查您使用的 LLM 提供的商的限制。例如：
+删除消息时，**请确保**生成的消息历史记录有效。请检查你所使用的 LLM 供应商的限制。例如：
 
-* 有些提供商期望消息历史记录以 `user` 消息开头
-* 大多数提供商要求带有工具调用的 `assistant` 消息后跟相应的 `tool` 结果消息。
+* 有些供应商期望消息历史以 `user` 消息开始
+* 大多数供应商要求带工具有调用的 `assistant` 消息后紧跟相应的 `tool` 结果消息。
 </Warning>
 
 <Accordion title="完整示例：删除消息">
@@ -1407,7 +1407,7 @@ const deleteMessages = (state) => {
   def delete_messages(state):
       messages = state["messages"]
       if len(messages) > 2:
-          # remove the earliest two messages
+          # 移除最早的两条消息
           return {"messages": [RemoveMessage(id=m.id) for m in messages[:2]]}  # [!code highlight]
 
   def call_model(state: MessagesState):
@@ -1511,15 +1511,15 @@ const deleteMessages = (state) => {
   :::
 </Accordion>
 
-### 总结消息 (Summarize messages)
+### 总结消息
 
-修剪或删除消息（如上所示）的问题在于，您可能会丢失在剔除消息队列时被丢弃的信息。因此，有些应用程序受益于使用聊天模型对消息历史进行更复杂的总结方法。
+截断或删除消息（如上所示）的问题在于，您可能会丢失因修剪消息队列而丢失的信息。因此，一些应用程序会通过使用聊天模型来更复杂地处理消息历史记录，即进行总结。
 
 ![](/oss/images/summary.png)
 
 
 :::python
-可以使用提示词和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，您可以扩展 [`MessagesState`](/oss/langgraph/graph-api#working-with-messages-in-graph-state) 以包含 `summary` 键：
+可以使用提示和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，你可以扩展 [`MessagesState`](/oss/langgraph/graph-api#working-with-messages-in-graph-state) 以包含一个 `summary` 键：
 
 ```python
 from langgraph.graph import MessagesState
@@ -1527,7 +1527,7 @@ class State(MessagesState):
     summary: str
 ```
 
-然后，您可以使用任何现有摘要作为上下文来生成聊天历史记录的摘要。当 `messages` 状态键中积累了特定数量的消息后，可以调用此 `summarize_conversation` 节点。
+然后，你可以生成聊天历史记录的摘要，使用任何现有摘要作为下一个摘要的上下文。可以在 `messages` 状态键中积累了一定数量的消息后调用此 `summarize_conversation` 节点。
 
 ```python
 def summarize_conversation(state: State):
@@ -1538,7 +1538,7 @@ def summarize_conversation(state: State):
     # 创建我们的总结提示
     if summary:
 
-        # 已经存在一个摘要
+        # 已存在摘要
         summary_message = (
             f"This is a summary of the conversation to date: {summary}\n\n"
             "Extend the summary by taking into account the new messages above:"
@@ -1551,14 +1551,14 @@ def summarize_conversation(state: State):
     messages = state["messages"] + [HumanMessage(content=summary_message)]
     response = model.invoke(messages)
 
-    # 删除除最后 2 条消息之外的所有消息
+    # 删除除最近两条消息之外的所有消息
     delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][:-2]]
     return {"summary": response.content, "messages": delete_messages}
 ```
 :::
 
 :::js
-可以使用提示词和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，您可以在状态中包含一个 `summary` 键以及 `messages` 键：
+可以使用提示和编排逻辑来总结消息历史记录。例如，在 LangGraph 中，你可以在状态中包含一个 `summary` 键，与 `messages` 键保持一致：
 
 ```typescript
 import { BaseMessage } from "@langchain/core/messages";
@@ -1574,19 +1574,19 @@ const State = z.object({
 });
 ```
 
-然后，您可以生成聊天历史记录的摘要，使用任何现有摘要作为下一个摘要的上下文。当在 `messages` 状态键中积累了 N 条消息后，可以调用此 `summarizeConversation` 节点。
+然后，你可以生成聊天历史记录的摘要，使用任何现有摘要作为下一个摘要的上下文。可以在 `messages` 状态键中积累了一定数量的消息后调用此 `summarizeConversation` 节点。
 
 ```typescript
 import { RemoveMessage, HumanMessage } from "@langchain/core/messages";
 
 const summarizeConversation = async (state: z.infer<typeof State>) => {
-  // First, we get any existing summary
+  // 首先，获取任何现有摘要
   const summary = state.summary || "";
 
-  // Create our summarization prompt
+  // 创建我们的总结提示
   let summaryMessage: string;
   if (summary) {
-    // A summary already exists
+    // 摘要已存在
     summaryMessage =
       `This is a summary of the conversation to date: ${summary}\n\n` +
       "Extend the summary by taking into account the new messages above:";
@@ -1594,14 +1594,14 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     summaryMessage = "Create a summary of the conversation above:";
   }
 
-  // Add prompt to our history
+  // 将提示添加到历史记录中
   const messages = [
     ...state.messages,
     new HumanMessage({ content: summaryMessage })
   ];
   const response = await model.invoke(messages);
 
-  // Delete all but the 2 most recent messages
+  // 删除除最近 2 条消息之外的所有消息
   const deleteMessages = state.messages
     .slice(0, -2)
     .map(m => new RemoveMessage({ id: m.id }));
@@ -1667,11 +1667,15 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
   print("\nSummary:", final_response["context"]["running_summary"].summary)
 ```
 
-  1. 我们将在 `context` 字段中跟踪我们的运行摘要（`SummarizationNode` 期望）。
+  1. 我们将在 `context` 字段中跟踪我们的运行摘要
 
-  2. 定义仅用于过滤 `call_model` 节点输入的私有状态。
+  （`SummarizationNode` 所需）。
 
-  3. 我们在这里传递一个私有输入状态，以隔离由摘要节点返回的消息。
+  1. 定义仅用于过滤的私有状态
+
+  `call_model` 节点的输入。
+
+  1. 我们在这里传递私有输入状态，以隔离由总结节点返回的消息
 
   ```
   ================================== Ai Message ==================================
@@ -1705,7 +1709,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 
   const memory = new MemorySaver();
 
-  // 我们将在状态中添加一个 `summary` 属性（以及 `messages` 键，由 MessagesZodState 已经拥有）
+  // 我们将在 `messages` 键（MessagesZodState 已经拥有的）之外添加一个 `summary` 属性
   const GraphState = z.object({
     messages: z
       .array(z.custom<BaseMessage>())
@@ -1713,7 +1717,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     summary: z.string().default(""),
   });
 
-  // 我们将使用此模型进行对话和摘要
+  // 我们将使用此模型进行对话和总结
   const model = new ChatAnthropic({ model: "claude-haiku-4-5-20251001" });
 
   // 定义调用模型的逻辑
@@ -1733,10 +1737,10 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     return { messages: [response] };
   };
 
-  // 我们现在定义确定是结束还是总结对话的逻辑
+  // 我们现在定义确定是继续还是总结对话的逻辑
   const shouldContinue = (state: z.infer<typeof GraphState>) => {
     const messages = state.messages;
-    // 如果消息超过六条，则总结对话
+    // 如果消息数量超过六条，则总结对话
     if (messages.length > 6) {
       return "summarize_conversation";
     }
@@ -1749,8 +1753,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     const { summary, messages } = state;
     let summaryMessage: string;
     if (summary) {
-      // 如果已有摘要，我们将使用不同的系统提示进行总结
-      // 比没有摘要时要好
+      // 如果摘要已存在，我们使用与不存在时不同的系统提示来总结它
       summaryMessage =
         `This is summary of the conversation to date: ${summary}\n\n` +
         "Extend the summary by taking into account the new messages above:";
@@ -1765,8 +1768,8 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 
     const response = await model.invoke(allMessages);
 
-    // 我们现在需要删除我们不再希望显示的任何消息
-    // 我将删除除最后两条消息之外的所有消息，但您可以更改此设置
+    // 我们现在需要删除不再希望显示的消息
+    // 我将删除除最后两条消息之外的所有消息，但你可以更改此设置
     const deleteMessages = messages
       .slice(0, -2)
       .map((m) => new RemoveMessage({ id: m.id! }));
@@ -1778,7 +1781,7 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     return { summary: response.content, messages: deleteMessages };
   };
 
-  // 定义一个新图
+  // 定义一个新的图
   const workflow = new StateGraph(GraphState)
     // 定义对话节点和总结节点
     .addNode("conversation", callModel)
@@ -1787,14 +1790,14 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     .addEdge(START, "conversation")
     // 我们现在添加一个条件边
     .addConditionalEdges(
-      // 首先，我们定义起始节点。我们使用 `conversation`。
-      // 这意味着调用 `conversation` 节点后采用的边。
+      // 首先，我们定义开始节点。我们使用 `conversation`。
+      // 这意味着在调用 `conversation` 节点之后采取这些边。
       "conversation",
-      // 接下来，我们传入将确定下一步调用哪个节点的函数。
+      // 其次，我们传入将决定下一个调用哪个节点的函数。
       shouldContinue,
     )
-    // 我们现在从 `summarize_conversation` 到 END 添加一条普通边。
-    // 这意味着调用 `summarize_conversation` 后，我们就结束。
+    // 我们现在从 `summarize_conversation` 到 END 添加一条正常边。
+    // 这意味着在调用 `summarize_conversation` 之后结束。
     .addEdge("summarize_conversation", END);
 
   // 最后，我们编译它！
@@ -1805,20 +1808,20 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
 
 ### 管理检查点
 
-您可以查看和删除 checkpointer 存储的信息。
+你可以查看和删除 Checkpointer 存储的信息。
 
 <a id="checkpoint"></a>
 #### 查看线程状态
 
 :::python
 <Tabs>
-    <Tab title="Graph/Functional API">
+    <Tab title="图/函数式 API">
     ```python
     config = {
         "configurable": {
             "thread_id": "1",  # [!code highlight]
-            # optionally provide an ID for a specific checkpoint,
-            # otherwise the latest checkpoint is shown
+            # 可选地提供特定检查点的 ID，
+            # 否则显示最新检查点
             # "checkpoint_id": "1f029ca3-1f5b-6704-8004-820c16b69a5a"  # [!code highlight]
 
         }
@@ -1849,8 +1852,8 @@ const summarizeConversation = async (state: z.infer<typeof State>) => {
     config = {
         "configurable": {
             "thread_id": "1",  # [!code highlight]
-            # optionally provide an ID for a specific checkpoint,
-            # otherwise the latest checkpoint is shown
+            # 可选地提供特定检查点的 ID，
+            # 否则显示最新检查点
             # "checkpoint_id": "1f029ca3-1f5b-6704-8004-820c16b69a5a"  # [!code highlight]
 
         }
@@ -1921,7 +1924,7 @@ await graph.getState(config);
 
 :::python
 <Tabs>
-    <Tab title="Graph/Functional API">
+    <Tab title="图/函数式 API">
     ```python
     config = {
         "configurable": {
@@ -1964,9 +1967,8 @@ await graph.getState(config);
             interrupts=()
         ),
         StateSnapshot(
-            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')], 'branch:to:call_model': None},
+            values={'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?")]},
             next=(),
-            config={...},
             metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')}}, 'step': 1, 'parents': {}, 'thread_id': '1'},
             created_at='2025-05-05T16:01:23.862295+00:00',
             parent_config={...}
@@ -1976,7 +1978,6 @@ await graph.getState(config);
         StateSnapshot(
             values={'messages': [HumanMessage(content="hi! I'm bob")]},
             next=('call_model',),
-            config={...},
             metadata={'source': 'loop', 'writes': None, 'step': 0, 'parents': {}, 'thread_id': '1'},
             created_at='2025-05-05T16:01:22.278960+00:00',
             parent_config={...}
@@ -2057,8 +2058,206 @@ await graph.getState(config);
                 'ts': '2025-05-05T16:01:23.862295+00:00',
                 'id': '1f029ca3-178d-6f54-8001-d7b180db0c89',
                 'channel_versions': {'__start__': '00000000000000000000000000000002.0.18673090920108737', 'messages': '00000000000000000000000000000003.0.7056767754077798', 'branch:to:call_model': '00000000000000000000000000000003.0.22059023329132854'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]}
+            },
+            metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')}}, 'step': 1, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:22.278960+00:00',
+                'id': '1f029ca3-0874-6612-8000-339f2abc83b1',
+                'channel_versions': {'__start__': '00000000000000000000000000000002.0.18673090920108737', 'messages': '00000000000000000000000000000002.0.30296526818059655', 'branch:to:call_model': '00000000000000000000000000000002.0.9300422176788571'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob")], 'branch:to:call_model': None}
+            },
+            metadata={'source': 'loop', 'writes': None, 'step': 0, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('8cbd75e0-3720-b056-04f7-71ac805140a0', 'messages', AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'))]
+        ),
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-0870-6ce2-bfff-1f3f14c3e565'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:22.277497+00:00',
+                'id': '1f029ca3-0870-6ce2-bfff-1f3f14c3e565',
+                'channel_versions': {'__start__': '00000000000000000000000000000001.0.7040775356287469'},
+                'versions_seen': {'__input__': {}},
+                'channel_values': {'__start__': {'messages': [{'role': 'user', 'content': "hi! I'm bob"}]}}
+            },
+            metadata={'source': 'input', 'writes': {'__start__': {'messages': [{'role': 'user', 'content': "hi! I'm bob"}]}}, 'step': -1, 'parents': {}, 'thread_id': '1'},
+            parent_config=None,
+            pending_writes=[('d458367b-8265-812c-18e2-33001d199ce6', 'messages', [{'role': 'user', 'content': "hi! I'm bob"}]), ('d458367b-8265-812c-18e2-33001d199ce6', 'branch:to:call_model', None)]
+        )
+    ]
+    ```
+    </Tab>
+    <Tab title="Checkpointer API">
+    ```python
+    config = {
+        "configurable": {
+            "thread_id": "1"  # [!code highlight]
+        }
+    }
+    list(checkpointer.list(config))  # [!code highlight]
+```
+
+    ```
+    [
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1f5b-6704-8004-820c16b69a5a'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:24.680462+00:00',
+                'id': '1f029ca3-1f5b-6704-8004-820c16b69a5a',
+                'channel_versions': {'__start__': '00000000000000000000000000000005.0.5290678567601859', 'messages': '00000000000000000000000000000006.0.3205149138784782', 'branch:to:call_model': '00000000000000000000000000000006.0.14611156755133758'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000004.0.5736472536395331'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000005.0.1410174088651449'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]},
+            },
+            metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Your name is Bob.')}}, 'step': 4, 'parents': {}, 'thread_id': '1'},
+            parent_config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1790-6b0a-8003-baf965b6a38f'}},
+            pending_writes=[]
+        ),
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1790-6b0a-8003-baf965b6a38f'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.863421+00:00',
+                'id': '1f029ca3-1790-6b0a-8003-baf965b6a38f',
+                'channel_versions': {'__start__': '00000000000000000000000000000005.0.5290678567601859', 'messages': '00000000000000000000000000000006.0.3205149138784782', 'branch:to:call_model': '00000000000000000000000000000006.0.14611156755133758'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000004.0.5736472536395331'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000005.0.1410174088651449'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?")], 'branch:to:call_model': None}
+            },
+            metadata={'source': 'loop', 'writes': None, 'step': 3, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('8ab4155e-6b15-b885-9ce5-bed69a2c305c', 'messages', AIMessage(content='Your name is Bob.'))]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.863173+00:00',
+                'id': '1f029ca3-1790-616e-8002-9e021694a0cd',
+                'channel_versions': {'__start__': '00000000000000000000000000000004.0.5736472536395331', 'messages': '00000000000000000000000000000003.0.7056767754077798', 'branch:to:call_model': '00000000000000000000000000000003.0.22059023329132854'},
                 'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000002.0.9300422176788571'}},
-                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')]}
+                'channel_values': {'__start__': {'messages': [{'role': 'user', 'content': "what's my name?"}]}, 'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')]}
+            },
+            metadata={'source': 'input', 'writes': {'__start__': {'messages': [{'role': 'user', 'content': "what's my name?"}]}}, 'step': 2, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('24ba39d6-6db1-4c9b-f4c5-682aeaf38dcd', 'messages', [{'role': 'user', 'content': "what's my name?"}]), ('24ba39d6-6db1-4c9b-f4c5-682aeaf38dcd', 'branch:to:call_model', None)]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.862295+00:00',
+                'id': '1f029ca3-178d-6f54-8001-d7b180db0c89',
+                'channel_versions': {'__start__': '00000000000000000000000000000002.0.18673090920108737', 'messages': '00000000000000000000000000000003.0.7056767754077798', 'branch:to:call_model': '00000000000000000000000000000003.0.22059023329132854'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]}
+            },
+            metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')}}, 'step': 1, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:22.278960+00:00',
+                'id': '1f029ca3-0874-6612-8000-339f2abc83b1',
+                'channel_versions': {'__start__': '00000000000000000000000000000002.0.18673090920108737', 'messages': '00000000000000000000000000000002.0.30296526818059655', 'branch:to:call_model': '00000000000000000000000000000002.0.9300422176788571'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob")], 'branch:to:call_model': None}
+            },
+            metadata={'source': 'loop', 'writes': None, 'step': 0, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('8cbd75e0-3720-b056-04f7-71ac805140a0', 'messages', AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'))]
+        ),
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-0870-6ce2-bfff-1f3f14c3e565'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:22.277497+00:00',
+                'id': '1f029ca3-0870-6ce2-bfff-1f3f14c3e565',
+                'channel_versions': {'__start__': '00000000000000000000000000000001.0.7040775356287469'},
+                'versions_seen': {'__input__': {}},
+                'channel_values': {'__start__': {'messages': [{'role': 'user', 'content': "hi! I'm bob"}]}}
+            },
+            metadata={'source': 'input', 'writes': {'__start__': {'messages': [{'role': 'user', 'content': "hi! I'm bob"}]}}, 'step': -1, 'parents': {}, 'thread_id': '1'},
+            parent_config=None,
+            pending_writes=[('d458367b-8265-812c-18e2-33001d199ce6', 'messages', [{'role': 'user', 'content': "hi! I'm bob"}]), ('d458367b-8265-812c-18e2-33001d199ce6', 'branch:to:call_model', None)]
+        )
+    ]
+    ```
+    </Tab>
+    <Tab title="Checkpointer API">
+    ```python
+    config = {
+        "configurable": {
+            "thread_id": "1"  # [!code highlight]
+        }
+    }
+    list(checkpointer.list(config))  # [!code highlight]
+```
+
+    ```
+    [
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1f5b-6704-8004-820c16b69a5a'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:24.680462+00:00',
+                'id': '1f029ca3-1f5b-6704-8004-820c16b69a5a',
+                'channel_versions': {'__start__': '00000000000000000000000000000005.0.5290678567601859', 'messages': '00000000000000000000000000000006.0.3205149138784782', 'branch:to:call_model': '00000000000000000000000000000006.0.14611156755133758'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000004.0.5736472536395331'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000005.0.1410174088651449'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]},
+            },
+            metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Your name is Bob.')}}, 'step': 4, 'parents': {}, 'thread_id': '1'},
+            parent_config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1790-6b0a-8003-baf965b6a38f'}},
+            pending_writes=[]
+        ),
+        CheckpointTuple(
+            config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1f029ca3-1790-6b0a-8003-baf965b6a38f'}},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.863421+00:00',
+                'id': '1f029ca3-1790-6b0a-8003-baf965b6a38f',
+                'channel_versions': {'__start__': '00000000000000000000000000000005.0.5290678567601859', 'messages': '00000000000000000000000000000006.0.3205149138784782', 'branch:to:call_model': '00000000000000000000000000000006.0.14611156755133758'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000004.0.5736472536395331'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000005.0.1410174088651449'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?")], 'branch:to:call_model': None}
+            },
+            metadata={'source': 'loop', 'writes': None, 'step': 3, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('8ab4155e-6b15-b885-9ce5-bed69a2c305c', 'messages', AIMessage(content='Your name is Bob.'))]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.863173+00:00',
+                'id': '1f029ca3-1790-616e-8002-9e021694a0cd',
+                'channel_versions': {'__start__': '00000000000000000000000000000004.0.5736472536395331', 'messages': '00000000000000000000000000000003.0.7056767754077798', 'branch:to:call_model': '00000000000000000000000000000003.0.22059023329132854'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}, 'call_model': {'branch:to:call_model': '00000000000000000000000000000002.0.9300422176788571'}},
+                'channel_values': {'__start__': {'messages': [{'role': 'user', 'content': "what's my name?"}]}, 'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')]}
+            },
+            metadata={'source': 'input', 'writes': {'__start__': {'messages': [{'role': 'user', 'content': "what's my name?"}]}}, 'step': 2, 'parents': {}, 'thread_id': '1'},
+            parent_config={...},
+            pending_writes=[('24ba39d6-6db1-4c9b-f4c5-682aeaf38dcd', 'messages', [{'role': 'user', 'content': "what's my name?"}]), ('24ba39d6-6db1-4c9b-f4c5-682aeaf38dcd', 'branch:to:call_model', None)]
+        ),
+        CheckpointTuple(
+            config={...},
+            checkpoint={
+                'v': 3,
+                'ts': '2025-05-05T16:01:23.862295+00:00',
+                'id': '1f029ca3-178d-6f54-8001-d7b180db0c89',
+                'channel_versions': {'__start__': '00000000000000000000000000000002.0.18673090920108737', 'messages': '00000000000000000000000000000003.0.7056767754077798', 'branch:to:call_model': '00000000000000000000000000000003.0.22059023329132854'},
+                'versions_seen': {'__input__': {}, '__start__': {'__start__': '00000000000000000000000000000001.0.7040775356287469'}},
+                'channel_values': {'messages': [HumanMessage(content="hi! I'm bob"), AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?'), HumanMessage(content="what's my name?"), AIMessage(content='Your name is Bob.')]}
             },
             metadata={'source': 'loop', 'writes': {'call_model': {'messages': AIMessage(content='Hi Bob! How are you doing today? Is there anything I can help you with?')}}, 'step': 1, 'parents': {}, 'thread_id': '1'},
             parent_config={...},
@@ -2130,7 +2329,15 @@ await checkpointer.deleteThread(threadId);
 :::
 
 :::python
-## 预构建内存工具
+## 预构建的内存工具
 
-**LangMem** 是一个由 LangChain 维护的库，它提供了管理代理长期记忆的工具。有关用法示例，请参阅 [LangMem 文档](https://langchain-ai.github.io/langmem/)。
+**LangMem** 是一个由 LangChain 维护的库，它提供了管理代理长期内存的工具。请参阅[LangMem 文档](https://langchain-ai.github.io/langmem/)以获取使用示例。
 :::
+
+## 数据库管理
+
+如果你正在使用任何基于数据库的持久化实现（如 Postgres 或 Redis）来存储短期和/或长期内存，你需要先运行迁移来设置所需的 schema，然后才能将其与数据库一起使用。
+
+按照惯例，大多数特定于数据库的库会在 checkpointer 或 store 实例上定义一个 `setup()` 方法，该方法会运行所需的迁移。然而，你应该查阅你所使用的 @[`BaseCheckpointSaver`] 或 @[`BaseStore`] 的特定实现，以确认确切的方法名称和用法。
+
+我们建议将迁移作为专用的部署步骤运行，或者你可以在服务器启动时确保它们被运行。

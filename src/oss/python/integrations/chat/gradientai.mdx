@@ -4,7 +4,7 @@ title: ChatGradient
 
 这将帮助您开始使用 DigitalOcean Gradient Chat 模型。
 
-## 概览
+## 概述
 
 ### 集成详情
 
@@ -22,11 +22,11 @@ title: ChatGradient
 
 前往 [DigitalOcean 登录](https://cloud.digitalocean.com/login)
 
-1. 注册/登录到 DigitalOcean 云控制台 (Cloud Console)。
-2. 前往 Gradient 平台并导航到 Serverless Inference（无服务器推理）。
-3. 点击 “Create model access key”（创建模型访问密钥），输入一个名称并创建该密钥。
+1. 注册/登录 DigitalOcean 云控制台
+2. 进入 Gradient 平台，导航到 Serverless Inference（无服务器推理）。
+3. 点击创建模型访问密钥 (Create model access key)，输入一个名称，然后创建密钥。
 
-完成以上步骤后，设置 `DIGITALOCEAN_INFERENCE_KEY` 环境变量：
+完成此操作后，设置 `DIGITALOCEAN_INFERENCE_KEY` 环境变量：
 
 ```python
 import getpass
@@ -38,7 +38,7 @@ if not os.getenv("DIGITALOCEAN_INFERENCE_KEY"):
     )
 ```
 
-如果您想对模型的调用进行自动跟踪，也可以取消注释以下代码以设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动化的追踪（tracing），可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
@@ -62,7 +62,7 @@ from langchain_gradient import ChatGradient
 
 llm = ChatGradient(
     model="llama3.3-70b-instruct",
-    # 其他参数...
+    # other params...
 )
 ```
 
@@ -72,11 +72,11 @@ llm = ChatGradient(
 messages = [
     (
         "system",
-        "You are a creative storyteller. Continue any story prompt you receive in an engaging and imaginative way.",
+        "你是一位富有创意的故事讲述者。请以引人入胜且富有想象力的方式续写你收到的任何故事提示。",
     ),
     (
         "human",
-        "Once upon a time, in a village at the edge of a mysterious forest, a young girl named Mira found a glowing stone...",
+        "从前，在一个神秘森林边缘的村庄里，一个名叫米拉的年轻女孩发现了一块发光的石头...",
     ),
 ]
 ai_msg = llm.invoke(messages)
@@ -84,7 +84,7 @@ ai_msg
 ```
 
 ```output
-AIMessage(content="...that had been hidden away for centuries, nestled amongst the twisted roots of an ancient tree. As soon as Mira's fingers made contact with the stone, she felt an sudden surge of energy course through her veins, like a river bursting its banks. The stone, which had been dull and lifeless just moments before, now pulsed with a soft, ethereal light, as if it had been awakened by Mira's touch.\n\nIntrigued, Mira turned the stone over in her hand, studying it from every angle. The light emanating from it cast eerie shadows on the trees around her, making her feel as though she was standing at the threshold of a secret world. As she gazed deeper into the stone, she began to notice that the glow was not just a random color, but a deep, rich blue that seemed to be calling to her.\n\nWithout thinking, Mira felt an overwhelming urge to follow the stone's gentle glow, which seemed to be leading her deeper into the mysterious forest. The trees loomed above her, their branches creaking and swaying in the wind, as if they too were urging her onward. The air was filled with the sweet scent of wildflowers and the soft hooting of owls, creating a sense of enchantment that was both exhilarating and unsettling.\n\nAs Mira wandered deeper into the forest, the stone's light grew brighter, illuminating a winding path that was all but invisible in the fading light of day. The trees grew taller and closer together here, forming a tunnel of foliage that seemed to be guiding her towards a hidden destination. Mira's heart pounded with excitement and a hint of fear, as she realized that she was being drawn into a world that was both magical and unknown.\n\nSuddenly, the trees parted, and Mira found herself standing at the edge of a clearing, surrounded by a ring of towering mushrooms that glowed with a soft, luminescent light. The air was filled with a faint humming noise, like the buzzing of a thousand bees, and the stone in her hand pulsed with an otherworldly energy. In the center of the clearing stood an enormous tree, its trunk twisted and gnarled with age, its branches reaching up towards the stars like a Nature's own cathedral.\n\nMira felt a sense of awe wash over her, as she approached the tree, the stone still clutched in her hand. She could feel the magic of the forest pulsing through her, calling to her, drawing her closer to the heart of the mystery. And as she reached out to touch the trunk of the tree, the stone's glow surged to a brilliant intensity, illuminating a doorway that had been hidden in the trunk all along...", additional_kwargs={}, response_metadata={'finish_reason': 'stop'}, id='run--593a6940-4c76-413b-bed9-1fd94f91c6c1-0', usage_metadata={'input_tokens': 82, 'output_tokens': 555, 'total_tokens': 637})
+AIMessage(content="...那块石头被隐藏了几个世纪，坐落在古老树木扭曲的根系之中。米拉的手指一接触到石头，她就感到一股突如其来的能量流遍全身，就像一条决堤的河流。这块几分钟前还黯淡无光、毫无生气的石头，现在正脉动着柔和、空灵的光芒，仿佛被米拉的触摸唤醒了一般。\n\n米拉很感兴趣，她翻转着手中的石头，从各个角度审视它。石头发出的光芒在她周围的树木上投下怪异的阴影，让她感觉自己正站在一个秘密世界的入口处。当她凝视石头更深处时，她开始注意到，这种发光并非随机的颜色，而是一种深邃、丰富的蓝色，似乎在呼唤着她。\n\n米拉不由自主地感受到一股强烈的冲动，想要追随石头柔和的光芒，那光芒似乎正引领她深入神秘的森林。树木在她上方高耸，树枝在风中嘎吱作响、摇曳着，就好像它们也在催促她继续前行。空气中弥漫着野花的甜香和猫头鹰轻柔的叫声，营造出一种既令人兴奋又令人不安的魔幻感。\n\n随着米拉更深入森林的漫步，石头的亮光变得更亮了，照亮了一条蜿蜒的小路，在日暮的余晖中，这条小路几乎看不见。树木在这里变得更高、更密集，形成了一条树叶构成的隧道，似乎在引导她前往一个隐藏的目的地。米拉的心因兴奋和一丝恐惧而怦怦直跳，因为她意识到自己正被吸引到一个既神奇又未知的世界里。\n\n突然，树木分开，米拉发现自己站在一片空地的边缘，周围环绕着一圈高耸的蘑菇，它们散发出柔和、发光的光芒。空气中充满了微弱的嗡嗡声，就像成千上万只蜜蜂的振翅声，她手中的石头脉动着超凡的能量。空地中央矗立着一棵巨大的树，树干扭曲、布满皱纹，树枝像大自然的教堂一样伸向星空。\n\nMira 走近这棵树时，一股敬畏感涌上心头，石头仍然紧握在手中。她能感觉到森林的魔力在她体内脉动，呼唤着她，将她引向这个谜团的核心。当她伸手触摸树干时，石头的发光增强到耀眼的强度，照亮了树干中一直隐藏着的一扇门……", additional_kwargs={}, response_metadata={'finish_reason': 'stop'}, id='run--593a6940-4c76-413b-bed9-1fd94f91c6c1-0', usage_metadata={'input_tokens': 82, 'output_tokens': 555, 'total_tokens': 637})
 ```
 
 ```python
@@ -92,22 +92,22 @@ print(ai_msg.content)
 ```
 
 ```output
-...that had been hidden away for centuries, nestled amongst the twisted roots of an ancient tree. As soon as Mira's fingers made contact with the stone, she felt an sudden surge of energy course through her veins, like a river bursting its banks. The stone, which had been dull and lifeless just moments before, now pulsed with a soft, ethereal light, as if it had been awakened by Mira's touch.
+...那块石头被隐藏了几个世纪，坐落在古老树木扭曲的根系之中。米拉的手指一接触到石头，她就感到一股突如其来的能量流遍全身，就像一条决堤的河流。这块几分钟前还黯淡无光、毫无生气的石头，现在正脉动着柔和、空灵的光芒，仿佛被米拉的触摸唤醒了一般。
 
-Intrigued, Mira turned the stone over in her hand, studying it from every angle. The light emanating from it cast eerie shadows on the trees around her, making her feel as though she was standing at the threshold of a secret world. As she gazed deeper into the stone, she began to notice that the glow was not just a random color, but a deep, rich blue that seemed to be calling to her.
+米拉很感兴趣，她翻转着手中的石头，从各个角度审视它。石头发出的光芒在她周围的树木上投下怪异的阴影，让她感觉自己正站在一个秘密世界的入口处。当她凝视石头更深处时，她开始注意到，这种发光并非随机的颜色，而是一种深邃、丰富的蓝色，似乎在呼唤着她。
 
-Without thinking, Mira felt an overwhelming urge to follow the stone's gentle glow, which seemed to be leading her deeper into the mysterious forest. The trees loomed above her, their branches creaking and swaying in the wind, as if they too were urging her onward. The air was filled with the sweet scent of wildflowers and the soft hooting of owls, creating a sense of enchantment that was both exhilarating and unsettling.
+米拉不由自主地感受到一股强烈的冲动，想要追随石头柔和的光芒，那光芒似乎正引领她深入神秘的森林。树木在她上方高耸，树枝在风中嘎吱作响、摇曳着，就好像它们也在催促她继续前行。空气中弥漫着野花的甜香和猫头鹰轻柔的叫声，营造出一种既令人兴奋又令人不安的魔幻感。
 
-As Mira wandered deeper into the forest, the stone's light grew brighter, illuminating a winding path that was all but invisible in the fading light of day. The trees grew taller and closer together here, forming a tunnel of foliage that seemed to be guiding her towards a hidden destination. Mira's heart pounded with excitement and a hint of fear, as she realized that she was being drawn into a world that was both magical and unknown.
+随着米拉更深入森林的漫步，石头的亮光变得更亮了，照亮了一条蜿蜒的小路，在日暮的余晖中，这条小路几乎看不见。树木在这里变得更高、更密集，形成了一条树叶构成的隧道，似乎在引导她前往一个隐藏的目的地。米拉的心因兴奋和一丝恐惧而怦怦直跳，因为她意识到自己正被吸引到一个既神奇又未知的世界里。
 
-Suddenly, the trees parted, and Mira found herself standing at the edge of a clearing, surrounded by a ring of towering mushrooms that glowed with a soft, luminescent light. The air was filled with a faint humming noise, like the buzzing of a thousand bees, and the stone in her hand pulsed with an otherworldly energy. In the center of the clearing stood an enormous tree, its trunk twisted and gnarled with age, its branches reaching up towards the stars like a Nature's own cathedral.
+突然，树木分开，米拉发现自己站在一片空地的边缘，周围环绕着一圈高耸的蘑菇，它们散发出柔和、发光的光芒。空气中充满了微弱的嗡嗡声，就像成千上万只蜜蜂的振翅声，她手中的石头脉动着超凡的能量。空地中央矗立着一棵巨大的树，树干扭曲、布满皱纹，树枝像大自然的教堂一样伸向星空。
 
-Mira felt a sense of awe wash over her, as she approached the tree, the stone still clutched in her hand. She could feel the magic of the forest pulsing through her, calling to her, drawing her closer to the heart of the mystery. And as she reached out to touch the trunk of the tree, the stone's glow surged to a brilliant intensity, illuminating a doorway that had been hidden in the trunk all along...
+Mira 走近这棵树时，一股敬畏感涌上心头，石头仍然紧握在手中。她能感觉到森林的魔力在她体内脉动，呼唤着她，将她引向这个谜团的核心。当她伸手触摸树干时，石头的发光增强到耀眼的强度，照亮了树干中一直隐藏着的一扇门……
 ```
 
 ## 链式调用 (Chaining)
 
-我们可以像这样将模型与提示模板 (prompt template) 链接起来：
+我们可以像下面这样将模型与提示模板 (Prompt Template) 链接起来：
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -116,9 +116,9 @@ prompt = ChatPromptTemplate(
     [
         (
             "system",
-            'You are a knowledgeable assistant. Carefully read the provided context and answer the user\'s question. If the answer is present in the context, cite the relevant sentence. If not, reply with "Not found in context."',
+            '你是一位知识渊博的助手。请仔细阅读提供的上下文并回答用户的问题。如果答案存在于上下文中，请引用相关的句子。如果不存在，请回复 "Not found in context"。',
         ),
-        ("human", "Context: {context}\nQuestion: {question}"),
+        ("human", "上下文: {context}\n问题: {question}"),
     ]
 )
 
@@ -126,22 +126,19 @@ chain = prompt | llm
 chain.invoke(
     {
         "context": (
-            "The Eiffel Tower is located in Paris and was completed in 1889. "
-            "It was designed by Gustave Eiffel's engineering company. "
-            "The tower is one of the most recognizable structures in the world. "
-            "The Statue of Liberty was a gift from France to the United States."
+            "埃菲尔铁塔位于巴黎，于 1889 年竣工。它由古斯塔夫·埃菲尔的工程公司设计。该塔是世界上最知名的建筑之一。自由女神像是法国送给美国的礼物。"
         ),
-        "question": "Who designed the Eiffel Tower and when was it completed?",
+        "question": "谁设计了埃菲尔铁塔，它是什么时候竣工的？",
     }
 )
 ```
 
 ```output
-AIMessage(content='The Eiffel Tower was designed by Gustave Eiffel\'s engineering company and was completed in 1889. (Sentence: "It was designed by Gustave Eiffel\'s engineering company. The tower is one of the most recognizable structures in the world. ...  The Eiffel Tower is located in Paris and was completed in 1889.")', additional_kwargs={}, response_metadata={'finish_reason': 'stop'}, id='run--c23ffab6-06ae-4130-87b1-d5b2e7744906-0', usage_metadata={'input_tokens': 153, 'output_tokens': 74, 'total_tokens': 227})
+AIMessage(content='埃菲尔铁塔由古斯塔夫·埃菲尔的工程公司设计，并于 1889 年竣工。（句子引用：“It was designed by Gustave Eiffel\'s engineering company. The tower is one of the most recognizable structures in the world. ...  The Eiffel Tower is located in Paris and was completed in 1889.”）', additional_kwargs={}, response_metadata={'finish_reason': 'stop'}, id='run--c23ffab6-06ae-4130-87b1-d5b2e7744906-0', usage_metadata={'input_tokens': 153, 'output_tokens': 74, 'total_tokens': 227})
 ```
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关所有 ChatGradient 特性和配置的详细文档，请前往 API 参考。
+有关 ChatGradient 所有功能和配置的详细文档，请前往 API 参考。

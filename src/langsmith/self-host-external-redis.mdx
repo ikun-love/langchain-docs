@@ -3,31 +3,31 @@ title: 连接到外部 Redis 数据库
 sidebarTitle: 连接到外部 Redis 数据库
 ---
 
-LangSmith 使用 Redis 来支持其队列/缓存操作。默认情况下，LangSmith 自托管（Self-Hosted）会使用一个内部的 Redis 实例。但是，您可以配置 LangSmith 以使用外部的 Redis 实例。通过配置外部 Redis 实例，您可以更轻松地管理备份、扩展以及针对您的 Redis 实例执行其他运维任务。
+LangSmith 使用 Redis 作为其队列/缓存操作的后端。默认情况下，LangSmith 自托管版本会使用一个内部的 Redis 实例。但是，您可以配置 LangSmith 以使用外部的 Redis 实例。通过配置外部 Redis 实例，您可以更轻松地管理 Redis 实例的备份、扩展和其他操作任务。
 
 ## 要求
 
-* 一个已配置的 Redis 实例，您的 LangSmith 实例需要能够通过网络访问它。我们推荐使用托管的 Redis 服务，例如：
+*   一个已配置好、LangSmith 实例可以进行网络访问的 Redis 实例。我们推荐使用托管的 Redis 服务，例如：
 
-  * [Amazon ElastiCache](https://aws.amazon.com/elasticache/redis/)
-  * [Google Cloud Memorystore](https://cloud.google.com/memorystore)
-  * [Azure Cache for Redis](https://azure.microsoft.com/en-us/services/cache/)
+    *   [Amazon ElastiCache](https://aws.amazon.com/elasticache/redis/)
+    *   [Google Cloud Memorystore](https://cloud.google.com/memorystore)
+    *   [Azure Cache for Redis](https://azure.microsoft.com/en-us/services/cache/)
 
-* 注意：我们仅官方支持 Redis 版本大于等于 5 的版本。
-* 我们同时支持独立（Standalone）模式和 Redis Cluster 模式。请参阅相应的部分以获取部署说明。
+*   注意：我们仅官方支持 Redis 版本 >= 5。
+*   我们同时支持独立（Standalone）模式和 Redis Cluster 模式。请参阅相应的章节以获取部署说明。
 
-* 默认情况下，我们推荐使用至少具有 2 个 vCPU 和 8GB 内存的实例。然而，实际需求将取决于您的追踪工作负载。我们建议监控您的 Redis 实例并根据需要进行扩展。
+*   默认情况下，我们建议实例至少具有 2 个 vCPU 和 8GB 内存。但是，实际需求将取决于您的跟踪（tracing）工作负载。我们建议监控您的 Redis 实例并根据需要进行扩展。
 
-## 独立 Redis (Standalone Redis)
+## 独立 (Standalone) Redis
 
-### 连接字符串
+### 连接字符串 (Connection String)
 
-您需要为您的 Redis 实例组装一个连接字符串。此连接字符串应包含以下信息：
+您需要为您的 Redis 实例组装连接字符串。此连接字符串应包含以下信息：
 
-* Host (主机名)
-* Database (数据库编号)
-* Port (端口)
-* URL params (URL 参数)
+*   主机 (Host)
+*   数据库 (Database)
+*   端口 (Port)
+*   URL 参数 (URL params)
 
 其格式如下：
 
@@ -41,10 +41,10 @@ LangSmith 使用 Redis 来支持其队列/缓存操作。默认情况下，LangS
 "redis://langsmith-redis:6379/0"
 ```
 
-注意：如果您的独立 Redis 需要身份验证（密码）或 TLS，请直接将它们包含在连接 URL 中：
+注意：如果您的独立 Redis 需要身份验证或 TLS，请直接将其包含在连接 URL 中：
 
-- 当 Redis 服务器启用了 TLS 时，请使用 `rediss://`。
-- 在连接字符串中提供密码。
+*   当 Redis 服务器上启用了 TLS 时，请使用 `rediss://`。
+*   在连接字符串中提供密码 (password)。
 
 例如：
 
@@ -54,7 +54,7 @@ rediss://langsmith-redis:6380/0?password=foo
 
 ### 配置
 
-获取连接字符串后，您可以配置 LangSmith 实例以使用外部 Redis 实例。您可以通过修改 LangSmith Helm Chart 安装的 `values` 文件或 Docker 安装的 `.env` 文件来完成此操作。
+获取到连接字符串后，您就可以配置 LangSmith 实例以使用外部 Redis 实例了。您可以通过修改 LangSmith Helm Chart 安装的 `values` 文件或 Docker 安装的 `.env` 文件来实现。
 
 <CodeGroup>
 
@@ -77,13 +77,13 @@ REDIS_DATABASE_URI="Your connection url"
 
 <CodeGroup>
 
-```yaml Helm (使用现有 Secret)
+```yaml Helm (使用现有的 Secret)
 redis:
   external:
     enabled: true
     # 包含连接 URL 的现有 Secret 的名称
     existingSecretName: "my-redis-secret"
-    # 存储连接 URL 的 Secret 中的键名（此处显示默认值）
+    # 存储连接 URL 的 Secret 中的键（此处显示默认值）
     connectionUrlSecretKey: "connection_url"
 ```
 
@@ -94,21 +94,21 @@ metadata:
   name: my-redis-secret
 type: Opaque
 stringData:
-  # 完整的连接 URL，例如：使用 TLS 和密码的格式
+  # 完整的连接 URL，例如：使用 TLS 和密码
   connection_url: "rediss://langsmith-redis:6380/0?password=foo"
 ```
 
 </CodeGroup>
 
-配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置都正确，您的 LangSmith 实例现在应该正在使用您的外部 Redis 实例。
+配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在将使用您的外部 Redis 实例。
 
 ## Redis Cluster
 
-从 LangSmith helm 版本 **0.12.25** 开始，我们正式支持 **Redis Cluster** 模式。
+从 LangSmith helm 版本 **0.12.25** 开始，我们正式支持 **Redis Cluster**。
 
 ### 主机名 (Host Names)
 
-使用 Redis Cluster 时，请提供一组节点的主机名和端口。每个节点 URI 必须是以下形式：
+使用 Redis Cluster 时，请提供一个节点主机名和端口的列表。每个节点 URI 必须遵循以下格式：
 
 ```text
 redis://hostname:port
@@ -122,21 +122,21 @@ redis://redis-node-1:6379
 redis://redis-node-2:6379
 ```
 
-在这些 URI 中不要包含密码，也不要使用 `rediss`。对于 Redis Cluster：
+请勿在这些 URI 中包含密码，也请勿使用 `rediss`。对于 Redis Cluster：
 
-- 通过 `redis.external.cluster.password` 或使用 Secret（通过 `passwordSecretKey`）单独提供密码。
-- 通过设置 `redis.external.cluster.tlsEnabled: true` 来单独启用 TLS。
+*   通过 `redis.external.cluster.password` 或使用 Secret 通过 `passwordSecretKey` 分别提供密码。
+*   使用 `redis.external.cluster.tlsEnabled: true` 分别启用 TLS。
 
 ### 配置
 
-连接到外部 Redis Cluster 时，请在 `redis.external.cluster` 下配置 Helm values。您可以选择以下任一方式：
+连接到外部 Redis Cluster 时，请在 `redis.external.cluster` 下配置 Helm values。您可以选择：
 
-* 在 `values.yaml` 中直接提供节点 URI 和（可选的）密码。
-* 或者引用包含节点 URI 和密码的现有 Kubernetes `Secret`。
+*   直接在 `values.yaml` 中提供节点 URI 和（可选）密码。
+*   或者引用包含节点 URI 和密码的现有 Kubernetes `Secret`。
 
 <CodeGroup>
 
-```yaml Helm (内联 values)
+```yaml Helm (内联值)
 redis:
   external:
     enabled: true
@@ -147,13 +147,13 @@ redis:
         - "redis://redis-node-0:6379"
         - "redis://redis-node-1:6379"
         - "redis://redis-node-2:6379"
-      # 可选。如果集群需要身份验证，请设置密码或使用 Secret（推荐）。
+      # 可选。如果您的集群需要身份验证，请设置密码或使用 Secret（推荐）。
       password: "your_redis_password"
       # 如果您的集群使用 TLS，请启用此项。
       tlsEnabled: true
 ```
 
-```yaml Helm (使用现有 Secret)
+```yaml Helm (使用现有的 Secret)
 redis:
   external:
     enabled: true
@@ -161,7 +161,7 @@ redis:
     existingSecretName: "my-redis-cluster-secret"
     cluster:
       enabled: true
-      # Secret 中的键名。此处显示默认值；如果您的 Secret 使用不同的键名，请覆盖它们。
+      # Secret 中的键。此处显示默认值；如果您的 Secret 使用不同的键，请覆盖它们。
       nodeUrisSecretKey: "redis_cluster_node_uris"
       passwordSecretKey: "redis_cluster_password"
       tlsEnabled: true
@@ -182,47 +182,47 @@ type: Opaque
 stringData:
   # 节点 URI 的 JSON 数组（作为字符串）
   redis_cluster_node_uris: '["redis://redis-node-0:6379","redis://redis-node-1:6379","redis://redis-node-2:6379"]'
-  # 如果您的集群需要密码，此项可选
+  # 如果您的集群需要密码，则可选
   redis_cluster_password: "your_redis_password"
 ```
 
 </CodeGroup>
 
-## Redis TLS 配置
+## 使用 TLS 连接 Redis
 
-使用本节来配置 Redis 连接的 TLS。要挂载内部/公共 CA 以便 LangSmith 信任您的 Redis 服务器证书，请参阅 [配置自定义 TLS 证书](/langsmith/self-host-custom-tls-certificates#mount-internal-cas-for-tls)。
+使用本节配置 Redis 连接的 TLS。要挂载内部/公共 CA 以便 LangSmith 信任您的 Redis 服务器证书，请参阅 [配置自定义 TLS 证书](/langsmith/self-host-custom-tls-certificates#mount-internal-cas-for-tls)。
 
-### 服务器端 TLS (单向验证)
+### 服务器 TLS (单向)
 
 要验证 Redis 服务器证书：
 
-- 通过 `config.customCa.secretName` 和 `config.customCa.secretKey` 提供一个 CA 捆绑包。
-- 对于独立 Redis，请在连接 URL 中使用 `rediss://`。
-- 对于 Redis Cluster，请设置 `redis.external.cluster.tlsEnabled: true`。
+*   使用 `config.customCa.secretName` 和 `config.customCa.secretKey` 提供 CA bundle。
+*   对于独立 Redis，请在连接 URL 中使用 `rediss://`。
+*   对于 Redis Cluster，请设置 `redis.external.cluster.tlsEnabled: true`。
 
 <Warning>
-仅当您的 Redis 服务器使用内部或私有 CA 时，才需要挂载自定义 CA。公共可信 CA 不需要此配置。
+仅当您的 Redis 服务器使用内部或私有 CA 时，才挂载自定义 CA。公共信任的 CA 不需要此配置。
 </Warning>
 
 <CodeGroup>
 
-```yaml Helm (独立模式 - 服务器端 TLS)
+```yaml Helm (Standalone - 服务器 TLS)
 config:
   customCa:
-    secretName: "langsmith-custom-ca"  # 包含您的 CA 捆绑包的 Secret
-    secretKey: "ca.crt"    # 包含 CA 捆绑包的 Secret 中的键名
+    secretName: "langsmith-custom-ca"  # 包含您的 CA bundle 的 Secret
+    secretKey: "ca.crt"    # 包含 CA bundle 的 Secret 中的键
 redis:
   external:
     enabled: true
-    # 如果服务器要求，请使用 rediss:// 并在连接 URL 中包含密码
+    # 使用 rediss:// 并在服务器需要时包含密码
     connectionUrl: "rediss://host:6380/0?password=<PASSWORD>"
 ```
 
-```yaml Helm (Cluster - 服务器端 TLS)
+```yaml Helm (Cluster - 服务器 TLS)
 config:
   customCa:
-    secretName: "langsmith-custom-ca"  # 包含您的 CA 捆绑包的 Secret
-    secretKey: "ca.crt"    # 包含 CA 捆绑包的 Secret 中的键名
+    secretName: "langsmith-custom-ca"  # 包含您的 CA bundle 的 Secret
+    secretKey: "ca.crt"    # 包含 CA bundle 的 Secret 中的键
 redis:
   external:
     enabled: true
@@ -236,7 +236,7 @@ redis:
       password: "<PASSWORD>"
 ```
 
-```yaml Kubernetes Secret (CA 捆绑包)
+```yaml Kubernetes Secret (CA bundle)
 apiVersion: v1
 kind: Secret
 metadata:
@@ -251,30 +251,30 @@ stringData:
 
 </CodeGroup>
 
-### 双向 TLS (mTLS)
+### 相互 TLS (mTLS) 客户端认证
 
-从 LangSmith helm chart 版本 **0.12.26** 开始，我们支持 Redis 连接的 mTLS。对于 mTLS 中的服务器端身份验证，请在配置客户端证书配置的同时（如下所示），使用服务器端 TLS 步骤（自定义 CA）。
+从 LangSmith helm chart 版本 **0.12.29** 开始，我们支持 Redis 连接的 mTLS。对于 mTLS 中的服务器端身份验证，请使用[服务器 TLS 步骤](#server-tls-one-way)（自定义 CA）以及以下客户端证书配置。
 
-如果您的 Redis 服务器需要客户端证书身份验证：
+如果您的 Redis 服务器要求客户端证书身份验证：
 
-- 提供一个包含您的客户端证书和密钥的 Secret。
-- 通过 `redis.external.clientCert.secretName` 引用它，并通过 `certSecretKey` 和 `keySecretKey` 指定相应的键名。
-- 对于独立 Redis，继续在连接 URL 中使用 `rediss://`。
-- 对于 Redis Cluster，请设置 `redis.external.cluster.tlsEnabled: true`。
+*   提供一个包含客户端证书和密钥的 Secret。
+*   通过 `redis.external.clientCert.secretName` 引用它，并通过 `certSecretKey` 和 `keySecretKey` 指定密钥名称。
+*   对于独立 Redis，请继续在连接 URL 中使用 `rediss://`。
+*   对于 Redis Cluster，请设置 `redis.external.cluster.tlsEnabled: true`。
 
 <CodeGroup>
 
-```yaml Helm (客户端身份验证)
+```yaml Helm (客户端认证)
 redis:
   external:
     enabled: true
     clientCert:
       secretName: "redis-mtls-secret"
-      certSecretKey: "client.crt"
-      keySecretKey: "client.key"
-    # 独立模式示例:
+      certSecretKey: "tls.crt"
+      keySecretKey: "tls.key"
+    # 独立示例:
     # connectionUrl: "rediss://host:6380/0?password=<PASSWORD>"
-    # 或者，对于 Cluster 模式:
+    # 或者，对于 Cluster:
     cluster:
       enabled: true
       tlsEnabled: true
@@ -292,14 +292,33 @@ metadata:
   name: redis-mtls-secret
 type: Opaque
 stringData:
-  client.crt: |
+  tls.crt: |
     -----BEGIN CERTIFICATE-----
     <CLIENT_CERT>
     -----END CERTIFICATE-----
-  client.key: |
+  tls.key: |
     -----BEGIN PRIVATE KEY-----
     <CLIENT_KEY>
     -----END PRIVATE KEY-----
 ```
 
 </CodeGroup>
+
+#### 用于证书卷的 Pod 安全上下文
+
+为 mTLS 挂载的证书卷受到文件访问限制的保护。为了确保所有 LangSmith Pod 都能读取证书文件，您必须在 Pod 安全上下文中设置 `fsGroup: 1000`。
+
+您可以通过以下两种方式配置此设置：
+
+**选项 1：使用 `commonPodSecurityContext`**
+
+在顶层设置 `fsGroup` 以将其应用于所有 Pod：
+
+```yaml
+commonPodSecurityContext:
+  fsGroup: 1000
+```
+
+**选项 2：添加到各个 Pod 安全上下文**
+
+如果您需要更精细的控制，请将 `fsGroup` 添加到每个 Pod 的安全上下文。有关完整参考，请参阅 [mtls 配置示例](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/examples/mtls_config.yaml)。

@@ -2,27 +2,27 @@
 title: MathPixPDFLoader
 ---
 
-受 Daniel Gross 在此处 Snippet 的启发：[https://gist.github.com/danielgross/3ab4104e14faccc12b49200843adab21](https://gist.github.com/danielgross/3ab4104e14faccc12b49200843adab21)
+灵感来源于 Daniel Gross 在此处的代码片段：[https://gist.github.com/danielgross/3ab4104e14faccc12b49200843adab21](https://gist.github.com/danielgross/3ab4104e14faccc12b49200843adab21)
 
-## 概述 (Overview)
+## 概述
 
-### 集成详情 (Integration details)
+### 集成详情
 
-| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support)|
+| 类 | 包 | 本地 | 可序列化 | JS 支持 |
 | :--- | :--- | :---: | :---: |  :---: |
 | [MathPixPDFLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.MathpixPDFLoader.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ❌ |
 
-### 加载器特性 (Loader features)
+### 加载器特性
 
-| 源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
+| 源 | 文档惰性加载 (Lazy Loading) | 原生异步支持 |
 | :---: | :---: | :---: |
 | MathPixPDFLoader | ✅ | ❌ |
 
-## 设置 (Setup)
+## 设置
 
 ### 凭证 (Credentials)
 
-请注册 Mathpix 并[创建一个 API 密钥](https://mathpix.com/docs/ocr/creating-an-api-key)，然后将 `MATHPIX_API_KEY` 变量设置到您的环境中。
+注册 Mathpix 账户并[创建一个 API 密钥](https://mathpix.com/docs/ocr/creating-an-api-key)，然后将 `MATHPIX_API_KEY` 变量设置到您的环境变量中。
 
 ```python
 import getpass
@@ -32,24 +32,24 @@ if "MATHPIX_API_KEY" not in os.environ:
     os.environ["MATHPIX_API_KEY"] = getpass.getpass("Enter your Mathpix API key: ")
 ```
 
-要启用对您的模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用对模型调用的自动追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-### 安装 (Installation)
+### 安装
 
-安装 **langchain-community**。
+安装 **langchain-community** 包。
 
 ```python
 pip install -qU langchain-community
 ```
 
-## 初始化 (Initialization)
+## 初始化
 
-现在我们准备初始化加载器：
+现在我们可以初始化加载器了：
 
 ```python
 from langchain_community.document_loaders import MathpixPDFLoader
@@ -58,7 +58,7 @@ file_path = "./example_data/layout-parser-paper.pdf"
 loader = MathpixPDFLoader(file_path)
 ```
 
-## 加载 (Load)
+## 加载
 
 ```python
 docs = loader.load()
@@ -69,14 +69,14 @@ docs[0]
 print(docs[0].metadata)
 ```
 
-## 延迟加载 (Lazy Load)
+## 惰性加载 (Lazy Load)
 
 ```python
 page = []
 for doc in loader.lazy_load():
     page.append(doc)
     if len(page) >= 10:
-        # 执行一些分页操作，例如
+        # 执行一些分页操作，例如：
         # index.upsert(page)
 
         page = []
@@ -84,6 +84,6 @@ for doc in loader.lazy_load():
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关所有 MathpixPDFLoader 特性和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.MathpixPDFLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.MathpixPDFLoader.html)
+有关 MathpixPDFLoader 所有功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.MathpixPDFLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.MathpixPDFLoader.html)

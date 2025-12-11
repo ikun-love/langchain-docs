@@ -3,45 +3,45 @@ title: Bedrock
 ---
 
 <Warning>
-**您当前正在浏览记录 Amazon Bedrock 模型用作文本补全模型的页面。Bedrock 上许多流行的模型都是[聊天补全模型](/oss/langchain/models)。**
+**您当前正在一个记录使用 Amazon Bedrock 模型作为文本补全模型的页面上。Bedrock 上许多流行的模型都是[聊天补全模型](/oss/langchain/models)。**
 
-您可能正在寻找[此页面](/oss/integrations/chat/bedrock/)。
+您可能正在寻找[这个页面](/oss/integrations/chat/bedrock/)。
 </Warning>
 
-> [Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，通过 API 提供了来自领先 AI 初创公司和亚马逊的基础模型 (FM)。您可以从各种 FM 中进行选择，以找到最适合您使用场景的模型。
+> [Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，它通过 API 提供了来自领先 AI 初创公司和 Amazon 的基础模型（FMs）。您可以从广泛的 FM 中进行选择，以找到最适合您使用场景的模型。
 
-这将帮助您使用 LangChain 开始使用 Bedrock 补全模型 (LLM)。有关 `Bedrock` 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html)。
+这将帮助您使用 LangChain 开始使用 Bedrock 补全模型（LLM）。有关 `Bedrock` 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html)。
 
-## 概述
+## 概览
 
 ### 集成详情
 
-| 类名 | 包名 | 本地 | 可序列化 | [PY 支持](https://python.langchain.com/docs/integrations/llms/bedrock) | 下载量 | 版本 |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [PY 支持](https://python.langchain.com/docs/integrations/llms/bedrock) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | [Bedrock](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_llms_bedrock.html) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## 设置
+## 设置 (Setup)
 
-要访问 Bedrock 模型，您需要创建一个 AWS 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成以及一些对等依赖项。
+要访问 Bedrock 模型，您需要创建一个 AWS 账户、获取一个 API 密钥，并安装 `@langchain/community` 集成以及一些对等依赖项。
 
-### 凭证
+### 凭证 (Credentials)
 
-请访问 [aws.amazon.com](https://aws.amazon.com) 注册 AWS Bedrock 并生成 API 密钥。完成此操作后，请设置以下环境变量：
+请访问 [aws.amazon.com](https://aws.amazon.com) 注册 AWS Bedrock 并生成一个 API 密钥。完成此操作后，设置以下环境变量：
 
 ```bash
-export BEDROCK_AWS_REGION="您的-区域-url"
-export BEDROCK_AWS_ACCESS_KEY_ID="您的-访问密钥-id"
-export BEDROCK_AWS_SECRET_ACCESS_KEY="您的-密钥-access-key"
+export BEDROCK_AWS_REGION="your-region-url"
+export BEDROCK_AWS_ACCESS_KEY_ID="your-access-key-id"
+export BEDROCK_AWS_SECRET_ACCESS_KEY="your-secret-access-key"
 ```
 
-如果您想对模型的调用进行自动追踪，您也可以取消注释以下行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想获取模型调用的自动化追踪信息，还可以取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
-# export LANGSMITH_API_KEY="您的-api-密钥"
+# export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### 安装
+### 安装 (Installation)
 
 LangChain Bedrock 集成位于 `@langchain/community` 包中：
 
@@ -57,7 +57,7 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-然后安装对等依赖项：
+然后安装对等依赖项（peer dependencies）：
 
 <CodeGroup>
 ```bash npm
@@ -71,7 +71,7 @@ pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protoco
 ```
 </CodeGroup>
 
-您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+您也可以在 Web 环境（如 Edge functions 或 Cloudflare Workers）中使用 Bedrock，方法是省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点：
 
 <CodeGroup>
 ```bash npm
@@ -94,7 +94,7 @@ yarn add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-然后安装对等依赖项：
+然后安装对等依赖项（peer dependencies）：
 
 <CodeGroup>
 ```bash npm
@@ -108,7 +108,7 @@ pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protoco
 ```
 </CodeGroup>
 
-您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+您也可以在 Web 环境（如 Edge functions 或 Cloudflare Workers）中使用 Bedrock，方法是省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点：
 
 <CodeGroup>
 ```bash npm
@@ -131,7 +131,7 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-然后安装对等依赖项：
+然后安装对等依赖项（peer dependencies）：
 
 <CodeGroup>
 ```bash npm
@@ -145,7 +145,7 @@ pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protoco
 ```
 </CodeGroup>
 
-您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+您也可以在 Web 环境（如 Edge functions 或 Cloudflare Workers）中使用 Bedrock，方法是省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点：
 
 <CodeGroup>
 ```bash npm
@@ -160,15 +160,16 @@ pnpm add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smith
 </CodeGroup>
 
 
-## 实例化
+## 实例化 (Instantiation)
 
 现在我们可以实例化模型对象并生成聊天补全：
 
 ```typescript
 // @lc-docs-hide-cell
-// Deno 需要这些导入以及加载环境变量的方式。
-// 我们不希望在文档中暴露它们。
-// 在下面的单元格中，我们有一个带有 node 代码的 typescript markdown 代码块。
+// Deno requires these imports, and way of loading env vars.
+// we don't want to expose in the docs.
+// Below this cell we have a typescript markdown codeblock with
+// the node code.
 import "@aws-sdk/credential-provider-node";
 import "@smithy/protocol-http";
 import "@aws-crypto/sha256-js";
@@ -191,7 +192,7 @@ const llm = new Bedrock({
   temperature: 0,
   maxTokens: undefined,
   maxRetries: 2,
-  // 其他参数...
+  // other params...
 })
 ```
 
@@ -209,25 +210,25 @@ const llm = new Bedrock({
   temperature: 0,
   maxTokens: undefined,
   maxRetries: 2,
-  // 其他参数...
+  // other params...
 })
 ```
 
-## 调用
+## 调用 (Invocation)
 
 请注意，某些模型需要特定的提示技术。例如，如果提示不以 `Human:` 开头，Anthropic 的 Claude-v2 模型将抛出错误。
 
 ```typescript
-const inputText = "Human: Bedrock 是一家人工智能公司，它\nAssistant: "
+const inputText = "Human: Bedrock is an AI company that\nAssistant: "
 
 const completion = await llm.invoke(inputText)
 completion
 ```
 
 ```output
-" 以下是关于 Bedrock AI 的几个要点：\n" +
+" Here are a few key points about Bedrock AI:\n" +
   "\n" +
-  "- Bedrock 成立于 2021 年，总部位于旧金山"... 116 more characters
+  "- Bedrock was founded in 2021 and is based in San Fran"... 116 more characters
 ```
 
 ---

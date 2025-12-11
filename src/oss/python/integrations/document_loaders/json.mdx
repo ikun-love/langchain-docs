@@ -2,7 +2,7 @@
 title: JSONLoader
 ---
 
-本指南简要介绍了如何开始使用 JSON [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)。欲了解所有 `JSONLoader` 功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html)。
+本指南提供了使用 JSON [文档加载器](https://python.langchain.com/docs/concepts/document_loaders) 的快速入门概述。有关 `JSONLoader` 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html)。
 
 - TODO: 添加任何其他相关链接，例如有关底层 API 的信息等。
 
@@ -10,13 +10,13 @@ title: JSONLoader
 
 ### 集成详情
 
-| 类 | 包 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/json/)|
-| :--- | :--- | :---: | :---: |  :---: |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/json/)|
+| :--- | :--- | :---: | :---: | :---: |
 | [JSONLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ✅ |
 
-### 加载器特性
+### 加载器功能
 
-| 来源 | 文档延迟加载 | 原生异步支持
+| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
 | :---: | :---: | :---: |
 | JSONLoader | ✅ | ❌ |
 
@@ -26,9 +26,9 @@ title: JSONLoader
 
 ### 凭证
 
-使用 `JSONLoader` 类不需要凭证。
+使用 `JSONLoader` 类**不需要**任何凭证。
 
-要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -78,7 +78,7 @@ print(docs[0].metadata)
 {'source': '/Users/isaachershenson/Documents/langchain/docs/docs/integrations/document_loaders/example_data/facebook_chat.json', 'seq_num': 1}
 ```
 
-## 延迟加载
+## 延迟加载 (Lazy Load)
 
 ```python
 pages = []
@@ -93,7 +93,7 @@ for doc in loader.lazy_load():
 
 ## 从 JSON Lines 文件读取
 
-如果您想从 JSON Lines 文件加载文档，请传递 `json_lines=True`，并指定 `jq_schema` 以从单个 JSON 对象中提取 `page_content`。
+如果要从 JSON Lines 文件加载文档，请传递 `json_lines=True` 并指定 `jq_schema` 来提取单个 JSON 对象中的 `page_content`。
 
 ```python
 loader = JSONLoader(
@@ -111,9 +111,9 @@ print(docs[0])
 page_content='Bye!' metadata={'source': '/Users/isaachershenson/Documents/langchain/docs/docs/integrations/document_loaders/example_data/facebook_chat_messages.jsonl', 'seq_num': 1}
 ```
 
-## 读取特定内容键
+## 读取特定的内容键 (Content Keys)
 
-另一种选择是设置 `jq_schema='.'` 并提供 `content_key` 以仅加载特定内容：
+另一种选择是设置 `jq_schema='.'`，并提供 `content_key` 以仅加载特定内容：
 
 ```python
 loader = JSONLoader(
@@ -131,9 +131,9 @@ print(docs[0])
 page_content='User 2' metadata={'source': '/Users/isaachershenson/Documents/langchain/docs/docs/integrations/document_loaders/example_data/facebook_chat_messages.jsonl', 'seq_num': 1}
 ```
 
-## 具有 jq schema `content_key` 的 JSON 文件
+## 具有 jq schema 和 `content_key` 的 JSON 文件
 
-要使用 jq schema 中的 `content_key` 从 JSON 文件加载文档，请设置 `is_content_key_jq_parsable=True`。确保 `content_key` 与 jq schema 兼容并且可以被解析。
+要使用 `content_key` 在 jq schema 中加载 JSON 文件内容，请设置 `is_content_key_jq_parsable=True`。请确保 `content_key` 与 jq schema 兼容，并且可以通过它进行解析。
 
 ```python
 loader = JSONLoader(
@@ -151,19 +151,19 @@ print(docs[0])
 page_content='Bye!' metadata={'source': '/Users/isaachershenson/Documents/langchain/docs/docs/integrations/document_loaders/example_data/facebook_chat.json', 'seq_num': 1}
 ```
 
-## 提取元数据
+## 提取元数据 (Metadata)
 
-通常，我们希望将 JSON 文件中可用的元数据包含到创建的文档中。
+通常，我们希望将 JSON 文件中可用的元数据包含到由内容创建的文档中。
 
 以下示例演示了如何使用 `JSONLoader` 提取元数据。
 
-需要注意一些关键更改。在前面的示例中，当我们不收集元数据时，我们能够直接在 schema 中指定 `page_content` 的值提取位置。
+需要注意几个关键变化。在前面的示例中，当我们不收集元数据时，我们直接在 schema 中指定了可以从中提取 `page_content` 值的位置。
 
-在当前示例中，我们必须告诉加载器迭代 `messages` 字段中的记录。然后 `jq_schema` 必须是 `.messages[]`。
+在这个示例中，我们必须告诉加载器遍历 `messages` 字段中的记录。然后 `jq_schema` 必须是 `.messages[]`。
 
-这使得我们可以将记录（字典）传递给必须实现的 `metadata_func`。`metadata_func` 负责识别记录中应包含在最终 @[`Document`] 对象中的哪些信息，并将其存储在元数据 (metadata) 中。
+这使得我们可以将记录（字典）传递给必须实现的 `metadata_func`。`metadata_func` 负责识别记录中应包含在最终 @[`Document`] 对象存储的元数据中的哪些信息片段。
 
-此外，我们现在必须通过 `content_key` 参数明确指定加载器中应从记录中提取 `page_content` 的键。
+此外，我们现在必须通过 `content_key` 参数在加载器中明确指定，需要从记录中提取 `page_content` 值对应的键。
 
 ```python
 # 定义元数据提取函数。
@@ -193,4 +193,4 @@ print(docs[0].metadata)
 
 ## API 参考
 
-欲了解所有 `JSONLoader` 功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html)
+有关 `JSONLoader` 所有功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.json_loader.JSONLoader.html)

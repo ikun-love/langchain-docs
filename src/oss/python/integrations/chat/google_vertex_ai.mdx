@@ -1,7 +1,13 @@
 ---
 title: ChatVertexAI
-description: 在 LangChain 中使用 Vertex AI 的 [聊天模型](/oss/langchain/models) 入门指南。
+description: 在 LangChain 中使用 Vertex AI 通过聊天模型开始使用。
 ---
+
+<Danger>
+    **已弃用**
+
+    此集成已被弃用，并将在未来的版本中移除。请使用 [`ChatGoogleGenerativeAI`](/oss/integrations/chat/google_generative_ai) 替代。请参阅完整的 [发布说明和迁移指南](https://github.com/langchain-ai/langchain-google/discussions/1422)。
+</Danger>
 
 Vertex AI 暴露了 Google Cloud 中所有可用的基础模型，例如 `gemini-2.5-pro`、`gemini-2.5-flash` 等。有关可用模型的完整和最新列表，请访问 [VertexAI 文档](https://cloud.google.com/vertex-ai/generative-ai/docs/models)。
 
@@ -14,20 +20,20 @@ Vertex AI 暴露了 Google Cloud 中所有可用的基础模型，例如 `gemini
 <Tip>
     **API 参考**
 
-    有关所有功能和配置选项的详细文档，请参阅 @[`ChatVertexAI`] API 参考。
+    有关所有功能和配置选项的详细文档，请前往 @[`ChatVertexAI`] API 参考。
 </Tip>
 
 ## 概述
 
 ### 集成详情
 
-| 类名 | 包名 | 本地化 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/chat/google_vertex_ai) | 下载量 | 版本 |
+| 类 | 包 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/chat/google_vertex_ai) | 下载量 | 版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | @[`ChatVertexAI`] | @[`langchain-google-vertexai`] | ❌ | beta | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-google-vertexai?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-google-vertexai?style=flat-square&label=%20) |
 
-### 模型功能
+### 模型特性
 
-| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming/) | 原生异步 | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | 原生异步 | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
@@ -39,17 +45,20 @@ Vertex AI 暴露了 Google Cloud 中所有可用的基础模型，例如 `gemini
 
 要使用此集成，您必须满足以下任一条件：
 
-- 为您的环境配置了凭据（例如 gcloud、工作负载身份等）。
-- 将服务账户 JSON 文件的路径存储在 `GOOGLE_APPLICATION_CREDENTIALS` 环境变量中。
+- 为您的环境（如 gcloud、工作负载身份等）配置了凭据
+- 将服务账户 JSON 文件路径存储为 `GOOGLE_APPLICATION_CREDENTIALS` 环境变量
 
-此代码库使用 `google.auth` 库，该库会首先查找上述提到的应用程序凭据变量，然后查找系统级别的认证信息。
+此代码库使用 `google.auth` 库，该库首先查找上述提到的应用程序凭据变量，然后查找系统级别的身份验证。
 
 有关更多信息，请参阅 `google.auth` [API 参考](https://googleapis.dev/python/google-auth/latest/reference/google.auth.html#module-google.auth)。
 
-要启用对模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+import os
+import getpass
+
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("请输入您的 LangSmith API 密钥: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
@@ -57,13 +66,13 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 LangChain VertexAI 集成位于 `langchain-google-vertexai` 包中：
 
-```python
+```bash
 pip install -qU langchain-google-vertexai
 ```
 
 ## 实例化
 
-现在我们可以实例化模型对象并生成聊天完成：
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```python
 from langchain_google_vertexai import ChatVertexAI
@@ -74,7 +83,7 @@ llm = ChatVertexAI(
     max_tokens=None,
     max_retries=6,
     stop=None,
-    # other params...
+    # 其他参数...
 )
 ```
 
@@ -84,7 +93,7 @@ llm = ChatVertexAI(
 messages = [
     (
         "system",
-        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+        "你是一个乐于助人、将英语翻译成法语的助手。请翻译用户输入的句子。",
     ),
     ("human", "I love programming."),
 ]
@@ -114,7 +123,7 @@ Gemini 支持一系列在服务器端执行的工具。
     **需要 `langchain-google-vertexai>=2.0.11`**
 </Info>
 
-Gemini 可以执行 Google 搜索并将结果用于[支撑其响应](https://ai.google.dev/gemini-api/docs/grounding)：
+Gemini 可以执行 Google 搜索并将结果用于 [为其响应提供依据](https://ai.google.dev/gemini-api/docs/grounding)：
 
 ```python
 from langchain_google_vertexai import ChatVertexAI
@@ -130,7 +139,7 @@ response = llm.invoke("What is today's news?")
     **需要 `langchain-google-vertexai>=2.0.25`**
 </Info>
 
-Gemini 可以[生成并执行 Python 代码](https://ai.google.dev/gemini-api/docs/code-execution)：
+Gemini 可以 [生成和执行 Python 代码](https://ai.google.dev/gemini-api/docs/code-execution)：
 
 ```python
 from langchain_google_vertexai import ChatVertexAI
@@ -144,4 +153,4 @@ response = llm.invoke("What is 3^3?")
 
 ## API 参考
 
-有关所有功能和配置选项的详细文档，请参阅 @[`ChatVertexAI`] API 参考。
+有关所有功能和配置选项的详细文档，请前往 @[`ChatVertexAI`] API 参考。

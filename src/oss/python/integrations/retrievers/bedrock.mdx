@@ -1,14 +1,14 @@
 ---
-title: Bedrock（知识库）
+title: Bedrock (知识库)
 ---
 
 本指南将帮助您开始使用 AWS 知识库 [检索器](/oss/langchain/retrieval)。
 
-[Amazon Bedrock 知识库](https://aws.amazon.com/bedrock/knowledge-bases/) 是 Amazon Web Services (AWS) 提供的一项服务，它允许您通过使用私有数据快速构建 RAG（检索增强生成）应用程序，以定制大型语言模型（FM）的响应。
+[Amazon Bedrock 知识库](https://aws.amazon.com/bedrock/knowledge-bases/) 是亚马逊云计算服务（AWS）提供的一项服务，它允许您利用私有数据快速构建 RAG（检索增强生成）应用程序，以定制大型语言模型（FM）的响应。
 
-实现 `RAG` 通常要求组织执行几个繁琐的步骤：将数据转换为嵌入（向量）、将这些嵌入存储在专用的向量数据库中，并构建自定义集成以根据用户的查询搜索和检索相关文本。这个过程可能非常耗时且效率低下。
+实现 `RAG` 需要组织执行多个繁琐的步骤：将数据转换为嵌入（向量）、将这些嵌入存储在专门的向量数据库中，以及构建自定义集成来搜索和检索与用户查询相关的文本。这个过程可能非常耗时且效率低下。
 
-借助 `Amazon Bedrock 知识库`，您只需将数据在 `Amazon S3` 中的位置指向该服务，`Amazon Bedrock 知识库` 就会负责将您的数据摄取到向量数据库的整个工作流程。如果您还没有现成的向量数据库，Amazon Bedrock 会为您创建一个 Amazon OpenSearch Serverless 向量存储。在检索时，您可以通过 `Retrieve API` 使用 LangChain - Amazon Bedrock 集成，从知识库中检索与用户查询相关的结果。
+借助 `Amazon Bedrock 知识库`，您只需指向数据在 `Amazon S3` 中的位置，`Amazon Bedrock 知识库` 就会负责完成整个数据摄取工作流，将其导入您的向量数据库。如果您还没有现成的向量数据库，Amazon Bedrock 会为您创建一个 Amazon OpenSearch Serverless 向量存储。在检索时，您可以通过 `Retrieve API` 使用 LangChain - Amazon Bedrock 集成，从知识库中检索与用户查询相关的结果。
 
 ### 集成详情
 
@@ -16,9 +16,9 @@ title: Bedrock（知识库）
 
 ## 设置
 
-可以通过 [AWS Console](https://aws.amazon.com/console/) 或使用 [AWS SDKs](https://aws.amazon.com/developer/tools/) 来配置知识库。我们需要 `knowledge_base_id` 才能实例化检索器。
+知识库可以通过 [AWS Console](https://aws.amazon.com/console/) 或使用 [AWS SDKs](https://aws.amazon.com/developer/tools/) 进行配置。我们需要 `knowledge_base_id` 来实例化检索器。
 
-如果您希望从单个查询中获得自动化的追踪记录，您还可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望为单个查询获取自动化的追踪信息，您还可以取消注释下方代码以设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -27,7 +27,7 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ### 安装
 
-此检索器位于 `langchain-aws` 包中：
+该检索器位于 `langchain-aws` 包中：
 
 ```python
 pip install -qU langchain-aws
@@ -35,7 +35,7 @@ pip install -qU langchain-aws
 
 ## 实例化
 
-现在我们可以实例化检索器：
+现在我们可以实例化我们的检索器：
 
 ```python
 from langchain_aws.retrievers import AmazonKnowledgeBasesRetriever
@@ -76,4 +76,4 @@ qa(query)
 
 ## API 参考
 
-有关 `AmazonKnowledgeBasesRetriever` 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/aws/retrievers/langchain_aws.retrievers.bedrock.AmazonKnowledgeBasesRetriever.html)。
+有关 `AmazonKnowledgeBasesRetriever` 所有功能和配置的详细文档，请查阅 [API 参考](https://python.langchain.com/api_reference/aws/retrievers/langchain_aws.retrievers.bedrock.AmazonKnowledgeBasesRetriever.html)。

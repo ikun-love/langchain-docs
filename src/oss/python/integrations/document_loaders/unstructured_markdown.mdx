@@ -2,19 +2,19 @@
 title: UnstructuredMarkdownLoader
 ---
 
-本指南快速概述了如何开始使用 UnstructuredMarkdown [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)。有关 __ModuleName__Loader 所有功能和配置的详细文档，请查阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)。
+本指南为您概述如何快速入门使用 UnstructuredMarkdown [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)。有关 __ModuleName__Loader 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)。
 
 ## 概述
 
 ### 集成详情
 
-| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
-| :--- | :--- | :---: | :---: | :---: |
+| 类 | 包 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
+| :--- | :--- | :---: | :---: |  :---: |
 | [UnstructuredMarkdownLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ❌ | ❌ | ✅ |
 
 ### 加载器特性
 
-| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
+| 数据源 | 文档延迟加载 | 原生异步支持
 | :---: | :---: | :---: |
 | UnstructuredMarkdownLoader | ✅ | ❌ |
 
@@ -24,9 +24,9 @@ title: UnstructuredMarkdownLoader
 
 ### 凭证
 
-使用此加载器**不需要**任何凭证。
+使用此加载器不需要任何凭证。
 
-要启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用对模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -41,11 +41,11 @@ os.environ["LANGSMITH_TRACING"] = "true"
 pip install -qU langchain_community unstructured
 ```
 
-## 初始化
+## 实例化
 
-现在我们可以实例化我们的模型对象并加载文档。
+现在我们可以实例化我们的模型对象并加载文档了。
 
-您可以通过两种模式运行加载器："single"（单个）和 "elements"（元素）。如果您使用 "single" 模式，文档将以单个 @[`Document`] 对象的形式返回。如果您使用 "elements" 模式，`unstructured` 库将把文档拆分成如 `Title` 和 `NarrativeText` 等元素。您可以在 `mode` 之后传入额外的 `unstructured` kwargs，以应用不同的 `unstructured` 设置。
+您可以通过两种模式运行加载器："single"（单文档模式）和 "elements"（元素模式）。如果使用 "single" 模式，文档将作为一个单独的 @[`Document`] 对象返回。如果使用 "elements" 模式，`unstructured` 库会将文档拆分成不同的元素，例如 `Title`（标题）和 `NarrativeText`（叙述性文本）。您可以在 `mode` 参数之后传入额外的 `unstructured` 关键字参数（kwargs）来应用不同的 `unstructured` 设置。
 
 ```python
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
@@ -83,7 +83,7 @@ page = []
 for doc in loader.lazy_load():
     page.append(doc)
     if len(page) >= 10:
-        # 执行一些分页操作，例如：
+        # 执行分页操作，例如：
         # index.upsert(page)
 
         page = []
@@ -96,7 +96,7 @@ Document(metadata={'source': './example_data/example.md', 'link_texts': ['OpenAI
 
 ## 加载元素 (Load Elements)
 
-在此示例中，我们将使用 `elements` 模式加载，该模式将返回 markdown 文档中不同元素的列表：
+在此示例中，我们将使用 `elements` 模式进行加载，该模式将返回 Markdown 文档中不同元素的列表：
 
 ```python
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
@@ -115,7 +115,7 @@ len(docs)
 29
 ```
 
-正如您所见，从 `example.md` 文件中提取了 29 个元素。第一个元素如预期的那样是文档的标题：
+如您所见，从 `example.md` 文件中提取了 29 个元素。正如预期的那样，第一个元素是文档的标题：
 
 ```python
 docs[0].page_content
@@ -129,4 +129,4 @@ docs[0].page_content
 
 ## API 参考
 
-有关 UnstructuredMarkdownLoader 所有功能和配置的详细文档，请查阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)
+有关 UnstructuredMarkdownLoader 所有功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.markdown.UnstructuredMarkdownLoader.html)

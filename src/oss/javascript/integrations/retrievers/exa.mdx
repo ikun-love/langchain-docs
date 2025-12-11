@@ -1,31 +1,30 @@
-```markdown
 ---
 title: ExaRetriever
 ---
 
 ## 概述
 
-[Exa](https://exa.ai/) 是一个搜索引擎，可以根据输入的查询检索相关的网页内容。
+[Exa](https://exa.ai/) 是一个搜索引擎，它能根据输入的查询检索相关的网页内容。
 
-本指南将帮助您开始使用 Exa [检索器](/oss/langchain/retrieval)。有关 `ExaRetriever` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html)。
+本指南将帮助您开始使用 Exa [检索器](/oss/langchain/retrieval)。有关 `ExaRetriever` 所有特性和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html)。
 
 ### 集成详情
 
 | 检索器 | 来源 | 包 |
 | :--- | :--- | :---: |
-[ExaRetriever](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html) | 网页信息。 | [`@langchain/exa`](https://www.npmjs.com/package/@langchain/exa) |
+[ExaRetriever](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html) | 网页上的信息。 | [`@langchain/exa`](https://www.npmjs.com/package/@langchain/exa) |
 
 ## 设置
 
 您需要将 API 密钥设置为环境变量。
 
-`Exa` 类在查找 API 密钥时默认为 `EXASEARCH_API_KEY`。
+`Exa` 类在查找 API 密钥时，默认使用 `EXASEARCH_API_KEY`。
 
 ```typescript
 process.env.EXASEARCH_API_KEY="<YOUR API KEY>";
 ```
 
-如果您想从单个查询中获得自动化的追踪记录，您还可以取消注释以下行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望从单个查询中获得自动化的跟踪（tracing）记录，可以取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_API_KEY = "<YOUR API KEY HERE>";
@@ -78,64 +77,45 @@ await retriever.invoke(query);
 ```output
 [
   Document {
-    pageContent: 'President Biden’s State of the Union Address\n' +
-      'Madam Speaker, Madam Vice President, and our First Lady and Second Gentleman, members of Congress and the Cabinet, Justices of the Supreme Court, my fellow Americans: Last year, COVID-19 kept us apart. This year, we’re finally together again.\n' +
-      'Tonight — tonight we meet as Democrats, Republicans, and independents, but, most importantly, as Americans with a duty to one another, to America, to the American people, and to the Constitution, and an unwavering resolve that freedom will always triumph over tyranny.\n' +
-      'Six — thank you. Six days ago, Russia’s Vladimir Putin sought to shake the very foundations of the free world, thinking he could make it bend to his menacing ways. But he badly miscalculated. He thought he could roll into Ukraine and the world would roll over. Instead, he met with a wall of strength he never anticipated or imagined. He met the Ukrainian people.\n' +
-      'From President Zelenskyy to every Ukrainian, their fearlessness, their courage, their determination literally inspires the world. Groups of citizens blocking tanks with their bodies. Everyone from students to retirees, to teachers turned soldiers defending their homeland.\n' +
-      'And in this struggle — President Zelenskyy said in his speech to the European Parliament, “Light will win over darkness.”\n' +
-      'The Ukrainian Ambassador to the United States is here tonight sitting with the First Lady. Let each of us, if you’re able to stand, stand and send an unmistakable signal to the world and Ukraine. Thank you. Thank you, thank you, thank you.\n' +
-      'She’s bright, she’s strong, and she’s resolved.\n' +
-      'Yes. We, the United States of America, stand with the Ukrainian people.\n' +
-      'Throughout our history, we’ve learned this lesson: When dictators do not pay a price for their aggression, they cause more chaos; they keep moving; and the costs, the threats to the America — and America, to the world keeps rising.\n' +
-      'That’s why the NATO Alliance was created: to secure peace and stability in Europe after World War Two.\n' +
-      'The United States is a member, along with 29 other nations. It matters. American diplomacy matters. American resolve matters.\n' +
-      'Putin’s latest attack on Ukraine was premeditated and totally unprovoked. He rejected repeated efforts at diplomacy.\n' +
-      'He thought the West and NATO wouldn’t respond. He thought he could divide us at home, in this chamber, in this nation. He thought he could divide us in Europe as well.\n' +
-      'But Putin was wrong. We are ready. We are united. And that’s what we did: We stayed united.\n' +
-      'We prepared extensively and carefully. We spent months building coalitions of other freedom-loving nations in Europe and the Americas to — from America to the Asian and African continents to confront Putin.\n' +
-      'Like many of you, I spent countless hours unifying our European Allies.\n' +
-      'We shared with the world, in advance, what we knew Putin was planning and precisely how he would try to falsely and justify his aggression.\n' +
-      'We countered Russia’s lies with the truth. And now — now that he’s acted, the free world is holding him accountable, along with 27 members of the European Union — including France, Germany, Italy — as well as countries like the United Kingdom, Canada, Japan, Korea, Australia, New Zealand, and many others. Even Switzerland are inflicting pain on Russia and supporting the people of Ukraine.\n' +
-      'Putin is now isolated from the world more than he has ever been.\n' +
-      'Together. Together. Together, along with our Allies, we are right now enforcing powerful economic sanctions. We’re cutting off Russia’s largest banks from the international financial system; preventing Russia’s Central Bank from defending the Russian ruble, making Putin’s $630 billion war fund worthless. We’re choking Russia’s access, we’re choking Russia’s access to technology that will sap its economic strength and weaken its military for years to come.\n' +
-      'Tonight, I say to the Russian oligarchs and the corrupt leaders who’ve bilked billions of dollars off this violent regime: No more.\n' +
-      'The United States — I mean it. The United States Department of Justice is assembling a dedicated task force to go after the crimes of the Russian oligarchs.\n' +
-      'We’re joining with European Allies to find and seize their yachts, their luxury apartments, their private jets. We’re coming for your ill-begotten gains.\n' +
-      'And, tonight, I’m announcing that we will join our Allies in closing off American air space to all Russian flights, further isolating Russia and adding an additional squeeze on their economy.\n' +
-      'He has no idea what’s coming.\n' +
-      'The ruble has already lost 30 percent of its value, the Russian stock market has lost 40 percent of its value, and trading remains suspended.\n' +
-      'The Russian economy is reeling, and Putin alone is the one to blame.\n' +
-      'Together with our Allies, we’re providing support to the Ukrainians in their fight for freedom: military assistance, economic assistance, humanitarian assistance. We’re giving more than a billion dollars in direct assistance to Ukraine. And we’ll continue to aid the Ukrainian people as they defend their country and help ease their suffering.\n' +
-      'But let me be clear: Our forces are not engaged and will not engage in the conflict with Russian forces in Ukraine. Our forces are not going to Europe to fight in Ukraine but to defend our NATO Allies in the event that Putin decides to keep moving west.\n' +
-      'For that purpose, we have mobilized American ground forces, air squadrons, ship deployments to protect NATO countries, including Poland, Romania, Latvia, Lithuania, and Estonia.\n' +
-      'And as I’ve made crystal clear, the United States and our Allies will defend every inch of territory that is NATO territory with the full force of our collective power — every single inch.\n' +
-      'And we’re clear-eyed. The Ukrainians are fighting back with pure courage. But the next few days, weeks, and months will be hard on them.\n' +
-      'Putin has unleashed violence and chaos. But while he may make gains on the battlefield, he will pay a continuing high price over the long run.\n' +
-      'And a pound of Ukrainian people — the proud, proud people — pound for pound, ready to fight with every inch of (inaudible) they have. They’ve known 30 years of independence — have repeatedly shown that they will not tolerate anyone who tries to take their country backwards.\n' +
-      'To all Americans, I’ll be honest with you, as I’ve always promised I would be. A Russian dictator infa- — invading a foreign country has costs around the world. And I’m taking robust action to make sure the pain of our sanctions is targeted at the Russian economy and that we use every tool at our disposal to protect American businesses and consumers.\n' +
-      'Tonight, I can announce the United States has worked with 30 other countries to release 60 million barrels of oil from reserves around the world. America will lead that effort, releasing 30 million barrels of our own Strategic Petroleum Reserve. And we stand ready to do more if necessary, united with our Allies.\n' +
-      'These steps will help blunt gas prices here at home. But I know news about what’s happening can seem alarming to all Americans. But I want you to know: We’re going to be okay. We’re going to be okay.\n' +
-      'When the history of this era is written, Putin’s war on Ukraine will have left Russia weaker and the rest of the world stronger.\n' +
-      'While it shouldn’t and while it shouldn’t have taken something so terrible for people around the world to see what’s at stake, now everyone sees it clearly.\n' +
-      'We see the unity among leaders of nations, a more unified Europe, a more unified West.\n' +
-      'We see unity among the people who are gathering in cities in large crowds around the world, even in Russia, to demonstrate their support for the people of Ukraine.\n' +
-      'In the battle between democracy and autocracies, democracies are rising to the moment and the world is clearly choosing the side of peace and security.\n' +
-      'This is the real test, and it’s going to take time. So, let us continue to draw inspiration from the iron will of the Ukrainian people.\n' +
-      'To our fellow Ukrainian Americans who forged a deep bond that connects our two nations: We stand with you. We stand with you.\n' +
-      'Putin may circle Kyiv with tanks, but he’ll never gain the hearts and souls of Ukrainian people. He’ll never — he’ll never extinguish their love of freedom. And he will never, never weaken the resolve of the free world.\n' +
-      'We meet tonight in an America that has lived through two of the hardest years this nation has ever faced. The pandemic has been punishing. And so many families are living paycheck to paycheck, struggling to keep up with the rising cost of food, gas, housing, and so much more.\n' +
-      'I understand, like many of you did. My dad had to leave his home in Scranton, Pennsylvania, to find work. So, like many of you, I grew up in a family when the price of food went up, it was felt throughout the family; it had an impact.\n' +
-      'That’s why one of the first things I did as President was fight to pass the American Rescue Plan, because people were hurting. We needed to act and we did.\n' +
-      'American Rescue Plan \n' +
-      'Few pieces of legislation have done more at a critical moment in our history to lift us out of a crisis. It fueled our efforts to vaccinate the nation and combat COVID-19. It delivered immediate economic relief to tens of millions of Americans. It helped put food on the table. Remember those long lines of cars waiting for hours just to get a box of food put in their trunk? It cut the cost of healthcare insurance. And as my dad used to say, it gave the people “just a little bit of breathing room.”\n' +
-      'And unlike the $2 trillion tax cut passed in the previous administration that benefitted the top 1 percent of Americans, the American Rescue Plan helped working people and left no one behind. And, folks — and it worked. It worked.\n' +
-      'It worked and created jobs — lots of jobs. In fact, our economy created over 6.5 million new jobs just last year, more jobs in one year than ever before in the history of the United States of America.\n' +
-      'Economic Progress Report \n' +
-      'The economy grew at a rate of 5.7 last year — the strongest growth'... 35166 more characters,
+    pageContent: '总统拜登的 2022 年国情咨文\n' +
+      '议长女士、副总统女士、我们的第一夫人和第二先生、国会议员和内阁成员、最高法院大法官、我的美国同胞们：去年，COVID-19 使我们分隔两地。今年，我们终于又团聚了。\n' +
+      '今晚——今晚我们以民主党人、共和党人和无党派人士的身份聚集在这里，但最重要的是，作为对彼此、对美国、对美国人民和对宪法负有责任的美国人，我们下定决心，自由将永远战胜暴政。\n' +
+      '六——谢谢。六天前，俄罗斯的弗拉基米尔·普京试图动摇自由世界的根基，以为他可以让他屈服于他威胁性的行径。但他严重误判了。他以为他可以开进乌克兰，而世界会袖手旁观。相反，他遇到了他从未预料或想象到的强大阻力。他遇到了乌克兰人民。\n' +
+      '从泽连斯基总统到每一位乌克兰人，他们的无畏、勇气和决心在字面上激励着全世界。公民团体用身体挡住坦克。从学生到退休人员，再到拿起武器保卫家园的教师，无不如此。\n' +
+      '在这场斗争中——泽连斯基总统在向欧洲议会发表的演讲中说：“光明必将战胜黑暗。”\n' +
+      '乌克兰驻美国大使今晚与第一夫人一同出席。如果各位能够站立，请站起来，向世界和乌克兰发出明确的信号。谢谢。谢谢，谢谢，谢谢。\n' +
+      '她很聪明，她很坚强，她很坚定。\n' +
+      '是的。我们，美利坚合众国，与乌克兰人民站在一起。\n' +
+      '纵观我们的历史，我们学到了这个教训：当独裁者不对他们的侵略行为付出代价时，他们会造成更多的混乱；他们会继续前进；而且对美国——以及对世界——的威胁就会不断上升。\n' +
+      '这就是北约成立的原因：在第二次世界大战后确保欧洲的和平与稳定。\n' +
+      '美国是成员国之一，还有其他 29 个国家。这很重要。美国的[外交]很重要。美国的决心很重要。\n' +
+      '普京对乌克兰的最新攻击是蓄意的、完全无端的。他拒绝了反复的外交努力。\n' +
+      '他以为西方和北约不会回应。他以为他可以在国内、在这个议会、在这个国家分裂我们。他也以为他可以在欧洲分裂我们。\n' +
+      '但普京错了。我们做好了准备。我们团结一致。这就是我们所做的：我们保持团结。我们进行了广泛而仔细的准备。我们花了好几个月的时间，在欧洲和美洲召集了其他爱好自由的国家的联盟——从美洲到亚洲和非洲大陆——来对抗普京。\n' +
+      '像许多人一样，我花费了无数个小时来团结我们的欧洲盟友。我们事先与世界分享了我们所知道的普京的计划，以及他将如何试图错误地证明其侵略的合理性。我们用真相反驳了俄罗斯的谎言。现在——现在他已经采取了行动，自由世界正在让他承担责任，与包括法国、德国、意大利在内的 27 个欧盟成员国——以及英国、加拿大、日本、韩国、澳大利亚、新西兰和许多其他国家——甚至瑞士一起对俄罗斯施加痛苦，并支持乌克兰人民。普京现在比以往任何时候都更加孤立于世界。\n' +
+      '我们现在正与盟友一起，对其实施强有力的经济制裁。我们正在切断俄罗斯最大的银行与国际金融体系的联系；阻止俄罗斯中央银行捍卫俄罗斯卢布，使普京的 6300 亿美元战争资金化为乌有。我们正在扼杀俄罗斯获取技术的能力，这些技术将在未来几年内削弱其经济实力和军事力量。\n' +
+      '今晚，我对那些通过这个暴力政权掠夺了数十亿美元的俄罗斯寡头和腐败领导人说：到此为止。美国——我是认真的。美国司法部正在组建一个专门的工作组来追究俄罗斯寡头的罪行。\n' +
+      '我们正与欧洲盟友合作，寻找并没收他们的游艇、豪华公寓和私人飞机。我们来追讨你们不义之财。今晚，我宣布我们将与盟友一起关闭美国领空，禁止所有俄罗斯航班进入，进一步孤立俄罗斯，并对其经济施加额外压力。\n' +
+      '他对即将发生的事情一无所知。卢布已经贬值了 30%，俄罗斯股市下跌了 40%，交易仍然暂停。俄罗斯经济正在动荡，而普京对此负有全部责任。\n' +
+      '我们与盟友一起，正在为乌克兰人民争取自由的斗争提供支持：军事援助、经济援助、人道主义援助。我们向乌克兰提供了超过十亿美元的直接援助。我们将继续援助乌克兰人民，帮助他们保卫国家并减轻痛苦。\n' +
+      '但请让我明确一点：我们的部队没有、也不会参与与乌克兰境内的俄罗斯军队的冲突。我们的部队不会前往欧洲在乌克兰作战，而是为了在普京决定继续向西推进时保护我们的北约盟友。为此，我们动员了美国的地面部队、空中编队、舰船部署，以保护波兰、罗马尼亚、拉脱维亚、立陶宛和爱沙尼亚等北约国家。正如我清楚表明的，美国和我们的盟友将以我们集体力量的全部威力保卫北约领土的每一寸土地——每一寸。\n' +
+      '我们目光清晰。乌克兰人民正以纯粹的勇气反击。但接下来的几天、几周和几个月对他们来说将是艰难的。普京释放了暴力和混乱。但尽管他可能在战场上取得进展，但从长远来看，他将付出持续的高昂代价。而乌克兰人民——骄傲、骄傲的人民——会尽其所有、全力以赴地战斗。他们已经享受了 30 年的独立——他们一再表明，他们不会容忍任何试图将他们的国家拉回过去的人。\n' +
+      '对所有美国人，我将诚实地告诉你们，就像我一直承诺的那样。一位俄罗斯独裁者入侵一个外国，对全世界都有代价。我正在采取强有力的行动，确保我们制裁的痛苦集中在俄罗斯经济上，并确保我们利用一切可用的工具来保护美国的企业和消费者。\n' +
+      '今晚，我可以宣布，美国已与另外 30 个国家合作，从世界各地的储备中释放 6000 万桶石油。美国将领导这项努力，释放我们 3000 万桶战略石油储备。如果需要，我们随时准备与盟友一起采取更多行动。\n' +
+      '这些措施将有助于平抑我们国内的汽油价格。但我知道有关正在发生的事情的新闻可能让所有美国人感到担忧。但我想让你们知道：我们会没事的。我们会没事的。\n' +
+      '当这个时代的历史被书写时，普京对乌克兰的战争将使俄罗斯变弱，而世界其他地区将变得更强大。\n' +
+      '尽管世界上的人们本不应该因为如此可怕的事情才看清所面临的风险，但现在每个人都看得清楚了。我们看到了各国领导人之间、一个更统一的欧洲、一个更统一的西方的团结。我们看到了世界各地城市中许多人聚集在一起，甚至在俄罗斯，以示对乌克兰人民的支持的团结。\n' +
+      '在民主与专制的较量中，民主国家正在迎接挑战，世界明确选择了和平与安全的一方。这是真正的考验，而且需要时间。因此，让我们继续从乌克兰人民坚如磐石的意志中汲取灵感。\n' +
+      '致我们所有与乌克兰有深厚联系的乌克兰裔美国人同胞：我们与你们站在一起。我们与你们站在一起。普京可能会用坦克包围基辅，但他永远无法赢得乌克兰人民的心灵。他永远不会——他永远不会熄灭他们对自由的热爱。他也永远不会削弱自由世界的决心。\n' +
+      '今晚我们相聚在这里的美国，经历了国家历史上最艰难的两年。大流行病造成了巨大的痛苦。许多家庭靠微薄的薪水生活，努力应对食品、汽油、住房和其他生活成本的上涨。\n' +
+      '我理解，就像你们中的许多人一样。我父亲为了找工作不得不离开宾夕法尼亚州斯克兰顿的家。所以，像你们中的许多人一样，我成长在一个家庭里，当食品价格上涨时，全家人都能感受到它的影响。这就是为什么我作为总统做的第一件事就是努力通过《美国救援计划》，因为人们正在遭受痛苦。我们需要采取行动，我们也做到了。\n' +
+      '《美国救援计划》\n' +
+      '很少有立法能在我们历史上的关键时刻做出如此大的贡献，将我们从危机中解救出来。它推动了我们为全国接种疫苗和抗击 COVID-19 的努力。它向数千万美国人提供了直接的经济救济。它帮助保障了食物的供应。还记得那些排着长长车队等待数小时才能往后备箱装一箱食物的场景吗？它降低了医疗保险的费用。正如我父亲常说的，它给了人们“一点喘息的空间”。\n' +
+      '与前一届政府通过的、使美国前 1% 的人受益的 2 万亿美元减税不同，《美国救援计划》帮助了工薪阶层，没有落下任何人。是的，各位——而且它起作用了。它起作用了。\n' +
+      '它创造了就业机会——大量的就业机会。事实上，去年我们的经济创造了超过 650 万个新的就业岗位，这是美国历史上任何一年中创造的就业岗位数量都多于以往。经济增长率为 5.7，是 40 年来最快的增长率，也是第一步……' 35166 more characters,
     metadata: {
       score: 0.16303963959217072,
-      title: '2022 State of the Union Address | The White House',
+      title: '2022年国情咨文 | 白宫',
       id: 'https://www.whitehouse.gov/state-of-the-union-2022/',
       url: 'https://www.whitehouse.gov/state-of-the-union-2022/',
       publishedDate: '2022-02-25',
@@ -144,38 +124,38 @@ await retriever.invoke(query);
     id: undefined
   },
   Document {
-    pageContent: "The President. Thank you all very, very much. Thank you, please. Thank you so much. Madam Speaker, Madam Vice President, and our First Lady and Second Gentleman, Members of Congress and the Cabinet, Justices of the Supreme Court, my fellow Americans: Last year, COVID-19 kept us apart. This year, we're finally together again.\n" +
-      'Tonight we meet as Democrats, Republicans, and Independents, but most importantly, as Americans with a duty to one another, to America, to the American people, and to the Constitution, and an unwavering resolve that freedom will always triumph over tyranny.\n' +
-      "Six—[applause]—thank you. Six days ago, Russia's Vladimir Putin sought to shake the very foundations of the free world, thinking he could make it bend to his menacing ways. But he badly miscalculated. He thought he could roll into Ukraine and the world would roll over. Instead, he met with a wall of strength he never anticipated or imagined. He met the Ukrainian people.\n" +
-      'From President Zelenskiy, their—to every Ukrainian, their fearlessness, their courage, their determination literally inspires the world. Groups of citizens blocking tanks with their bodies. Everyone from students to retirees, to teachers turned soldiers defending their homeland. And in this struggle—President Zelenskiy said in his speech to the European Parliament, "Light will win over darkness."\n' +
-      "The Ukrainian Ambassador to the United States is here tonight sitting with the First Lady. Let each of us, if you're able to stand, stand and send an unmistakable signal to the world and Ukraine. Thank you. Thank you, thank you, thank you. She's bright, she's strong, and she's resolved. Yes. We, the United States of America, stand with the Ukrainian people.\n" +
-      "Throughout our history, we've learned this lesson: When dictators do not pay a price for their aggression, they cause more chaos; they keep moving; and the costs, the threats to the America—and America, to the world keeps rising. That's why the NATO alliance was created: to secure peace and stability in Europe after World War II. The United States is a member, along with 29 other nations. It matters. American diplomacy matters. American resolve matters.\n" +
-      "Putin's latest attack on Ukraine was premeditated and totally unprovoked. He rejected repeated—repeated—efforts at diplomacy. He thought the West and NATO wouldn't respond. He thought he could divide us at home, in this Chamber, in this Nation. He thought he could divide us in Europe as well.\n" +
-      "But Putin was wrong. We are ready. We are united. And that's what we did: We stayed united. We prepared extensively and carefully. We spent months building coalitions of other freedom-loving nations in Europe and the Americas to—from America to the Asian and African continents to confront Putin.\n" +
-      "Like many of you, I spent countless hours unifying our European allies. We shared with the world in advance what we knew Putin was planning and precisely how he would try to falsify and justify his aggression. We countered Russia's lies with the truth. And now—now that he's acted, the free world is holding him accountable, along with 27 members of the European Union—including France, Germany, Italy—as well as countries like the United Kingdom, Canada, Japan, Korea, Australia, New Zealand, and many others—even Switzerland—are inflicting pain on Russia and supporting the people of Ukraine. Putin is now isolated from the world more than he has ever been.\n" +
-      "Together, along with our allies, we are right now enforcing powerful economic sanctions. We're cutting off Russia's largest banks from the international financial system; preventing Russia's Central Bank from defending the Russian ruble, making Putin's $630 billion war fund worthless. We're choking Russia's access to technology that will sap its economic strength and weaken its military for years to come.\n" +
-      'Tonight I say to the Russian oligarchs and the corrupt leaders who have bilked billions of dollars off this violent regime: No more. The United States—[applause]—I mean it. The United States Department of Justice is assembling a dedicated task force to go after the crimes of the Russian oligarchs.\n' +
-      "We're joining with European allies to find and seize their yachts, their luxury apartments, their private jets. We're coming for your ill-begotten gains. And tonight I'm announcing that we will join our allies in closing off American air space to all Russian flights, further isolating Russia and adding an additional squeeze on their economy.\n" +
-      "He has no idea what's coming. The ruble has already lost 30 percent of its value, the Russian stock market has lost 40 percent of its value, and trading remains suspended. The Russian economy is reeling, and Putin alone is the one to blame.\n" +
-      "Together with our allies, we're providing support to the Ukrainians in their fight for freedom: military assistance, economic assistance, humanitarian assistance. We're giving more than a billion dollars in direct assistance to Ukraine. And we'll continue to aid the Ukrainian people as they defend their country and help ease their suffering.\n" +
-      "But let me be clear: Our Forces are not engaged and will not engage in the conflict with Russian forces in Ukraine. Our Forces are not going to Europe to fight [in]* Ukraine but to defend our NATO allies in the event that Putin decides to keep moving west. For that purpose, we have mobilized American ground forces, air squadrons, ship deployments to protect NATO countries, including Poland, Romania, Latvia, Lithuania, and Estonia. And as I've made crystal clear, the United States and our allies will defend every inch of territory that is NATO territory with the full force of our collective power—every single inch.\n" +
-      "And we're clear eyed. The Ukrainians are fighting back with pure courage. But the next few days, weeks, and months will be hard on them. Putin has unleashed violence and chaos. But while he may make gains on the battlefield, he'll pay a continuing high price over the long run. And a pound of Ukrainian people—the proud, proud people—pound for pound, ready to fight with every inch of energy they have. They've known 30 years of independence—have repeatedly shown that they will not tolerate anyone who tries to take their country backwards.\n" +
-      "To all Americans, I'll be honest with you, as I've always promised I would be. A Russian dictator invading a foreign country has costs around the world. And I'm taking robust action to make sure the pain of our sanctions is targeted at Russian economy and that we use every tool at our disposal to protect American businesses and consumers.\n" +
-      'Tonight I can announce the United States has worked with 30 other countries to release 60 million barrels of oil from reserves around the world. America will lead that effort, releasing 30 million barrels of our own Strategic Petroleum Reserve. And we stand ready to do more if necessary, united with our allies.\n' +
-      "These steps will help blunt gas prices here at home. But I know news about what's happening can seem alarming to all Americans. But I want you to know: We're going to be okay. We're going to be okay.\n" +
-      "When the history of this era is written, Putin's war on Ukraine will have left Russia weaker and the rest of the world stronger.\n" +
-      "While it shouldn't have taken something so terrible for people around the world to see what's at stake, now everyone sees it clearly. We see the unity among leaders of nations, a more unified Europe, a more unified West. We see unity among the people who are gathering in cities in large crowds around the world, even in Russia, to demonstrate their support for the people of Ukraine.\n" +
-      "In the battle between democracy and autocracies, democracies are rising to the moment, and the world is clearly choosing the side of peace and security. This is the real test, and it's going to take time. So let us continue to draw inspiration from the iron will of the Ukrainian people.\n" +
-      "To our fellow Ukrainian Americans who forged a deep bond that connects our two nations: We stand with you. We stand with you. Putin may circle Kiev with tanks, but he'll never gain the hearts and souls of the Uranian [Ukrainian]* people. He'll never extinguish their love of freedom. And he will never, never weaken the resolve of the free world.\n" +
-      'We meet tonight in an America that has lived through 2 of the hardest years this Nation has ever faced. The pandemic has been punishing. And so many families are living paycheck to paycheck, struggling to keep up with the rising cost of food, gas, housing, and so much more.\n' +
-      "I understand, like many of you did. My dad had to leave his home in Scranton, Pennsylvania, to find work. So, like many of you, I grew up in a family when the price of food went up, it was felt throughout the family; it had an impact. That's why one of the first things I did as President was fight to pass the American Rescue Plan, because people were hurting. We needed to act, and we did.\n" +
-      'Few pieces of legislation have done more at a critical moment in our history to lift us out of a crisis. It fueled our efforts to vaccinate the Nation and combat COVID-19. It delivered immediate economic relief to tens of millions of Americans. It helped put food on the table. Remember those long lines of cars waiting for hours just to get a box of food put in their trunk? It cut the cost of health care insurance. And as my dad used to say, it gave the people "just a little bit of breathing room."\n' +
-      'And unlike the $2 trillion tax cut passed in the previous administration that benefited the top 1 percent of Americans, the American Rescue Plan——\n' +
-      ' Audience members. Boo!\n' +
-      ' The President. ——the American Rescue Plan helped working people and left no one behind. And, folks—and it worked. It worked. It worked and created jobs, lots of jobs. In fact, our economy created over 6.5 million new jobs just last year, more jobs in 1 year than ever before in the history of the United States of America. The economy grew at a rate of 5.7 last year, the strongest growth rate in 40 years and the first step in'... 35254 more characters,
+    pageContent: "总统先生。非常感谢大家。谢谢，请坐。非常感谢。议长女士、副总统女士、我们的第一夫人和第二先生、国会议员和内阁成员、最高法院大法官、我的美国同胞们：去年，COVID-19 使我们分隔两地。今年，我们终于又团聚了。\n" +
+      '今晚我们以民主党人、共和党人和无党派人士的身份聚集在这里，但最重要的是，作为对彼此、对美国、对美国人民和对宪法负有责任的美国人，我们怀着一个坚定的决心：自由将永远战胜暴政。\n' +
+      "六——[掌声]——谢谢。六天前，俄罗斯的弗拉基米尔·普京试图动摇自由世界的根基，以为他可以让他屈服于他威胁性的行径。但他严重误判了。他以为他可以开进乌克兰，而世界会袖手旁观。相反，他遇到了他从未预料或想象到的强大阻力。他遇到了乌克兰人民。\n" +
+      '从泽连斯基总统到每一位乌克兰人，他们的无畏、勇气和决心在字面上激励着全世界。公民团体用身体挡住坦克。从学生到退休人员，再到拿起武器保卫家园的教师，无不如此。在这场斗争中——泽连斯基总统在向欧洲议会发表的演讲中说：“光明必将战胜黑暗。”\n' +
+      "乌克兰驻美国大使今晚与第一夫人一同出席。请各位如果能站立，请站起来，向世界和乌克兰发出明确的信号。谢谢。谢谢，谢谢，谢谢。她很聪明，她很坚强，她很坚定。是的。我们，美利坚合众国，与乌克兰人民站在一起。\n" +
+      "纵观我们的历史，我们学到了这个教训：当独裁者不对他们的侵略行为付出代价时，他们会造成更多的混乱；他们会继续前进；而且对美国——以及对世界——的威胁就会不断上升。这就是北约成立的原因：在第二次世界大战后确保欧洲的和平与稳定。美国是成员国之一，还有其他 29 个国家。这很重要。美国的[外交]很重要。美国的决心很重要。\n" +
+      "普京对乌克兰的最新攻击是蓄意的、完全无端的。他拒绝了反复的——反复的——外交努力。他以为西方和北约不会回应。他以为他可以在国内、在这个议会、在这个国家分裂我们。他也以为他可以在欧洲分裂我们。\n" +
+      "但普京错了。我们做好了准备。我们团结一致。这就是我们所做的：我们保持团结。我们进行了广泛而仔细的准备。我们花了好几个月的时间，在欧洲和美洲召集了其他爱好自由的国家的联盟——从美洲到亚洲和非洲大陆——来对抗普京。\n" +
+      "像许多人一样，我花费了无数个小时来团结我们的欧洲盟友。我们事先与世界分享了我们所知道的普京的计划，以及他将如何试图虚假地证明其侵略的合理性。我们用真相反驳了俄罗斯的谎言。而现在——现在他已经采取了行动，自由世界正在让他承担责任，与包括法国、德国、意大利在内的 27 个欧盟成员国——以及英国、加拿大、日本、韩国、澳大利亚、新西兰和许多其他国家——甚至瑞士一起对俄罗斯施加痛苦，并支持乌克兰人民。普京现在比以往任何时候都更加孤立于世界。\n" +
+      "我们现在正与盟友一起，对其实施强有力的经济制裁。我们正在切断俄罗斯最大的银行与国际金融体系的联系；阻止俄罗斯中央银行捍卫俄罗斯卢布，使普京的 6300 亿美元战争资金化为乌有。我们正在扼杀俄罗斯获取技术的能力，这些技术将在未来几年内削弱其经济实力和军事力量。\n" +
+      '今晚我对那些通过这个暴力政权掠夺了数十亿美元的俄罗斯寡头和腐败领导人说：到此为止。美国——[掌声]——我是认真的。美国司法部正在组建一个专门的工作组来追究俄罗斯寡头的罪行。\n' +
+      "我们正与欧洲盟友合作，寻找并没收他们的游艇、他们的豪华公寓、他们的私人飞机。我们来追讨你们不义之财。今晚我宣布，我们将与盟友一起关闭美国领空，禁止所有俄罗斯航班进入，进一步孤立俄罗斯，并对其经济施加额外压力。\n" +
+      "他对即将发生的事情一无所知。卢布已经贬值了 30%，俄罗斯股市下跌了 40%，交易仍然暂停。俄罗斯经济正在动荡，而普京对此负有全部责任。\n" +
+      "我们与盟友一起，正在为乌克兰人民争取自由的斗争提供支持：军事援助、经济援助、人道主义援助。我们向乌克兰提供了超过十亿美元的直接援助。我们将继续援助乌克兰人民，帮助他们保卫国家并减轻痛苦。\n" +
+      "但请让我明确一点：我们的部队没有、也不会参与与乌克兰境内的俄罗斯军队的冲突。我们的部队不会前往欧洲在乌克兰作战，而是为了在普京决定继续向西推进时保护我们的北约盟友。为此，我们动员了美国的地面部队、空中编队、舰船部署，以保护包括波兰、罗马尼亚、拉脱维亚、立陶宛和爱沙尼亚在内的北约国家。正如我清楚表明的，美国和我们的盟友将以我们集体力量的全部威力保卫北约领土的每一寸土地——每一寸。\n" +
+      "而且我们目光清晰。乌克兰人民正以纯粹的勇气反击。但接下来的几天、几周和几个月对他们来说将是艰难的。普京释放了暴力和混乱。但尽管他可能在战场上取得进展，但从长远来看，他将付出持续的高昂代价。而乌克兰人民——骄傲、骄傲的人民——会尽其所有、全力以赴地战斗。他们已经享受了 30 年的独立——已经一再表明，他们不会容忍任何试图将他们的国家拉回过去的人。\n" +
+      "对所有美国人，我将诚实地告诉你们，正如我一直承诺的那样。一位俄罗斯独裁者入侵一个外国，对全世界都有代价。我正在采取强有力的行动，确保我们制裁的痛苦集中在俄罗斯经济上，并确保我们利用一切可用的工具来保护美国的企业和消费者。\n" +
+      '今晚我可以宣布，美国已与另外 30 个国家合作，从世界各地的储备中释放 6000 万桶石油。美国将领导这项努力，释放我们 3000 万桶战略石油储备。如果需要，我们随时准备与盟友一起采取更多行动。\n' +
+      "这些措施将有助于平抑我们国内的汽油价格。但我知道有关正在发生的事情的新闻可能让所有美国人感到担忧。但我想让你们知道：我们会没事的。我们会没事的。\n" +
+      "当这个时代的历史被书写时，普京对乌克兰的战争将使俄罗斯变弱，而世界其他地区将变得更强大。\n" +
+      "尽管世界上的人们本不应该因为如此可怕的事情才看清所面临的风险，但现在每个人都看得清楚了。我们看到了各国领导人之间、一个更统一的欧洲、一个更统一的西方的团结。我们看到了世界各地城市中许多人聚集在一起，甚至在俄罗斯，以示对乌克兰人民的支持的团结。\n" +
+      "在民主与专制的较量中，民主国家正在迎接挑战，世界明确选择了和平与安全的一方。这是真正的考验，而且需要时间。因此，让我们继续从乌克兰人民坚如磐石的意志中汲取灵感。\n" +
+      "致我们所有与乌克兰有深厚联系的乌克兰裔美国人同胞：我们与你们站在一起。我们与你们站在一起。普京可能会用坦克包围基辅，但他永远无法赢得乌克兰人民的心灵。他永远不会熄灭他们对自由的热爱。他也永远不会削弱自由世界的决心。\n" +
+      '我们今晚相聚在这里的美国，经历了国家历史上最艰难的两年。大流行病造成了巨大的痛苦。许多家庭靠微薄的薪水生活，努力应对食品、汽油、住房和其他生活成本的上涨。\n' +
+      "我理解，就像你们中的许多人一样。我父亲为了找工作不得不离开宾夕法尼亚州斯克兰顿的家。所以，像你们中的许多人一样，我成长在一个家庭里，当食品价格上涨时，全家人都能感受到它的影响。这就是为什么我作为总统做的第一件事就是努力通过《美国救援计划》，因为人们正在遭受痛苦。我们需要采取行动，我们也做到了。\n" +
+      '很少有立法能在我们历史上的关键时刻做出如此大的贡献，将我们从危机中解救出来。它推动了我们为全国接种疫苗和抗击 COVID-19 的努力。它向数千万美国人提供了直接的经济救济。它帮助保障了食物的供应。还记得那些排着长长车队等待数小时才能往后备箱装一箱食物的场景吗？它降低了医疗保险的费用。正如我父亲常说的，它给了人们“一点喘息的空间”。\n' +
+      '与前一届政府通过的、使美国前 1% 的人受益的 2 万亿美元减税不同，《美国救援计划》——\n' +
+      ' 观众席。嘘声！\n' +
+      ' 总统。——《美国救援计划》帮助了工薪阶层，没有落下任何人。是的，各位——而且它起作用了。它起作用了。它创造了就业机会——大量的就业机会。事实上，去年我们的经济创造了超过 650 万个新的就业岗位，这是美国历史上任何一年中创造的就业岗位数量都多于以往。经济增长率为 5.7，是 40 年来最快的增长率，也是第一步……' 35254 more characters,
     metadata: {
       score: 0.16301880776882172,
-      title: 'Address Before a Joint Session of the Congress on the State of the Union',
+      title: '向国会联席会议发表的国情咨文',
       id: 'https://www.presidency.ucsb.edu/documents/address-before-joint-session-the-congress-the-state-the-union-28',
       url: 'https://www.presidency.ucsb.edu/documents/address-before-joint-session-the-congress-the-state-the-union-28',
       publishedDate: '2022-03-01',
@@ -190,5 +170,4 @@ await retriever.invoke(query);
 
 ## API 参考
 
-有关 `ExaRetriever` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html)。
-```
+有关 `ExaRetriever` 所有特性和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_exa.ExaRetriever.html)。

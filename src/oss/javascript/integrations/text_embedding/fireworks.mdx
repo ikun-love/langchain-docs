@@ -1,37 +1,38 @@
+```markdown
 ---
-title: FireworksEmbeddings
+title: FireworksEmbeddings 入门指南
 ---
 
-这将帮助你开始使用 LangChain 的 FireworksEmbeddings [嵌入模型](/oss/integrations/text_embedding)。有关 `FireworksEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_embeddings_fireworks.FireworksEmbeddings.html)。
+本指南将帮助您开始使用 LangChain 中的 FireworksEmbeddings [嵌入模型](/oss/integrations/text_embedding)。有关 `FireworksEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_embeddings_fireworks.FireworksEmbeddings.html)。
 
-## 概述
+## 概览 (Overview)
 
-### 集成详情
+### 集成详情 (Integration details)
 
-| 类 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/text_embedding/fireworks/) | 下载量 (Downloads) | 版本 (Version) |
+| 类名 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/text_embedding/fireworks/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [FireworksEmbeddings](https://api.js.langchain.com/classes/langchain_community_embeddings_fireworks.FireworksEmbeddings.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_embeddings_fireworks.html) | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
 
-## 设置
+## 设置 (Setup)
 
-要访问 Fireworks 嵌入模型，你需要创建一个 Fireworks 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成包。
+要访问 Fireworks 嵌入模型，您需要创建一个 Fireworks 账户，获取 API 密钥，并安装 `@langchain/community` 集成包。
 
 ### 凭证 (Credentials)
 
-前往 [fireworks.ai](https://fireworks.ai/) 注册 `Fireworks` 账户并生成 API 密钥。完成后，设置 `FIREWORKS_API_KEY` 环境变量：
+请访问 [fireworks.ai](https://fireworks.ai/) 注册 `Fireworks` 账户并生成 API 密钥。完成后，设置 `FIREWORKS_API_KEY` 环境变量：
 
 ```bash
 export FIREWORKS_API_KEY="your-api-key"
 ```
 
-如果你想对模型调用进行自动化的跟踪，你也可以取消注释下方内容来设置你的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动跟踪，可以取消注释以下内容以设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### 安装
+### 安装 (Installation)
 
 LangChain 的 `FireworksEmbeddings` 集成位于 `@langchain/community` 包中：
 
@@ -47,9 +48,9 @@ pnpm add @langchain/community @langchain/core
 ```
 </CodeGroup>
 
-## 实例化
+## 实例化 (Instantiation)
 
-现在我们可以实例化我们的模型对象并生成聊天补全：
+现在我们可以实例化模型对象并生成聊天完成（completions）：
 
 ```typescript
 import { FireworksEmbeddings } from "@langchain/community/embeddings/fireworks";
@@ -61,43 +62,43 @@ const embeddings = new FireworksEmbeddings({
 
 ## 索引和检索 (Indexing and Retrieval)
 
-嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以用于后续的检索。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡](/oss/learn/) 下的 RAG 教程。
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以用于后续的检索过程。有关更详细的说明，请参阅 [**学习** 标签页](/oss/learn/) 下的 RAG 教程。
 
-下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在这个示例中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
+下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
 // 使用示例文本创建一个向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
-const text = "LangChain 是用于构建上下文感知推理应用的框架";
+const text = "LangChain is the framework for building context-aware reasoning applications";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: text, metadata: {} }],
   embeddings,
 );
 
-// 使用向量存储作为检索器，返回单个文档
+// 将向量存储用作检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
 // 检索最相似的文本
-const retrievedDocuments = await retriever.invoke("LangChain 是什么?");
+const retrievedDocuments = await retriever.invoke("What is LangChain?");
 
 retrievedDocuments[0].pageContent;
 ```
 
 ```output
-"LangChain 是用于构建上下文感知推理应用的框架"
+"LangChain is the framework for building context-aware reasoning applications"
 ```
 
-## 直接使用
+## 直接使用 (Direct Usage)
 
 在底层，向量存储和检索器的实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 中使用的文本和检索器的 `invoke` 操作创建嵌入向量。
 
-你可以直接调用这些方法来获取嵌入向量以用于你自己的用例。
+您可以直接调用这些方法来获取嵌入向量以用于您自己的用例。
 
-### 嵌入单个文本
+### 嵌入单个文本 (Embed single texts)
 
-你可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -144,12 +145,12 @@ console.log(singleVector.slice(0, 100));
 ]
 ```
 
-### 嵌入多个文本
+### 嵌入多个文本 (Embed multiple texts)
 
-你可以使用 `embedDocuments` 来嵌入多个用于索引的文本。此方法内部使用的逻辑可能（但不必须）与嵌入查询的方法不同：
+您可以使用 `embedDocuments` 来嵌入多个文本，这通常用于索引目的。底层用于此方法的实现可能与嵌入查询（queries）的方式不同（但不必不同）：
 
 ```typescript
-const text2 = "LangGraph 是一个用于使用 LLM 构建有状态、多参与者应用的库";
+const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
 
 const vectors = await embeddings.embedDocuments([text, text2]);
 
@@ -227,5 +228,4 @@ console.log(vectors[1].slice(0, 100));
    -0.007686614990234375,       -0.0848388671875,     0.058563232421875,
        0.021148681640625,      0.034393310546875,   0.01087188720703125,
      -0.0196380615234375,      -0.09515380859375,       0.0054931640625,
-      -0.012481689453125,   0.003322601318359375,    -0.019683837890625,
-     -0.0307
+      -0.012481689453125,   0.0

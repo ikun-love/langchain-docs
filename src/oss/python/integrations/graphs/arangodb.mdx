@@ -4,22 +4,22 @@ title: ArangoDB
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arangodb/interactive_tutorials/blob/master/notebooks/LangChain.ipynb)
 
->[ArangoDB](https://github.com/arangodb/arangodb) 是一个可扩展的图数据库系统，可更快地从**互联数据**中发掘价值。它通过单一查询语言提供原生图、集成搜索引擎和 JSON 支持。`ArangoDB` 可在本地部署或在云端运行。
+>[ArangoDB](https://github.com/arangodb/arangodb) 是一个可扩展的图数据库系统，用于更快地从互联数据中挖掘价值。它通过单一的查询语言实现了原生图、集成搜索引擎和 JSON 支持。`ArangoDB` 可以在本地（on-prem）或云端运行。
 
-本 Notebook 演示了如何使用 LLM 为 [ArangoDB](https://github.com/arangodb/arangodb#readme) 数据库提供自然语言接口。
+本 Notebook 展示了如何使用大型语言模型（LLM）来为 [ArangoDB](https://github.com/arangodb/arangodb#readme) 数据库提供自然语言界面。
 
 ## 设置 (Setting up)
 
-您可以通过 [ArangoDB Docker 镜像](https://hub.docker.com/_/arangodb) 运行本地 `ArangoDB` 实例：
+您可以通过 [ArangoDB Docker 镜像](https://hub.docker.com/_/arangodb) 来运行本地的 `ArangoDB` 实例：
 
 ```
 docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD= arangodb/arangodb
 ```
 
-另一种方法是使用 [ArangoDB Cloud Connector 包](https://github.com/arangodb/adb-cloud-connector#readme) 来获取一个临时的云实例：
+另一种方法是使用 [ArangoDB Cloud Connector 包](https://github.com/arangodb/adb-cloud-connector#readme) 来快速启动一个临时的云实例：
 
 ```shell
-pip install -qU  python-arango # ArangoDB Python 驱动程序
+pip install -qU  python-arango # ArangoDB Python 驱动
 pip install -qU  adb-cloud-connector # ArangoDB 云实例配置器
 pip install -qU  langchain-openai
 pip install -qU  langchain
@@ -47,7 +47,7 @@ Succcess: new credentials acquired
 {
   "dbName": "TUT3sp29s3pjf1io0h4cfdsq",
   "username": "TUTo6nkwgzkizej3kysgdyeo8",
-  "password": "TUT9vx0qjqt42i9bq8uik4v9",
+  "password": "x",
   "hostname": "tutorials.arangodb.cloud",
   "port": 8529,
   "url": "https://tutorials.arangodb.cloud:8529"
@@ -63,7 +63,7 @@ graph = ArangoGraph(db)
 
 ## 填充数据库 (Populating database)
 
-我们将依赖 `Python Driver` 将我们的 [GameOfThrones](https://github.com/arangodb/example-datasets/tree/master/GameOfThrones) 数据导入到数据库中。
+我们将使用 `Python Driver` 将我们的 [GameOfThrones](https://github.com/arangodb/example-datasets/tree/master/GameOfThrones) 数据导入到数据库中。
 
 ```python
 if db.has_graph("GameOfThrones"):
@@ -136,13 +136,13 @@ db.collection("ChildOf").import_bulk(edges)
  'details': []}
 ```
 
-## 获取和设置 ArangoDB 模式 (Getting and setting the ArangoDB schema)
+## 获取和设置 ArangoDB 架构 (Getting and setting the ArangoDB schema)
 
-当实例化 `ArangoDBGraph` 对象时，会自动生成初始的 `ArangoDB Schema`。下面是该 Schema 的 getter (获取器) 和 setter (设置器) 方法，如果您想查看或修改 Schema，可以使用它们：
+在实例化 `ArangoDBGraph` 对象时，会生成一个初始的 `ArangoDB Schema`。如果您有兴趣查看或修改此架构，下面是其 getter 和 setter 方法：
 
 ```python
-# 此处 Schema 应该为空,
-# 因为 `graph` 在 ArangoDB 数据摄取之前已经被初始化 (见上文)。
+# 这里的 schema 应该是空的，
+# 因为 `graph` 在 ArangoDB 数据摄取（见上文）之前就已经初始化了。
 
 import json
 
@@ -161,7 +161,7 @@ graph.set_schema()
 ```
 
 ```python
-# 我们现在可以查看生成的 Schema
+# 现在我们可以查看生成的 schema
 
 import json
 
@@ -274,7 +274,7 @@ print(json.dumps(graph.schema, indent=4))
 
 ## 查询 ArangoDB 数据库 (Querying the ArangoDB database)
 
-我们现在可以使用 `ArangoDB Graph` QA Chain 来询问我们的数据。
+我们现在可以使用 `ArangoDB Graph` QA Chain 来查询我们的数据。
 
 ```python
 import os
@@ -379,9 +379,9 @@ AQL Result:
 'Yes, Arya Stark has a dead parent. The parent is Catelyn Stark.'
 ```
 
-## 链修改器 (Chain modifiers)
+## Chain 修改器 (Chain modifiers)
 
-您可以通过修改以下 `ArangoDBGraphQAChain` 类的变量值来改变 Chain 的行为：
+您可以更改以下 `ArangoDBGraphQAChain` 类的变量值，以修改 Chain 的行为和结果：
 
 ```python
 # 指定要返回的 AQL 查询结果的最大数量
@@ -396,7 +396,7 @@ chain.return_aql_result = True
 # 指定应进行的最大 AQL 生成尝试次数
 chain.max_aql_generation_attempts = 5
 
-# 指定一组 AQL 查询示例，它们将被传递给 AQL 生成提示模板，以促进少样本学习 (few-shot-learning)。
+# 指定一组 AQL 查询示例，它们将被传递给 AQL 生成提示模板以促进少样本学习（few-shot-learning）。
 # 默认为空字符串。
 chain.aql_examples = """
 # Is Ned Stark alive?
@@ -412,7 +412,7 @@ FOR e IN ChildOf
 ```python
 chain.run("Is Ned Stark alive?")
 
-# chain("Is Ned Stark alive?") # 返回一个包含 AQL 查询和 AQL 结果的字典
+# chain("Is Ned Stark alive?") # 返回包含 AQL 查询和 AQL 结果的字典
 ```
 
 ```output

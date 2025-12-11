@@ -2,11 +2,11 @@
 title: Atlas
 ---
 
-> [Atlas](https://docs.nomic.ai/index.html) 是 Nomic 公司推出的一个平台，专为处理小型到互联网规模的非结构化数据集而设计。它使用户能够在浏览器中对海量数据集进行可视化、搜索和共享。
+> [Atlas](https://docs.nomic.ai/index.html) 是 Nomic 公司（Nomic）推出的一款平台，专为处理**小规模**到**超大规模**的非结构化数据集而设计。它使用户能够在浏览器中对海量数据集进行可视化、搜索和分享。
 
-您需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 库，才能使用此集成。
+你需要通过运行 `pip install -qU langchain-community` 命令来安装 `langchain-community` 才能使用此集成。
 
-本教程展示了如何使用与 `AtlasDB` 向量存储相关的常用功能。
+本 Notebook 将向你展示如何使用与 `AtlasDB` 向量存储相关的各项功能。
 
 ```python
 pip install -qU  spacy
@@ -31,7 +31,7 @@ from langchain_text_splitters import SpacyTextSplitter
 ```
 
 ```python
-ATLAS_TEST_API_KEY = "7xDPkYXSYDc1_ErdTPIcoAR9RNd8YDlkS3nVNXcVoIMZ6"
+ATLAS_TEST_API_KEY = "x"
 ```
 
 ### 准备数据 (Prepare the Data)
@@ -42,7 +42,6 @@ documents = loader.load()
 text_splitter = SpacyTextSplitter(separator="|")
 texts = []
 for doc in text_splitter.split_documents(documents):
-    # 按照 "|" 符号分割文档内容
     texts.extend(doc.page_content.split("|"))
 
 texts = [e.strip() for e in texts]
@@ -53,10 +52,10 @@ texts = [e.strip() for e in texts]
 ```python
 db = AtlasDB.from_texts(
     texts=texts,
-    name="test_index_" + str(time.time()),  # 为您的向量存储设置一个唯一的名称
-    description="test_index",  # 为您的向量存储提供一个描述
+    name="test_index_" + str(time.time()),  # 为你的向量存储设置一个唯一名称
+    description="test_index",  # 为你的向量存储提供描述
     api_key=ATLAS_TEST_API_KEY,
-    index_kwargs={"build_topic_model": True}, # 启用主题模型构建
+    index_kwargs={"build_topic_model": True},
 )
 ```
 
@@ -68,5 +67,5 @@ db.project.wait_for_project_lock()
 db.project
 ```
 
-以下是此代码运行结果的地图。此地图显示了“国情咨文”的所有文本内容。
+下面是这段代码运行的结果地图。该地图展示了“国情咨文”（State of the Union）的文本内容。
 [atlas.nomic.ai/map/3e4de075-89ff-486a-845c-36c23f30bb67/d8ce2284-8edb-4050-8b9b-9bb543d7f647](https://atlas.nomic.ai/map/3e4de075-89ff-486a-845c-36c23f30bb67/d8ce2284-8edb-4050-8b9b-9bb543d7f647)

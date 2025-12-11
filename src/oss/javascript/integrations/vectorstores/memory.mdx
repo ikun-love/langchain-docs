@@ -2,25 +2,25 @@
 title: MemoryVectorStore
 ---
 
-LangChain 提供了一个**内存中且瞬时**的向量存储（vectorstore），它将嵌入（embeddings）存储在内存中，并执行**精确的线性搜索**来查找最相似的嵌入。默认的相似度度量是余弦相似度（cosine similarity），但可以更改为 [ml-distance](https://mljs.github.io/distance/modules/similarity.html) 支持的任何相似度度量。
+LangChain 提供了一个**内存中、临时性的向量存储**（in-memory, ephemeral vectorstore），它将嵌入向量（embeddings）存储在内存中，并通过**线性精确搜索**来查找最相似的嵌入向量。默认的相似性度量标准是**余弦相似度**（cosine similarity），但可以更改为 [ml-distance](https://mljs.github.io/distance/modules/similarity.html) 支持的任何相似性度量。
 
-由于它主要用于演示（demos），目前**不支持**文档 ID 或删除操作。
+由于它主要面向**演示场景**（demos），所以暂不支持 ID 或删除操作。
 
-本指南快速概述了如何入门使用内存中的 [`vector stores`](/oss/integrations/vectorstores)。有关 `MemoryVectorStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html)。
+本指南将快速介绍如何开始使用内存中的 [`vector stores`](/oss/integrations/vectorstores)。要了解 `MemoryVectorStore` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html)。
 
-## 概述 (Overview)
+## 概述
 
-### 集成详情 (Integration details)
+### 集成详情
 
-| 类 (Class) | 包 (Package) | PY 支持 (PY support) | 版本 (Version) |
+| 类（Class） | 包（Package） | PY 支持 | 版本（Version） |
 | :--- | :--- | :---: | :---: |
 | [`MemoryVectorStore`](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html) | [`langchain`](https://www.npmjs.com/package/langchain) | ❌ | ![NPM - Version](https://img.shields.io/npm/v/langchain?style=flat-square&label=%20&) |
 
-## 设置 (Setup)
+## 设置
 
-要使用内存向量存储，您需要安装 `langchain` 包：
+要使用内存中的向量存储，您需要安装 `langchain` 包：
 
-本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这要求您安装 `@langchain/openai` 集成包。如果需要，您也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
+本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，因此需要安装 `@langchain/openai` 集成包。如果您愿意，也可以使用[其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -34,24 +34,24 @@ pnpm add langchain @langchain/openai @langchain/core
 ```
 </CodeGroup>
 
-### 凭证 (Credentials)
+### 凭证（Credentials）
 
-使用内存向量存储**不需要**任何必需的凭证。
+使用内存中的向量存储**不需要**任何必需的凭证。
 
-如果您在本指南中使用了 OpenAI embeddings，您还需要设置您的 OpenAI 密钥：
+如果您在本指南中使用了 OpenAI embeddings，则还需要设置您的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-如果您希望对模型的调用进行自动跟踪，您也可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型的调用进行**自动追踪**（tracing），也可以设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥，方法是取消下面代码的注释：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
 // process.env.LANGSMITH_API_KEY="your-api-key"
 ```
 
-## 实例化 (Instantiation)
+## 实例化
 
 ```typescript
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
@@ -64,9 +64,9 @@ const embeddings = new OpenAIEmbeddings({
 const vectorStore = new MemoryVectorStore(embeddings);
 ```
 
-## 管理向量存储 (Manage vector store)
+## 管理向量存储
 
-### 向向量存储中添加条目 (Add items to vector store)
+### 向向量存储中添加条目
 
 ```typescript
 import type { Document } from "@langchain/core/documents";
@@ -91,11 +91,11 @@ const documents = [document1, document2, document3];
 await vectorStore.addDocuments(documents);
 ```
 
-## 查询向量存储 (Query vector store)
+## 查询向量存储
 
-一旦创建了向量存储并将相关文档添加进去，在您的链（chain）或智能体（agent）运行时，您很可能希望对其进行查询。
+一旦创建了向量存储并添加了相关文档，您最有可能在链（chain）或代理（agent）运行时对其进行查询。
 
-### 直接查询 (Query directly)
+### 直接查询
 
 可以按如下方式执行简单的相似性搜索：
 
@@ -114,9 +114,9 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-过滤器是可选的，它必须是一个谓词函数（predicate function），该函数接收一个文档作为输入，并根据该文档是否应被返回而返回 `true` 或 `false`。
+该过滤器是可选的，它必须是一个谓词函数（predicate function），该函数接受一个文档作为输入，并根据文档是否应该被返回而返回 `true` 或 `false`。
 
-如果您想执行相似性搜索并接收相应的分数，您可以运行：
+如果您想执行相似性搜索并接收相应的**分数**，可以运行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -131,9 +131,9 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.148] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### 通过转换为检索器进行查询 (Query by turning into retriever)
+### 通过转换为检索器（Retriever）进行查询
 
-您也可以将向量存储转换为 [检索器（retriever）](/oss/langchain/retrieval)，以便在链中使用更方便：
+您也可以将向量存储转换为**检索器**（retriever），以便在链中使用它：
 
 ```typescript
 const retriever = vectorStore.asRetriever({
@@ -160,9 +160,9 @@ await retriever.invoke("biology");
 ]
 ```
 
-### 最大边际相关性 (Maximal marginal relevance)
+### 最大边际相关性（Maximal Marginal Relevance, MMR）
 
-此向量存储还支持最大边际相关性（MMR），这是一种技术：首先获取一个较大的结果集（由 `searchKwargs.fetchK` 指定），使用经典的相似性搜索，然后重新排序以确保多样性，并返回前 `k` 个结果。这有助于防止信息冗余：
+这个向量存储也支持**最大边际相关性**（MMR）技术。MMR 首先通过经典的相似性搜索获取**更多的结果**（由 `searchKwargs.fetchK` 指定），然后对这些结果进行**重排序**以提高多样性，最后返回前 `k` 个结果。这有助于避免信息冗余：
 
 ```typescript
 const mmrRetriever = vectorStore.asRetriever({
@@ -193,16 +193,16 @@ await mmrRetriever.invoke("biology");
 ]
 ```
 
-### 用于检索增强生成 (RAG) 的使用方式 (Usage for retrieval-augmented generation)
+### 用于检索增强生成（RAG）的用法
 
 有关如何将此向量存储用于检索增强生成（RAG）的指南，请参阅以下部分：
 
 - [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
-- [智能体式 RAG](/oss/langgraph/agentic-rag)
+- [代理式 RAG](/oss/langgraph/agentic-rag)
 - [检索文档](/oss/langchain/retrieval)
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 `MemoryVectorStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html)。
+有关 `MemoryVectorStore` 所有功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html)。

@@ -1,24 +1,24 @@
 ---
-title: Sentence Transformers on Hugging Face
+title: Hugging Face 上的 Sentence Transformers
 ---
 
->[Hugging Face sentence-transformers](https://huggingface.co/sentence-transformers) is a Python framework for state-of-the-art sentence, text and image embeddings.
->You can use these embedding models from the `HuggingFaceEmbeddings` class.
+>[Hugging Face sentence-transformers](https://huggingface.co/sentence-transformers) 是一个用于实现最先进的句子、文本和图像嵌入（embeddings）的 Python 框架。
+>你可以使用 `HuggingFaceEmbeddings` 类来调用这些嵌入模型。
 
 <Warning>
-**Running sentence-transformers locally can be affected by your operating system and other global factors. It is recommended for experienced users only.**
+**在本地运行 `sentence-transformers` 可能会受到操作系统和其他全局因素的影响。我们仅推荐有经验的用户使用。**
 
 </Warning>
 
-## Setup
+## 安装 (Setup)
 
-You'll need to install the `langchain_huggingface` package as a dependency:
+你需要安装作为依赖项的 `langchain_huggingface` 包：
 
 ```python
 pip install -qU langchain-huggingface
 ```
 
-## Usage
+## 用法 (Usage)
 
 ```python
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -28,7 +28,7 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 text = "This is a test document."
 query_result = embeddings.embed_query(text)
 
-# show only the first 100 characters of the stringified vector
+# 只显示字符串化向量的前 100 个字符
 print(str(query_result)[:100] + "...")
 ```
 
@@ -45,9 +45,9 @@ print(str(doc_result)[:100] + "...")
 [[-0.038338497281074524, 0.12346471846103668, -0.028642890974879265, 0.05365274101495743, 0.00884535...
 ```
 
-## Troubleshooting
+## 故障排除 (Troubleshooting)
 
-If you are having issues with the `accelerate` package not being found or failing to import, installing/upgrading it may help:
+如果你在使用 `accelerate` 包时遇到找不到或导入失败的问题，尝试安装或升级该包可能会有所帮助：
 
 ```python
 pip install -qU accelerate

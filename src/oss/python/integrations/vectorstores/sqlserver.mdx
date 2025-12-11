@@ -2,19 +2,19 @@
 title: SQLServer
 ---
 
-> Azure SQL 提供了一个专用的 [Vector 数据类型](https:\learn.microsoft.com\sql\t-sql\data-types\vector-data-type?view=azuresqldb-current&viewFallbackFrom=sql-server-ver16&tabs=csharp-sample)，它简化了向量嵌入的创建、存储和查询，可以直接在关系数据库中进行。这消除了对单独向量数据库和相关集成的需求，从而提高了解决方案的安全性，同时降低了整体复杂性。
+> Azure SQL 提供了一个专用的 [Vector 数据类型](https:\learn.microsoft.com\sql\t-sql\data-types\vector-data-type?view=azuresqldb-current&viewFallbackFrom=sql-server-ver16&tabs=csharp-sample)，它可以简化向量嵌入的创建、存储和查询，这些操作可以直接在关系数据库内完成。这消除了对独立向量数据库和相关集成的需求，从而提高了解决方案的安全性，同时降低了整体复杂性。
 
-Azure SQL 是一项强大的服务，它集成了可扩展性、安全性和高可用性，提供了现代数据库解决方案的所有优势。它利用复杂的查询优化器和企业级功能，可以在执行传统 SQL 查询的同时执行向量相似性搜索，从而增强数据分析和决策制定能力。
+Azure SQL 是一种强大的服务，它结合了可扩展性、安全性和高可用性，提供了现代数据库解决方案的所有优势。它利用复杂的查询优化器和企业级功能，可以与传统 SQL 查询并行执行向量相似性搜索，从而增强数据分析和决策制定能力。
 
-阅读更多关于使用 Azure SQL 数据库构建[智能应用](https://learn.microsoft.com/azure/azure-sql/database/ai-artificial-intelligence-intelligent-applications?view=azuresql)的内容。
+阅读更多关于使用 Azure SQL 数据库构建 [智能应用程序](https://learn.microsoft.com/azure/azure-sql/database/ai-artificial-intelligence-intelligent-applications?view=azuresql) 的信息。
 
-此 Notebook 演示了如何利用这个集成的 SQL [向量数据库](https://devblogs.microsoft.com/azure-sql/exciting-announcement-public-preview-of-native-vector-support-in-azure-sql-database/)来存储文档，并使用余弦距离 (Cosine)、L2 (欧几里得距离) 和 IP (内积) 进行向量搜索查询，以定位与查询向量接近的文档。
+此 Notebook 演示了如何利用这个集成的 SQL [向量数据库](https://devblogs.microsoft.com/azure-sql/exciting-announcement-public-preview-of-native-vector-support-in-azure-sql-database/) 来存储文档，并使用余弦距离 (Cosine)、L2 (欧几里得距离) 和 IP (内积) 进行向量搜索查询，以查找与查询向量接近的文档。
 
 ## 设置 (Setup)
 
 安装 `langchain-sqlserver` Python 包。
 
-代码位于一个名为 `langchain-sqlserver` 的集成包中: [langchain-sqlserver](https:\github.com\langchain-ai\langchain-azure\tree\main\libs\sqlserver)。
+该代码位于一个名为 [langchain-sqlserver](https:\github.com\langchain-ai\langchain-azure\tree\main\libs\sqlserver) 的集成包中。
 
 ```python
 !pip install langchain-sqlserver==0.1.1
@@ -23,7 +23,7 @@ Azure SQL 是一项强大的服务，它集成了可扩展性、安全性和高�
 ## 凭证 (Credentials)
 
 运行此 Notebook 不需要任何凭证，只需确保已下载 `langchain-sqlserver` 包即可。
-如果您想对模型的调用进行一流的自动化跟踪，可以取消注释以下内容并设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想对模型调用进行一流的自动跟踪，还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -36,9 +36,9 @@ os.environ["LANGSMITH_TRACING"] = "true"
 from langchain_sqlserver import SQLServer_VectorStore
 ```
 
-请在 Azure 门户中您的数据库设置下查找您的 Azure SQL DB 连接字符串。
+在 Azure 门户的数据库设置下查找您的 Azure SQL DB 连接字符串。
 
-更多信息请参阅：[连接到 Azure SQL DB - Python](https:\learn.microsoft.com\en-us\azure\azure-sql\database\connect-query-python?view=azuresql)
+更多信息：[连接到 Azure SQL DB - Python](https:\learn.microsoft.com\en-us\azure\azure-sql\database\connect-query-python?view=azuresql)
 
 ```python
 import os
@@ -56,14 +56,15 @@ _CONNECTION_STRING = (
 )
 
 # 连接字符串可能有所不同：
-# "mssql+pyodbc://<username>:<password><servername>/<dbname>?driver=ODBC+Driver+18+for+SQL+Server" -> 指定了用户名和密码
+# "mssql+pyodbc://<username>:<password><servername>/<dbname>?driver=ODBC+Driver+18+for+SQL+Server" -> 包含用户名和密码
 # "mssql+pyodbc://<servername>/<dbname>?driver=ODBC+Driver+18+for+SQL+Server&Trusted_connection=yes" -> 使用受信任的连接
 # "mssql+pyodbc://<servername>/<dbname>?driver=ODBC+Driver+18+for+SQL+Server&Trusted_connection=no" -> 使用 EntraID 连接
+# "mssql+pyodbc://<servername>/<dbname>?driver=ODBC+Driver+18+for+SQL+Server&Trusted_connection=yes" -> 使用 EntraID 连接
 ```
 
-在此示例中，我们使用 Azure OpenAI 来生成嵌入（embeddings），但您也可以使用 LangChain 中提供的不同嵌入模型。
+在此示例中，我们使用 Azure OpenAI 来生成嵌入（Embeddings），但您也可以使用 LangChain 提供的其他嵌入模型。
 
-您可以按照此[指南](https:\learn.microsoft.com\en-us\azure\ai-services\openai\how-to\create-resource?pivots=web-portal)在 Azure 门户上部署 Azure OpenAI 实例版本。实例运行后，请确保您拥有其实例名称和密钥。您可以在 Azure 门户中，在实例的“密钥和终结点”部分找到密钥。
+您可以通过遵循此 [指南](https:\learn.microsoft.com\en-us\azure\ai-services\openai\how-to\create-resource?pivots=web-portal) 在 Azure 门户上部署 Azure OpenAI 实例版本。实例运行后，请确保您拥有其实例名称和密钥。您可以在 Azure 门户中实例的“密钥和终结点”部分找到密钥。
 
 ```python
 !pip install langchain-openai
@@ -81,7 +82,7 @@ azure_api_version = "2023-05-15"
 azure_api_key = "YOUR_KEY"
 
 
-# 使用 AzureChatOpenAI 进行聊天完成 (chat completions)
+# 使用 AzureChatOpenAI 进行聊天完成
 llm = AzureChatOpenAI(
     azure_endpoint=azure_endpoint,
     azure_deployment=azure_deployment_name_chatcompletion,
@@ -89,7 +90,7 @@ llm = AzureChatOpenAI(
     openai_api_key=azure_api_key,
 )
 
-# 使用 AzureOpenAIEmbeddings 进行嵌入 (embeddings)
+# 使用 AzureOpenAIEmbeddings 进行嵌入
 embeddings = AzureOpenAIEmbeddings(
     azure_endpoint=azure_endpoint,
     azure_deployment=azure_deployment_name_embedding,
@@ -108,16 +109,16 @@ from langchain_sqlserver import SQLServer_VectorStore
 vector_store = SQLServer_VectorStore(
     connection_string=_CONNECTION_STRING,
     distance_strategy=DistanceStrategy.COSINE,  # 可选，如果未提供，默认为 COSINE
-    embedding_function=embeddings,  # 您可以使用 LangChain 中提供的不同嵌入模型
+    embedding_function=embeddings,  # 您可以使用 LangChain 提供的不同嵌入模型
     embedding_length=1536,
     table_name="langchain_test_table",  # 使用自定义名称的表
 )
 ```
 
-### 向向量存储添加项 (Add items to vector store)
+### 向向量存储添加条目 (Add items to vector store)
 
 ```python
-## 我们将使用一些人工数据作为本例
+## 我们将使用一些人工数据用于此示例
 query = [
     "I have bought several of the Vitality canned dog food products and have found them all to be of good quality. The product looks more like a stew than a processed meat and it smells better. My Labrador is finicky and she appreciates this product better than  most.",
     "The candy is just red , No flavor . Just  plan and chewy .  I would never buy them again",
@@ -158,12 +159,12 @@ vector_store.add_texts(texts=query, metadatas=query_metadata)
 
 ## 查询向量存储 (Query vector store)
 
-一旦向量存储创建完成并且相关的文档已添加，您很可能希望在链或代理运行时查询它。
+一旦向量存储创建完成并且已添加相关文档，您在运行链或代理时很可能会希望查询它。
 
 执行简单的相似性搜索可以按如下方式完成：
 
 ```python
-# 在查询嵌入和文档嵌入之间执行相似性搜索 (Perform a similarity search between the embedding of the query and the embeddings of the documents)
+# 在查询嵌入和文档嵌入之间执行相似性搜索
 simsearch_result = vector_store.similarity_search("Good reviews", k=3)
 print(simsearch_result)
 ```
@@ -174,10 +175,10 @@ print(simsearch_result)
 
 ### 筛选支持 (Filtering Support)
 
-向量存储支持一组可以应用于文档元数据字段的筛选器。此功能使开发人员和数据分析师能够精炼其查询，确保搜索结果与他们的需求准确对齐。通过根据特定元数据属性应用筛选器，用户可以限制搜索范围，仅关注最相关的数据子集。
+向量存储支持一组可以应用于文档元数据字段的筛选器。此功能使开发人员和数据分析师能够精确定制他们的查询，确保搜索结果与他们的需求准确对齐。通过根据特定的元数据属性应用筛选器，用户可以限制搜索范围，只关注最相关的数据子集。
 
 ```python
-# 混合搜索 -> 筛选条件为 id 不等于 1。 (hybrid search -> filter for cases where id not equal to 1.)
+# 混合搜索 -> 筛选出 id 不等于 1 的情况。
 hybrid_simsearch_result = vector_store.similarity_search(
     "Good reviews", k=3, filter={"id": {"$ne": 1}}
 )
@@ -188,9 +189,9 @@ print(hybrid_simsearch_result)
 [Document(metadata={'id': 7, 'summary': 'This stuff is great'}, page_content='I have used this product in smoothies for my son and he loves it. Additionally, I use this oil in the shower as a skin conditioner and it has made my skin look great. Some of the stretch marks on my belly has disappeared quickly. Highly recommend!!!'), Document(metadata={'id': 5, 'summary': 'Great for the kids!'}, page_content="If you are looking for a less messy version of licorice for the children, then be sure to try these!  They're soft, easy to chew, and they don't get your hands all sticky and gross in the car, in the summer, at the beach, etc. We love all the flavos and sometimes mix these in with the chocolate to have a very nice snack! Great item, great price too, highly recommend!"), Document(metadata={'id': 3, 'summary': 'Taste is neutral, quantity is DECEITFUL!'}, page_content='The taste of these white cheddar flat breads is like a regular cracker - which is not bad, except that I bought them because I wanted a cheese taste.<br /><br />What was a HUGE disappointment? How misleading the packaging of the box is. The photo on the box (I bought these in store) makes it look like it is full of long flatbreads (expanding the length and width of the box). Wrong! The plastic tray that holds the crackers is about 2 smaller all around - leaving you with about 15 or so small flatbreads.<br /><br />What is also bad about this is that the company states they use biodegradable and eco-friendly packaging. FAIL! They used a HUGE box for a ridiculously small amount of crackers. Not ecofriendly at all.<br /><br />Would I buy these again? No - I feel ripped off. The other crackers (like Sesame Tarragon) give you a little<br />more bang for your buck and have more flavor.')]
 ```
 
-### 带分数的相似性搜索 (Similarity Search with Score)
+### 相似性搜索及分数 (Similarity Search with Score)
 
-如果您想执行相似性搜索并接收相应的分数，可以运行：
+如果您希望执行相似性搜索并获取相应的分数，可以运行：
 
 ```python
 simsearch_with_score_result = vector_store.similarity_search_with_score(
@@ -203,12 +204,12 @@ print(simsearch_with_score_result)
 [(Document(metadata={'id': 3, 'summary': 'Taste is neutral, quantity is DECEITFUL!'}, page_content='The taste of these white cheddar flat breads is like a regular cracker - which is not bad, except that I bought them because I wanted a cheese taste.<br /><br />What was a HUGE disappointment? How misleading the packaging of the box is. The photo on the box (I bought these in store) makes it look like it is full of long flatbreads (expanding the length and width of the box). Wrong! The plastic tray that holds the crackers is about 2 smaller all around - leaving you with about 15 or so small flatbreads.<br /><br />What is also bad about this is that the company states they use biodegradable and eco-friendly packaging. FAIL! They used a HUGE box for a ridiculously small amount of crackers. Not ecofriendly at all.<br /><br />Would I buy these again? No - I feel ripped off. The other crackers (like Sesame Tarragon) give you a little<br />more bang for your buck and have more flavor.'), 0.651870006770711), (Document(metadata={'id': 8, 'summary': 'Nasty No flavor'}, page_content='The candy is just red , No flavor . Just  plan and chewy .  I would never buy them again'), 0.6908952973052638), (Document(metadata={'id': 4, 'summary': 'stale product'}, page_content='Arrived in 6 days and were so stale i could not eat any of the 6 bags!!'), 0.7360955776468822), (Document(metadata={'id': 1, 'summary': 'Good Quality Dog Food'}, page_content='I have bought several of the Vitality canned dog food products and have found them all to be of good quality. The product looks more like a stew than a processed meat and it smells better. My Labrador is finicky and she appreciates this product better than  most.'), 0.7408823529514486), (Document(metadata={'id': 9, 'summary': 'Nearly killed the cats'}, page_content="Too much of a good thing? We worked this kibble in over time, slowly shifting the percentage of Felidae to national junk-food brand until the bowl was all natural. By this time, the cats couldn't keep it in or down. What a mess. We've moved on."), 0.782995248991772), (Document(metadata={'id': 7, 'summary': 'This stuff is great'}, page_content='I have used this product in smoothies for my son and he loves it. Additionally, I use this oil in the shower as a skin conditioner and it has made my skin look great. Some of the stretch marks on my belly has disappeared quickly. Highly recommend!!!'), 0.7912681479906212), (Document(metadata={'id': 2, 'summary': 'yum falafel'}, page_content='We had trouble finding this locally - delivery was fast, no more hunting up and down the flour aisle at our local grocery stores.'), 0.809213468778896), (Document(metadata={'id': 10, 'summary': "The reviews don't lie"}, page_content='Been taking Coconut Oil for YEARS.  This is the best on the retail market.  I wish it was in glass, but this is the one.'), 0.8281482301097155), (Document(metadata={'id': 5, 'summary': 'Great for the kids!'}, page_content="If you are looking for a less messy version of licorice for the children, then be sure to try these!  They're soft, easy to chew, and they don't get your hands all sticky and gross in the car, in the summer, at the beach, etc. We love all the flavos and sometimes mix these in with the chocolate to have a very nice snack! Great item, great price too, highly recommend!"), 0.8283754326400574), (Document(metadata={'id': 6, 'summary': 'Price cannot be correct'}, page_content='Hey, the description says 360 grams - that is roughly 13 ounces at under $4.00 per can. No way - that is the approximate price for a 100 gram can.'), 0.8323967822635847), (Document(metadata={'id': 11, 'summary': 'Great value and convenient ramen'}, page_content="Got these on sale for roughly 25 cents per cup, which is half the price of my local grocery stores, plus they rarely stock the spicy flavors. These things are a GREAT snack for my office where time is constantly crunched and sometimes you can't escape for a real meal. This is one of my favorite flavors of Instant Lunch and will be back to buy every time it goes on sale."), 0.8387189489406939)]
 ```
 
-对于 Azure SQL 向量存储可以执行的不同搜索列表的完整文档，请参阅 [API 参考](https://python.langchain.com/api_reference/sqlserver/index.html)。
+有关您可以在 Azure SQL 向量存储上执行的不同搜索类型的完整列表，请参阅 [API 参考](https://python.langchain.com/api_reference/sqlserver/index.html)。
 
-### 当您已有要搜索的嵌入时进行相似性搜索
+### 相似性搜索（已提供嵌入向量）
 
 ```python
-# 如果您已经有要搜索的嵌入 (if you already have embeddings you want to search on)
+# 如果您已经有了要搜索的嵌入向量
 simsearch_by_vector = vector_store.similarity_search_by_vector(
     [-0.0033353185281157494, -0.017689190804958344, -0.01590404286980629, ...]
 )
@@ -220,7 +221,7 @@ print(simsearch_by_vector)
 ```
 
 ```python
-# 如果您已经有要搜索的嵌入，则执行带分数的相似性搜索 (Similarity Search with Score if you already have embeddings you want to search on)
+# 如果您已经有了要搜索的嵌入向量，则使用分数进行相似性搜索
 simsearch_by_vector_with_score = vector_store.similarity_search_by_vector_with_score(
     [-0.0033353185281157494, -0.017689190804958344, -0.01590404286980629, ...]
 )
@@ -231,12 +232,12 @@ print(simsearch_by_vector_with_score)
 [(Document(metadata={'id': 8, 'summary': 'Nasty No flavor'}, page_content='The candy is just red , No flavor . Just  plan and chewy .  I would never buy them again'), 0.9648153551769503), (Document(metadata={'id': 4, 'summary': 'stale product'}, page_content='Arrived in 6 days and were so stale i could not eat any of the 6 bags!!'), 0.9655108580341948), (Document(metadata={'id': 3, 'summary': 'Taste is neutral, quantity is DECEITFUL!'}, page_content='The taste of these white cheddar flat breads is like a regular cracker - which is not bad, except that I bought them because I wanted a cheese taste.<br /><br />What was a HUGE disappointment? How misleading the packaging of the box is. The photo on the box (I bought these in store) makes it look like it is full of long flatbreads (expanding the length and width of the box). Wrong! The plastic tray that holds the crackers is about 2 smaller all around - leaving you with about 15 or so small flatbreads.<br /><br />What is also bad about this is that the company states they use biodegradable and eco-friendly packaging. FAIL! They used a HUGE box for a ridiculously small amount of crackers. Not ecofriendly at all.<br /><br />Would I buy these again? No - I feel ripped off. The other crackers (like Sesame Tarragon) give you a little<br />more bang for your buck and have more flavor.'), 0.9840511208615808), (Document(metadata={'id': 6, 'summary': 'Price cannot be correct'}, page_content='Hey, the description says 360 grams - that is roughly 13 ounces at under $4.00 per can. No way - that is the approximate price for a 100 gram can.'), 0.9915737524649991)]
 ```
 
-## 从向量存储中删除项 (Delete items from vector store)
+## 从向量存储中删除条目 (Delete items from vector store)
 
 ### 按 ID 删除行 (Delete Row by ID)
 
 ```python
-# 按 id 删除行 (delete row by id)
+# 按 id 删除行
 vector_store.delete(["3", "7"])
 ```
 
@@ -244,16 +245,16 @@ vector_store.delete(["3", "7"])
 True
 ```
 
-### 释放向量存储 (Drop Vector Store)
+### 丢弃向量存储 (Drop Vector Store)
 
 ```python
-# 释放向量存储 (drop vectorstore)
+# 丢弃向量存储
 vector_store.drop()
 ```
 
 ## 从 Azure Blob 存储加载文档 (Load a Document from Azure Blob Storage)
 
-以下是如何在将文档拆分为块后，将其从 Azure Blob 存储容器加载到 SQL Vector 存储中的示例。[Azure 博客存储](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction)是 Microsoft 在云中对象存储的解决方案。Blob 存储针对存储海量非结构化数据进行了优化。
+以下是如何在将文档分割成块（chunk）后，将其从 Azure Blob 存储容器加载到 SQL 向量存储中的示例。[Azure Blob 存储](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) 是微软在云中的对象存储解决方案。Blob 存储针对存储海量非结构化数据进行了优化。
 
 ```python
 pip install azure-storage-blob
@@ -277,11 +278,11 @@ loader = AzureBlobStorageFileLoader(
 # 从 Azure Blob 存储加载文档
 documents = loader.load()
 
-# 如果需要，将文档拆分为更小的块
+# 如果需要，将文档分割成更小的块
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 split_documents = text_splitter.split_documents(documents)
 
-# 打印拆分后的文档数量
+# 打印分割后的文档数量
 print(f"Number of split documents: {len(split_documents)}")
 ```
 
@@ -292,16 +293,16 @@ Number of split documents: 528
 API 参考：[AzureBlobStorageContainerLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.azure_blob_storage_container.AzureBlobStorageContainerLoader.html)
 
 ```python
-# # 初始化向量存储并将其嵌入插入到 AzureSQLDB 中
+# # 初始化向量存储并将其嵌入插入 AzureSQLDB
 vector_store = SQLServer_VectorStore(
     connection_string=_CONNECTION_STRING,
     distance_strategy=DistanceStrategy.COSINE,
     embedding_function=embeddings,
     embedding_length=1536,
     table_name="harrypotter",
-)  # 替换为您实际的向量存储初始化
+)  # 替换为您实际的向量存储初始化设置
 
-# 单独将拆分后的文档添加到向量存储中
+# 逐个向向量存储添加分割后的文档
 for i, doc in enumerate(split_documents):
     vector_store.add_documents(documents=[doc], ids=[f"doc_{i}"])
 
@@ -333,17 +334,17 @@ for doc, score in docs_with_score:
 ```output
 ------------------------------------------------------------
 Score:  0.3626232679001803
-The Dursleys had everything they wanted, but they also had a secret, and their greatest fear was that somebody would discover it. They didn’t think they could bear it if anyone found out about the Potters. Mrs. Potter was Mrs. Dursley’s sister, but they hadn’t met for several years; in fact, Mrs. Dursley pretended she didn’t have a sister, because her sister and her good-for-nothing husband were as unDursleyish as it was possible to be. The Dursleys shuddered to think what the neighbors would say if the Potters arrived in the street. The Dursleys knew that the Potters had a small son, too, but they had never even seen him. This boy was another good reason for keeping the Potters away; they didn’t want Dudley mixing with a child like that.
+The Dursleys had everything they wanted, but they also had a secret, and their greatest fear was that somebody would discover it. They didn’t think they could bear it if anybody found out about the Potters. Mrs. Potter was Mrs. Dursley’s sister, but they hadn’t met for several years; in fact, Mrs. Dursley pretended she didn’t have a sister, because her sister and her good-for-nothing husband were as unDursleyish as it was possible to be. The Dursleys shuddered to think what the neighbors would say if the Potters arrived in the street. The Dursleys knew that the Potters had a small son, too, but they had never even seen him. This boy was another good reason for keeping the Potters away; they didn’t want Dudley mixing with a child like that.
 ------------------------------------------------------------
 ------------------------------------------------------------
 Score:  0.44752797298657554
-M r. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much. They were the last people you’d expect to be involved in anything strange or mysterious, because they just didn’t hold with such nonsense.
-
-Mr. Dursley was the director of a firm called Grunnings, which made drills. He was a big, beefy man with hardly any neck, although he did have a very large mustache. Mrs. Dursley was thin and blonde and had nearly twice the usual amount of neck, which came in very useful as she spent so much of her time craning over garden fences, spying on the neighbors. The Dursleys had a small son called Dudley and in their opinion there was no finer boy anywhere.
+The Dursleys’ house had four bedrooms: one for Uncle Vernon and Aunt Petunia, one for visitors (usually Uncle Vernon’s sister, Marge), one where Dudley slept, and one where Dudley kept all the toys and things that wouldn’t fit into his first bedroom. It only took Harry one trip upstairs to move everything he owned from the cupboard to this room. He sat down on the bed and stared around him. Nearly everything in here was broken. The month-old video camera was lying on top of a small, working tank Dudley had once driven over the next door neighbor’s dog; in the corner was Dudley’s first-ever television set, which he’d put his foot through when his favorite program had been canceled; there was a large birdcage, which had once held a parrot that Dudley had swapped at school for a real air rifle, which was up on a shelf with the end all bent because Dudley had sat on it. Other shelves were full of books. They were the only things in the room that looked as though they’d never been touched.
 ------------------------------------------------------------
 ------------------------------------------------------------
 Score:  0.4652486419877385
-The Dursleys’ house had four bedrooms: one for Uncle Vernon and Aunt Petunia, one for visitors (usually Uncle Vernon’s sister, Marge), one where Dudley slept, and one where Dudley kept all the toys and things that wouldn’t fit into his first bedroom. It only took Harry one trip upstairs to move everything he owned from the cupboard to this room. He sat down on the bed and stared around him. Nearly everything in here was broken. The month-old video camera was lying on top of a small, working tank Dudley had once driven over the next door neighbor’s dog; in the corner was Dudley’s first-ever television set, which he’d put his foot through when his favorite program had been canceled; there was a large birdcage, which had once held a parrot that Dudley had swapped at school for a real air rifle, which was up on a shelf with the end all bent because Dudley had sat on it. Other shelves were full of books. They were the only things in the room that looked as though they’d never been touched.
+M r. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much. They were the last people you’d expect to be involved in anything strange or mysterious, because they just didn’t hold with such nonsense.
+
+Mr. Dursley was the director of a firm called Grunnings, which made drills. He was a big, beefy man with hardly any neck, although he did have a very large mustache. Mrs. Dursley was thin and blonde and had nearly twice the usual amount of neck, which came in very useful as she spent so much of her time craning over garden fences, spying on the neighbors. The Dursleys had a small son called Dudley and in their opinion there was no finer boy anywhere.
 ------------------------------------------------------------
 ------------------------------------------------------------
 Score:  0.4739086301927252
@@ -359,17 +360,17 @@ But at that moment, Hagrid leapt from the sofa and drew a battered pink umbrella
 ------------------------------------------------------------
 ```
 
-## 用于检索增强生成的使用 (Usage for retrieval-augmented generation)
+## 用于检索增强生成 (RAG) 的用法
 
-#### 用例 1：基于故事书的问答系统 (Use Case 1: Q&A System based on the Story Book)
+#### 用例 1：基于故事书的问答系统
 
-问答功能使用户能够询问有关故事、角色和事件的具体问题，并获得简洁、信息丰富的答案。这不仅增强了他们对书籍的理解，还让他们感觉自己是魔法世界的一部分。
+问答功能允许用户询问有关故事、角色和事件的具体问题，并获得简洁、内容丰富的答案。这不仅增强了他们对书籍的理解，还让他们感觉自己是魔法世界的一部分。
 
-## 通过转换为检索器进行查询 (Query by turning into retriever)
+## 通过转为检索器进行查询 (Query by turning into retriever)
 
-LangChain 向量存储通过启用基于用户查询的高效相似性搜索来查找前 10 个相关文档，从而简化了复杂的问答系统的构建。**检索器** (retriever) 是从 **vector\_store** 创建的，问答链是使用 **create\_stuff\_documents\_chain** 函数构建的。使用 **ChatPromptTemplate** 类创建提示模板，确保响应结构良好且信息丰富。在问答应用中，向用户展示用于生成答案的来源通常很重要。LangChain 内置的 **create\_retrieval\_chain** 会将检索到的源文档通过 “context” 键传播到输出：
+LangChain 向量存储通过实现高效的相似性搜索来查找基于用户查询的排名前 10 的相关文档，从而简化了复杂的问答系统的构建。**检索器 (retriever)** 是从 **vector\_store** 创建的，问答链是使用 **create\_stuff\_documents\_chain** 函数构建的。提示模板是使用 **ChatPromptTemplate** 类创建的，以确保结构化和内容丰富的响应。在问答应用程序中，向用户显示用于生成答案的来源通常很重要。LangChain 内置的 **create\_retrieval\_chain** 会将检索到的源文档作为 "context" 键传播到输出中：
 
-阅读更多关于 LangChain RAG 教程和上述术语的介绍 [此处](/oss/langchain/rag)
+在此处阅读更多关于 LangChain RAG 教程和上面提到的术语的介绍 [此处](/oss/langchain/rag)
 
 ```python
 from typing import List, Tuple
@@ -390,7 +391,7 @@ def get_answer_and_sources(user_query: str):
         )
     )
 
-    # 从排名前几的结果中提取上下文
+    # 从前几个结果中提取上下文
     context = "\n".join([doc.page_content for doc, score in docs_with_score])
 
     # 定义系统提示
@@ -456,7 +457,7 @@ get_answer_and_sources(user_query)
 ```
 
 ```output
-Answer: When Harry first learned that he was a wizard, he felt quite sure there had been a horrible mistake. He struggled to believe it because he had spent his life being bullied and mistreated by the Dursleys. If he was really a wizard, he wondered why he hadn't been able to use magic to defend himself. This disbelief and surprise were evident when he gasped, “I’m a what?”
+Answer: 当哈利第一次得知自己是巫师时，他确信一定是出了可怕的错误。他难以置信，因为他一生都在被德思礼一家欺负和虐待。如果他真的是巫师，他想知道为什么他不能用魔法来保护自己。这种怀疑和惊讶在他惊呼“我是一个什么？”时显而易见。
 
 Sources:
 | Doc ID                                      | Content                                               |
@@ -493,7 +494,7 @@ Sources:
 
 有关 SQLServer Vectorstore 功能和配置的详细文档，请参阅 API 参考：[https://python.langchain.com/api\_reference/sqlserver/index.html](https:\python.langchain.com\api_reference\sqlserver\index.html)
 
-## 相关 (Related)
+## 相关内容 (Related)
 
 - 向量存储 [概念指南](https://python.langchain.com/docs/concepts/vectorstores/)
 - 向量存储 [操作指南](https://python.langchain.com/docs/how_to/#vector-stores)

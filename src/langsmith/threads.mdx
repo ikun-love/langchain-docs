@@ -3,19 +3,19 @@ title: 配置线程
 sidebarTitle: 线程
 ---
 
-许多 LLM 应用都具有聊天机器人式的接口，用户和 LLM 应用会在其中进行多轮对话。为了跟踪这些对话，您可以在 LangSmith 中使用 `Threads`（线程）功能。
+许多 LLM 应用都有一个类似聊天机器人的界面，用户和 LLM 应用在此进行多轮对话。为了跟踪这些对话，您可以在 LangSmith 中使用 `Threads`（线程）功能。
 
-## 将追踪（Traces）分组到线程中
+## 将 Traces 分组到线程中
 
-`Thread`（线程）是一系列追踪的序列，代表了一次单一的对话。每次响应都表示为一个独立的追踪（trace），但这些追踪通过属于同一个线程而被链接在一起。
+`Thread`（线程）是一系列代表**单次完整对话**的 traces（痕迹）。每次响应都表示为一个独立的 trace，但这些 trace 通过属于同一个线程而相互关联。
 
-要将追踪关联起来，您需要在传递的元数据（`metadata`）中包含一个特殊的键，其值是该线程的唯一标识符。该键名可以是以下之一：
+为了将 traces 关联起来，您需要在传递的元数据 (`metadata`) 中包含一个特殊的键，其值是该线程的唯一标识符。该键名可以是以下之一：
 
-*   `session_id`
-*   `thread_id`
-*   `conversation_id`
+- `session_id`
+- `thread_id`
+- `conversation_id`
 
-值可以是您想要的任何字符串，但我们推荐使用 UUID，例如 `f47ac10b-58cc-4372-a567-0e02b2c3d479`。请参阅[本指南](./add-metadata-tags)了解如何向追踪添加元数据的说明。
+该值可以是任何您想要的字符串，但我们推荐使用 UUID，例如 `f47ac10b-58cc-4372-a567-0e02b2c3d479`。有关向 traces 添加元数据的说明，请参阅 [本指南](./add-metadata-tags)。
 
 ### 示例
 
@@ -43,12 +43,12 @@ langsmith_extra={"project_name": LANGSMITH_PROJECT, "metadata":{"session_id": TH
 
 # 获取线程中所有 LLM 调用的历史记录，以构建对话历史
 def get_thread_history(thread_id: str, project_name: str):
-    # 按特定线程和项目过滤运行（runs）
+    # 按特定线程和项目过滤运行记录
     filter_string = f'and(in(metadata_key, ["session_id","conversation_id","thread_id"]), eq(metadata_value, "{thread_id}"))'
-    # 只获取 LLM 运行
+    # 只获取 LLM 运行记录
     runs = [r for r in langsmith_client.list_runs(project_name=project_name, filter=filter_string, run_type="llm")]
 
-    # 按开始时间排序，以获取最近的交互
+    # 按开始时间排序，以获取最新的交互
     runs = sorted(runs, key=lambda run: run.start_time, reverse=True)
 
     # 重构对话状态
@@ -61,10 +61,10 @@ def chat_pipeline(messages: list, get_chat_history: bool = False):
     # 确定是继续现有线程还是启动新线程
     if get_chat_history:
         run_tree = ls.get_current_run_tree()
-        # 获取现有对话历史并将新消息追加到后面
+        # 获取现有对话历史并附加新消息
         history_messages = get_thread_history(run_tree.extra["metadata"]["session_id"], run_tree.session_name)
         all_messages = history_messages + messages
-        # 将完整的对话包含在追踪的输入中
+        # 将完整的对话包含在输入中进行追踪
         input_messages = all_messages
     else:
         all_messages = messages
@@ -75,7 +75,7 @@ def chat_pipeline(messages: list, get_chat_history: bool = False):
         model="gpt-4o-mini", messages=all_messages
     )
 
-    # 返回包含输入和响应的完整对话
+    # 返回完整的对话，包括输入和响应
     response_message = chat_completion.choices[0].message
     return {
         "messages": input_messages + [response_message]
@@ -131,10 +131,10 @@ interface ChatInput {
 
 // 获取线程中所有 LLM 调用的历史记录，以构建对话历史
 async function getThreadHistory(threadId: string, projectName: string): Promise<Message[]> {
-  // 按特定线程和项目过滤运行（runs）
+  // 按特定线程和项目过滤运行记录
   const filterString = `and(in(metadata_key, ["session_id","conversation_id","thread_id"]), eq(metadata_value, "${threadId}"))`;
 
-  // 只获取 LLM 运行
+  // 只获取 LLM 运行记录
   const runs: any[] = [];
   for await (const run of langsmithClient.listRuns({
     projectName: projectName,
@@ -146,15 +146,15 @@ async function getThreadHistory(threadId: string, projectName: string): Promise<
     }
   }
 
-  // 按开始时间排序，以获取最近的交互
+  // 按开始时间排序，以获取最新的交互
   runs.sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
-  // 检查是否有任何运行记录
+  // 检查是否有运行记录
   if (runs.length === 0) {
     return [];
   }
 
-  // 当前对话的状态
+  // 当前对话状态
   const latestRun = runs[0];
   const inputMessages = latestRun.inputs.messages as Message[];
   const outputMessage = latestRun.outputs.choices[0].message as Message;
@@ -171,14 +171,14 @@ const chatPipeline = traceable(async (input: ChatInput): Promise<ChatResponse> =
   // 确定是继续现有线程还是启动新线程
   if (get_chat_history) {
     const runTree = getCurrentRunTree();
-    // 获取现有对话历史并将新消息追加到后面
+    // 获取现有对话历史并附加新消息
     const sessionId = runTree.extra?.metadata?.session_id || THREAD_ID;
     const historyMessages = await getThreadHistory(
       sessionId,
       runTree.project_name
     );
     allMessages = historyMessages.concat(messages);
-    // 将完整的对话包含在追踪的输入中
+    // 将完整的对话包含在输入中进行追踪
     inputMessages = allMessages;
   } else {
     allMessages = messages;
@@ -191,14 +191,14 @@ const chatPipeline = traceable(async (input: ChatInput): Promise<ChatResponse> =
     messages: allMessages
   });
 
-  // 返回包含输入和响应的完整对话
+  // 返回完整的对话，包括输入和响应
   const responseMessage = chatCompletion.choices[0].message as Message;
   return {
     messages: [...inputMessages, responseMessage]
   };
 }, { name: "Chat Bot" });
 
-// 期望的 JSON 格式的示例输入
+// 要求的 JSON 格式示例输入
 const input: ChatInput = {
   get_chat_history: false,
   messages: [
@@ -215,7 +215,7 @@ const result = await chatPipeline(input);
 
 </CodeGroup>
 
-等待几秒钟后，您可以进行以下调用以继续对话。通过传递 `get_chat_history=True` / `getChatHistory: true`，您可以从上次停止的地方继续对话。这意味着 LLM 将收到完整的消息历史记录并对其作出回应，而不仅仅是对最新消息作出回应。
+等待几秒钟后，您可以进行以下调用以继续对话。通过传递 `get_chat_history=True`/`getChatHistory: true`，您可以从上次中断的地方继续对话。这意味着 LLM 将接收到完整的消息历史记录并对其做出响应，而不仅仅是对最新消息做出响应。
 
 <CodeGroup>
 
@@ -248,7 +248,7 @@ await chatPipeline(input);
 ```
 </CodeGroup>
 
-继续保持对话。由于包含了过去的消息，LLM 将会记住整个对话。
+继续对话。由于包含了过去的记录，LLM 将会记住这次对话。
 
 <CodeGroup>
 
@@ -284,7 +284,7 @@ await chatPipeline(input);
 
 ## 查看线程
 
-您可以在任何项目详情页面的 **Threads**（线程）选项卡中查看线程。然后，您将看到所有线程的列表，按最近活动的先后排序。
+您可以在任何项目详情页面的 **Threads**（线程）选项卡中查看线程。届时，您将看到所有线程的列表，按最近活动时间排序。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -300,6 +300,9 @@ await chatPipeline(input);
 />
 </div>
 
+<Callout type="info" icon="bird">
+在线程视图中使用 **[Polly](/langsmith/polly)** 来分析对话线程，理解用户情绪，识别痛点，并跟踪问题是否得到解决。
+</Callout>
 
 ### 查看单个线程
 
@@ -319,30 +322,30 @@ await chatPipeline(input);
 />
 </div>
 
-线程可以通过两种不同的方式查看：
+线程有两种不同的查看方式：
 
-*   [线程概览](/langsmith/threads#thread-overview)
-*   [追踪视图](/langsmith/threads#trace-view)
+- [线程概览](/langsmith/threads#thread-overview)
+- [Trace 视图](/langsmith/threads#trace-view)
 
-您可以使用页面顶部的按钮在这两种视图之间切换，或者使用键盘快捷键 `T` 来切换两者。
+您可以使用页面顶部的按钮在这两种视图之间切换，或者使用键盘快捷键 `T` 在两种视图之间切换。
 
-#### 线程概览
+#### 线程概览 (Thread overview)
 
-线程概览页面向您展示了一个类似聊天机器人的 UI，您可以在其中查看对话中每一轮的输入和输出。您可以配置在概览中显示哪些输入和输出字段，或者通过点击 **Configure**（配置）按钮显示多个字段。
+线程概览页面会向您展示一个类似聊天机器人的 UI，您可以在其中看到对话每一轮的输入和输出。您可以配置在概览中显示输入和输出的哪些字段，或者通过点击 **Configure**（配置）按钮显示多个字段。
 
-输入和输出的 JSON 路径支持负索引，因此您可以使用 `-1` 来访问数组的最后一个元素。例如，`inputs.messages[-1].content` 将访问 `messages` 数组中的最后一条消息。
+输入和输出的 JSON 路径支持负数索引，因此您可以使用 `-1` 来访问数组的最后一个元素。例如，`inputs.messages[-1].content` 将访问 `messages` 数组中的最后一条消息。
 
 
-#### 追踪视图
+#### Trace 视图 (Trace view)
 
-这里的追踪视图与查看单个运行时的追踪视图类似，不同之处在于您可以轻松访问线程中每一轮的所有运行记录。
+此处的 Trace 视图类似于查看单个运行记录时的 Trace 视图，区别在于您可以方便地访问线程中每一轮对应的所有运行记录。
 
 ### 查看反馈
 
-查看线程时，在页面顶部，您会看到一个名为 `Feedback`（反馈）的部分。您可以在此处查看构成该线程的所有运行记录的反馈。这些反馈是汇总的，因此如果您针对相同的标准评估线程中的每个运行记录，您将看到跨所有运行记录显示的平均得分。您还可以在此处查看留下的[线程级别反馈](/langsmith/online-evaluations#configure-multi-turn-online-evaluators)。
+在查看线程时，在页面顶部您会看到一个名为 `Feedback`（反馈）的部分。您可以在这里看到构成该线程的每次运行记录的反馈。这些反馈会进行聚合，因此如果您针对相同的标准评估了线程中的每次运行，显示的将是所有运行记录的平均得分。您还可以在此处查看留下的[线程级别反馈](/langsmith/online-evaluations#configure-multi-turn-online-evaluators)。
 
 ### 保存线程级别过滤器
 
-与在项目级别保存过滤器类似，您也可以在线程级别保存常用的过滤器。要在线程表上保存过滤器，请使用过滤器按钮设置过滤器，然后点击 **Save filter**（保存过滤器）按钮。
+类似于在项目级别保存过滤器，您也可以在线程级别保存常用的过滤器。要保存线程表上的过滤器，请使用过滤器按钮设置一个过滤器，然后点击 **Save filter**（保存过滤器）按钮。
 
-您可以通过点击 `Annotate`（标注）或 `Open trace`（打开追踪）分别在侧边栏中打开或注释追踪。
+通过点击 `Annotate`（标注）或 `Open trace`（打开 trace），您可以分别在侧边栏中打开或标注 trace。

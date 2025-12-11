@@ -1,36 +1,35 @@
-```markdown
 ---
 title: PyMuPDF4LLMLoader
 ---
 
-本指南快速概述了如何开始使用 PyMuPDF4LLM [文档加载器](https://python.langchain.com/docs/concepts/#document-loaders)。有关 PyMuPDF4LLMLoader 所有功能和配置的详细文档，请访问 [GitHub 仓库](https://github.com/lakinduboteju/langchain-pymupdf4llm)。
+本指南提供了使用 PyMuPDF4LLM [文档加载器](https://python.langchain.com/docs/concepts/#document-loaders)的快速入门概览。有关 PyMuPDF4LLMLoader 所有功能和配置的详细文档，请访问 [GitHub 仓库](https://github.com/lakinduboteju/langchain-pymupdf4llm)。
 
-## 概述
+## 概览 (Overview)
 
-### 集成详情
+### 集成详情 (Integration details)
 
 | 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) |
-| :--- | :--- | :---: | :---: |  :---: |
+| :--- | :--- | :---: | :---: | :---: |
 | [PyMuPDF4LLMLoader](https://github.com/lakinduboteju/langchain-pymupdf4llm) | [langchain-pymupdf4llm](https://pypi.org/project/langchain-pymupdf4llm) | ✅ | ❌ | ❌ |
 
-### 加载器功能 (Loader features)
+### 加载器特性 (Loader features)
 
 | 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support) | 提取图像 (Extract Images) | 提取表格 (Extract Tables) |
 | :--- | :--- | :---: | :---: | :---: |
 | PyMuPDF4LLMLoader | ✅ | ❌ | ✅ | ✅ |
 
-## 设置
+## 设置 (Setup)
 
-要访问 PyMuPDF4LLM 文档加载器，您需要安装 `langchain-pymupdf4llm` 集成包。
+要使用 PyMuPDF4LLM 文档加载器，您需要安装 `langchain-pymupdf4llm` 集成包。
 
 ### 凭证 (Credentials)
 
-使用 PyMuPDF4LLMLoader **不需要**凭证。
+使用 PyMuPDF4LLMLoader **不需要**任何凭证。
 
-要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
@@ -96,7 +95,7 @@ pages = []
 for doc in loader.lazy_load():
     pages.append(doc)
     if len(pages) >= 10:
-        # 执行分页操作，例如：
+        # do some paged operation, e.g.
         # index.upsert(page)
 
         pages = []
@@ -112,7 +111,7 @@ from IPython.display import Markdown, display
 
 part = pages[0].page_content[778:1189]
 print(part)
-# Markdown 渲染
+# Markdown rendering
 display(Markdown(part))
 ```
 
@@ -141,26 +140,26 @@ pprint.pp(pages[0].metadata)
 
 `metadata` 属性至少包含以下键：
 
-- source
-- page（如果在 *page* 模式下）
-- total_page
-- creationdate
-- creator
-- producer
+- source (来源)
+- page (如果模式是 *page*)
+- total_page (总页数)
+- creationdate (创建日期)
+- creator (创建者)
+- producer (生成器)
 
-额外的元数据特定于每个解析器。
-这些信息（例如，用于对 PDF 进行分类）可能会很有帮助。
+其他元数据特定于每个解析器。
+这些信息可能很有帮助（例如，用于对您的 PDF 进行分类）。
 
-## 分割模式 & 自定义页分隔符 (Splitting mode & custom pages delimiter)
+## 分页模式和自定义页面分隔符 (Splitting mode & custom pages delimiter)
 
-加载 PDF 文件时，您可以通过两种不同的方式将其拆分：
+加载 PDF 文件时，您可以通过两种不同的方式对其进行分割：
 
-- 按页拆分 (By page)
+- 按页分割 (By page)
 - 作为单个文本流 (As a single text flow)
 
-默认情况下，PyMuPDF4LLMLoader 按页拆分 PDF。
+默认情况下，PyMuPDF4LLMLoader 会按页分割 PDF。
 
-### 按页提取 PDF。每页均提取为一个 langchain Document 对象
+### 按页提取 PDF。每页都提取为 langchain Document 对象 (Extract the PDF by page. Each page is extracted as a langchain Document object)
 
 ```python
 loader = PyMuPDF4LLMLoader(
@@ -193,9 +192,9 @@ pprint.pp(docs[0].metadata)
  'page': 0}
 ```
 
-在此模式下，PDF 按页分割，结果 `Document` 的元数据中包含 `page`（页码）。但在某些情况下，我们可能希望将 PDF 作为单个文本流处理（这样就不会在段落中间截断）。在这种情况下，您可以使用 *single* 模式：
+在此模式下，PDF 按页分割，结果 Document 的元数据包含 `page`（页码）。但在某些情况下，我们可能希望将 PDF 作为单一文本流处理（这样我们就不会将段落截断）。在这种情况下，您可以使用 *single* 模式：
 
-### 将整个 PDF 提取为单个 langchain Document 对象
+### 将整个 PDF 提取为一个 langchain Document 对象 (Extract the whole PDF as a single langchain Document object)
 
 ```python
 loader = PyMuPDF4LLMLoader(
@@ -229,7 +228,7 @@ pprint.pp(docs[0].metadata)
 
 从逻辑上讲，在此模式下，`page`（页码）元数据会消失。以下是如何在文本流中清晰识别页面结束位置的方法：
 
-### 在 *single* 模式下添加自定义 *pages\_delimiter* 以识别页面结束位置
+### 在 *single* 模式下添加自定义 *pages_delimiter* 以标识页面结束位置 (Add a custom *pages_delimiter* to identify where are ends of pages in *single* mode)
 
 ```python
 loader = PyMuPDF4LLMLoader(
@@ -245,19 +244,19 @@ display(Markdown(part))
 ```
 
 默认的 `pages_delimiter` 是 `\n-----\n\n`。
-但它可以简单地是 `\n`，或者 `\f` 以明确指示页面更改，或者 `\<!-- PAGE BREAK -->` 用于在 Markdown 查看器中无缝注入而没有视觉效果。
+但这可能只是 `\n`，或 `\f` 来明确指示页面更改，或 `\<!-- PAGE BREAK -->` 用于无缝注入 Markdown 查看器中而没有视觉效果。
 
-# 从 PDF 中提取图像
+# 从 PDF 中提取图像 (Extract images from the PDF)
 
-您可以使用三种不同解决方案以 *markdown* 格式从 PDF 中提取图像（文本形式）：
+您可以使用三种不同的解决方案以*markdown* 文本形式从 PDF 中提取图像：
 
 - rapidOCR（轻量级光学字符识别工具）
 - Tesseract（高精度 OCR 工具）
 - 多模态语言模型 (Multimodal language model)
 
-结果将插入在页面文本的末尾。
+结果将插入到页面文本的末尾。
 
-### 使用 rapidOCR 从 PDF 中提取图像
+### 使用 rapidOCR 从 PDF 中提取图像 (Extract images from the PDF with rapidOCR)
 
 ```python
 pip install -qU rapidocr-onnxruntime pillow
@@ -281,7 +280,7 @@ display(Markdown(part))
 
 请注意，RapidOCR 专为处理中文和英文而设计，不适用于其他语言。
 
-### 使用 Tesseract 从 PDF 中提取图像
+### 使用 Tesseract 从 PDF 中提取图像 (Extract images from the PDF with Tesseract)
 
 ```python
 pip install -qU pytesseract
@@ -301,7 +300,7 @@ docs = loader.load()
 print(docs[5].page_content[1863:])
 ```
 
-### 使用多模态模型提取图像
+### 使用多模态模型提取图像 (Extract images from the PDF with multimodal model)
 
 ```python
 pip install -qU langchain-openai
@@ -323,7 +322,7 @@ True
 from getpass import getpass
 
 if not os.environ.get("OPENAI_API_KEY"):
-    os.environ["OPENAI_API_KEY"] = getpass("OpenAI API 密钥 =")
+    os.environ["OPENAI_API_KEY"] = getpass("OpenAI API key =")
 ```
 
 ```python
@@ -343,19 +342,21 @@ docs = loader.load()
 print(docs[5].page_content[1863:])
 ```
 
-# 从 PDF 中提取表格
+# 从 PDF 中提取表格 (Extract tables from the PDF)
 
-使用 PyMUPDF4LLM，您可以将 PDF 中的表格提取为 *markdown* 格式：
+使用 PyMUPDF4LLM，您可以将 PDF 中的表格提取为*markdown*格式：
 
 ```python
 loader = PyMuPDF4LLMLoader(
     "./example_data/layout-parser-paper.pdf",
     mode="page",
     # "lines_strict" 是默认策略，
-    # 对于具有行列线的表格最准确，
+    # 对于带有行列线的表格最为准确，
     # 但可能不适用于所有文档。
-    # "lines" 是一种不那么严格的策略，可能适用于某些文档。
-    # "text" 是最不严格的策略，可能适用于不包含带线的表格的文档。
+    # "lines" 是一种不太严格的策略，可能更适用于
+    # 某些文档。
+    # "text" 是最不严格的策略，可能更适用于
+    # 没有表格线的文档。
     table_strategy="lines",
 )
 docs = loader.load()
@@ -365,11 +366,11 @@ print(part)
 display(Markdown(part))
 ```
 
-## 使用文件 (Working with Files)
+## 处理文件 (Working with Files)
 
-许多文档加载器涉及解析文件。这些加载器之间的差异通常源于文件解析方式，而不是文件加载方式。例如，您可以使用 `open` 读取 PDF 或 markdown 文件的二进制内容，但需要不同的解析逻辑才能将该二进制数据转换为文本。
+许多文档加载器涉及解析文件。此类加载器之间的区别主要在于文件解析方式，而不是文件加载方式。例如，您可以使用 `open` 读取 PDF 或 Markdown 文件的二进制内容，但需要不同的解析逻辑才能将该二进制数据转换为文本。
 
-因此，将解析逻辑与加载逻辑解耦可能很有帮助，这样可以更轻松地重用给定的解析器，而无需考虑数据是如何加载的。
+因此，将解析逻辑与加载逻辑分离可能很有帮助，这样可以更轻松地重用给定的解析器，而无论数据是如何加载的。
 您可以使用此策略来分析不同的文件，并使用相同的解析参数。
 
 ```python
@@ -396,4 +397,3 @@ display(Markdown(part))
 ## API 参考 (API reference)
 
 有关 PyMuPDF4LLMLoader 所有功能和配置的详细文档，请访问 GitHub 仓库：[github.com/lakinduboteju/langchain-pymupdf4llm](https://github.com/lakinduboteju/langchain-pymupdf4llm)
-```

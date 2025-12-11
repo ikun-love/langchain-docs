@@ -1,36 +1,52 @@
 ---
-title: 流式传输 (Streaming)
+title: 流式传输（Streaming）
 ---
 
-LangChain 实现了一个流式传输系统，用于实时展现更新信息。
+LangChain 实现了一个流式传输系统，用于提供实时的更新信息。
 
-对于基于 LLM（大语言模型）构建的应用，流式传输对于增强应用的响应性至关重要。通过**逐步显示**输出，即使在完整响应准备好之前，流式传输也能显著改善用户体验 (UX)，尤其是在处理 LLM 的等待延迟时。
+流式传输对于增强基于 LLM 构建的应用程序的响应速度至关重要。通过逐步显示输出，即使在完整响应准备就绪之前，流式传输也能显著改善用户体验（UX），尤其是在处理 LLM 的延迟时。
 
 ## 概述
 
-LangChain 的流式传输系统可以让你向应用展示来自智能体（Agent）运行的实时反馈。
+LangChain 的流式传输系统允许您向应用程序暴露来自智能体（Agent）运行的实时反馈。
 
 使用 LangChain 流式传输可以实现以下功能：
 
-* <Icon icon="brain" size={16} /> [**流式传输智能体进度**](#agent-progress) — 在智能体的每一步执行后获取状态更新。
-* <Icon icon="square-binary" size={16} /> [**流式传输 LLM Token**](#llm-tokens) — 在语言模型生成 Token 的同时进行传输。
-* <Icon icon="table" size={16} /> [**流式传输自定义更新**](#custom-updates) — 发出用户定义的信号（例如：`"Fetched 10/100 records"`）。
-* <Icon icon="layer-plus" size={16} /> [**流式传输多种模式**](#stream-multiple-modes) — 可以选择 `updates`（智能体进度）、`messages`（LLM Token + 元数据）或 `custom`（任意用户数据）。
+* <Icon icon="brain" size={16} /> [**流式传输智能体进度**](#agent-progress) — 在每个智能体步骤之后获取状态更新。
+* <Icon icon="square-binary" size={16} /> [**流式传输 LLM Token**](#llm-tokens) — 在语言模型生成 Token 的同时进行流式传输。
+* <Icon icon="table" size={16} /> [**流式传输自定义更新**](#custom-updates) — 发出用户定义的信号（例如，`"Fetched 10/100 records"`）。
+* <Icon icon="layer-plus" size={16} /> [**流式传输多种模式**](#stream-multiple-modes) — 可以从 `updates`（智能体进度）、`messages`（LLM Token + 元数据）或 `custom`（任意用户数据）中进行选择。
+
+## 支持的流式传输模式
+
+:::python
+将以下一个或多个流式传输模式作为列表传递给 @[`stream`][CompiledStateGraph.stream] 或 @[`astream`][CompiledStateGraph.astream] 方法：
+:::
+
+:::js
+将以下一个或多个流式传输模式作为列表传递给 @[`stream`][CompiledStateGraph.stream] 方法：
+:::
+
+| 模式 (Mode) | 描述 (Description) |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `updates`  | 在每个智能体步骤后流式传输状态更新。如果同一个步骤中进行了多次更新（例如，运行了多个节点），这些更新会分别流式传输。 |
+| `messages` | 从任何执行了 LLM 调用的图节点流式传输 `(token, metadata)` 元组。 |
+| `custom`   | 使用流式写入器（stream writer）从图节点内部流式传输用户定义的数据。 |
 
 ## 智能体进度 (Agent progress)
 
 :::python
-要以流式方式传输智能体进度，请将 @[`stream`][CompiledStateGraph.stream] 或 @[`astream`][CompiledStateGraph.astream] 方法与 `stream_mode="updates"` 一起使用。该方法会在每个智能体步骤后发出一个事件。
+要流式传输智能体进度，请将 `@[`stream`][CompiledStateGraph.stream]` 或 `@[`astream`][CompiledStateGraph.astream]` 方法与 `stream_mode="updates"` 一起使用。这会在每个智能体步骤后发出一个事件。
 :::
 
 :::js
-要以流式方式传输智能体进度，请将 @[`stream`][CompiledStateGraph.stream] 方法与 `streamMode: "updates"` 一起使用。该方法会在每个智能体步骤后发出一个事件。
+要流式传输智能体进度，请将 `@[`stream`][CompiledStateGraph.stream]` 方法与 `streamMode: "updates"` 一起使用。这会在每个智能体步骤后发出一个事件。
 :::
 
-例如，如果你的智能体调用了一次工具，你应该会看到以下更新：
+例如，如果您的智能体调用了一次工具，您应该会看到以下更新：
 
-* **LLM 节点**: 包含工具调用请求的 @[`AIMessage`]
-* **工具节点**: 包含执行结果的 @[`ToolMessage`]
+* **LLM 节点**: @[`AIMessage`] 附带工具调用请求
+* **工具节点**: @[`ToolMessage`] 附带执行结果
 * **LLM 节点**: 最终的 AI 响应
 
 :::python
@@ -149,10 +165,10 @@ for await (const chunk of await agent.stream(
 ```
 :::
 
-## LLM Token 传输 (LLM tokens)
+## LLM Token 流式传输 (LLM tokens)
 
 :::python
-要以流式方式传输 LLM 生成的 Token，请使用 `stream_mode="messages"`。下面展示了智能体流式传输工具调用和最终响应的输出。
+要按生成顺序流式传输 Token，请使用 `stream_mode="messages"`。下面您可以看到智能体流式传输工具调用和最终响应时的输出。
 
 ```python title="Streaming LLM tokens"
 from langchain.agents import create_agent
@@ -275,7 +291,7 @@ content: [{'type': 'text', 'text': '!"\n\n'}]
 :::
 
 :::js
-要以流式方式传输 LLM 生成的 Token，请使用 `streamMode: "messages"`：
+要按生成顺序流式传输 Token，请使用 `streamMode: "messages"`：
 
 ```typescript
 import z from "zod";
@@ -345,12 +361,12 @@ Acquired data for city: San Francisco
 ```
 
 <Note>
-    如果在工具内部添加了 @[`get_stream_writer`]，则无法在 LangGraph 执行上下文之外调用该工具。
+    如果您在工具中添加了 @[`get_stream_writer`] 并在 LangGraph 执行上下文之外调用该工具，则无法正常使用。
 </Note>
 :::
 
 :::js
-要流式传输工具执行时的更新，可以使用配置中的 `writer` 参数。
+要流式传输工具执行时的更新，您可以使用配置中的 `writer` 参数。
 
 ```typescript
 import z from "zod";
@@ -361,7 +377,7 @@ const getWeather = tool(
     async (input, config: LangGraphRunnableConfig) => {
         // 流式传输任何任意数据
         config.writer?.(`Looking up data for city: ${input.city}`);
-        // ... 获取城市数据
+        // ... fetch city data
         config.writer?.(`Acquired data for city: ${input.city}`);
         return `It's always sunny in ${input.city}!`;
     },
@@ -393,14 +409,16 @@ Acquired data for city: San Francisco
 ```
 
 <Note>
-    如果向工具中添加 `writer` 参数，则在不提供 writer 函数的情况下，无法在 LangGraph 执行上下文之外调用该工具。
+    如果您在工具中添加了 `writer` 参数，则在不提供写入函数的情况下，您将无法在 LangGraph 执行上下文之外调用该工具。
 </Note>
 :::
 
 ## 流式传输多种模式 (Stream multiple modes)
 
 :::python
-您可以通过将流式模式指定为列表来指定多种流式传输模式：`stream_mode=["updates", "custom"]`：
+您可以通过将流式传输模式作为列表传递来指定多种流式传输模式：`stream_mode=["updates", "custom"]`。
+
+流式传输的输出将是 `(mode, chunk)` 元组，其中 `mode` 是流式传输模式的名称，`chunk` 是该模式流式传输的数据。
 
 ```python title="Streaming multiple modes"
 from langchain.agents import create_agent
@@ -451,7 +469,9 @@ content: {'model': {'messages': [AIMessage(content='San Francisco weather: It's 
 :::
 
 :::js
-您可以通过将 `streamMode` 指定为数组来指定多种流式传输模式：`streamMode: ["updates", "messages", "custom"]`：
+您可以通过将 `streamMode` 作为数组传递来指定多种流式传输模式：`streamMode: ["updates", "messages", "custom"]`。
+
+流式传输的输出将是 `[mode, chunk]` 元组，其中 `mode` 是流式传输模式的名称，`chunk` 是该模式流式传输的数据。
 
 ```typescript
 import z from "zod";
@@ -460,9 +480,9 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 const getWeather = tool(
     async (input, config: LangGraphRunnableConfig) => {
-        // 流式传输任何任意数据
+        // Stream any arbitrary data
         config.writer?.(`Looking up data for city: ${input.city}`);
-        // ... 获取城市数据
+        // ... fetch city data
         config.writer?.(`Acquired data for city: ${input.city}`);
         return `It's always sunny in ${input.city}!`;
     },
@@ -491,8 +511,58 @@ for await (const [streamMode, chunk] of await agent.stream(
 
 ## 禁用流式传输 (Disable streaming)
 
-在某些应用中，您可能需要为特定模型的单个 Token 禁用流式传输。
+在某些应用程序中，您可能需要禁用针对特定模型的单个 Token 的流式传输。这在以下情况下很有用：
 
-这在 [多智能体](/oss/langchain/multi-agent) 系统中控制哪些智能体流式传输其输出时非常有用。
+- 处理 [多智能体](/oss/langchain/multi-agent) 系统时，用于控制哪些智能体流式传输其输出
+- 混合使用支持流式传输和不支持流式传输的模型
+- 部署到 [LangSmith](/langsmith/home) 时，想要防止某些模型输出流式传输到客户端
 
-请参阅 [模型](/oss/langchain/models#disable-streaming) 指南，了解如何禁用流式传输。
+:::python
+在初始化模型时设置 `streaming=False`。
+
+```python
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(
+    model="gpt-4o",
+    streaming=False  # [!code highlight]
+)
+```
+:::
+
+:::js
+在初始化模型时设置 `streaming: false`。
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({
+  model: "gpt-4o",
+  streaming: false,  // [!code highlight]
+});
+```
+:::
+
+<Tip>
+部署到 LangSmith 时，请在您不希望其输出流式传输到客户端的任何模型上设置 `streaming=False`。这在部署前于图代码中进行配置。
+</Tip>
+
+:::python
+<Note>
+并非所有聊天模型集成都支持 `streaming` 参数。如果您的模型不支持，请改用 `disable_streaming=True`。此参数可通过基类在所有聊天模型上使用。
+</Note>
+:::
+
+:::js
+<Note>
+并非所有聊天模型集成都支持 `streaming` 参数。如果您的模型不支持，请改用 `disableStreaming: true`。此参数可通过基类在所有聊天模型上使用。
+</Note>
+:::
+
+有关更多详细信息，请参阅 [LangGraph 流式传输指南](/oss/langgraph/streaming#disable-streaming-for-specific-chat-models)。
+
+## 相关内容 (Related)
+
+- [使用聊天模型进行流式传输](/oss/langchain/models#stream) — 在不使用智能体或图的情况下直接从聊天模型流式传输 Token
+- [与人工干预（Human-in-the-Loop）一起流式传输](/oss/langchain/human-in-the-loop#streaming-with-hil) — 在处理人工审核中断的同时流式传输智能体进度
+- [LangGraph 的流式传输](/oss/langgraph/streaming) — 高级流式传输选项，包括 `values`、`debug` 模式和子图流式传输

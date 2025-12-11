@@ -1,57 +1,61 @@
+```markdown
 ---
-title: 批量导出追踪数据
-sidebarTitle: 批量导出追踪数据
+title: 批量导出跟踪数据
+sidebarTitle: 批量导出跟踪数据
 ---
 
 <Info>
-**受计划限制**
+**存在套餐限制**
 
-请注意，数据导出功能仅支持 [LangSmith Plus 或 Enterprise 套件](https://www.langchain.com/pricing-langsmith)。
+请注意，数据导出功能仅支持 [LangSmith Plus 或 Enterprise 套餐](https://www.langchain.com/pricing-langsmith)。
 </Info>
 
-LangSmith 的批量数据导出功能允许您将追踪数据（traces）导出到外部目标地。如果您希望在外部工具（如 BigQuery, Snowflake, RedShift, Jupyter Notebooks 等）中离线分析数据，这将非常有用。
+LangSmith 的批量数据导出功能允许您将跟踪数据导出到外部目标。如果您希望在 BigQuery、Snowflake、RedShift、Jupyter Notebooks 等工具中进行离线数据分析，此功能将非常有用。
 
-可以启动一次导出任务，以针对特定的 LangSmith 项目和日期范围进行导出。一旦启动了批量导出，我们的系统将负责处理整个导出过程的协调和弹性恢复。请注意，导出数据可能需要一些时间，具体取决于数据的大小。我们还对可以同时运行的导出任务数量有所限制。批量导出还有一个运行时超时限制，为 24 小时。
+您可以启动一个导出任务，以针对特定的 LangSmith 项目和日期范围。一旦启动了批量导出，我们的系统将负责协调和确保导出过程的弹性。请注意，导出数据可能需要一些时间，具体取决于数据的大小。我们还限制了可以同时运行的导出任务数量。批量导出也有 24 小时的运行时间超时限制。
 
-## 目标存储（Destinations）
+## 目标 (Destinations)
 
-目前我们支持导出到您提供的 S3 存储桶或 S3 API 兼容的存储桶中。数据将以 [Parquet](https://parquet.apache.org/docs/overview/) 列式格式导出。这种格式可以方便地将数据导入到其他系统。数据导出将包含与 [Run 数据格式](/langsmith/run-data-format) 中等效的数据字段。
+目前，我们支持导出到您提供的 S3 存储桶或与 S3 API 兼容的存储桶。数据将以 [Parquet](https://parquet.apache.org/docs/overview/) 列式格式导出。这种格式将允许您轻松地将数据导入到其他系统。数据导出将包含与 [运行数据格式](/langsmith/run-data-format) 相同的等效数据字段。
 
 ## 导出数据
 
-### 目标存储 - 提供 S3 存储桶
+### 目标 - 提供 S3 存储桶
 
-要导出 LangSmith 数据，您需要提供一个 S3 存储桶，数据将被导出到该存储桶中。
+要导出 LangSmith 数据，您需要提供一个 S3 存储桶作为数据导出目标。
 
 导出需要以下信息：
 
-- **Bucket Name**: 数据将被导出的 S3 存储桶的名称。
-- **Prefix**: 存储桶内数据将被导出的根前缀（路径）。
-- **S3 Region**: 存储桶所在的区域——AWS S3 存储桶需要此信息。
-- **Endpoint URL**: S3 存储桶的端点 URL——S3 API 兼容的存储桶需要此信息。
+- **Bucket Name**: 数据将要导出的 S3 存储桶的名称。
+- **Prefix**: 存储桶内数据将要导出的根前缀（路径）。
+- **S3 Region**: 存储桶的区域——这是 AWS S3 存储桶所必需的。
+- **Endpoint URL**: S3 存储桶的端点 URL——这是 S3 API 兼容存储桶所必需的。
 - **Access Key**: S3 存储桶的访问密钥。
 - **Secret Key**: S3 存储桶的密钥。
+- **Include Bucket in Prefix** (可选)：是否将存储桶名称包含在路径前缀中。对于新目标或当存储桶名称已存在于路径中时，默认为 `false`。如果需要向后兼容或在使用要求路径中包含存储桶名称的存储系统时，请将其设置为 `true`。
 
 我们支持任何 S3 兼容的存储桶。对于非 AWS 存储桶（如 GCS 或 MinIO），您需要提供 `endpoint_url`。
 
-### 准备目标存储
+### 准备目标 (Preparing the Destination)
 
 <Note>
-**对于自托管（self-hosted）和欧盟（EU）区域部署**
+**对于自托管和欧盟地区部署**
 
-在以下请求中，请相应地更新自托管安装或位于欧盟区域的组织的 LangSmith URL。对于欧盟区域，请使用 `eu.api.smith.langchain.com`。
+在下面的请求中，请相应地更新自托管安装或位于欧盟地区组织的 LangSmith URL。
+对于欧盟地区，请使用 `eu.api.smith.langchain.com`。
 </Note>
 
 <Note>
-**需要的权限**
+**所需权限**
 
-`backend` 和 `queue` 服务都需要对目标存储桶的写入访问权限：
+`backend` 和 `queue` 服务都需要对目标存储桶的写入权限：
 
-- `backend` 服务在创建导出目标时，会尝试向目标存储桶写入一个测试文件。如果具有删除权限，它将删除该测试文件（删除权限是可选的）。
-- `queue` 服务负责执行批量导出并将文件上传到存储桶。
+- `backend` 服务在创建导出目标时会尝试向目标存储桶写入一个测试文件。
+  如果它有权限，它将删除该测试文件（删除权限是可选的）。
+- `queue` 服务负责批量导出执行并将文件上传到存储桶。
 </Note>
 
-以下示例演示了如何使用 cURL 创建一个目标存储。请将占位符值替换为您实际的配置详情。请注意，凭证将以加密形式安全地存储在我们的系统中。
+以下示例演示了如何使用 cURL 创建一个目标。请将占位符值替换为您实际的配置详细信息。请注意，凭据将以加密形式安全地存储在我们的系统中。
 
 ```bash
 curl --request POST \
@@ -61,12 +65,13 @@ curl --request POST \
   --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
   --data '{
     "destination_type": "s3",
-    "display_name": "My S3 Destination",
+    "display_name": "我的 S3 目标",
     "config": {
       "bucket_name": "your-s3-bucket-name",
       "prefix": "root_folder_prefix",
       "region": "your aws s3 region",
-      "endpoint_url": "your endpoint url for s3 compatible buckets"
+      "endpoint_url": "your endpoint url for s3 compatible buckets",
+      "include_bucket_in_prefix": true
     },
     "credentials": {
       "access_key_id": "YOUR_S3_ACCESS_KEY_ID",
@@ -75,23 +80,23 @@ curl --request POST \
   }'
 ```
 
-使用返回的 `id` 在后续的批量导出操作中引用此目标存储。
+使用返回的 `id` 在后续的批量导出操作中引用此目标。
 
-**如果您在创建目标存储时收到错误，请参阅 [调试目标存储错误](#debugging-destination-errors) 以获取详细的调试信息。**
+**如果在创建目标时收到错误，请参阅 [调试目标错误](#debugging-destination-errors) 以获取调试详细信息。**
 
-#### 凭证配置
+#### 凭据配置
 
 <Note>**需要 LangSmith Helm 版本 >= `0.10.34` (应用版本 >= `0.10.91`)**</Note>
 
-除了静态的 `access_key_id` 和 `secret_access_key` 之外，我们还支持以下额外的凭证格式：
+除了静态的 `access_key_id` 和 `secret_access_key` 之外，我们还支持以下附加凭据格式：
 
-- 要使用包含 AWS 会话令牌的[临时凭证](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html)，在创建批量导出目标时，需要额外提供 `credentials.session_token` 字段。
-- (仅限自托管): 要使用基于环境的凭证，例如与[AWS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) (IRSA) 配合使用时，在创建批量导出目标时，请从请求中省略 `credentials` 字段。
-  在这种情况下，[标准 Boto3 凭证位置](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#credentials)将按照库定义的顺序进行检查。
+- 要使用包含 AWS 会话令牌的[临时凭据](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html)，请在创建批量导出目标时额外提供 `credentials.session_token` 键。
+- (仅限自托管)：要使用基于环境的凭据，例如使用[AWS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) (IRSA)，请在创建批量导出目标时从请求中省略 `credentials` 键。
+  在这种情况下，将按照库定义的顺序检查[标准的 Boto3 凭据位置](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#credentials)。
 
 #### AWS S3 存储桶
 
-对于 AWS S3，您可以省略 `endpoint_url` 字段，并提供与您的存储桶区域匹配的 `region`。
+对于 AWS S3，您可以省略 `endpoint_url`，并提供与您的存储桶区域匹配的区域。
 
 ```bash
 curl --request POST \
@@ -101,7 +106,7 @@ curl --request POST \
   --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
   --data '{
     "destination_type": "s3",
-    "display_name": "My AWS S3 Destination",
+    "display_name": "我的 AWS S3 目标",
     "config": {
       "bucket_name": "my_bucket",
       "prefix": "data_exports",
@@ -116,7 +121,7 @@ curl --request POST \
 
 #### Google GCS XML S3 兼容存储桶
 
-当使用 Google 的 GCS 存储桶时，您需要使用 XML S3 兼容 API，并提供 `endpoint_url`，该 URL 通常是 `https://storage.googleapis.com`。
+使用 Google 的 GCS 存储桶时，您需要使用 XML S3 兼容 API，并提供通常为 `https://storage.googleapis.com` 的 `endpoint_url`。
 以下是使用与 S3 兼容的 GCS XML API 时的 API 请求示例：
 
 ```bash
@@ -127,11 +132,12 @@ curl --request POST \
   --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
   --data '{
     "destination_type": "s3",
-    "display_name": "My GCS Destination",
+    "display_name": "我的 GCS 目标",
     "config": {
       "bucket_name": "my_bucket",
       "prefix": "data_exports",
       "endpoint_url": "https://storage.googleapis.com"
+      "include_bucket_in_prefix": true
     },
     "credentials": {
       "access_key_id": "YOUR_S3_ACCESS_KEY_ID",
@@ -140,11 +146,11 @@ curl --request POST \
   }'
 ```
 
-请参阅[Google 文档](https://cloud.google.com/storage/docs/interoperability#xml_api)以获取更多信息。
+有关更多信息，请参阅 [Google 文档](https://cloud.google.com/storage/docs/interoperability#xml_api)
 
-### 创建导出作业（Create an export job）
+### 创建导出作业 (Create an export job)
 
-要导出数据，您需要创建一个导出作业。此作业将指定目标存储、项目、日期范围和用于过滤要导出的数据的**过滤表达式**。过滤表达式用于缩小导出的追踪（runs）集合，它是可选的。如果不设置过滤字段，将导出所有追踪。请参阅我们的[过滤查询语言](/langsmith/trace-query-syntax#filter-query-language)和[示例](/langsmith/export-traces#use-filter-query-language)以确定正确的过滤表达式。
+要导出数据，您需要创建一个导出作业。此作业将指定目标、项目、日期范围和要导出的数据的过滤表达式。过滤表达式用于缩小导出的 Run 集合，并且是可选的。不设置过滤字段将导出所有 Run。请参阅我们的[过滤查询语言](/langsmith/trace-query-syntax#filter-query-language)和[示例](/langsmith/export-traces#use-filter-query-language)以确定正确的导出过滤表达式。
 
 您可以使用以下 cURL 命令创建作业：
 
@@ -164,7 +170,7 @@ curl --request POST \
 ```
 
 <Note>
-`session_id` 也被称为**追踪项目 ID**（Tracing Project ID），可以从追踪项目列表中点击进入特定项目后，在项目视图中复制得到。
+`session_id` 也称为**跟踪项目 ID** (Tracing Project ID)，可以从单个项目视图中复制，方法是点击“跟踪项目”列表中的项目进入。
 </Note>
 
 使用返回的 `id` 在后续的批量导出操作中引用此导出。
@@ -172,14 +178,14 @@ curl --request POST \
 #### 限制导出的字段
 
 <Note>
-需要 LangSmith Helm 版本 >= `0.12.11` (应用版本 >= `0.12.42`)。此功能**支持**在[计划导出](#scheduled-exports)和[标准批量导出](#create-an-export-job)中使用。
+需要 LangSmith Helm 版本 >= `0.12.11` (应用版本 >= `0.12.42`)。此功能在[计划性导出](#scheduled-exports)和[标准批量导出](#create-an-export-job)中**受支持**。
 </Note>
 
-您可以通过使用 `export_fields` 参数限制导出的 Parquet 文件中包含的字段，从而提高批量导出的速度并减小行大小。当提供了 `export_fields` 时，只有指定的字段才会被导出为 Parquet 文件中的列。当未提供 `export_fields` 时，将包含所有可导出的字段。
+您可以通过使用 `export_fields` 参数限制导出的 Parquet 文件中包含的字段，从而提高批量导出速度并减小行大小。当提供 `export_fields` 时，只有指定的字段才会被导出为 Parquet 文件中的列。如果不提供 `export_fields`，则包含所有可导出的字段。
 
-这在您希望排除如 `inputs` 和 `outputs` 等较大字段时尤其有用。
+这在您想要排除像 `inputs` 和 `outputs` 这样的大字段时特别有用。
 
-以下示例创建了一个只包含特定字段的导出作业：
+以下示例创建了一个仅包含特定字段的导出作业：
 
 ```bash
 curl --request POST \
@@ -202,16 +208,17 @@ curl --request POST \
 - `is_root`
 
 <Tip>
-**性能提示**：从导出中排除 `inputs` 和 `outputs` 可以显著提高导出性能并减小文件大小，特别是对于大型运行。只有在分析中需要这些字段时才包含它们。
+**性能提示**：从导出中排除 `inputs` 和 `outputs` 可以显著提高导出性能并减小文件大小，特别是对于大型 Run。只有当您的分析需要时，才包含这些字段。
 </Tip>
 
-### 计划导出（Scheduled exports）
+### 计划性导出 (Scheduled exports)
 
 <Note>
 需要 LangSmith Helm 版本 >= `0.10.42` (应用版本 >= `0.10.109`)
 </Note>
 
-计划导出会定期收集运行数据并导出到配置的目标存储。要创建计划导出，请包含 `interval_hours` 字段并移除 `end_time` 字段：
+计划性导出会定期收集 Runs 并导出到配置的目标。
+若要创建计划性导出，请包含 `interval_hours` 并移除 `end_time`：
 
 ```bash
 curl --request POST \
@@ -228,7 +235,7 @@ curl --request POST \
   }'
 ```
 
-您也可以将 `export_fields` 与计划导出一起使用，以限制导出的字段：
+您也可以将 `export_fields` 与计划性导出一起使用，以限制导出哪些字段：
 
 ```bash
 curl --request POST \
@@ -245,23 +252,23 @@ curl --request POST \
   }'
 ```
 
-**详情**
+**详细信息**
 
-- `interval_hours` 必须在 1 小时到 168 小时（1 周）之间（包含）。
-- 对于生成的导出（spawned exports），第一次导出的时间范围是 `start_time=(scheduled_export_start_time), end_time=(start_time + interval_hours)`。
-  然后是 `start_time=(previous_export_end_time), end_time=(this_export_start_time + interval_hours)`，依此类推。
-- 对于计划导出，必须省略 `end_time` 字段。对于非计划导出，`end_time` 仍然是必需的。
-- 计划导出可以通过[取消导出](#stop-an-export)来停止。
-  - 由计划导出生成的子导出（spawned exports）会填充 `source_bulk_export_id` 属性。
-  - 如果需要，这些子导出必须与源计划导出单独取消——取消源计划导出**不会**取消子导出。
-- 子导出会在 `end_time + 10 分钟` 时运行，以处理那些在最近过去提交的、`end_time` 在这个时间点之前的运行。
+- `interval_hours` 必须在 1 小时到 168 小时（1 周）之间（含）。
+- 对于生成的导出，第一次导出的时间范围是 `start_time=(scheduled_export_start_time), end_time=(start_time + interval_hours)`。
+    然后是 `start_time=(previous_export_end_time), end_time=(this_export_start_time + interval_hours)`，依此类推。
+- 计划性导出中必须省略 `end_time`。非计划性导出仍然需要 `end_time`。
+- 计划性导出可以通过[取消导出](#stop-an-export)来停止。
+  - 由计划性导出生成的导出具有 `source_bulk_export_id` 属性。
+  - 如果需要，这些生成的批量导出必须与源计划性批量导出单独取消——取消源批量导出**不会**取消已生成的批量导出。
+- 生成的导出会在 `end_time + 10 分钟` 运行时，以考虑任何在不久前提交了包含 `end_time` 的 Run。
 
 **示例**
 
-如果使用 `start_time=2025-07-16T00:00:00Z` 和 `interval_hours=6` 创建了一个计划导出：
+如果使用 `start_time=2025-07-16T00:00:00Z` 和 `interval_hours=6` 创建了一个计划性批量导出：
 
-| 导出 | Start Time | End Time | 运行时间 |
-| ------ | -------------------- | -------------------- | -------------------- |
+| 导出 | 开始时间 | 结束时间 | 运行时间 |
+| :--- | :--- | :--- | :--- |
 | 1 | 2025-07-16T00:00:00Z | 2025-07-16T06:00:00Z | 2025-07-16T06:10:00Z |
 | 2 | 2025-07-16T06:00:00Z | 2025-07-16T12:00:00Z | 2025-07-16T12:10:00Z |
 | 3 | 2025-07-16T12:00:00Z | 2025-07-16T18:00:00Z | 2025-07-16T18:10:00Z |
@@ -282,9 +289,10 @@ curl --request GET \
 
 将 `{export_id}` 替换为您要监控的导出的 ID。此命令将检索指定导出作业的当前状态。
 
-### 列出导出中的运行（Runs）
+### 列出导出的 Run
 
-导出通常被分解为多个运行（runs），这些运行对应于要导出的特定日期分区。要列出与特定导出相关联的所有运行，请使用以下 cURL 命令：
+导出通常会分解为多个 Run，这些 Run 对应于要导出的特定日期分区。
+要列出与特定导出相关的所有 Run，请使用以下 cURL 命令：
 
 ```bash
 curl --request GET \
@@ -294,9 +302,9 @@ curl --request GET \
   --header 'X-Tenant-Id: YOUR_WORKSPACE_ID'
 ```
 
-此命令将获取与指定导出相关的所有运行，并提供运行 ID、状态、创建时间、导出行数等详细信息。
+此命令会获取与指定导出相关的所有 Run，提供诸如 Run ID、状态、创建时间、导出行数等详细信息。
 
-### 列出所有导出作业
+### 列出所有导出
 
 要检索所有导出作业的列表，请使用以下 cURL 命令：
 
@@ -308,11 +316,11 @@ curl --request GET \
   --header 'X-Tenant-Id: YOUR_WORKSPACE_ID'
 ```
 
-此命令将返回所有导出作业的列表，包括它们当前的运行状态和创建时间戳。
+此命令将返回所有导出作业的列表，包括它们的当前状态和创建时间戳。
 
-### 停止导出
+### 停止导出 (Stop an Export)
 
-要停止现有的导出作业，请使用以下 cURL 命令：
+要停止现有导出，请使用以下 cURL 命令：
 
 ```bash
 curl --request PATCH \
@@ -325,9 +333,9 @@ curl --request PATCH \
 }'
 ```
 
-将 `{export_id}` 替换为您希望取消的导出 ID。请注意，一旦作业被取消，它就不能重新启动，您需要创建一个新的导出作业来代替。
+将 `{export_id}` 替换为您希望取消的导出的 ID。请注意，一旦作业被取消，就无法重新启动，您需要创建新的导出作业。
 
-## 分区方案（Partitioning Scheme）
+## 分区方案 (Partitioning Scheme)
 
 数据将以以下 Hive 分区格式导出到您的存储桶中：
 
@@ -337,23 +345,23 @@ curl --request PATCH \
 
 ## 导入数据到其他系统
 
-从 S3 和 Parquet 格式导入数据通常受到大多数分析系统的支持。以下是文档链接：
+从 S3 和 Parquet 格式导入数据通常受大多数分析系统的支持。请参阅下面的文档链接：
 
 ### BigQuery
 
-要将数据导入 BigQuery，请参阅[从 Parquet 加载数据](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-parquet)以及[Hive 分区加载](https://cloud.google.com/bigquery/docs/hive-partitioned-loads-gcs)。
+要将数据导入 BigQuery，请参阅[从 Parquet 加载数据](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-parquet)以及[使用 Hive 分区的加载](https://cloud.google.com/bigquery/docs/hive-partitioned-loads-gcs)。
 
 ### Snowflake
 
-您可以按照[从云文档加载](https://docs.snowflake.com/en/user-guide/tutorials/load-from-cloud-tutorial)的说明，将数据从 S3 加载到 Snowflake 中。
+您可以按照[从云文档加载](https://docs.snowflake.com/en/user-guide/tutorials/load-from-cloud-tutorial)说明，将数据从 S3 加载到 Snowflake。
 
 ### RedShift
 
-您可以通过遵循[AWS COPY 命令文档](https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html)中的说明，将数据从 S3 或 Parquet 复制到 Amazon Redshift。
+您可以通过遵循[AWS COPY 命令文档](https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html)，将数据从 S3 或 Parquet COPY 到 Amazon Redshift 中。
 
 ### Clickhouse
 
-您可以直接查询 S3 / Parquet 格式的数据（在 Clickhouse 中）。例如，如果使用 GCS，您可以按如下方式查询数据：
+您可以直接查询 S3 / Parquet 格式的数据。例如，如果使用 GCS，您可以按以下方式查询数据：
 
 ```sql
 SELECT count(distinct id) FROM s3('https://storage.googleapis.com/<bucket>/<prefix>/export_id=<export_id>/**',
@@ -368,18 +376,18 @@ SELECT count(distinct id) FROM s3('https://storage.googleapis.com/<bucket>/<pref
 
 ## 错误处理
 
-### 调试目标存储错误
+### 调试目标错误
 
-`destinations` API 端点将验证目标存储和凭证是否有效，并检查对存储桶的写入访问权限是否存在。
+`destinations` API 端点将验证目标和凭据是否有效，并且存储桶是否具有写入访问权限。
 
-如果您收到错误，并希望调试此错误，您可以使用 [AWS CLI](https://aws.amazon.com/cli/) 来测试到存储桶的连接性。您应该能够使用与您提供给 `destinations` API 的相同数据写入文件。
+如果您收到错误并希望调试此问题，您可以使用 [AWS CLI](https://aws.amazon.com/cli/) 来测试到存储桶的连接。您应该能够使用与您在目标 API 中提供的相同数据写入文件。
 
 **AWS S3:**
 
 ```bash
 aws configure
 
-# 设置与您用于目标存储的访问密钥凭证和区域相同
+# 设置与目标中使用的相同的访问密钥凭据和区域
 > AWS Access Key ID: <access_key_id>
 > AWS Secret Access Key: <secret_access_key>
 > Default region name [us-east-1]: <region>
@@ -394,12 +402,13 @@ aws s3 cp ./test.txt s3://<bucket-name>/tmp/test.txt
 
 **GCS 兼容存储桶:**
 
-您需要使用 `--endpoint-url` 选项提供 `endpoint_url`。对于 GCS，`endpoint_url` 通常是 `https://storage.googleapis.com`：
+您需要使用 `--endpoint-url` 选项提供 `endpoint_url`。
+对于 GCS，`endpoint_url` 通常是 `https://storage.googleapis.com`：
 
 ```bash
 aws configure
 
-# 设置与您用于目标存储的访问密钥凭证和区域相同
+# 设置与目标中使用的相同的访问密钥凭据和区域
 > AWS Access Key ID: <access_key_id>
 > AWS Secret Access Key: <secret_access_key>
 > Default region name [us-east-1]: <region>
@@ -412,17 +421,18 @@ touch ./test.txt
 aws s3 --endpoint-url=<endpoint_url> cp ./test.txt s3://<bucket-name>/tmp/test.txt
 ```
 
-### 监控运行
+### 监控 Run
 
-您可以使用[列出导出运行 API](#list-runs-for-an-export)来监控您的运行。如果这是一个已知错误，它将被添加到运行的 `errors` 字段中。
+您可以使用[列出导出 Run API](#list-runs-for-an-export)来监控您的 Run。如果这是一个已知错误，它将被添加到 Run 的 `errors` 字段中。
 
 ### 常见错误
 
 以下是一些常见错误：
 
 | 错误 | 描述 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Access denied (访问被拒绝) | 实体存储凭证或存储桶无效。当提供的访问密钥和密钥组合没有必要的权限来访问指定存储桶或执行所需操作时，会发生此错误。 |
-| Bucket is not valid (存储桶无效) | 指定的实体存储桶无效。当存储桶不存在或没有足够的访问权限来执行写入操作时，会抛出此错误。 |
-| Key ID you provided does not exist (提供的密钥 ID 不存在) | 提供的实体存储凭证无效。当用于身份验证的访问密钥 ID 不是有效的密钥时，会发生此错误。 |
-| Invalid endpoint (端点无效) | 提供的 `endpoint_url` 无效。当指定的端点无效时，会引发此错误。仅支持 S3 兼容的端点，例如 GCS 的 `https://storage.googleapis.com`，MinIO 的 `https://play.min.io` 等。如果使用 AWS，则应省略 `endpoint_url`。 |
+| :--- | :--- |
+| Access denied | 存储对象凭据或存储桶无效。当提供的访问密钥和密钥组合没有必要的权限来访问指定存储桶或执行所需操作时，会发生此错误。 |
+| Bucket is not valid | 指定的存储对象存储桶无效。当存储桶不存在或无法执行写入操作时，会抛出此错误。 |
+| Key ID you provided does not exist | 提供的存储对象凭据无效。当用于身份验证的访问密钥 ID 不是有效密钥时，会发生此错误。 |
+| Invalid endpoint | 提供的 endpoint\_url 无效。当指定的端点是无效端点时，会引发此错误。仅支持 S3 兼容的端点，例如 GCS 的 `https://storage.googleapis.com`，Minio 的 `https://play.min.io` 等。如果使用 AWS，您应省略 endpoint\_url。 |
+```

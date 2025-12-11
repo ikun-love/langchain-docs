@@ -4,7 +4,7 @@ title: FireworksEmbeddings
 
 本文将帮助您开始使用 LangChain 中的 Fireworks 嵌入模型。有关 `FireworksEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html)。
 
-## 概述
+## 概览
 
 ### 集成详情
 
@@ -12,11 +12,11 @@ title: FireworksEmbeddings
 
 ## 设置
 
-要访问 Fireworks 嵌入模型，您需要创建一个 Fireworks 账户，获取 API 密钥，并安装 `langchain-fireworks` 集成包。
+要访问 Fireworks 嵌入模型，您需要创建一个 Fireworks 帐户、获取一个 API 密钥，并安装 `langchain-fireworks` 集成包。
 
-### 凭证 (Credentials)
+### 凭证
 
-请访问 [fireworks.ai](https://fireworks.ai/) 注册 Fireworks 账户并生成 API 密钥。完成此操作后，设置 `FIREWORKS_API_KEY` 环境变量：
+访问 [fireworks.ai](https://fireworks.ai/) 注册 Fireworks 并生成 API 密钥。完成此操作后，设置 `FIREWORKS_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -26,7 +26,7 @@ if not os.getenv("FIREWORKS_API_KEY"):
     os.environ["FIREWORKS_API_KEY"] = getpass.getpass("Enter your Fireworks API key: ")
 ```
 
-要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
@@ -57,7 +57,7 @@ embeddings = FireworksEmbeddings(
 
 嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在这个例子中，我们将使用 `InMemoryVectorStore` 对示例文档进行索引和检索。
+下面展示了如何使用我们上面初始化的 `embeddings` 对象对数据进行索引和检索。在此示例中，我们将在 `InMemoryVectorStore` 中索引和检索一个示例文档。
 
 ```python
 # 使用示例文本创建一个向量存储
@@ -70,7 +70,7 @@ vectorstore = InMemoryVectorStore.from_texts(
     embedding=embeddings,
 )
 
-# 将向量存储用作检索器
+# 使用向量存储作为检索器
 retriever = vectorstore.as_retriever()
 
 # 检索最相似的文本
@@ -86,13 +86,13 @@ retrieved_documents[0].page_content
 
 ## 直接使用
 
-在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 中的文本和检索 `invoke` 操作中的文本创建嵌入向量。
+在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来为 `from_texts` 和检索 `invoke` 操作中使用的文本生成嵌入向量。
 
-您可以直接调用这些方法来获取供您自己使用的嵌入向量。
+您可以直接调用这些方法来获取嵌入向量，用于您自己的用例。
 
 ### 嵌入单个文本
 
-您可以使用 `embed_query` 嵌入单个文本或文档：
+您可以使用 `embed_query` 来嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
@@ -105,7 +105,7 @@ print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 
 ### 嵌入多个文本
 
-您可以使用 `embed_documents` 嵌入多个文本：
+您可以使用 `embed_documents` 来嵌入多个文本：
 
 ```python
 text2 = (
@@ -125,4 +125,4 @@ for vector in two_vectors:
 
 ## API 参考
 
-有关所有 `FireworksEmbeddings` 功能和配置的详细文档，请转到 [API 参考](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html)。
+有关所有 `FireworksEmbeddings` 功能和配置的详细文档，请前往 [API 参考](https://python.langchain.com/api_reference/fireworks/embeddings/langchain_fireworks.embeddings.FireworksEmbeddings.html)。

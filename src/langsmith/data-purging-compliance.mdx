@@ -4,37 +4,37 @@ title: 数据清除以满足合规性要求
 sidebarTitle: 数据清除以满足合规性要求
 ---
 
-本指南涵盖了数据到达 LangSmith Cloud 服务器后可用的各种功能，以帮助您实现隐私目标。
+本指南涵盖了数据进入 LangSmith Cloud 服务器后可用的各种功能，以帮助您实现隐私目标。
 
 ## 数据保留
 
-LangSmith 提供自动数据保留功能，以协助进行合规性和存储管理。数据保留策略可以在组织（organization）级别和项目（project）级别进行配置。
+LangSmith 提供自动数据保留功能，以协助合规性和存储管理。数据保留策略可以在组织和项目级别进行配置。
 
 有关数据保留配置和管理的详细信息，请参阅 [数据保留概念](/langsmith/administration-overview#data-retention) 文档。
 
-## 追踪删除 (Trace Deletes)
+## 轨迹（Trace）删除
 
-您可以使用 API 来完成追踪删除操作。API 支持两种删除追踪的方法：
+您可以使用 API 来完成轨迹删除。API 支持两种删除轨迹的方法：
 
-1. **通过追踪 ID 和会话 ID (Trace IDs and session ID)**：通过提供一组追踪 ID 及其对应的会话 ID 来删除特定的追踪记录（每次请求最多 1000 条追踪记录）。
-2. **通过元数据 (Metadata)**：删除工作区（workspace）中与指定的任意键值对匹配的追踪记录。
+1. **按轨迹 ID 和会话 ID**：通过提供轨迹 ID 列表及其对应的会话 ID 来删除特定的轨迹（每次请求最多 1000 条轨迹）。
+2. **按元数据**：删除工作区中与指定的任何**元数据键值对**匹配的轨迹。
 
-如需了解更多详情，请参阅 [API 规范](https://api.smith.langchain.com/redoc#tag/run/operation/delete_runs_api_v1_runs_delete_post)。
+有关更多详细信息，请参阅 [API 规范](https://api.smith.langchain.com/redoc#tag/run/operation/delete_runs_api_v1_runs_delete_post)。
 
 <Warning>
-所有追踪记录的删除都将删除所有数据存储中相关的实体，例如反馈（feedbacks）、聚合（aggregations）和统计数据（stats）。
+所有轨迹删除都将删除所有数据存储中相关的实体，例如反馈（feedbacks）、聚合（aggregations）和统计数据（stats）。
 </Warning>
 
 ### 删除时间线
 
-追踪记录的删除操作在非高峰使用时段内处理，并非即时完成。LangChain 会在周末运行删除作业。**系统不会提供删除确认**——您需要再次查询数据以验证记录是否已被移除。
+轨迹删除操作在非高峰使用时间进行处理，并非即时完成。LangChain 会在周末运行删除作业。**不会收到删除确认信息**——您需要再次查询数据以验证其是否已被移除。
 
-### 删除特定的追踪记录
+### 删除特定轨迹
 
-要从单个会话中按追踪 ID 删除特定的追踪记录：
+要通过单个会话中的轨迹 ID 删除特定轨迹：
 
 <Note>
-`session_id` 即为您尝试删除的追踪记录所属的项目 ID。您可以在 LangSmith UI 中的追踪项目页面找到此 ID。
+`session_id` 是您尝试删除的轨迹的项目（project） ID。您可以在 LangSmith UI 的跟踪项目页面中找到它。
 </Note>
 
 ```bash
@@ -49,12 +49,12 @@ curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
 
 ### 按元数据删除
 
-在按元数据删除时：
+按元数据删除时：
 
-- 接受一个包含键/值对的 `metadata` 对象。键值对匹配采用 **或 (or)** 条件。如果追踪记录匹配了元数据中指定的**任意**（而非所有）键值对，则该追踪记录会被选中。
-- 按元数据删除时，您无需指定 `session_id`。删除操作将应用于整个工作区。
+- 接受一个**键/值对**的 `metadata` 对象。键值对的匹配使用的是 **or**（或）条件。如果轨迹匹配了元数据中指定的**任何**（而非全部）键值对，则会被选中。
+- 按元数据删除时，您无需指定会话 ID。删除操作将应用于整个工作区。
 
-要根据元数据跨工作区删除追踪记录（匹配**任意**元数据键值对）：
+要根据工作区中的元数据删除轨迹（匹配**任何**元数据键值对）：
 
 ```bash
 curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
@@ -68,31 +68,31 @@ curl -X POST "https://api.smith.langchain.com/api/v1/runs/delete" \
   }'
 ```
 
-这将删除其元数据中同时包含 `user_id: "user123"` **或** `environment: "staging"` 的追踪记录。
+这将删除元数据中满足 `user_id: "user123"` **或** `environment: "staging"` 的轨迹。
 
 <Warning>
-请记住，每次请求最多只能安排删除 1000 条追踪记录（按会话/请求计算）。对于大规模删除，您需要发起多次请求。
+请记住，每个会话每次请求最多只能调度 1000 条轨迹。对于大规模删除，您需要进行多次请求。
 </Warning>
 
-## 示例删除 (Example Deletes)
+## 示例（Example）删除
 
-您可以通过我们的 API 自助服务删除数据集示例（dataset examples）。API 支持**软删除**和**硬删除**两种方法，具体取决于您的数据保留需求。
+您可以通过 API 自助服务删除数据集示例（dataset examples）。API 支持软删除和硬删除方法，具体取决于您的数据保留需求。
 
 <Warning>
-硬删除将永久移除指定示例在整个数据集历史记录的所有版本中的输入（inputs）、输出（outputs）和元数据。
+硬删除将**永久移除**指定示例在整个数据集历史记录的所有版本中的输入（inputs）、输出（outputs）和元数据（metadata）。
 </Warning>
 
-### 删除示例是两步流程
+### 删除示例是一个两步过程
 
-对于批量操作，示例删除遵循一个两步流程：
+对于批量操作，示例删除遵循以下两步过程：
 
-#### 1. 通过元数据搜索示例
+#### 1. 按元数据搜索示例
 
-查找工作区中所有数据集中与指定元数据匹配的示例。
+查找工作区中所有数据集内与元数据匹配的示例。
 
 [GET /examples](https://api.smith.langchain.com/redoc#tag/examples/operation/read_examples_api_v1_examples_get)
 
-- 必须明确指定 `as_of` 时间戳。只返回早于 `as_of` 日期创建的示例。
+- 必须明确指定 `as_of` 作为时间戳。只返回早于 `as_of` 日期创建的示例。
 
 ```bash
 curl -X GET "https://api.smith.langchain.com/api/v1/examples?as_of=2024-01-01T00:00:00Z" \
@@ -106,38 +106,37 @@ curl -X GET "https://api.smith.langchain.com/api/v1/examples?as_of=2024-01-01T00
   }'
 ```
 
-这将返回其元数据中包含 `user_id: "user123"` **或** `environment: "staging"` 的示例，这些示例来自您工作区中的所有数据集。
+这将返回工作区所有数据集中元数据包含 `user_id: "user123"` **或** `environment: "staging"` 的示例。
 
 #### 2. 硬删除示例
 
-获取到示例 ID 后，发送删除请求。这将清除该示例在数据集所有版本中的输入、输出和元数据。
+获取到示例 ID 后，发送删除请求。此操作将清空该示例在数据集所有版本中的输入、输出和元数据。
 
-[DELETE /examples](https://api.smith.langchain.com/redoc#tag/examples/operation/delete_examples_api_v1_examples_delete)
+[POST /v1/platform/datasets/examples/delete/](https://api.smith.langchain.com/redoc?#tag/examples/paths/~1v1~1platform~1datasets~1examples~1delete/post)
 
-- 在请求的查询参数中指定示例 ID 并添加参数 `"hard_delete": true`。
+- 在请求体中指定 `example_ids`（示例 ID 列表）和 `hard_delete`（布尔值）。
 
 ```bash
-curl -X DELETE "https://api.smith.langchain.com/api/v1/examples?hard_delete=true" \
+curl -X POST "https://api.smith.langchain.com/v1/platform/datasets/examples/delete/" \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "example_ids": ["example-id-1", "example-id-2", "example-id-3"]
+    "example_ids": ["example-id-1", "example-id-2", "example-id-3"],
+    "hard_delete": true
   }'
 ```
 
 ### 删除类型
 
-#### 软删除 (默认)
+#### 软删除（默认）
 
-- 在数据集中创建带有 `NULL` 输入/输出的“标记”条目（tombstoned entries）。
-- 保留历史数据并维持数据集版本控制。
-- **仅影响**数据集的当前版本。
+- 在数据集中创建带有 NULL 输入/输出的“墓碑”（tombstoned）条目。
+- 保留历史数据并维持数据集的版本控制。
+- 只影响数据集的当前版本。
 
 #### 硬删除
 
-- **永久**删除所有数据集版本中的输入、输出和元数据。
-- 当合规性要求跨所有版本实现零数据残留时使用。
-- 通过在查询参数中添加 `"hard_delete": true` 来启用。
-
-如需了解更多详情，请参阅 [API 规范](https://api.smith.langchain.com/redoc#tag/examples/operation/delete_examples_api_v1_examples_delete)。
+- **永久移除**所有数据集版本中的输入、所有数据集版本中的输出以及所有数据集版本中的元数据。
+- 当合规性要求跨所有版本零数据残留时，实现完整的数据移除。
+- 在请求体中设置 `"hard_delete": true`。
 ```

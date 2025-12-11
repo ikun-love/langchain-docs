@@ -5,28 +5,28 @@ sidebarTitle: 自定义 RAG 智能体
 
 ## 概述
 
-在本教程中，我们将使用 LangGraph 构建一个[检索](/oss/langchain/retrieval)（RAG）智能体。
+在本教程中，我们将使用 LangGraph 构建一个[检索（retrieval）](/oss/langchain/retrieval)智能体。
 
-LangChain 提供了内置的[智能体](/oss/langchain/agents)实现，它们是使用 [LangGraph](/oss/langgraph/overview) 基本原语构建的。如果需要更深层次的定制，可以直接在 LangGraph 中实现智能体。本指南展示了一个检索智能体的示例实现。当你希望 LLM 决定是应该从向量存储中检索上下文，还是直接响应用户时，[检索](/oss/langchain/retrieval) 智能体非常有用。
+LangChain 提供了内置的[智能体（agent）](/oss/langchain/agents)实现，这些实现是使用 [LangGraph](/oss/langgraph/overview) 基础原语实现的。如果需要更深层次的定制，可以直接在 LangGraph 中实现智能体。本指南演示了一个检索智能体的示例实现。当您希望 LLM 决定是应从向量存储中检索上下文，还是直接回复用户时，[检索（Retrieval）](/oss/langchain/retrieval)智能体非常有用。
 
-完成本教程后，我们将完成以下工作：
+完成本教程后，我们将执行以下操作：
 
 1. 获取和预处理将用于检索的文档。
 2. 对这些文档进行索引以进行语义搜索，并为智能体创建一个检索器工具。
-3. 构建一个智能体化的 RAG 系统，该系统能够决定何时使用检索器工具。
+3. 构建一个智能体的 RAG 系统，该系统可以决定何时使用检索器工具。
 
 ![Hybrid RAG](/images/langgraph-hybrid-rag-tutorial.png)
 
 ### 概念
 
-我们将介绍以下概念：
+我们将涵盖以下概念：
 
-- 使用[文档加载器](/oss/integrations/document_loaders)、[文本分块器](/oss/integrations/splitters)、[嵌入模型](/oss/integrations/text_embedding)和[向量存储](/oss/integrations/vectorstores)进行[检索](/oss/langchain/retrieval)。
-- LangGraph 的 [Graph API](/oss/langgraph/graph-api)，包括 State（状态）、Nodes（节点）、Edges（边）和 Conditional Edges（条件边）。
+- 使用[文档加载器](/oss/integrations/document_loaders)、[文本分割器](/oss/integrations/splitters)、[嵌入模型（embeddings）](/oss/integrations/text_embedding)和[向量存储（vector stores）](/oss/integrations/vectorstores)进行[检索](/oss/langchain/retrieval)
+- LangGraph 的[图 API](/oss/langgraph/graph-api)，包括状态（state）、节点（nodes）、边（edges）和条件边（conditional edges）。
 
 ## 设置
 
-让我们下载所需的包并设置 API 密钥：
+让我们下载所需的包并设置我们的 API 密钥：
 
 :::python
 ```python
@@ -69,13 +69,13 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 :::
 
 <Tip>
-  注册 LangSmith，可以快速发现问题并提高使用 LangGraph 构建的 LLM 项目的性能。LangSmith 允许你使用追踪数据来调试、测试和监控你的 LangGraph LLM 应用。
+  注册 LangSmith，以便快速发现问题并提高您 LangGraph 项目的性能。[LangSmith](https://docs.smith.langchain.com) 允许您使用追踪数据来调试、测试和监控使用 LangGraph 构建的 LLM 应用。
 </Tip>
 
 ## 1. 预处理文档
 
 :::python
-1. 获取将用于我们 RAG 系统中的文档。我们将使用 [Lilian Weng 的精彩博客](https://lilianweng.github.io/) 中最近的三个页面。我们首先使用 `WebBaseLoader` 工具获取这些页面的内容：
+1. 获取将用于我们 RAG 系统中的文档。我们将使用 [Lilian Weng 出色的博客](https://lilianweng.github.io/)上最近的三篇文章。我们首先使用 `WebBaseLoader` 工具获取这些页面的内容：
   ```python
   from langchain_community.document_loaders import WebBaseLoader
 
@@ -107,7 +107,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 :::
 
 :::js
-1. 获取将用于我们 RAG 系统中的文档。我们将使用 [Lilian Weng 的精彩博客](https://lilianweng.github.io/) 中最近的三个页面。我们首先使用 `CheerioWebBaseLoader` 来获取这些页面的内容：
+1. 获取将用于我们 RAG 系统中的文档。我们将使用 [Lilian Weng 出色的博客](https://lilianweng.github.io/)上最近的三篇文章。我们首先使用 `CheerioWebBaseLoader` 获取这些页面的内容：
   ```typescript
   import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 
@@ -135,12 +135,12 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   ```
 :::
 
-## 2. 创建检索器工具
+## 2. 创建检索工具
 
-现在我们有了分割好的文档，可以将其索引到向量存储中，供语义搜索使用。
+现在我们有了分割后的文档，我们可以将它们索引到向量存储中，用于语义搜索。
 
 :::python
-1. 使用内存向量存储和 OpenAI 的嵌入模型：
+1. 使用内存向量存储和 OpenAI 嵌入模型：
   ```python
   from langchain_core.vectorstores import InMemoryVectorStore
   from langchain_openai import OpenAIEmbeddings
@@ -150,19 +150,21 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   )
   retriever = vectorstore.as_retriever()
   ```
-2. 使用 LangChain 的预构建函数 `create_retriever_tool` 创建一个检索器工具：
+2. 使用 `@tool` 装饰器创建一个检索工具：
   ```python
-  from langchain_classic.tools.retriever import create_retriever_tool
+  from langchain.tools import tool
 
-  retriever_tool = create_retriever_tool(
-      retriever,
-      "retrieve_blog_posts",
-      "Search and return information about Lilian Weng blog posts.",
-  )
+  @tool
+  def retrieve_blog_posts(query: str) -> str:
+      """搜索并返回有关 Lilian Weng 博客文章的信息。"""
+      docs = retriever.invoke(query)
+      return "\n\n".join([doc.page_content for doc in docs])
+
+  retriever_tool = retrieve_blog_posts
   ```
-3. 测试该工具：
+3. 测试工具：
   ```python
-  retriever_tool.invoke({"query": "types of reward hacking"})
+  retriever_tool.invoke({"query": "reward hacking 的类型"})
   ```
 :::
 
@@ -179,7 +181,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 
   const retriever = vectorStore.asRetriever();
   ```
-2. 使用 LangChain 的预构建函数 `createRetrieverTool` 创建一个检索器工具：
+2. 使用 LangChain 的预构建 `createRetrieverTool` 创建一个检索工具：
   ```typescript
   import { createRetrieverTool } from "@langchain/classic/tools/retriever";
 
@@ -188,7 +190,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
     {
       name: "retrieve_blog_posts",
       description:
-        "Search and return information about Lilian Weng blog posts on LLM agents, prompt engineering, and adversarial attacks on LLMs.",
+        "搜索并返回有关 Lilian Weng 关于 LLM 智能体、提示工程和对抗性攻击 LLM 博客文章的信息。",
     },
   );
   const tools = [tool];
@@ -197,12 +199,12 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 
 ## 3. 生成查询
 
-现在我们将开始为智能体的 RAG 图构建组件（[节点](/oss/langgraph/graph-api#nodes) 和[边](/oss/langgraph/graph-api#edges)）。
+现在我们将开始为我们的智能体式 RAG 图构建组件（[节点](/oss/langgraph/graph-api#nodes)和[边](/oss/langgraph/graph-api#edges)）。
 
 :::python
-注意，这些组件将操作 [`MessagesState`](/oss/langgraph/graph-api#messagesstate) — 包含一个 `messages` 键的图状态，该键包含一个[聊天消息](https://python.langchain.com/docs/concepts/messages/)列表。
+请注意，这些组件将操作 [`MessagesState`](/oss/langgraph/graph-api#messagesstate) —— 包含一个 `messages` 键的图状态，该键包含一个[聊天消息](https://python.langchain.com/docs/concepts/messages/)列表。
 
-1. 构建一个 `generate_query_or_respond` 节点。它将调用一个 LLM，根据当前的图状态（消息列表）生成响应。给定输入消息，它将决定是使用检索器工具进行检索，还是直接响应用户。请注意，我们通过 `.bind_tools` 将我们之前创建的 `retriever_tool` 提供了给聊天模型：
+1. 构建一个 `generate_query_or_respond` 节点。它将调用 LLM 根据当前的图状态（消息列表）生成回复。给定输入消息，它将决定是使用检索工具进行检索，还是直接回复用户。请注意，我们通过 `.bind_tools` 将 `retriever_tool` 授予了聊天模型：
   ```python
   from langgraph.graph import MessagesState
   from langchain.chat_models import init_chat_model
@@ -211,7 +213,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 
 
   def generate_query_or_respond(state: MessagesState):
-      """根据当前状态调用模型生成响应。给定问题，模型将决定是使用检索器工具检索，还是直接响应用户。
+      """根据当前状态调用模型生成回复。给定问题，它将决定是使用检索工具进行检索，还是仅回复用户。
       """
       response = (
           response_model
@@ -219,7 +221,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
       )
       return {"messages": [response]}
   ```
-2. 尝试使用随机输入：
+2. 在随机输入上进行尝试：
   ```python
   input = {"messages": [{"role": "user", "content": "hello!"}]}
   generate_query_or_respond(input)["messages"][-1].pretty_print()
@@ -230,13 +232,13 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 
   Hello! How can I help you today?
   ```
-3. 提出一个需要语义搜索的问题：
+3. 询问一个需要语义搜索的问题：
   ```python
   input = {
       "messages": [
           {
               "role": "user",
-              "content": "What does Lilian Weng say about types of reward hacking?",
+              "content": "Lilian Weng 对奖励破解的类型有何看法？",
           }
       ]
   }
@@ -254,7 +256,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 :::
 
 :::js
-1. 构建一个 `generateQueryOrRespond` 节点。它将调用一个 LLM，根据当前的图状态（消息列表）生成响应。给定输入消息，它将决定是使用检索器工具检索，还是直接响应用户。请注意，我们通过 `.bindTools` 将我们之前创建的 `tools` 提供了给聊天模型：
+1. 构建一个 `generateQueryOrRespond` 节点。它将调用 LLM 根据当前的图状态（消息列表）生成回复。给定输入消息，它将决定是使用检索工具进行检索，还是直接回复用户。请注意，我们通过 `.bindTools` 将我们创建的 `tools` 授予了聊天模型：
   ```typescript
   import { ChatOpenAI } from "@langchain/openai";
 
@@ -271,7 +273,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
     };
   }
   ```
-2. 尝试使用随机输入：
+2. 在随机输入上进行尝试：
   ```typescript
   import { HumanMessage } from "@langchain/core/messages";
 
@@ -286,11 +288,11 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
     tool_calls: []
   }
   ```
-3. 提出一个需要语义搜索的问题：
+3. 询问一个需要语义搜索的问题：
   ```typescript
   const input = {
     messages: [
-      new HumanMessage("What does Lilian Weng say about types of reward hacking?")
+      new HumanMessage("Lilian Weng 对奖励破解的类型有何看法？")
     ]
   };
   const result = await generateQueryOrRespond(input);
@@ -315,25 +317,25 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 ## 4. 评估文档
 
 :::python
-1. 添加一个[条件边](/oss/langgraph/graph-api#conditional-edges) — `grade_documents` — 用于确定检索到的文档是否与问题相关。我们将使用具有结构化输出模式 `GradeDocuments` 的模型来进行文档评分。`grade_documents` 函数将根据评分决定返回下一个节点的名称（`generate_answer` 或 `rewrite_question`）：
+1. 添加一个[条件边](/oss/langgraph/graph-api#conditional-edges)——`grade_documents`——以确定检索到的文档是否与问题相关。我们将使用具有结构化输出模式 `GradeDocuments` 的模型来进行文档评分。`grade_documents` 函数将根据评分决策（`generate_answer` 或 `rewrite_question`）返回要转到的节点名称：
   ```python
   from pydantic import BaseModel, Field
   from typing import Literal
 
   GRADE_PROMPT = (
-      "You are a grader assessing relevance of a retrieved document to a user question. \n "
-      "Here is the retrieved document: \n\n {context} \n\n"
-      "Here is the user question: {question} \n"
-      "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
-      "Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."
+      "你是一个评分员，负责评估检索到的文档与用户问题的相关性。\n"
+      "这是检索到的文档：\n\n {context} \n\n"
+      "这是用户问题：{question} \n"
+      "如果文档包含与用户问题相关的关键词或语义含义，请将其评为相关。\n"
+      "给出一个二元分数 'yes' 或 'no'，以表明文档是否与问题相关。"
   )
 
 
   class GradeDocuments(BaseModel):  # [!code highlight]
-      """Grade documents using a binary score for relevance check."""
+      """使用二元分数进行相关性检查来评分文档。"""
 
       binary_score: str = Field(
-          description="Relevance score: 'yes' if relevant, or 'no' if not relevant"
+          description="相关性分数：如果相关则为 'yes'，否则为 'no'"
       )
 
 
@@ -343,7 +345,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   def grade_documents(
       state: MessagesState,
   ) -> Literal["generate_answer", "rewrite_question"]:
-      """Determine whether the retrieved documents are relevant to the question."""
+      """确定检索到的文档是否与问题相关。"""
       question = state["messages"][0].content
       context = state["messages"][-1].content
 
@@ -361,7 +363,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
       else:
           return "rewrite_question"
   ```
-2. 使用工具响应中包含无关文档的情况进行运行：
+2. 在工具响应中包含不相关文档的情况下运行：
   ```python
   from langchain_core.messages import convert_to_messages
 
@@ -422,7 +424,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 :::
 
 :::js
-1. 添加一个节点 — `gradeDocuments` — 用于确定检索到的文档是否与问题相关。我们将使用 Zod 进行文档评分，模型具有结构化输出。我们还将添加一个[条件边](/oss/langgraph/graph-api#conditional-edges) — `checkRelevance` — 它检查评分结果并返回下一个节点的名称（`generate` 或 `rewrite`）：
+1. 添加一个节点——`gradeDocuments`——以确定检索到的文档是否与问题相关。我们将使用具有结构化输出（使用 Zod）的模型来进行文档评分。我们还将添加一个[条件边](/oss/langgraph/graph-api#conditional-edges)——`checkRelevance`——该条件边检查评分结果并返回要转到的节点名称（`generate` 或 `rewrite`）：
   ```typescript
   import * as z from "zod";
   import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -430,20 +432,20 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   import { AIMessage } from "@langchain/core/messages";
 
   const prompt = ChatPromptTemplate.fromTemplate(
-    `You are a grader assessing relevance of retrieved docs to a user question.
-    Here are the retrieved docs:
+    `你是一个评分员，负责评估检索到的文档与用户问题的相关性。
+    这是检索到的文档：
     \n ------- \n
     {context}
     \n ------- \n
-    Here is the user question: {question}
-    If the content of the docs are relevant to the users question, score them as relevant.
-    Give a binary score 'yes' or 'no' score to indicate whether the docs are relevant to the question.
-    Yes: The docs are relevant to the question.
-    No: The docs are not relevant to the question.`,
+    这是用户问题：{question}
+    如果文档的内容与用户问题相关，请将其评为相关。
+    给出二元评分 'yes' 或 'no'，以表明文档是否与问题相关。
+    Yes: 文档与问题相关。
+    No: 文档与问题不相关。`,
   );
 
   const gradeDocumentsSchema = z.object({
-    binaryScore: z.string().describe("Relevance score 'yes' or 'no'"),  // [!code highlight]
+    binaryScore: z.string().describe("相关性分数 'yes' 或 'no'"),  // [!code highlight]
   })
 
   async function gradeDocuments(state) {
@@ -465,7 +467,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
     return "rewrite";
   }
   ```
-2. 使用工具响应中包含无关文档的情况进行运行：
+2. 在工具响应中包含不相关文档的情况下运行：
   ```typescript
   import { ToolMessage } from "@langchain/core/messages";
 
@@ -518,22 +520,22 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 ## 5. 重写问题
 
 :::python
-1. 构建 `rewrite_question` 节点。检索器工具可能会返回可能不相关的文档，这表明需要改进原始用户问题。为此，我们将调用 `rewrite_question` 节点：
+1. 构建 `rewrite_question` 节点。检索工具返回的文档可能不相关，这表明需要改进原始用户问题。为此，我们将调用 `rewrite_question` 节点：
   ```python
   from langchain.messages import HumanMessage
 
   REWRITE_PROMPT = (
-      "Look at the input and try to reason about the underlying semantic intent / meaning.\n"
-      "Here is the initial question:"
+      "查看输入并尝试推断潜在的语义意图/含义。\n"
+      "这是初始问题："
       "\n ------- \n"
       "{question}"
       "\n ------- \n"
-      "Formulate an improved question:"
+      "构建一个改进后的问题："
   )
 
 
   def rewrite_question(state: MessagesState):
-      """Rewrite the original user question."""
+      """重写原始用户问题。"""
       messages = state["messages"]
       question = messages[0].content
       prompt = REWRITE_PROMPT.format(question=question)
@@ -575,18 +577,18 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 :::
 
 :::js
-1. 构建 `rewrite` 节点。检索器工具可能会返回可能不相关的文档，这表明需要改进原始用户问题。为此，我们将调用 `rewrite` 节点：
+1. 构建 `rewrite` 节点。检索工具返回的文档可能不相关，这表明需要改进原始用户问题。为此，我们将调用 `rewrite` 节点：
   ```typescript
   import { ChatPromptTemplate } from "@langchain/core/prompts";
   import { ChatOpenAI } from "@langchain/openai";
 
   const rewritePrompt = ChatPromptTemplate.fromTemplate(
-    `Look at the input and try to reason about the underlying semantic intent / meaning. \n
-    Here is the initial question:
+    `查看输入并尝试推断潜在的语义意图/含义。\n
+    这是初始问题：
     \n ------- \n
     {question}
     \n ------- \n
-    Formulate an improved question:`,
+    构建一个改进后的问题：`,
   );
 
   async function rewrite(state) {
@@ -641,17 +643,17 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 1. 构建 `generate_answer` 节点：如果我们通过了评分检查，我们可以根据原始问题和检索到的上下文生成最终答案：
   ```python
   GENERATE_PROMPT = (
-      "You are an assistant for question-answering tasks. "
-      "Use the following pieces of retrieved context to answer the question. "
-      "If you don't know the answer, just say that you don't know. "
-      "Use three sentences maximum and keep the answer concise.\n"
-      "Question: {question} \n"
-      "Context: {context}"
+      "你是一个问答任务的助手。 "
+      "使用以下检索到的上下文片段来回答问题。 "
+      "如果你不知道答案，就说你不知道。 "
+      "最多使用三句话，保持答案简洁。\n"
+      "问题：{question} \n"
+      "上下文：{context}"
   )
 
 
   def generate_answer(state: MessagesState):
-      """Generate an answer."""
+      """生成答案。"""
       question = state["messages"][0].content
       context = state["messages"][-1].content
       prompt = GENERATE_PROMPT.format(question=question, context=context)
@@ -694,7 +696,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   ```
   ================================== Ai Message ==================================
 
-  Lilian Weng categorizes reward hacking into two types: environment or goal misspecification, and reward tampering. She considers reward hacking as a broad concept that includes both of these categories. Reward hacking occurs when an agent exploits flaws or ambiguities in the reward function to achieve high rewards without performing the intended behaviors.
+  Lilian Weng 将奖励破解分为两类：环境或目标错误指定，以及奖励篡改。她认为奖励破解是一个包含这两类的广泛概念。当智能体利用奖励函数中的缺陷或模糊之处以获得高奖励而又不真正学习预期行为或完成设计任务时，就会发生奖励破解。
   ```
 :::
 
@@ -710,12 +712,12 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
     const context = messages.at(-1)?.content;
 
     const prompt = ChatPromptTemplate.fromTemplate(
-    `You are an assistant for question-answering tasks.
-        Use the following pieces of retrieved context to answer the question.
-        If you don't know the answer, just say that you don't know.
-        Use three sentences maximum and keep the answer concise.
-        Question: {question}
-        Context: {context}`
+    `你是一个问答任务的助手。
+        使用以下检索到的上下文片段来回答问题。
+        如果你不知道答案，就说你不知道。
+        最多使用三句话，保持答案简洁。
+        问题：{question}
+        上下文：{context}`
     );
 
     const llm = new ChatOpenAI({
@@ -765,7 +767,7 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
   ```
   **输出：**
   ```
-  Lilian Weng categorizes reward hacking into two types: environment or goal misspecification, and reward tampering. She considers reward hacking as a broad concept that includes both of these categories. Reward hacking occurs when an agent exploits flaws or ambiguities in the reward function to achieve high rewards without performing the intended behaviors.
+  Lilian Weng 将奖励破解分为两类：环境或目标错误指定，以及奖励篡改。她认为奖励破解是一个包含这两类的一个广泛概念。当智能体利用奖励函数中的缺陷或模糊之处以获得高奖励而又不真正学习预期行为或完成设计任务时，就会发生奖励破解。
   ```
 :::
 
@@ -774,13 +776,13 @@ bun add @langchain/langgraph @langchain/openai @langchain/community @langchain/t
 现在我们将所有节点和边组装成一个完整的图：
 
 :::python
-* 从 `generate_query_or_respond` 开始，然后决定是否需要调用 `retriever_tool`
+* 从 `generate_query_or_respond` 开始，并确定是否需要调用 `retriever_tool`
 * 使用 `tools_condition` 路由到下一步：
   * 如果 `generate_query_or_respond` 返回了 `tool_calls`，则调用 `retriever_tool` 来检索上下文
-  * 否则，直接响应用户
-* 对检索到的文档内容进行评分，判断其与问题的相关性 (`grade_documents`)，并路由到下一步：
+  * 否则，直接回复用户
+* 评估检索到的文档内容与问题的相关性（`grade_documents`）并路由到下一步：
   * 如果不相关，使用 `rewrite_question` 重写问题，然后再次调用 `generate_query_or_respond`
-  * 如果相关，则进入 `generate_answer` 节点，使用包含检索到的文档上下文的 @[`ToolMessage`] 生成最终响应
+  * 如果相关，则继续执行 `generate_answer` 并使用包含检索到的文档上下文的 @[`ToolMessage`] 生成最终回复
 
 ```python
 from langgraph.graph import StateGraph, START, END
@@ -799,7 +801,7 @@ workflow.add_edge(START, "generate_query_or_respond")
 # 决定是否检索
 workflow.add_conditional_edges(
     "generate_query_or_respond",
-    # 评估 LLM 的决策（调用 `retriever_tool` 工具或响应用户）
+    # 评估 LLM 决策（调用 `retriever_tool` 工具或回复用户）
     tools_condition,
     {
         # 将条件输出映射到图中的节点
@@ -808,7 +810,7 @@ workflow.add_conditional_edges(
     },
 )
 
-# 调用 `action` 节点后采用的边。
+# 调用 `action` 节点后采取的边。
 workflow.add_conditional_edges(
     "retrieve",
     # 评估智能体决策
@@ -837,23 +839,23 @@ display(Image(graph.get_graph().draw_mermaid_png()))
 :::
 
 :::js
-* 从 `generateQueryOrRespond` 开始，然后决定是否需要调用检索器工具
+* 从 `generateQueryOrRespond` 开始，并确定是否需要调用检索工具
 * 使用条件边路由到下一步：
-  * 如果 `generateQueryOrRespond` 返回了 `tool_calls`，则调用检索器工具来检索上下文
-  * 否则，直接响应用户
-* 对检索到的文档内容进行评分，判断其与问题的相关性 (`gradeDocuments`)，并路由到下一步：
+  * 如果 `generateQueryOrRespond` 返回了 `tool_calls`，则调用检索工具以检索上下文
+  * 否则，直接回复用户
+* 评估检索到的文档内容与问题的相关性（`gradeDocuments`）并路由到下一步：
   * 如果不相关，使用 `rewrite` 重写问题，然后再次调用 `generateQueryOrRespond`
-  * 如果相关，则进入 `generate` 节点，使用包含检索到的文档上下文的 @[`ToolMessage`] 生成最终响应
+  * 如果相关，则继续执行 `generate` 节点，并使用包含检索到的文档上下文的 @[`ToolMessage`] 生成最终回复
 
 ```typescript
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { AIMessage } from "langchain";
 
-// 为检索器创建一个 ToolNode
+// 为检索工具创建一个 ToolNode
 const toolNode = new ToolNode(tools);
 
-// 确定我们是否应该检索的辅助函数
+// 确定是否应检索的辅助函数
 function shouldRetrieve(state) {
   const { messages } = state;
   const lastMessage = messages.at(-1);
@@ -876,10 +878,10 @@ const builder = new StateGraph(GraphState)
   // 决定是否检索
   .addConditionalEdges("generateQueryOrRespond", shouldRetrieve)
   .addEdge("retrieve", "gradeDocuments")
-  // 经过文档评分后采用的边
+  // 评分文档后采取的边
   .addConditionalEdges(
     "gradeDocuments",
-    // 根据评分决定路由
+    // 根据评分决策路由
     (state) => {
       // gradeDocuments 函数返回 "generate" 或 "rewrite"
       const lastMessage = state.messages.at(-1);
@@ -894,9 +896,9 @@ const graph = builder.compile();
 ```
 :::
 
-## 8. 运行智能体 RAG
+## 8. 运行智能体式 RAG
 
-现在让我们通过向图提供一个问题来测试完整的图：
+现在让我们通过运行一个问题来测试完整的图：
 
 :::python
 ```python
@@ -958,7 +960,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const inputs = {
   messages: [
-    new HumanMessage("What does Lilian Weng say about types of reward hacking?")
+    new HumanMessage("Lilian Weng 对奖励破解的类型有何看法？")
   ]
 };
 
@@ -1007,7 +1009,7 @@ Output from node: 'retrieve'
 Output from node: 'generate'
 {
   type: 'ai',
-  content: 'Lilian Weng categorizes reward hacking into two types: environment or goal misspecification, and reward tampering. She considers reward hacking as a broad concept that includes both of these categories. Reward hacking occurs when an agent exploits flaws or ambiguities in the reward function to achieve high rewards without performing the intended behaviors.',
+  content: 'Lilian Weng 将奖励破解分为两类：环境或目标错误指定，以及奖励篡改。她认为奖励破解是一个包含这两类的一个广泛概念。当智能体利用奖励函数中的缺陷或模糊之处以获得高奖励而又不真正学习预期行为或完成设计任务时，就会发生奖励破解。',
   tool_calls: []
 }
 ---

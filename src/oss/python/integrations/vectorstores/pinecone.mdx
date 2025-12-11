@@ -1,24 +1,25 @@
+```markdown
 ---
 title: Pinecone
 ---
 
-> [Pinecone](https://docs.pinecone.io/docs/overview) 是一个功能丰富的向量数据库。
+>[Pinecone](https://docs.pinecone.io/docs/overview) 是一个功能丰富的向量数据库。
 
-本指南展示了如何使用与 `Pinecone` 向量数据库相关的功能。
+本 Notebook 演示了如何使用与 `Pinecone` 向量数据库相关的功能。
 
 ## 设置 (Setup)
 
-要使用 `PineconeVectorStore`，您首先需要安装配套包以及本指南中使用的其他包。
+要使用 `PineconeVectorStore`，您首先需要安装配套的包，以及本 Notebook 中使用的其他依赖包。
 
 ```python
 pip install -qU langchain langchain-pinecone langchain-openai
 ```
 
-迁移注意事项：如果您是从 `langchain_community.vectorstores` 中实现的 Pinecone 迁移，则可能需要先移除您的 `pinecone-client` v2 依赖，然后再安装 `langchain-pinecone`（它依赖于 `pinecone-client` v6）。
+迁移注意事项：如果您正在从 `langchain_community.vectorstores` 中实现的 Pinecone 迁移，您可能需要在安装 `langchain-pinecone`（它依赖于 `pinecone-client` v6）之前，先移除对 `pinecone-client` v2 的依赖。
 
 ### 凭证 (Credentials)
 
-创建一个新的 Pinecone 账户，或登录到您现有的账户，并创建一个 API 密钥以供本指南使用。
+创建一个新的 Pinecone 账户，或登录您现有的账户，并生成一个 API 密钥以在本 Notebook 中使用。
 
 ```python
 import getpass
@@ -34,7 +35,7 @@ pinecone_api_key = os.environ.get("PINECONE_API_KEY")
 pc = Pinecone(api_key=pinecone_api_key)
 ```
 
-如果您希望对模型调用进行自动跟踪，可以通过取消注释以下代码行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型的调用进行自动追踪，您还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
@@ -43,12 +44,12 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ## 初始化 (Initialization)
 
-在初始化向量存储之前，我们先连接到 Pinecone 索引。如果名为 `index_name` 的索引不存在，它将被创建。
+在初始化我们的向量存储之前，我们先连接到一个 Pinecone 索引。如果名为 `index_name` 的索引不存在，它将被创建。
 
 ```python
 from pinecone import ServerlessSpec
 
-index_name = "langchain-test-index"  # 如果需要，请更改名称
+index_name = "langchain-test-index"  # 如果需要，请修改此名称
 
 if not pc.has_index(index_name):
     pc.create_index(
@@ -160,11 +161,11 @@ vector_store.delete(ids=[uuids[-1]])
 
 ## 查询向量存储 (Query vector store)
 
-一旦创建了向量存储并将相关文档添加进去，您很可能希望在运行链或代理时对其进行查询。
+一旦您的向量存储创建完成并且相关的文档已被添加，您可能希望在运行链或代理时对其进行查询。
 
 ### 直接查询 (Query directly)
 
-可以按如下方式执行简单的相似性搜索：
+可以通过如下方式执行简单的相似性搜索：
 
 ```python
 results = vector_store.similarity_search(
@@ -190,11 +191,11 @@ for res, score in results:
 
 #### 其他搜索方法 (Other search methods)
 
-本指南中未列出更多搜索方法（例如 MMR），要查找所有方法，请务必阅读 [API 参考文档](https://python.langchain.com/api_reference/pinecone/vectorstores/langchain_pinecone.vectorstores.PineconeVectorStore.html)。
+本 Notebook 中未列出更多搜索方法（如 MMR）。要查找所有方法，请务必阅读 [API 参考文档](https://python.langchain.com/api_reference/pinecone/vectorstores/langchain_pinecone.vectorstores.PineconeVectorStore.html)。
 
-### 通过转换为检索器进行查询 (Query by turning into retriever)
+### 通过转换为检索器查询 (Query by turning into retriever)
 
-您还可以将向量存储转换为检索器 (retriever)，以便在链中使用更加方便。
+您还可以将向量存储转换为检索器 (retriever)，以便在链中使用更方便。
 
 ```python
 retriever = vector_store.as_retriever(
@@ -204,11 +205,11 @@ retriever = vector_store.as_retriever(
 retriever.invoke("Stealing from the bank is a crime", filter={"source": "news"})
 ```
 
-## 用于检索增强生成 (Retrieval-Augmented Generation, RAG) 的使用
+## 检索增强生成 (RAG) 的使用
 
-有关如何将此向量存储用于 RAG 的指南，请参阅以下部分：
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
-- [教程](/oss/langchain/rag)
+- [教程 (Tutorials)](/oss/langchain/rag)
 - [操作指南：使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
 - [检索概念文档](https://python.langchain.com/docs/concepts/retrieval)
 
@@ -217,3 +218,4 @@ retriever.invoke("Stealing from the bank is a crime", filter={"source": "news"})
 ## API 参考 (API reference)
 
 有关所有功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/pinecone/vectorstores/langchain_pinecone.vectorstores.PineconeVectorStore.html](https://python.langchain.com/api_reference/pinecone/vectorstores/langchain_pinecone.vectorstores.PineconeVectorStore.html)
+```

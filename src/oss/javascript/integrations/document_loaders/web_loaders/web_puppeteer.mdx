@@ -6,18 +6,18 @@ title: PuppeteerWebBaseLoader
 **兼容性**: 仅在 Node.js 上可用。
 </Tip>
 
-本指南提供了关于如何开始使用 `[PuppeteerWebBaseLoader](/oss/integrations/document_loaders/)` 的快速概览。有关 `PuppeteerWebBaseLoader` 所有功能和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_web_puppeteer.PuppeteerWebBaseLoader.html)。
+本指南快速概述了如何开始使用 [PuppeteerWebBaseLoader](/oss/integrations/document_loaders/) 文档加载器。有关所有 `PuppeteerWebBaseLoader` 功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_web_puppeteer.PuppeteerWebBaseLoader.html)。
 
-Puppeteer 是一个 Node.js 库，它提供了一个高级 API 用于控制无头 Chrome 或 Chromium 浏览器。您可以使用 Puppeteer 自动化网页交互，包括从需要 JavaScript 渲染的动态网页中提取数据。
+Puppeteer 是一个 Node.js 库，它提供了一个高级 API 来控制无头 Chrome 或 Chromium 浏览器。您可以使用 Puppeteer 自动化网页交互，包括从需要 JavaScript 渲染的动态网页中提取数据。
 
-如果您需要一个更轻量级的解决方案，并且您想加载的网页不需要 JavaScript 渲染，那么可以使用 `[CheerioWebBaseLoader](/oss/integrations/document_loaders/web_loaders/web_cheerio)` 代替。
+如果您需要更轻量级的解决方案，并且想要加载的网页不需要 JavaScript 渲染，则可以改用 [CheerioWebBaseLoader](/oss/integrations/document_loaders/web_loaders/web_cheerio)。
 
-## 概览
+## 概述
 
 ### 集成详情
 
-| 类 | 包 | 本地 | 可序列化 | PY 支持
-| :--- | :--- | :---: | :---: |  :---: |
+| 类名 | 包名 | 本地 | 可序列化 | PY 支持 |
+| :--- | :--- | :---: | :---: | :---: |
 | [PuppeteerWebBaseLoader](https://api.js.langchain.com/classes/langchain_community_document_loaders_web_puppeteer.PuppeteerWebBaseLoader.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_document_loaders_web_puppeteer.html) | ✅ | beta | ❌ |
 
 ### 加载器特性
@@ -28,11 +28,11 @@ Puppeteer 是一个 Node.js 库，它提供了一个高级 API 用于控制无�
 
 ## 设置
 
-要访问 `PuppeteerWebBaseLoader` 文档加载器，您需要安装 `@langchain/community` 集成包，以及 `puppeteer` 对等依赖项。
+要使用 `PuppeteerWebBaseLoader` 文档加载器，您需要安装 `@langchain/community` 集成包，以及 `puppeteer` 对等依赖项。
 
 ### 凭证
 
-如果您想对模型调用进行自动化的追踪，可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望自动追踪您的模型调用，也可以取消注释以下行来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -57,14 +57,14 @@ pnpm add @langchain/community @langchain/core puppeteer
 
 ## 实例化
 
-现在我们可以实例化我们的模型对象并加载文档：
+现在我们可以实例化我们的模型对象并加载文档了：
 
 ```typescript
 import { PuppeteerWebBaseLoader } from "@langchain/community/document_loaders/web/puppeteer"
 
 const loader = new PuppeteerWebBaseLoader("https://langchain.com", {
-  // required params = ...
-  // optional params = ...
+  // 必需的参数 = ...
+  // 可选的参数 = ...
 })
 ```
 
@@ -392,7 +392,7 @@ console.log(docs[0].metadata)
 
 ## 选项
 
-以下是关于您可以通过 `PuppeteerWebBaseLoaderOptions` 接口传递给 `PuppeteerWebBaseLoader` 构造函数的参数的解释：
+这里解释了您可以通过 `PuppeteerWebBaseLoaderOptions` 接口向 `PuppeteerWebBaseLoader` 构造函数传递的参数：
 
 ```typescript
 type PuppeteerWebBaseLoaderOptions = {
@@ -402,18 +402,17 @@ type PuppeteerWebBaseLoaderOptions = {
 };
 ```
 
-1. `launchOptions`：一个可选对象，用于指定要传递给 `puppeteer.launch()` 方法的附加选项。这可以包括诸如 `headless` 标志（用于以无头模式启动浏览器）或 `slowMo` 选项（用于减慢 Puppeteer 的操作以便更容易跟踪）。
+1. `launchOptions`: 一个可选对象，用于指定传递给 `puppeteer.launch()` 方法的附加选项。这可以包括诸如 `headless` 标志（用于以无头模式启动浏览器）或 `slowMo` 选项（用于减慢 Puppeteer 的操作以便更容易跟踪）。
 
-2. `gotoOptions`：一个可选对象，用于指定要传递给 `page.goto()` 方法的附加选项。这可以包括 `timeout` 选项（用于以毫秒为单位指定最大导航时间）或 `waitUntil` 选项（用于指定何时认为导航成功）。
+2. `gotoOptions`: 一个可选对象，用于指定传递给 `page.goto()` 方法的附加选项。这可以包括诸如 `timeout` 选项（用于以毫秒为单位指定最大导航时间）或 `waitUntil` 选项（用于指定何时认为导航成功）。
 
-3. `evaluate`：一个可选函数，可用于使用 `page.evaluate()` 方法在页面上执行 JavaScript 代码。这对于从页面中提取数据或与页面元素进行交互非常有用。该函数应返回一个解析为包含评估结果的字符串的 `Promise`。
+3. `evaluate`: 一个可选函数，可用于使用 `page.evaluate()` 方法来评估页面上的 JavaScript 代码。这对于从页面提取数据或与页面元素交互非常有用。该函数应该返回一个 Promise，该 Promise 解析为一个包含评估结果的字符串。
 
-通过将这些选项传递给 `PuppeteerWebBaseLoader` 构造函数，您可以自定义加载器的行为，并利用 Puppeteer 强大的功能来抓取和交互网页。
+通过将这些选项传递给 `PuppeteerWebBaseLoader` 构造函数，您可以自定义加载器的行为，并使用 Puppeteer 强大的功能来抓取和交互网页。
 
 ## 屏幕截图
 
-要截取网站的屏幕截图，像上面一样初始化加载器，然后调用 `.screenshot()` 方法。
-这将返回一个 `Document` 实例，其中 `pageContent` 是一个 base64 编码的图像，`metadata` 包含一个带有页面 URL 的 `source` 字段。
+要对网站截图，请像上面一样实例化加载器，然后调用 `.screenshot()` 方法。这将返回一个 `Document` 实例，其中 `pageContent` 是 base64 编码的图像，`metadata` 包含一个 `source` 字段，其中包含页面的 URL。
 
 ```typescript
 import { PuppeteerWebBaseLoader } from "@langchain/community/document_loaders/web/puppeteer";
@@ -441,4 +440,4 @@ iVBORw0KGgoAAAANSUhEUgAACWAAAAdoCAIAAAA/Q2IJAAAAAXNSR0IArs4c6QAAIABJREFUeJzsvUuz
 
 ## API 参考
 
-有关 `PuppeteerWebBaseLoader` 所有功能和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_web_puppeteer.PuppeteerWebBaseLoader.html)。
+有关所有 `PuppeteerWebBaseLoader` 功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_community_document_loaders_web_puppeteer.PuppeteerWebBaseLoader.html)。

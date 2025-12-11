@@ -3,26 +3,26 @@ title: QdrantVectorStore
 ---
 
 <Tip>
-**兼容性**: 仅在 Node.js 上可用。
+**兼容性**: 仅在 Node.js 环境下可用。
 </Tip>
 
-[Qdrant](https://qdrant.tech/) 是一个向量相似性搜索引擎。它提供了一个可用于生产环境的服务，具有方便的 API，用于存储、搜索和管理点（即带有附加 Payload 的向量）。
+[Qdrant](https://qdrant.tech/) 是一个向量相似性搜索引擎。它提供了一个生产就绪的服务，带有一个便捷的 API，用于存储、搜索和管理点（即带有额外 Payload 的向量）。
 
-本指南提供了关于如何开始使用 Qdrant [向量存储](/oss/integrations/vectorstores) 的快速概览。有关 `QdrantVectorStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_qdrant.QdrantVectorStore.html)。
+本指南快速概述了如何开始使用 Qdrant [向量存储](/oss/integrations/vectorstores)。有关 `QdrantVectorStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_qdrant.QdrantVectorStore.html)。
 
-## 概览
+## 概述
 
 ### 集成详情
 
-| 类名 | 包 | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/qdrant/) | 版本 |
+| 类名 | 包名 | [PY 支持](https://python.langchain.com/docs/integrations/vectorstores/qdrant/) | 版本 |
 | :--- | :--- | :---: | :---: |
 | [`QdrantVectorStore`](https://api.js.langchain.com/classes/langchain_qdrant.QdrantVectorStore.html) | [`@langchain/qdrant`](https://npmjs.com/@langchain/qdrant) | ✅ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/qdrant?style=flat-square&label=%20&) |
 
 ## 设置
 
-要使用 Qdrant 向量存储，你需要设置一个 Qdrant 实例并安装 `@langchain/qdrant` 集成包。
+要使用 Qdrant 向量存储，您需要设置一个 Qdrant 实例，并安装 `@langchain/qdrant` 集成包。
 
-本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这要求你安装 `@langchain/openai` 集成包。如果你愿意，也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
+本指南还将使用 [OpenAI embeddings](/oss/integrations/text_embedding/openai)，这意味着您需要安装 `@langchain/openai` 集成包。如果您愿意，也可以使用 [其他支持的嵌入模型](/oss/integrations/text_embedding)。
 
 <CodeGroup>
 ```bash npm
@@ -36,24 +36,24 @@ pnpm add @langchain/qdrant @langchain/core @langchain/openai
 ```
 </CodeGroup>
 
-安装完所需的依赖后，请通过遵循 [Qdrant 设置说明](https://qdrant.tech/documentation/quickstart/)，使用 Docker 在你的计算机上运行一个 Qdrant 实例。请记下你的容器运行的 URL。
+安装完所需依赖后，请按照 [Qdrant 设置说明](https://qdrant.tech/documentation/quickstart/) 使用 Docker 在您的计算机上运行一个 Qdrant 实例。请记下您的容器运行的 URL。
 
 ### 凭证
 
-完成上述步骤后，设置 `QDRANT_URL` 环境变量：
+完成上述操作后，设置 `QDRANT_URL` 环境变量：
 
 ```typescript
 // 例如 http://localhost:6333
 process.env.QDRANT_URL = "your-qdrant-url"
 ```
 
-如果本指南中使用 OpenAI embeddings，你还需要设置你的 OpenAI 密钥：
+如果您在本指南中使用 OpenAI embeddings，您还需要设置您的 OpenAI 密钥：
 
 ```typescript
 process.env.OPENAI_API_KEY = "YOUR_API_KEY";
 ```
 
-如果你想自动跟踪你的模型调用，你也可以取消注释以下内容来设置你的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想获取模型调用的自动跟踪（tracing），您也可以取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```typescript
 // process.env.LANGSMITH_TRACING="true"
@@ -108,15 +108,15 @@ const documents = [document1, document2, document3, document4];
 await vectorStore.addDocuments(documents);
 ```
 
-目前不支持顶级文档 ID 和删除操作。
+目前不支持顶层文档 ID 和删除操作。
 
 ## 查询向量存储
 
-一旦你的向量存储被创建并且相关的文档已被添加，你在链或代理运行时很可能会希望查询它。
+一旦创建了向量存储并将相关文档添加进去，在运行链或代理的过程中，您很可能会希望对其进行查询。
 
 ### 直接查询
 
-执行简单的相似性搜索可以按如下方式进行：
+可以按如下方式执行简单的相似性搜索：
 
 ```typescript
 const filter = {
@@ -137,9 +137,9 @@ for (const doc of similaritySearchResults) {
 * Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-请参阅 [此页面](https://qdrant.tech/documentation/concepts/filtering/) 了解更多关于 Qdrant 过滤语法的信息。请注意，所有值必须以 `metadata.` 作为前缀。
+有关 Qdrant 过滤器语法的更多信息，请参阅 [此页面](https://qdrant.tech/documentation/concepts/filtering/)。请注意，所有值都必须以 `metadata.` 作为前缀。
 
-如果你想执行相似性搜索并获取对应的分数，你可以运行：
+如果您想执行相似性搜索并接收相应的分数，可以执行：
 
 ```typescript
 const similaritySearchWithScoreResults = await vectorStore.similaritySearchWithScore("biology", 2, filter)
@@ -154,13 +154,13 @@ for (const [doc, score] of similaritySearchWithScoreResults) {
 * [SIM=0.148] Mitochondria are made out of lipids [{"source":"https://example.com"}]
 ```
 
-### 通过转换为检索器查询
+### 通过转换为检索器进行查询
 
-你也可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
+您也可以将向量存储转换为 [检索器](/oss/langchain/retrieval)，以便在链中使用更方便。
 
 ```typescript
 const retriever = vectorStore.asRetriever({
-  // 可选的过滤条件
+  // 可选的过滤器
   filter: filter,
   k: 2,
 });
@@ -182,9 +182,9 @@ await retriever.invoke("biology");
 ]
 ```
 
-### 用于检索增强生成 (RAG) 的用法
+### 用于检索增强生成（RAG）的用法
 
-关于如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
+有关如何将此向量存储用于检索增强生成（RAG）的指南，请参阅以下部分：
 
 - [使用 LangChain 构建 RAG 应用](/oss/langchain/rag)。
 - [代理式 RAG](/oss/langgraph/agentic-rag)

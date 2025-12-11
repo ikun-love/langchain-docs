@@ -1,13 +1,12 @@
-```markdown
 ---
 title: vLLM 聊天
 ---
 
-vLLM 可以部署为一个模拟 OpenAI API 协议的服务器。这使得 vLLM 可以作为应用程序中使用 OpenAI API 的**即插即用替代品**。该服务器的查询方式与 OpenAI API 相同。
+vLLM 可以部署为一个模拟 OpenAI API 协议的服务器。这使得 vLLM 可以作为使用 OpenAI API 的应用程序的**即插即用（drop-in）替代品**。该服务器的查询方式与 OpenAI API 完全相同。
 
 ## 概览
 
-本指南将帮助您开始使用 vLLM [聊天模型](/oss/langchain/models)，它利用了 `langchain-openai` 包。如需了解所有 @[`ChatOpenAI`] 功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html)。
+本文将帮助您开始使用 vLLM [聊天模型](/oss/langchain/models)，这些模型利用了 `langchain-openai` 包。要获取所有 @[`ChatOpenAI`] 功能和配置的详细文档，请前往 [API 参考](https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html)。
 
 ### 集成详情
 
@@ -17,36 +16,36 @@ vLLM 可以部署为一个模拟 OpenAI API 协议的服务器。这使得 vLLM 
 
 ### 模型特性
 
-特定的模型特性，例如工具调用（tool calling）、对多模态输入的**支持**、对 token 级流式传输的支持等，将取决于所托管的模型。
+特定的模型特性，例如工具调用（tool calling）、对多模态输入的**支持**、对 token 级别流式传输（token-level streaming）的支持等，将取决于所托管的模型。
 
-## 设置
+## 设置 (Setup)
 
-请在此处 [查看 vLLM 文档](https://docs.vllm.ai/en/latest/)。
+请在此处查看 vLLM 的文档 [here](https://docs.vllm.ai/en/latest/)。
 
 要通过 LangChain 访问 vLLM 模型，您需要安装 `langchain-openai` 集成包。
 
 ### 凭证 (Credentials)
 
-身份验证将取决于推理服务器的具体配置。
+身份验证将取决于推理服务器的具体设置。
 
-要启用模型调用的**自动化追踪**，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的**自动追踪**，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### 安装
+### 安装 (Installation)
 
-可以通过 `langchain-openai` 包来访问 LangChain 的 vLLM 集成：
+可以通过 `langchain-openai` 包来使用 LangChain 的 vLLM 集成：
 
 ```python
 pip install -qU langchain-openai
 ```
 
-## 实例化
+## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成聊天补全（chat completions）：
+现在我们可以实例化模型对象并生成对话补全（chat completions）：
 
 ```python
 from langchain.messages import HumanMessage, SystemMessage
@@ -92,7 +91,6 @@ AIMessage(content=' Io amo programmare', additional_kwargs={}, example=False)
 
 ## API 参考
 
-如需了解 `langchain-openai` 提供的所有功能和配置的详细文档，请前往 API 参考页面：[python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html](https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html)
+有关 `langchain-openai` 提供的所有功能和配置的详细文档，请前往 API 参考：[python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html](https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html)
 
-同时，请参考 vLLM 的 [文档](https://docs.vllm.ai/en/latest/)。
-```
+同时参考 vLLM 的 [文档](https://docs.vllm.ai/en/latest/)。

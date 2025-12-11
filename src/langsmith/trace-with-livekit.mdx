@@ -1,0 +1,230 @@
+---
+title: 使用 LiveKit 进行追踪
+sidebarTitle: LiveKit
+---
+
+LangSmith 可以使用 OpenTelemetry 仪器（instrumentation）来捕获由 [LiveKit Agents](https://docs.livekit.io/agents/) 生成的追踪（traces）。本指南将向您展示如何自动捕获来自 LiveKit 语音 AI 代理的追踪，并将它们发送到 LangSmith 进行监控和分析。
+
+如需完整的实现代码，请参阅 [演示仓库](https://github.com/langchain-ai/voice-agents-tracing)。
+
+## 安装
+
+安装所需的软件包：
+
+<CodeGroup>
+
+```bash pip
+pip install langsmith livekit livekit-agents livekit-plugins-openai livekit-plugins-silero livekit-plugins-turn-detector opentelemetry-exporter-otlp python-dotenv
+```
+
+```bash uv
+uv add langsmith livekit livekit-agents livekit-plugins-openai livekit-plugins-silero livekit-plugins-turn-detector opentelemetry-exporter-otlp python-dotenv
+```
+
+</CodeGroup>
+
+## 快速入门教程
+
+请遵循此分步教程，创建一个结合了 LiveKit 和 LangSmith 追踪功能的语音 AI 代理。您可以通过复制和粘贴代码片段来构建一个完整可运行的示例。
+
+### 步骤 1：设置环境
+
+在项目目录中创建一个 `.env` 文件：
+
+```bash .env
+OTEL_EXPORTER_OTLP_ENDPOINT=https://api.smith.langchain.com/otel
+OTEL_EXPORTER_OTLP_HEADERS=x-api-key=<your-langsmith-api-key>, Langsmith-Project=livekit-voice
+LIVEKIT_URL=<your-livekit-url>
+LIVEKIT_API_KEY=<your-livekit-api-key>
+LIVEKIT_API_SECRET=<your-livekit-api-secret>
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### 步骤 2：下载 Span 处理器
+
+添加 [自定义 Span 处理器文件](https://github.com/langchain-ai/voice-agents-tracing/blob/main/livekit/langsmith_processor.py)，该文件启用了 LangSmith 追踪功能。将其保存为 `langsmith_processor.py` 在您的项目目录中。
+
+<Accordion title="Span 处理器是做什么的？">
+
+该 Span 处理器会使用与 LangSmith 兼容的属性来丰富 LiveKit 代理的 OpenTelemetry Span，以确保追踪能在 LangSmith 中正确显示。
+
+**关键功能：**
+- 将 LiveKit 的 Span 类型（如 stt, llm, tts, agent, session, job）转换为 LangSmith 兼容的格式。
+- 为消息可视化添加 `gen_ai.prompt.*` 和 `gen_ai.completion.*` 属性。
+- 跨轮次跟踪和聚合对话消息。
+- 使用多种提取策略来处理各种 LiveKit 属性格式。
+
+当您在代码中导入该处理器时，它会自动激活。
+
+</Accordion>
+
+### 步骤 3：创建语音代理文件
+
+创建一个名为 `agent.py` 的新文件，并添加以下代码。我们将分段构建它，以便您可以复制粘贴每个部分。
+
+#### 第 1 部分：导入依赖项并设置追踪
+
+```python
+import sys
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
+# 导入 LiveKit 组件
+from livekit import agents
+from livekit.agents import AgentServer, AgentSession, Agent
+from livekit.agents.telemetry import set_tracer_provider
+from livekit.plugins import silero
+from livekit.plugins.turn_detector.multilingual import MultilingualModel
+from opentelemetry.sdk.trace import TracerProvider
+
+# 导入 Span 处理器以启用 LangSmith 追踪
+from langsmith_processor import LangSmithSpanProcessor
+
+# 设置 LangSmith 追踪
+def setup_langsmith():
+    """设置 OpenTelemetry 追踪，将 Span 导出到 LangSmith。"""
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    headers = os.getenv("OTEL_EXPORTER_OTLP_HEADERS")
+
+    if not endpoint or not headers:
+        print("⚠️  警告：未设置 OTEL 环境变量。追踪功能已禁用。")
+        return
+
+    # 使用自定义 Span 处理器创建追踪器提供者
+    trace_provider = TracerProvider()
+    trace_provider.add_span_processor(LangSmithSpanProcessor())
+
+    # 设置为 LiveKit 的追踪器提供者
+    set_tracer_provider(trace_provider)
+    print("✅ LangSmith 追踪已启用")
+
+# 在创建代理之前启用追踪
+setup_langsmith()
+```
+
+#### 第 2 部分：定义您的代理
+
+```python
+class Assistant(Agent):
+    def __init__(self) -> None:
+        super().__init__(
+            instructions="""你是一个乐于助人的语音 AI 助手。
+            你热切地帮助用户解决他们的问题。
+            保持回复简短且具有对话性（口语化）。""",
+        )
+```
+
+#### 第 3 部分：设置代理服务器
+
+```python
+server = AgentServer()
+
+@server.rtc_session()
+async def my_agent(ctx: agents.JobContext):
+    # 使用 STT、LLM、TTS 和 VAD 创建代理会话
+    session = AgentSession(
+        stt="deepgram/nova-2:en",
+        llm="openai/gpt-4o-mini",
+        tts=openai.TTS(model="tts-1", voice="alloy"),
+        vad=silero.VAD.load(),
+        turn_detection=MultilingualModel(),
+    )
+
+    # 启动会话
+    await session.start(
+        room=ctx.room,
+        agent=Assistant(),
+    )
+
+if __name__ == "__main__":
+    # 针对本地测试，以控制台模式运行
+    sys.argv = [sys.argv[0], "console"]
+    agents.cli.run_app(server)
+```
+
+### 步骤 4：运行您的代理
+
+在控制台模式下运行您的语音代理进行本地测试：
+
+```bash
+python agent.py console
+```
+
+您的代理将启动并连接到 LiveKit。通过麦克风说话，所有追踪内容将自动出现在 LangSmith 中。以下是 LangSmith 中追踪的一个示例：[LangSmith 带有 LiveKit 的追踪](https://smith.langchain.com/public/0f583c03-6d2a-4a2c-a043-9588e387cb55/r)
+
+查看完整的 [agent.py 代码](https://github.com/langchain-ai/voice-agents-tracing/blob/main/livekit/agent.py)。
+
+
+## 高级用法
+
+### 自定义元数据和标签
+
+您可以使用 Span 属性添加自定义元数据到追踪中：
+
+```python
+from opentelemetry import trace
+
+class Assistant(Agent):
+    def __init__(self) -> None:
+        super().__init__(
+            instructions="你是一个有帮助的助手。",
+        )
+
+        # 获取当前 Span 并添加自定义属性
+        tracer = trace.get_tracer(__name__)
+        span = trace.get_current_span()
+        if span:
+            span.set_attribute("langsmith.metadata.agent_type", "voice_assistant")
+            span.set_attribute("langsmith.metadata.version", "1.0")
+            span.set_attribute("langsmith.span.tags", "livekit,voice-ai,production")
+```
+
+## 故障排除
+
+### Span 未出现在 LangSmith 中
+
+如果追踪未显示在 LangSmith 中：
+
+1. **验证环境变量**：确保在 `.env` 文件中正确设置了 `OTEL_EXPORTER_OTLP_ENDPOINT` 和 `OTEL_EXPORTER_OTLP_HEADERS`。
+2. **检查设置顺序**：确保 `setup_langsmith()` 在创建 `AgentServer` **之前**被调用。
+3. **检查 API 密钥**：确认您的 LangSmith API 密钥具有写入权限。
+4. **查看确认信息**：启动时，您应该在控制台中看到 "✅ LangSmith tracing enabled"。
+
+### 消息未正确显示
+
+如果对话消息未正确显示：
+
+1. **检查 Span 处理器**：验证 `langsmith_processor.py` 是否在您的项目目录中并且已正确导入。
+2. **验证导入**：确保在 `agent.py` 中导入了 `LangSmithSpanProcessor`。
+3. **启用调试日志**：在环境中设置 `LANGSMITH_PROCESSOR_DEBUG=true` 以查看详细日志。
+
+### 连接问题
+
+如果您的代理无法连接到 LiveKit：
+
+1. **验证 LiveKit URL**：检查 `.env` 文件中是否正确设置了 `LIVEKIT_URL`。
+2. **检查凭据**：确保 `LIVEKIT_API_KEY` 和 `LIVEKIT_API_SECRET` 是正确的。
+3. **测试连接**：首先尝试使用 LiveKit CLI 连接到您的 LiveKit 服务器。
+4. **控制台模式**：本地测试时，请始终使用：`python agent.py console`。
+
+### 导入错误
+
+如果您遇到导入错误：
+
+1. **安装依赖项**：运行步骤 1 中的完整 pip 安装命令。
+2. **检查 Python 版本**：确保您使用的是 Python 3.9 或更高版本。
+3. **验证 langsmith_processor**：确保已下载 `langsmith_processor.py` 并且它与 `agent.py` 在同一目录下。
+4. **检查 LiveKit 插件**：确保为您使用的 STT/LLM/TTS 提供商安装了正确的 LiveKit 插件。
+
+### 代理无响应
+
+如果代理已连接但没有响应：
+
+1. **检查 API 密钥**：验证您的 OpenAI API 密钥（或其他提供商密钥）是否正确。
+2. **测试服务**：确保您的 STT、LLM 和 TTS 服务可以访问。
+3. **检查指令**：确保您的 Agent 具有适当的启动指令。
+4. **查看日志**：检查控制台输出中是否有错误信息。

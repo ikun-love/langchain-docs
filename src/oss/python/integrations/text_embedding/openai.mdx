@@ -4,19 +4,19 @@ title: OpenAIEmbeddings
 
 这将帮助您开始使用 LangChain 中的 OpenAI 嵌入模型。有关 `OpenAIEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/openai/embeddings/langchain_openai.embeddings.base.OpenAIEmbeddings.html)。
 
-## 概述
+## 概述 (Overview)
 
-### 集成详情
+### 集成详情 (Integration details)
 
 <ItemTable category="text_embedding" item="OpenAI" />
 
-## 设置
+## 设置 (Setup)
 
-要访问 OpenAI 嵌入模型，您需要创建一个 OpenAI 账户，获取 API 密钥，并安装 `langchain-openai` 集成包。
+要访问 OpenAI 嵌入模型，您需要创建一个 OpenAI 账户，获取一个 API 密钥，并安装 `langchain-openai` 集成包。
 
-### 凭证
+### 凭证 (Credentials)
 
-访问 [platform.openai.com](https://platform.openai.com) 来注册 OpenAI 账户并生成 API 密钥。完成此操作后，设置 `OPENAI_API_KEY` 环境变量：
+前往 [platform.openai.com](https://platform.openai.com) 注册 OpenAI 账户并生成 API 密钥。完成此操作后，设置 `OPENAI_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -26,14 +26,14 @@ if not os.getenv("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
 ```
 
-要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
-### 安装
+### 安装 (Installation)
 
 LangChain OpenAI 集成位于 `langchain-openai` 包中：
 
@@ -41,16 +41,17 @@ LangChain OpenAI 集成位于 `langchain-openai` 包中：
 pip install -qU langchain-openai
 ```
 
-## 实例化
+## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成聊天补全：
+现在我们可以实例化模型对象并生成聊天完成：
 
 ```python
 from langchain_openai import OpenAIEmbeddings
 
 embeddings = OpenAIEmbeddings(
     model="text-embedding-3-large",
-    # 对于 `text-embedding-3` 系列模型，您可以指定返回的嵌入维度大小。
+    # 使用 `text-embedding-3` 系列模型时，
+    # 您可以指定希望返回的嵌入的维度大小。
     # dimensions=1024
 )
 ```
@@ -58,17 +59,17 @@ embeddings = OpenAIEmbeddings(
 <Info>
     **Azure OpenAI v1 API 支持**
 
-    从 `langchain-openai>=1.0.1` 开始，`OpenAIEmbeddings` 可以直接与 Azure OpenAI 端点一起使用新的 [v1 API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=python#next-generation-api-1)，包括对 Microsoft Entra ID 身份验证的支持。有关详细信息，请参阅下面的 [与 Azure OpenAI 一起使用](#using-with-azure-openai) 部分。
+    从 `langchain-openai>=1.0.1` 开始，`OpenAIEmbeddings` 可以直接与 Azure OpenAI 端点一起使用新的 [v1 API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=python#next-generation-api-1)，包括对 Microsoft Entra ID 身份验证的支持。有关详细信息，请参阅下文的 [与 Azure OpenAI 配合使用](#using-with-azure-openai) 部分。
 </Info>
 
-## 索引和检索
+## 索引和检索 (Indexing and Retrieval)
 
 嵌入模型通常用于检索增强生成 (RAG) 流程中，既作为数据索引的一部分，也用于后续的检索。有关更详细的说明，请参阅我们的 [RAG 教程](/oss/langchain/rag)。
 
-下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 来索引和检索一个示例文档。
+下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 索引和检索一个示例文档。
 
 ```python
-# 使用示例文本创建向量存储
+# 使用示例文本创建一个向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
 text = "LangChain is the framework for building context-aware reasoning applications"
@@ -92,15 +93,15 @@ retrieved_documents[0].page_content
 'LangChain is the framework for building context-aware reasoning applications'
 ```
 
-## 直接使用
+## 直接使用 (Direct Usage)
 
-在底层，向量存储和检索器的实现分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来创建用于 `from_texts` 和检索 `invoke` 操作的文本嵌入。
+在底层，向量存储和检索器实现在调用 `from_texts` 和检索 `invoke` 操作时，分别调用 `embeddings.embed_documents(...)` 和 `embeddings.embed_query(...)` 来创建文本的嵌入向量。
 
-您可以直接调用这些方法来获取嵌入，以用于您自己的用例。
+您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
-### 嵌入单个文本
+### 嵌入单个文本 (Embed single texts)
 
-您可以使用 `embed_query` 来嵌入单个文本或文档：
+您可以使用 `embed_query` 嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
@@ -111,9 +112,9 @@ print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 [-0.019276829436421394, 0.0037708976306021214, -0.03294256329536438, 0.0037671267054975033, 0.008175
 ```
 
-### 嵌入多个文本
+### 嵌入多个文本 (Embed multiple texts)
 
-您可以使用 `embed_documents` 来嵌入多个文本：
+您可以使用 `embed_documents` 嵌入多个文本：
 
 ```python
 text2 = (
@@ -129,7 +130,7 @@ for vector in two_vectors:
 [-0.010181212797760963, 0.023419594392180443, -0.04215526953339577, -0.001532090245746076, -0.023573
 ```
 
-## 与 Azure OpenAI 一起使用
+## 与 Azure OpenAI 配合使用 (Using with Azure OpenAI)
 
 <Info>
     **Azure OpenAI v1 API 支持**
@@ -139,9 +140,9 @@ for vector in two_vectors:
     对于传统的 Azure 特定实现，请继续使用 [`AzureOpenAIEmbeddings`](/oss/integrations/text_embedding/azure_openai)。
 </Info>
 
-### 使用 API 密钥配合 Azure OpenAI v1 API
+### 将 Azure OpenAI v1 API 与 API 密钥一起使用
 
-要将 `OpenAIEmbeddings` 与 Azure OpenAI 结合使用，请将 `base_url` 设置为您 Azure 端点，并追加 `/openai/v1/`：
+要将 `OpenAIEmbeddings` 与 Azure OpenAI 配合使用，请将 `base_url` 设置为您的 Azure 端点，并在末尾附加 `/openai/v1/`：
 
 ```python
 from langchain_openai import OpenAIEmbeddings
@@ -152,13 +153,13 @@ embeddings = OpenAIEmbeddings(
     api_key="your-azure-api-key"
 )
 
-# 像往常一样使用
+# 正常使用
 vector = embeddings.embed_query("Hello world")
 ```
 
-### 使用 Microsoft Entra ID 配合 Azure OpenAI
+### 将 Azure OpenAI 与 Microsoft Entra ID 一起使用
 
-v1 API 为 [Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/managed-identity) 身份验证增加了原生支持，并支持自动令牌刷新。将一个令牌提供者可调用对象传递给 `api_key` 参数：
+v1 API 为 [Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/managed-identity) 身份验证提供了原生支持，并支持自动令牌刷新。将令牌提供者可调用对象传递给 `api_key` 参数：
 
 ```python
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -176,7 +177,7 @@ embeddings = OpenAIEmbeddings(
     api_key=token_provider  # 处理令牌刷新的可调用对象
 )
 
-# 像往常一样使用
+# 正常使用
 vectors = embeddings.embed_documents(["Hello", "World"])
 ```
 
@@ -214,11 +215,11 @@ vectors = await embeddings_async.aembed_documents(["Hello", "World"])
 :::
 
 <Note>
-    当使用异步可调用对象作为 API 密钥时，您必须使用异步方法（`aembed_query`、`aembed_documents`）。同步方法将引发错误。
+    当使用异步可调用对象作为 API 密钥时，您必须使用异步方法（`aembed_query`、`aembed_documents`）。同步方法会引发错误。
 </Note>
 
 ---
 
-## API 参考
+## API 参考 (API reference)
 
 有关 `OpenAIEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/openai/embeddings/langchain_openai.embeddings.base.OpenAIEmbeddings.html)。

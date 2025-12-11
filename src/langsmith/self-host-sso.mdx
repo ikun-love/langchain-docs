@@ -3,42 +3,42 @@ title: 使用 OAuth2.0 和 OIDC 设置 SSO
 sidebarTitle: 使用 OAuth2.0 和 OIDC 设置 SSO
 ---
 
-LangSmith 自托管版（Self-Hosted）通过 OAuth2.0 和 OIDC 提供单点登录（SSO）功能。这将认证委托给您的身份提供商（IdP）来管理对 LangSmith 的访问。
+LangSmith 自托管版（Self-Hosted）通过 OAuth2.0 和 OIDC 提供单点登录（SSO）功能。这将把认证工作委托给您的身份提供商（IdP），由其来管理对 LangSmith 的访问权限。
 
-我们的实现支持几乎所有符合 OIDC 标准的配置，但有少数例外。配置完成后，您将看到如下所示的登录屏幕：
+我们的实现支持几乎所有符合 OIDC 标准的 IdP，但有少数例外情况。配置完成后，您将看到如下所示的登录界面：
 
 ![LangSmith UI with OAuth SSO](/langsmith/images/langsmith-ui-sso.png)
 
 ## 概述
 
 <Note>
-您可以将 [基础认证](/langsmith/self-host-basic-auth) 安装升级到此模式，但不能将 [无认证](/langsmith/authentication-methods#none) 安装升级到此模式。要升级，只需移除基础认证配置，并添加如下所示所需的配置参数。之后，用户**只能**通过 OAuth 登录。**为了在升级后保持访问权限，您必须能够使用之前通过基础认证登录的电子邮件地址通过 OAuth 登录。**
+您可以将配置了[基础认证](/langsmith/self-host-basic-auth)的安装升级到此模式，但不能将配置了[无认证（none）](/langsmith/authentication-methods#none)的安装升级。要进行升级，只需移除基础认证配置，并添加如下所示的必需配置参数即可。此后，用户**只能**通过 OAuth 登录。**为了在升级后保持访问权限，您必须能够使用先前通过基础认证登录时所使用的电子邮件地址通过 OAuth 进行登录。**
 </Note>
 
 <Warning>
-目前，LangSmith 自托管版不支持从 SSO 模式切换回基础认证模式。我们也不支持在“带客户端密钥的 OAuth 模式”和“不带客户端密钥的 OAuth 模式”之间切换，反之亦然。最后，我们不支持同时启用基础认证和 OAuth。启用 OAuth 时，请确保禁用基础认证配置。
+目前，LangSmith 自托管版不支持从 SSO 模式切换回基础认证模式。我们也不支持在带客户端密钥的 OAuth 模式和不带客户端密钥的 OAuth 模式之间切换，反之亦然。最后，我们不支持同时启用基础认证和 OAuth。启用 OAuth 时，请务必禁用基础认证配置。
 </Warning>
 
 ## 使用客户端密钥（推荐）
 
-默认情况下，LangSmith 自托管版支持带有 `Client Secret` 的 `授权码`（Authorization Code）流程。在此流程版本中，您的客户端密钥安全地存储在 LangSmith 中（而不是在前端），并用于身份验证和建立认证会话。
+默认情况下，LangSmith 自托管版支持带有 `Client Secret` 的 `Authorization Code` 授权流程。在此流程版本中，您的客户端密钥会安全地存储在 LangSmith 中（而不是在前端），并用于身份验证和建立授权会话。
 
 ### 先决条件
 
-* 您必须是自托管用户，且处于企业版（Enterprise Plan）。
-* 您的 IdP 必须支持带有 `Client Secret` 的 `授权码` 流程。
-* 您的 IdP 必须支持使用外部发现/颁发者 URL。我们将使用此 URL 来获取您的 IdP 所需的路由和密钥。
-* 您必须向 LangSmith 提供 `OIDC`、`email` 和 `profile` 范围（scopes）。我们使用这些信息来获取用户的必要信息和电子邮件地址。
+* 您必须是自托管部署，并且处于企业版（Enterprise plan）套餐。
+* 您的 IdP 必须支持带有 `Client Secret` 的 `Authorization Code` 流程。
+* 您的 IdP 必须支持使用外部发现/颁发者 URL（external discovery/issuer URL）。我们将使用此 URL 来获取您的 IdP 所需的路由和密钥。
+* 您必须向 LangSmith 提供 `OIDC`、`email` 和 `profile` 作用域（scopes）。我们使用这些作用域来获取用户的必要信息和电子邮件地址。
 <Note>
 
-LangSmith SSO 仅支持通过 `https` 连接。
+LangSmith SSO 仅通过 `https` 受支持。
 </Note>
 
 ### 配置
 
-* 您需要在 IdP 中设置回调 URL 为 `https://<host>/api/v1/oauth/custom-oidc/callback`，其中 `host` 是您为 LangSmith 实例配置的域名或 IP 地址。这是您的 IdP 在用户通过身份验证后重定向用户的目标地址。
-* 您需要在 `values.yaml` 文件中提供 `oauthClientId`、`oauthClientSecret`、`hostname` 和 `oauthIssuerUrl`。这是配置 LangSmith 实例的地方。
-* 如果您**尚未**配置带客户端密钥的 OAuth，或者您只有个人组织（personal orgs），则必须提供一个电子邮件地址，作为新创建的 SSO 组织（org）的初始管理员。如果您是从基础认证升级而来，则会重用您现有的组织。
+* 您需要在 IdP 中将回调 URL 设置为 `https://<host>/api/v1/oauth/custom-oidc/callback`，其中 `host` 是您为 LangSmith 实例配置的域名或 IP 地址。您的 IdP 在用户通过身份验证后将重定向到此地址。
+* 您需要在 `values.yaml` 文件中提供 `oauthClientId`、`oauthClientSecret`、`hostname` 和 `oauthIssuerUrl`。这是您配置 LangSmith 实例的地方。
+* 如果您**尚未**配置带有客户端密钥的 OAuth，或者您只拥有个人组织，则必须提供一个电子邮件地址，将其指定为新配置的 SSO 组织（org）的初始组织管理员（initial org admin）。如果您是从基础认证升级，则将复用您现有的组织。
 
 <CodeGroup>
 
@@ -46,12 +46,12 @@ LangSmith SSO 仅支持通过 `https` 连接。
 config:
   authType: mixed
   hostname: https://langsmith.example.com
-  initialOrgAdminEmail: test@email.com # 如果需要，请设置此项
+  initialOrgAdminEmail: test@email.com # 如果需要则设置此项
   oauth:
     enabled: true
-    oauthClientId: <您的客户端ID>
-    oauthClientSecret: <您的客户端密钥>
-    oauthIssuerUrl: <您的发现URL>
+    oauthClientId: <YOUR CLIENT ID>
+    oauthClientSecret: <YOUR CLIENT SECRET>
+    oauthIssuerUrl: <YOUR DISCOVERY URL>
     oauthScopes: "email,profile,openid"
 ```
 
@@ -68,31 +68,31 @@ OAUTH_SCOPES=email,profile,openid
 
 </CodeGroup>
 
-### 会话时长控制
+### 会话长度控制
 
 <Note>
-此部分中的所有环境变量都针对 `platform-backend` 服务，可以使用 Helm 中的 `platformBackend.deployment.extraEnv` 添加。
+此部分中的所有环境变量都针对 `platform-backend` 服务，可以通过在 Helm 中使用 `platformBackend.deployment.extraEnv` 进行添加。
 </Note>
 
-* 默认情况下，会话时长由身份提供商返回的身份令牌（identity token）的过期时间控制。
-* 大多数设置应使用刷新令牌（refresh tokens）来启用会话时长延长，使其超过身份令牌的过期时间，最长可达 `OAUTH_SESSION_MAX_SEC`。这可能需要在 `oauthScopes`（Helm）或 `OAUTH_SCOPES`（Docker）中包含 `offline_access` 范围。
-* `OAUTH_SESSION_MAX_SEC`（默认 1 天）可以被覆盖，最大值为一周（`604800`）。
-* 对于不支持刷新令牌的身份提供商设置，设置 `OAUTH_OVERRIDE_TOKEN_EXPIRY="true"` 将会把 `OAUTH_SESSION_MAX_SEC` 作为会话时长，而忽略身份令牌的过期时间。
+* 默认情况下，会话长度由身份提供商返回的身份令牌（identity token）的过期时间控制。
+* 大多数设置应该使用刷新令牌（refresh tokens）来启用将会话长度延长至超过身份令牌的过期时间，最长可达 `OAUTH_SESSION_MAX_SEC`。这可能需要在 `oauthScopes` (Helm) 或 `OAUTH_SCOPES` (Docker) 中包含 `offline_access` 作用域。
+* `OAUTH_SESSION_MAX_SEC`（默认 1 天）可以被覆盖，最长可设置为一周（`604800` 秒）。
+* 对于不支持刷新令牌的身份提供商设置，设置 `OAUTH_OVERRIDE_TOKEN_EXPIRY="true"` 将把 `OAUTH_SESSION_MAX_SEC` 作为会话长度，忽略身份令牌的过期时间。
 
-### 覆盖 Sub 声明（Claim）
+### 覆盖 Sub 声明 (Claim)
 
-在某些场景下，您可能需要覆盖身份提供商中用作 `sub` 声明（claim）的字段。
+在某些场景中，可能有必要覆盖 IdP 中用作 `sub` 声明（claim）的声明。
 例如，在使用 SCIM 时，解析出的 `sub` 声明和 SCIM 的 `externalId` 必须匹配，登录才能成功。
-如果 `sub` 声明的源属性和/或 SCIM `externalId` 有限制，请设置 `ISSUER_SUB_CLAIM_OVERRIDES` 环境变量，以选择哪个 OIDC JWT 声明用作 `sub`。
+如果 `sub` 声明的源属性和/或 SCIM `externalId` 有限制，请设置 `ISSUER_SUB_CLAIM_OVERRIDES` 环境变量来选择哪个 OIDC JWT 声明被用作 `sub`。
 
 如果一个颁发者 URL **以**此配置中的某个 URL **开头**，则 `sub` 声明将取自指定的字段名称。
-例如，使用以下配置，颁发者为 `https://idp.yourdomain.com/application/uuid` 的令牌将使用 `customClaim` 的值作为 `sub`：
+例如，使用以下配置，颁发者为 `https://idp.yourdomain.com/application/uuid` 的令牌将使用 `customClaim` 值作为 `sub`：
 
 ```
 ISSUER_SUB_CLAIM_OVERRIDES='{"https://idp.yourdomain.com": "customClaim"}'
 ```
 
-如果未设置，此配置的默认值会在使用 Azure Entra ID 作为身份提供商时使用 `oid` 声明：
+如果未设置，此配置的默认值在 Azure Entra ID 作为身份提供商时使用 `oid` 声明：
 
 ```
 ISSUER_SUB_CLAIM_OVERRIDES='{"https://login.microsoftonline.com/": "oid", "https://sts.windows.net/": "oid", "https://login.microsoftonline.us/": "oid", "https://login.partner.microsoftonline.cn/": "oid"}'
@@ -100,39 +100,39 @@ ISSUER_SUB_CLAIM_OVERRIDES='{"https://login.microsoftonline.com/": "oid", "https
 
 ### Google Workspace IdP 设置
 
-您可以使用 Google Workspace 作为单点登录（SSO）提供商，通过 [OAuth2.0 和 OIDC](https://developers.google.com/identity/openid-connect/openid-connect)（不使用 PKCE）。
+您可以使用 Google Workspace 作为单点登录（SSO）提供商，通过 [OAuth2.0 和 OIDC](https://developers.google.com/identity/openid-connect/openid-connect) 进行配置，而无需 PKCE。
 
 <Note>
-您必须对贵组织的 Google Cloud Platform (GCP) 账户具有管理员级别的访问权限，才能创建新项目，或者拥有创建和配置现有项目 OAuth 2.0 凭据的权限。我们建议您创建一个新项目来管理访问权限，因为每个 GCP 项目都有一个 OAuth 同意屏幕。
+您必须对您组织 Google Cloud Platform (GCP) 帐户拥有管理员级别的访问权限，才能创建新项目，或者拥有创建和配置现有项目 OAuth 2.0 凭据的权限。我们建议您为管理访问创建一个新项目，因为每个 GCP 项目都有一个 OAuth 同意屏幕。
 </Note>
 
-1. 创建一个新的 GCP 项目，请参阅 Google 文档主题 [创建和管理项目](https://cloud.google.com/resource-manager/docs/creating-managing-projects)。
+1. 创建一个新的 GCP 项目，请参阅 Google 文档主题[创建和管理项目](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 
-2. 创建项目后，在 Google API Console（确保左上角的项目正确）中打开 [凭据（Credentials）](https://console.developers.google.com/apis/credentials) 页面。
+2. 创建项目后，请打开 Google API Console 中的[凭据（Credentials）](https://console.developers.google.com/apis/credentials)页面（确保左上角的项目是正确的）
 
-3. 创建新凭据：`创建凭据 → OAuth 客户端 ID`。
+3. 创建新凭据：`创建凭据 → OAuth 客户端 ID`
 
-4. 将“应用类型”选择为 `Web 应用程序`，并为应用程序输入一个名称，例如 `LangSmith`。
+4. 将 `Application type`（应用类型）选择为 `Web application`，并为应用输入一个名称，例如 `LangSmith`
 
-5. 在“授权的 JavaScript 起源（Authorized Javascript origins）”中填入您的 LangSmith 实例的域名，例如 `https://langsmith.yourdomain.com`。
+5. 在 `Authorized Javascript origins` 中填入您的 LangSmith 实例的域名，例如 `https://langsmith.yourdomain.com`
 
-6. 在“授权的重定向 URI（Authorized redirect URIs）”中填入您的 LangSmith 实例的域名，后跟 `/api/v1/oauth/custom-oidc/callback`，例如 `https://langsmith.yourdomain.com/api/v1/oauth/custom-oidc/callback`。
+6. 在 `Authorized redirect URIs` 中填入您的 LangSmith 实例的域名，后接 `/api/v1/oauth/custom-oidc/callback`，例如 `https://langsmith.yourdomain.com/api/v1/oauth/custom-oidc/callback`
 
-7. 点击 `创建`，然后以 JSON 格式下载或复制并安全保存 `客户端 ID`（以 `.apps.googleusercontent.com` 结尾）和 `客户端密钥`。**如果需要，您稍后可以访问这些信息**。
+7. 点击 `创建`，然后下载 JSON 或复制并安全保存 `Client ID`（以 `.apps.googleusercontent.com` 结尾）和 `Client secret`。**如果需要，您稍后可以访问这些信息**。
 
-8. 从左侧导航菜单中选择 `OAuth 同意屏幕（OAuth consent screen）`。
+8. 从左侧导航菜单中选择 `OAuth consent screen`
 
-   1. 将“应用程序类型”选择为 `内部（Internal）`。**如果选择 `公开（Public）`，任何拥有 Google 帐户的人都可以登录。**
-   2. 输入一个描述性的“应用程序名称”。此名称在用户登录时会显示在同意屏幕上。例如，使用 `LangSmith` 或 `<organization_name> SSO for LangSmith`。
-   3. 验证 Google APIs 的“范围”仅列出 `email`、`profile` 和 `openid` 范围。单点登录只需要这些范围。如果您授予额外的范围，会增加暴露敏感数据的风险。
+   1. 将应用类型选择为 `Internal`（内部）。**如果您选择 `Public`（公开），任何拥有 Google 帐户的人都可以登录。**
+   2. 输入描述性的 `Application name`（应用名称）。此名称在用户登录时会显示在同意屏幕上。例如，使用 `LangSmith` 或 `<organization_name> SSO for LangSmith`。
+   3. 验证 Google APIs 的作用域（Scopes）列表中仅包含 email、profile 和 openid 作用域。单点登录仅需要这些作用域。如果您授予额外的作用域，会增加暴露敏感数据的风险。
 
-9. （可选）控制贵组织内谁有权访问 LangSmith：[https://admin.google.com/ac/owl/list?tab=configuredApps](https://admin.google.com/ac/owl/list?tab=configuredApps)。有关其他详细信息，请参阅 [Google 文档](https://support.google.com/a/answer/7281227?hl=en\&fl=1\&sjid=9554153972856467090-NA)。
+9. （可选）控制您组织内谁可以访问 LangSmith：[https://admin.google.com/ac/owl/list?tab=configuredApps](https://admin.google.com/ac/owl/list?tab=configuredApps)。有关更多详细信息，请参阅 [Google 的文档](https://support.google.com/a/answer/7281227?hl=en\&fl=1\&sjid=9554153972856467090-NA)。
 
-10. 配置 LangSmith 以使用此 OAuth 应用程序。例如，以下是在 Kubernetes 配置中使用的 `config` 值：
+10. 配置 LangSmith 以使用此 OAuth 应用。例如，以下是 Kubernetes 配置 `config` 值：
 
-    1. `oauthClientId`: `客户端 ID`（以 `.apps.googleusercontent.com` 结尾）
-    2. `oauthClientSecret`: `客户端密钥`
-    3. `hostname`: 您的 LangSmith 实例的域名，例如 `https://langsmith.yourdomain.com`（无尾部斜杠）
+    1. `oauthClientId`: `Client ID`（以 `.apps.googleusercontent.com` 结尾）
+    2. `oauthClientSecret`: `Client secret`
+    3. `hostname`: 您的 LangSmith 实例的域名，例如 `https://langsmith.yourdomain.com`（末尾无斜杠）
     4. `oauthIssuerUrl`: `https://accounts.google.com`
     5. `oauth.enabled`: `true`
     6. `authType`: `mixed`
@@ -143,51 +143,53 @@ ISSUER_SUB_CLAIM_OVERRIDES='{"https://login.microsoftonline.com/": "oid", "https
 
 * IdP 发起的 SSO
 * SP 发起的 SSO
-* 即时（Just-In-Time）配置
+* 即时配置（Just-In-Time provisioning）
 
 #### 配置步骤
 
-有关其他信息，请参阅 Okta 的[文档](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm)。
-如果您有任何疑问或问题，请通过 [support.langchain.com](https://support.langchain.com) 联系支持。
+有关更多信息，请参阅 Okta 的[文档](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm)。
+如果您有任何疑问或遇到问题，请通过 [support.langchain.com](https://support.langchain.com) 联系支持团队。
 
 <div id="via-okta-integration-network">
     <b>通过 Okta 集成网络（推荐）</b>
 </div>
 
+<Info>有关 SCIM 设置的详细信息，请参阅 [为您的组织设置 SCIM](/langsmith/user-management#set-up-scim-for-your-organization)。</Info>
+
 <Note>
-必须使用此配置方法才能将 SCIM 与 Okta 配合使用。
+要将 SCIM 与 Okta 配合使用，需要此方法的配置。
 </Note>
 
 1. 登录 [Okta](https://login.okta.com/)。
-1. 在右上角，选择“管理员（Admin）”。此按钮从管理员区域不可见。
-1. 选择“浏览应用集成目录（Browse App Integration Catalog）”。
+1. 在右上角，选择 Admin。该按钮在 Admin 区域不可见。
+1. 选择 `Browse App Integration Catalog`（浏览应用集成目录）。
 1. 找到并选择 LangSmith 应用程序。
-1. 在应用程序概述页面上，选择“添加集成（Add Integration）”。
-1. 填写 `ApiUrlBase`：
-   * 您的 LangSmith API URL，**不带协议前缀** (`https://`)，格式为 `<langsmith_domain>/api/v1`，例如 `langsmith.yourdomain.com/api/v1`。
+1. 在应用程序概览页面，选择 Add Integration（添加集成）。
+1. 填写 `ApiUrlBase`:
+   * 您的 LangSmith API URL，**不含协议** (`https://`)，格式为 `<langsmith_domain>/api/v1`，例如 `langsmith.yourdomain.com/api/v1`。
    * 如果您的安装配置了子域名/路径前缀，请将其包含在 URL 中，例如 `langsmith.yourdomain.com/prefix/api/v1`。
 1. 将 `AuthHost` 留空。
-1. （可选，如果也计划使用 [SCIM](/langsmith/user-management#set-up-scim-for-your-organization)）填写 `LangSmithUrl`：上述 `<langsmith_url>` 部分，例如 `langsmith.yourdomain.com`。
-1. 在“应用程序可见性（Application Visibility）”下，取消选中该框。
-1. 选择“下一步（Next）”。
+1. （可选，如果计划同时使用 [SCIM](/langsmith/user-management#set-up-scim-for-your-organization)）填写 `LangSmithUrl`: 上述的 `<langsmith_url>` 部分，例如 `langsmith.yourdomain.com`。
+1. 在 Application Visibility（应用可见性）下，保持复选框 **未选中**。
+1. 选择 Next。
 1. 选择 `OpenID Connect`。
-1. 填写“登录选项（Sign-On Options）”：
-   * `应用程序用户名格式（Application username format）`：`Email`。
-   * `在...时更新应用程序用户名（Update application username on）`：`创建和更新（Create and update）`。
-   * `允许用户安全地查看其密码（Allow users to securely see their password）`：保持**未选中**。
-1. 点击“保存（Save）”。
-1. 配置 LangSmith 以使用此 OAuth 应用程序（有关 `initialOrgAdminEmail` 的详细信息，请参阅[常规配置部分](#configuration)`）：
+1. 填写 `Sign-On Options`（登录选项）:
+   * `Application username format`（应用用户名格式）: `Email`。
+   * `Update application username on`（应用用户名更新时机）: `Create and update`。
+   * `Allow users to securely see their password`: 保持**未选中**。
+1. 点击 **Save**。
+1. 配置 LangSmith 以使用此 OAuth 应用（有关 `initialOrgAdminEmail` 的详细信息，请参阅[通用配置部分](#configuration)）：
 
 <CodeGroup>
 
 ```yaml Helm
 config:
   authType: mixed
-  hostname: https://langsmith.example.com # 实例的域名（注意: 无尾部斜杠）
-  initialOrgAdminEmail: test@email.com # 如果需要，请设置此项
+  hostname: https://langsmith.example.com # 您的实例域名（注意末尾无斜杠）
+  initialOrgAdminEmail: test@email.com # 如果需要则设置此项
   oauth:
     enabled: true
-    oauthClientId: "Client ID" # (以 `0o` 开头)
+    oauthClientId: "Client ID" # (以 "0o" 开头)
     oauthClientSecret: "Client secret"
     oauthIssuerUrl: "https://company-7422949.okta.com" # 您的 Okta 实例的 URL
     oauthScopes: "email,profile,openid"
@@ -196,9 +198,9 @@ config:
 ```bash Docker
 # 在您的 .env 文件中
 AUTH_TYPE=mixed
-INITIAL_ORG_ADMIN_EMAIL=test@email.com # 如果需要，请设置此项
-LANGSMITH_URL=https://langsmith.example.com # 实例的域名（注意: 无尾部斜杠）
-OAUTH_CLIENT_ID="Client ID" # (以 `0o` 开头)
+INITIAL_ORG_ADMIN_EMAIL=test@email.com # 如果需要则设置此项
+LANGSMITH_URL=https://langsmith.example.com # 您的实例域名（注意末尾无斜杠）
+OAUTH_CLIENT_ID="Client ID" # (以 "0o" 开头)
 OAUTH_CLIENT_SECRET="Client secret"
 OAUTH_ISSUER_URL="https://company-7422949.okta.com" # 您的 Okta 实例的 URL
 OAUTH_SCOPES=email,profile,openid
@@ -206,42 +208,44 @@ OAUTH_SCOPES=email,profile,openid
 
 </CodeGroup>
 
+<Info>有关 SCIM 设置的详细信息，请参阅 [为您的组织设置 SCIM](/langsmith/user-management#set-up-scim-for-your-organization)。</Info>
+
 <div id="via-okta-custom-app-integration">
-    <b>通过自定义应用程序集成</b>
+    <b>通过自定义应用集成</b>
 </div>
 
 <Warning>
-SCIM 不兼容此配置方法。请参阅 [**通过 Okta 集成网络**](#via-okta-integration-network)。
+SCIM 与此配置方法不兼容。请参阅 [**通过 Okta 集成网络**](#via-okta-integration-network)。
 </Warning>
 
-1. 以管理员身份登录 Okta，然后进入 **Okta 管理控制台（Okta Admin console）**。
-1. 在 **应用程序 > 应用程序（Applications > Applications）** 下点击 **创建应用集成（Create App Integration）**。
-1. 将“登录方法”选择为 **OIDC - OpenID Connect**，将“应用程序类型”选择为 **Web 应用程序（Web Application）**，然后点击 **下一步（Next）**。
-1. 输入一个“应用集成名称（App integration name）”（例如 `LangSmith`）。
-1. 推荐：勾选 **核心授权 > 刷新令牌（Core grants > Refresh Token）**（参见[会话时长控制](#session-length-controls)）。
-1. 在“登录重定向 URI（Sign-in redirect URIs）”中填入您的 LangSmith 实例的域名后跟 `/api/v1/oauth/custom-oidc/callback`，例如 `https://langsmith.yourdomain.com/api/v1/oauth/custom-oidc/callback`。如果您的安装配置了子域名/路径前缀，请将其包含在 URL 中，例如 `https://langsmith.yourdomain.com/prefix/api/v1/oauth/custom-oidc/callback`。
-1. 移除“登出重定向 URI（Sign-out redirect URIs）”下的默认 URI。
-1. 在“受信任源 > 基准 URI（Trusted Origins > Base URIs）”下，添加带协议的您的 langsmith URL，例如 `https://langsmith.yourdomain.com`。
-1. 在“分配 > 受控访问（Assignments > Controlled access）”下选择您的期望选项：
-    * 允许组织中的所有人访问。
-    * 限制访问权限给选定的组。
+1. 以管理员身份登录 Okta，进入 **Okta Admin console**。
+1. 在 **Applications** > **Applications** 下，点击 **Create App Integration**（创建应用集成）。
+1. 选择 **OIDC - OpenID Connect** 作为登录方法，选择 **Web Application**（Web 应用程序）作为应用类型，然后点击 **Next**。
+1. 输入 `App integration name`（应用集成名称），例如 `LangSmith`。
+1. 推荐：勾选 **Core grants > Refresh Token**（核心授权 > 刷新令牌）（参见 [会话长度控制](#session-length-controls)）。
+1. 在 **Sign-in redirect URIs**（登录重定向 URI）中，填入您的 LangSmith 实例的域名后接 `/api/v1/oauth/custom-oidc/callback`，例如 `https://langsmith.yourdomain.com/api/v1/oauth/custom-oidc/callback`。如果您的安装配置了子域名/路径前缀，请在 URL 中包含它，例如 `https://langsmith.yourdomain.com/prefix/api/v1/oauth/custom-oidc/callback`。
+1. 删除 **Sign-out redirect URIs**（登出重定向 URI）下的默认 URI。
+1. 在 **Trusted Origins > Base URIs** 下添加您的 LangSmith URL，包括协议，例如 `https://langsmith.yourdomain.com`。
+1. 在 **Assignments > Controlled access**（分配 > 受控访问）下选择您的选项：
+    * 允许组织中的每个人访问。
+    * 将访问权限限制给选定的组。
     * 暂时跳过组分配。
-1. 点击“保存（Save）”。
-1. 在“登录（Sign On）> OpenID Connect ID 令牌”下，将“颁发者（Issuer）”设置为 **Okta URL**。
-1. （可选）在“常规 > 登录（General > Login）”下，将“登录发起方（Login initiated by）”设置为 `Okta 或应用任一（Either Okta or App）` 以启用 IdP 发起的登录。
-1. （推荐）在“常规 > 登录 > 电子邮件验证体验（General > Login > Email verification experience）”中，填写“回调 URI（Callback URI）”为 LangSmith URL，例如 `https://langsmith.yourdomain.com`。
-1. 配置 LangSmith 以使用此 OAuth 应用程序（有关 `initialOrgAdminEmail` 的详细信息，请参阅[常规配置部分](#configuration)`）：
+1. 点击 **Save**。
+1. 在 **Sign On > OpenID Connect ID Token**（登录 > OpenID Connect ID 令牌）下，将 **Issuer**（颁发者）设置为 **Okta URL**。
+1. （可选）在 **General > Login**（常规 > 登录）下，将 **Login initiated by**（登录发起方）设置为 `Either Okta or App`（Okta 或应用任意一方）以启用 IdP 发起的登录。
+1. （推荐）在 **General > Login > Email verification experience**（常规 > 登录 > 电子邮件验证体验）下，在 **Callback URI** 中填写 LangSmith URL，例如 `https://langsmith.yourdomain.com`。
+1. 配置 LangSmith 以使用此 OAuth 应用（有关 `initialOrgAdminEmail` 的详细信息，请参阅[通用配置部分](#configuration)）：
 
 <CodeGroup>
 
 ```yaml Helm
 config:
   authType: mixed
-  hostname: https://langsmith.example.com # 实例的域名（注意: 无尾部斜杠）
-  initialOrgAdminEmail: test@email.com # 如果需要，请设置此项
+  hostname: https://langsmith.example.com # 您的实例域名（注意末尾无斜杠）
+  initialOrgAdminEmail: test@email.com # 如果需要则设置此项
   oauth:
     enabled: true
-    oauthClientId: "Client ID" # (以 `0o` 开头)
+    oauthClientId: "Client ID" # (以 "0o" 开头)
     oauthClientSecret: "Client secret"
     oauthIssuerUrl: "https://company-7422949.okta.com" # 您的 Okta 实例的 URL
     oauthScopes: "email,profile,openid"
@@ -250,9 +254,9 @@ config:
 ```bash Docker
 # 在您的 .env 文件中
 AUTH_TYPE=mixed
-INITIAL_ORG_ADMIN_EMAIL=test@email.com # 如果需要，请设置此项
-LANGSMITH_URL=https://langsmith.example.com # 实例的域名（注意: 无尾部斜杠）
-OAUTH_CLIENT_ID="Client ID" # (以 `0o` 开头)
+INITIAL_ORG_ADMIN_EMAIL=test@email.com # 如果需要则设置此项
+LANGSMITH_URL=https://langsmith.example.com # 您的实例域名（注意末尾无斜杠）
+OAUTH_CLIENT_ID="Client ID" # (以 "0o" 开头)
 OAUTH_CLIENT_SECRET="Client secret"
 OAUTH_ISSUER_URL="https://company-7422949.okta.com" # 您的 Okta 实例的 URL
 OAUTH_SCOPES=email,profile,openid
@@ -262,23 +266,23 @@ OAUTH_SCOPES=email,profile,openid
 
 #### SP 发起的 SSO
 
-用户可以通过 LangSmith 主页上的“通过 SSO 登录（Login via SSO）”按钮进行登录。
+用户可以通过点击 LangSmith 主页上的 **Login via SSO** 按钮进行登录。
 
 ## 不带客户端密钥（PKCE）（已弃用）
 
-我们建议尽可能使用带有 `Client Secret` 的方式运行（我们之前不支持此方式）。但是，如果您的 IdP 不支持该方式，您可以使用带有 PKCE 的 `授权码` 流程。
+如果您的 IdP 不支持（如前所述，我们推荐使用带有 `Client Secret` 的方案），您可以使用 `Authorization Code with PKCE` 流程。
 
-此流程**不**需要 `Client Secret`。有关替代工作流程，请参阅 [使用客户端密钥（推荐）](#with-client-secret-recommended)。
+此流程**不**需要 `Client Secret`。有关替代工作流程，请参阅[使用客户端密钥（推荐）](#with-client-secret-recommended)。
 
 ### 要求
 
 使用 OAuth SSO 访问 LangSmith 有几个要求：
 
-* 您的 IdP 必须支持带有 PKCE 的 `授权码` [流程](https://www.oauth.com/oauth2-servers/pkce)（例如，Google 不支持此流程，但请参阅[上方](#with-client-secret-recommended)以获取 Google 支持的替代配置）。这通常在您的 OAuth 提供商处显示为配置“单页应用程序 (SPA)”。
+* 您的 IdP 必须支持 `Authorization Code with PKCE` [流程](https://www.oauth.com/oauth2-servers/pkce)（例如，Google 不支持此流程，但请参阅[上方](#with-client-secret-recommended)以获取 Google 支持的替代配置）。在您的 OAuth 提供商中，这通常显示为配置“单页应用程序（SPA）”。
 * 您的 IdP 必须支持使用外部发现/颁发者 URL。我们将使用此 URL 来获取您的 IdP 所需的路由和密钥。
-* 您必须向 LangSmith 提供 `OIDC`、`email` 和 `profile` 范围（scopes）。我们使用这些信息来获取用户的必要信息和电子邮件地址。
-* 您需要在 IdP 中设置回调 URL 为 `http://<host>/oauth-callback`，其中 host 是您为 LangSmith 实例配置的域名或 IP 地址。这是您的 IdP 在用户通过身份验证后重定向用户的目标地址。
-* 您需要在 `values.yaml` 文件中提供 `oauthClientId` 和 `oauthIssuerUrl`。这是配置 LangSmith 实例的地方。
+* 您必须向 LangSmith 提供 `OIDC`、`email` 和 `profile` 作用域。我们使用这些作用域来获取用户的必要信息和电子邮件地址。
+* 您需要在 IdP 中将回调 URL 设置为 `http://<host>/oauth-callback`，其中 host 是您为 LangSmith 实例配置的域名或 IP 地址。此地址是 IdP 在用户通过身份验证后重定向到的位置。
+* 您需要在 `values.yaml` 文件中提供 `oauthClientId` 和 `oauthIssuerUrl`。这是您配置 LangSmith 实例的地方。
 
 <CodeGroup>
 
@@ -286,8 +290,8 @@ OAUTH_SCOPES=email,profile,openid
 config:
   oauth:
     enabled: true
-    oauthClientId: <您的客户端ID>
-    oauthIssuerUrl: <您的发现URL>
+    oauthClientId: <YOUR CLIENT ID>
+    oauthIssuerUrl: <YOUR DISCOVERY URL>
 ```
 
 ```bash Docker

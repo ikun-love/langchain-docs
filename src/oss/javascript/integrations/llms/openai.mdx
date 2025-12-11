@@ -3,14 +3,14 @@ title: OpenAI
 ---
 
 <Warning>
-**您当前正在查看记录 OpenAI 文本补全模型（text completion models）的页面。最新且最流行的 OpenAI 模型是[聊天补全模型](/oss/langchain/models)。**
+**您当前正在查看记录 OpenAI 文本补全模型用法的页面。最新和最流行的 OpenAI 模型是[聊天补全模型](/oss/langchain/models)。**
 
-除非您明确使用的是 `gpt-3.5-turbo-instruct`，否则您很可能正在寻找[此页面](/oss/integrations/chat/openai/)。
+除非您专门使用 `gpt-3.5-turbo-instruct`，否则您可能想查看[此页面](/oss/integrations/chat/openai/)。
 </Warning>
 
 [OpenAI](https://en.wikipedia.org/wiki/OpenAI) 是一家人工智能（AI）研究实验室。
 
-本指南将帮助您使用 LangChain 入门 OpenAI 补全模型（LLMs）。有关 OpenAI 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。
+这将帮助您使用 LangChain 入门 OpenAI 补全模型（LLM）。有关 OpenAI 特性和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。
 
 ## 概述
 
@@ -26,13 +26,13 @@ title: OpenAI
 
 ### 凭证 (Credentials)
 
-前往 [platform.openai.com](https://platform.openai.com/) 注册 OpenAI 账户并生成 API 密钥。完成此操作后，设置 `OPENAI_API_KEY` 环境变量：
+请访问 [platform.openai.com](https://platform.openai.com/) 注册 OpenAI 账户并生成 API 密钥。完成此操作后，设置 `OPENAI_API_KEY` 环境变量：
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
 ```
 
-如果您希望对模型调用进行自动追踪，您还可以取消注释以下代码行，设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想对模型调用进行自动追踪，还可以设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥（取消下面的注释即可）：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -57,7 +57,7 @@ pnpm add @langchain/openai @langchain/core
 
 ## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成聊天补全：
+现在我们可以实例化模型对象并生成聊天补全内容：
 
 ```typescript
 import { OpenAI } from "@langchain/openai"
@@ -76,27 +76,27 @@ const llm = new OpenAI({
 ## 调用 (Invocation)
 
 ```typescript
-const inputText = "OpenAI 是一家人工智能公司，它 "
+const inputText = "OpenAI is an AI company that "
 
 const completion = await llm.invoke(inputText)
 completion
 ```
 
 ```output
-开发并推广友好的人工智能，以造福人类。它由 Elon Musk、Sam Altman、Greg Brockman、Ilya Sutskever、Wojciech Zaremba、John Schulman 和 Chris Olah 于 2015 年创立。该公司的使命是创建和推广安全且对人类有益的人工通用智能（AGI）。
+develops and promotes friendly AI for the benefit of humanity. It was founded in 2015 by Elon Musk, Sam Altman, Greg Brockman, Ilya Sutskever, Wojciech Zaremba, John Schulman, and Chris Olah. The company's mission is to create and promote artificial general intelligence (AGI) that is safe and beneficial to humanity.
 
-OpenAI 在人工智能的各个领域进行研究，包括深度学习、强化学习、机器人技术和自然语言处理。该公司还开发并发布了用于人工智能研究的开源工具和平台，例如 GPT-3 语言模型和用于强化学习的 Gym 工具包。
+OpenAI conducts research in various areas of AI, including deep learning, reinforcement learning, robotics, and natural language processing. The company also develops and releases open-source tools and platforms for AI research, such as the GPT-3 language model and the Gym toolkit for reinforcement learning.
 
-OpenAI 的主要目标之一是确保人工智能的发展与人类价值观保持一致，并且不对人类构成威胁。为此，该公司制定了一套安全和合乎伦理的人工智能开发原则，并积极与其他组织和研究人员在该领域进行合作。
+One of the main goals of OpenAI is to ensure that the development of AI is aligned with human values and does not pose a threat to humanity. To this end, the company has established a set of principles for safe and ethical AI development, and it actively collaborates with other organizations and researchers in the field.
 
-OpenAI 从各种来源获得了资助，包括微软和亚马逊等科技巨头，以及个人投资者。它还与谷歌、IBM 和联合国等公司和组织建立了合作伙伴关系，以推进其研究并促进负责任的人工智能发展。
+OpenAI has received funding from various sources, including tech giants like Microsoft and Amazon, as well as individual investors. It has also partnered with companies and organizations such as Google, IBM, and the United Nations to advance its research and promote responsible AI development.
 
-除了其研究和开发之外
+In addition to its research and development
 ```
 
 ## 自定义 URL (Custom URLs)
 
-您可以通过传递 `configuration` 参数来定制 SDK 发出请求的基础 URL，如下所示：
+您可以通过传入一个 `configuration` 参数来定制 SDK 发送请求的基础 URL，如下所示：
 
 ```typescript
 const llmCustomURL = new OpenAI({
@@ -107,12 +107,12 @@ const llmCustomURL = new OpenAI({
 });
 ```
 
-您还可以传递官方 SDK 接受的其他 `ClientOptions` 参数。
+您还可以传入官方 SDK 接受的其他 `ClientOptions` 参数。
 
-如果您部署在 Azure OpenAI 上，请参阅[专用页面](/oss/integrations/llms/azure)。
+如果您正在 Azure OpenAI 上托管服务，请查看[专用页面](/oss/integrations/llms/azure)而不是本页。
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关所有 OpenAI 功能和配置的详细文档，请访问[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。
+有关所有 OpenAI 特性和配置的详细文档，请访问[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。

@@ -1,23 +1,27 @@
 ---
 title: 更新日志
 sidebarTitle: 更新日志
-description: 我们 JavaScript/TypeScript 包的更新和改进日志
+description: 我们 JavaScript/TypeScript 软件包的更新和改进日志
 rss: true
 ---
 
-<Update label="2025年11月25日" tags={["langchain"]}>
+<Callout icon="rss" color="#DFC5FE" iconType="regular">
+**订阅**: 我们的更新日志包含一个 [RSS 订阅源](https://docs.langchain.com/oss/javascript/releases/changelog/rss.xml)，可以集成到 [Slack](https://slack.com/help/articles/218688467-Add-RSS-feeds-to-Slack)、[电子邮件](https://zapier.com/apps/email/integrations/rss/1441/send-new-rss-feed-entries-via-email)（通过 Zapier）、Discord 机器人（如 [Readybot](https://readybot.io/)）或 [RSS Feeds to Discord Bot](https://rss.app/en/bots/rssfeeds-discord-bot) 以及其他订阅工具。
+</Callout>
+
+<Update label="Nov 25, 2025" tags={["langchain"]}>
     ## v1.1.0
 
-    * [模型配置项 (Model profiles)](/oss/langchain/models#model-profiles)：聊天模型现在通过 `.profile` getter 暴露其支持的功能和能力。这些数据来源于 [models.dev](https://models.dev)，这是一个提供模型能力数据的开源项目。
-    * [模型重试中间件 (Model retry middleware)](/oss/langchain/middleware/built-in#model-retry)：新的中间件，用于自动重试失败的模型调用，并带有可配置的指数退避（exponential backoff）机制，从而提高了智能体的可靠性。
-    * [内容审核中间件 (Content moderation middleware)](/oss/langchain/middleware/built-in#content-moderation)：OpenAI 内容审核中间件，用于在智能体交互中检测和处理不安全的内容。支持检查用户输入、模型输出和工具结果。
-    * [摘要中间件 (Summarization middleware)](/oss/langchain/middleware/built-in#summarization)：已更新，支持使用模型配置项触发点，实现上下文感知的摘要生成。
-    * [结构化输出 (Structured output)](/oss/langchain/structured-output)：`ProviderStrategy` 支持（即原生结构化输出）现在可以从模型配置项中自动推断出来。
-    * [`createAgent` 的 SystemMessage](/oss/langchain/middleware/custom#working-with-system-messages)：现在可以直接将 `SystemMessage` 实例传递给 `createAgent` 的 `systemPrompt` 参数，并且新增了 `concat` 方法用于扩展系统消息。这使得实现如缓存控制和结构化内容块等高级功能成为可能。
-    * [动态系统提示中间件 (Dynamic system prompt middleware)](/oss/langchain/agents#dynamic-system-prompt)：`dynamicSystemPromptMiddleware` 的返回值现在是纯粹的累加（additive）。当返回一个 @[`SystemMessage`] 或 `string` 时，它会与现有的系统消息合并而不是替换它们，这使得组合多个修改提示的中间件变得更加容易。
-    * **兼容性改进**：修复了结构化输出和工具 Schema 中 Zod v4 验证错误的处理逻辑，确保详细的错误信息能够被正确显示。
+    * [模型配置项](/oss/langchain/models#model-profiles)：聊天模型现在通过 `.profile` getter 暴露其支持的功能和能力。这些数据源自 [models.dev](https://models.dev)，这是一个提供模型能力数据的开源项目。
+    * [模型重试中间件](/oss/langchain/middleware/built-in#model-retry)：新增中间件，用于自动重试失败的模型调用，并支持可配置的指数退避策略，以提高代理（Agent）的可靠性。
+    * [内容适宜性（内容审核）中间件](/oss/langchain/middleware/built-in#content-moderation)：用于检测和处理代理交互中不安全内容的 OpenAI 内容审核中间件。它支持检查用户输入、模型的输出以及工具的调用结果。
+    * [摘要中间件](/oss/langchain/middleware/built-in#summarization)：已更新，支持使用模型配置项来灵活设定触发点，以实现上下文感知的摘要功能。
+    * [结构化输出](/oss/langchain/structured-output)：现在可以从模型配置项中推断出 `ProviderStrategy` 支持（即原生的结构化输出能力）。
+    * [`createAgent` 的 `SystemMessage`](/oss/langchain/middleware/custom#working-with-system-messages)：支持将 `SystemMessage` 实例直接传递给 `createAgent` 的 `systemPrompt` 参数，并新增了一个 `concat` 方法用于扩展系统消息。这使得启用缓存控制和结构化内容块等高级功能成为可能。
+    * [动态系统提示中间件](/oss/langchain/agents#dynamic-system-prompt)：`dynamicSystemPromptMiddleware` 的返回值现在是纯粹可累加的。当返回一个 @[`SystemMessage`] 或 `string` 时，它将与现有的系统消息合并，而不是替换它们，从而更容易组合修改提示的多个中间件。
+    * **兼容性改进**：修复了结构化输出和工具模式中 Zod v4 验证错误的处理逻辑，确保详细的错误信息能够被正确显示。
 </Update>
-<Update label="2025年10月20日" tags={["langchain", "langgraph"]}>
+<Update label="Oct 20, 2025" tags={["langchain", "langgraph"]}>
     ## v1.0.0
 
     ### `langchain`
@@ -27,4 +31,8 @@ rss: true
     ### `langgraph`
     * [发布说明](/oss/releases/langgraph-v1)
     * [迁移指南](/oss/migrate/langgraph-v1)
+
+    <Callout icon="bullhorn" color="#DFC5FE" iconType="regular">
+    如果您遇到任何问题或有反馈意见，请 [打开一个 Issue](https://github.com/langchain-ai/docs/issues/new?template=01-langchain.yml)，以便我们进行改进。如需查看 v0.x 文档，请 [转到存档内容](https://github.com/langchain-ai/langchainjs/tree/v0.3/docs/core_docs/docs)。
+    </Callout>
 </Update>

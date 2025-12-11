@@ -1,13 +1,14 @@
+```markdown
 ---
 title: 可观测性概念
 sidebarTitle: 概念
 ---
 
-本页面涵盖了在 LangSmith 中记录追踪（trace）时理解的关键概念。
+本页面涵盖了在 LangSmith 中记录跟踪（trace）时需要理解的关键概念。
 
-一个[_追踪_](#traces) 记录了应用程序执行的步骤序列——从接收输入，经过中间处理，到产生最终输出。追踪中的每一步都由一个[_运行_](#runs) 来表示。多个追踪被分组到一个[_项目_](#projects) 中，来自多轮对话的追踪可以通过[_线程_](#threads) 链接在一起。
+一个 [_跟踪_](#traces) 记录了应用程序执行的步骤序列——从接收输入，经过中间处理，到产生最终输出。跟踪中的每一步都由一个 [_运行_](#runs) 来表示。多个跟踪会分组在一个 [_项目_](#projects) 中，多轮对话的跟踪可以通过 [_线程_](#threads) 连接起来。
 
-下图展示了这些概念在一个简单的 RAG（检索增强生成）应用中的上下文，该应用从索引中检索文档并生成答案。
+下图展示了这些概念在一个简单的 RAG 应用（从索引检索文档并生成答案）的上下文中的情况。
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -25,21 +26,21 @@ sidebarTitle: 概念
 
 ## 运行 (Runs)
 
-_运行_ 是一个跨度（span），代表 LLM 应用中单个工作单元或操作。这可以是从单个 LLM 调用或 Chain 调用，到提示词格式化调用，再到可调用 lambda 的执行等任何操作。如果您熟悉 [OpenTelemetry](https://opentelemetry.io/)，您可以将一次运行视为一个 span。
+一个 _运行_ 是一个跨度 (span)，代表 LLM 应用中单个工作单元或操作。这可以是从单个 LLM 调用或 Chain 调用，到提示格式化调用，再到可运行 lambda 调用。如果你熟悉 [OpenTelemetry](https://opentelemetry.io/)，你可以将一个运行视为一个跨度 (span)。
 
 ![Run](/langsmith/images/run.png)
 
-## 追踪 (Traces)
+## 跟踪 (Traces)
 
-_追踪_ 是为单次操作收集的一组运行。例如，如果用户请求触发了一个 Chain，该 Chain 又调用了 LLM，然后调用了输出解析器，依此类推，那么所有这些运行都将是同一追踪的一部分。如果您熟悉 [OpenTelemetry](https://opentelemetry.io/)，您可以将 LangSmith 追踪视为一组 span 的集合。运行通过唯一的追踪 ID 绑定到一个追踪。
+一个 _跟踪_ 是单个操作中运行的集合。例如，如果一个用户请求触发了一个 Chain，而这个 Chain 又调用了 LLM，然后调用了输出解析器，等等，所有这些运行都将属于同一个跟踪。如果你熟悉 [OpenTelemetry](https://opentelemetry.io/)，你可以将 LangSmith 跟踪视为一组跨度 (spans) 的集合。运行通过唯一的跟踪 ID (`trace ID`) 绑定到一个跟踪上。
 
 ![Trace](/langsmith/images/trace.png)
 
 ## 线程 (Threads)
 
-_线程_ 是代表单次对话的一系列追踪。许多 LLM 应用都有一个类似聊天机器人的界面，用户和 LLM 应用在此进行多轮对话。对话中的每一轮都被表示为一个独立的追踪，但这些追踪通过属于同一个线程而被链接起来。线程中最新的追踪是最近的消息交换。
+一个 _线程_ 是代表单次对话的跟踪序列。许多 LLM 应用具有类似聊天机器人的界面，用户和 LLM 应用在其中进行多轮对话。对话的每一轮都表示为一个单独的跟踪，但这些跟踪通过属于同一个线程而被链接起来。线程中最新的跟踪是最近的消息交换。
 
-为了将追踪分组到线程中，您需要传递一个特殊的元数据键（`session_id`、`thread_id` 或 `conversation_id`）以及一个唯一的标识符值，该值将这些追踪链接在一起。
+为了将跟踪分组到线程中，你需要传递一个特殊的元数据键（`session_id`、`thread_id` 或 `conversation_id`）以及一个唯一的标识符值，该值将这些跟踪链接在一起。
 
 [了解如何配置线程](/langsmith/threads)。
 
@@ -55,67 +56,72 @@ _线程_ 是代表单次对话的一系列追踪。许多 LLM 应用都有一个
     alt="Thread representing a sequence of traces in a multi-turn conversation."
 />
 
+<Callout type="info" icon="bird">
+使用 **[Polly](/langsmith/polly)** 来分析跟踪、运行和线程。Polly 帮助你理解 Agent 的性能、调试问题，并洞察对话线程，而无需手动深入挖掘数据。
+</Callout>
+
 ## 项目 (Projects)
 
-_项目_ 是追踪的集合。您可以将项目视为单个应用或服务相关所有追踪的容器。您可以拥有多个项目，每个项目可以包含多个追踪。
+一个 _项目_ 是跟踪的集合。你可以将一个项目视为所有与单个应用程序或服务相关的跟踪的容器。你可以有多个项目，每个项目可以有多个跟踪。
 
 ![Project](/langsmith/images/project.png)
 
 ## 反馈 (Feedback)
 
-_反馈_ 允许您根据某些标准对单个运行进行评分。每条反馈记录由一个反馈标签（tag）和一个反馈分数（score）组成，并通过唯一的运行 ID 绑定到该运行。反馈可以是连续的（continuous）也可以是离散的（categorical，即分类的），您可以在组织内跨不同的运行重复使用反馈标签。
+_反馈_ 允许你根据特定标准对单个运行进行评分。每条反馈记录由一个反馈标签和一个反馈分数组成，并通过唯一的运行 ID 绑定到该运行。反馈可以是连续的（连续值）或离散的（分类），并且你可以在组织内跨不同运行重用反馈标签。
 
-您可以通过多种方式收集运行的反馈：
+你可以通过以下几种方式收集对运行的反馈：
 
-1. [随追踪一起从 LLM 应用发送](/langsmith/attach-user-feedback)。
-2. 由用户在应用中[内联](/langsmith/annotate-traces-inline)或在[注释队列](/langsmith/annotation-queues)中生成。
-3. 在[离线评估](/langsmith/evaluate-llm-application)期间由自动评估器生成。
-4. 由[在线评估器](/langsmith/online-evaluations)生成。
+1.  [与跟踪一起从 LLM 应用发送](/langsmith/attach-user-feedback)。
+2.  由用户在应用中 [内联](/langsmith/annotate-traces-inline) 或在 [注释队列](/langsmith/annotation-queues) 中生成。
+3.  由自动评估器在 [离线评估](/langsmith/evaluate-llm-application) 期间生成。
+4.  由 [在线评估器](/langsmith/online-evaluations) 生成。
 
-要了解有关反馈在应用中如何存储的更多信息，请参阅 [反馈数据格式指南](/langsmith/feedback-data-format)。
+要了解有关反馈如何在应用程序中存储的更多信息，请参阅 [反馈数据格式指南](/langsmith/feedback-data-format)。
 
 ![Feedback](/langsmith/images/feedback.png)
 
 ## 标签 (Tags)
 
-_标签_ 是可以附加到运行的字符串集合。您可以使用标签在 LangSmith UI 中执行以下操作：
+_标签_ 是可以附加到运行的字符串集合。你可以使用标签在 LangSmith UI 中执行以下操作：
 
-- 对运行进行分类以便于搜索。
+- 按类别对运行进行分类，以便于搜索。
 - 过滤运行。
-- 将运行分组以进行分析。
+- 将运行分组以便进行分析。
 
-[了解如何向追踪附加标签](/langsmith/add-metadata-tags)。
+[了解如何向跟踪附加标签](/langsmith/add-metadata-tags)。
 
 ![Tags](/langsmith/images/tags.png)
 
 ## 元数据 (Metadata)
 
-_元数据_ 是您可以附加到运行的键值对集合。您可以使用元数据来存储有关运行的附加信息，例如生成该运行的应用版本、生成该运行的环境或您希望与运行关联的任何其他信息。与标签类似，您可以使用元数据在 LangSmith UI 中过滤运行或将运行分组以进行分析。
+_元数据_ 是你可以附加到运行的键值对集合。你可以使用元数据来存储关于运行的附加信息，例如生成该运行的应用程序版本、生成该运行的环境，或者任何你想与运行关联的额外信息。与标签类似，你可以使用元数据在 LangSmith UI 中过滤运行或将运行分组以供分析。
 
-[了解如何向追踪添加元数据](/langsmith/add-metadata-tags)。
+[了解如何向跟踪添加元数据](/langsmith/add-metadata-tags)。
 
 ![Metadata](/langsmith/images/metadata.png)
 
 ## 数据存储和保留
 
-对于在 2024 年 5 月 22 日或之后摄入的追踪，LangSmith (SaaS) 会在追踪被插入 LangSmith 追踪数据库之日起保留追踪数据，最长可达 400 天。
+对于在 2024 年 5 月 22 日星期三或之后摄取的跟踪，LangSmith (SaaS) 将跟踪数据保留的时间最长为 自跟踪被插入 LangSmith 跟踪数据库之日起的 400 天。
 
-400 天后，追踪将从 LangSmith 中永久删除，但会保留少量元数据，用于显示准确的统计数据，例如历史使用情况和成本。
+400 天后，跟踪将从 LangSmith 中永久删除，但会保留少量元数据，用于显示准确的统计数据，例如历史使用情况和成本。
 
 <Note>
-如果您希望将追踪数据保留的时间超过数据保留期限，可以将其添加到数据集中。一个[数据集](/langsmith/manage-datasets)允许您存储追踪的输入和输出（例如，作为键值数据集），并且即使追踪被删除，它也会永久存在。
+如果你希望保留跟踪数据的时间超过数据保留期限，可以将其添加到数据集中。一个 [数据集](/langsmith/manage-datasets) 允许你存储跟踪的输入和输出（例如，作为键值数据集），即使跟踪被删除也会永久保留。
 </Note>
 
-## 从 LangSmith 中删除追踪
+## 从 LangSmith 中删除跟踪
 
-如果您需要在追踪到期前将其从 LangSmith 中移除，可以通过删除包含它的项目来实现。
+如果你需要在过期日期前从 LangSmith 中删除跟踪，可以通过删除包含该跟踪的项目来实现。
 
-您可以通过以下方式删除项目：
+你可以通过以下方式之一删除项目：
 
 - 在 [LangSmith UI](https://smith.langchain.com) 中，在项目的溢出菜单上选择 **Delete** 选项。
-- 使用 [`delete_tracer_sessions`](https://api.smith.langchain.com/redoc#tag/tracer-sessions/operation/delete_tracer_session_api_v1_sessions__session_id__delete) API 端点。
-- 在 LangSmith SDK 中使用 `delete_project()` ([Python](https://reference.langchain.com/python/langsmith/observability/sdk/)) 或 `deleteProject()` ([JS/TS](https://reference.langchain.com/javascript/modules/langsmith.html))。
+- 使用 [`delete_tracer_sessions`](https://api.smith.langchain.com/redoc#tag/tracer-sessions/operation/delete_tracer_session_api_v1_sessions__session_id__delete) API 端点
+- 使用 LangSmith SDK 中的 `delete_project()` ([Python](https://reference.langchain.com/python/langsmith/observability/sdk/)) 或 `deleteProject()` ([JS/TS](https://reference.langchain.com/javascript/modules/langsmith.html))。
 
-LangSmith 不支持自助删除单个追踪。
+LangSmith 不支持对单个跟踪进行自助删除。
 
-如果您需要在到期前从 LangSmith 项目中删除单个追踪（或一组追踪），帐户所有者应通过 [LangSmith 支持](https://support.langchain.com)联系支持团队，并提供组织 ID 和追踪 ID。
+如果你需要在过期日期前从 LangSmith 项目中删除单个跟踪（或一组跟踪），账户所有者应通过 [LangSmith 支持](https://support.langchain.com) 联系支持团队，提供组织 ID 和跟踪 ID。
+```

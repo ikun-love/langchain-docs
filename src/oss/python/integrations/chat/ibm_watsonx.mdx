@@ -2,33 +2,33 @@
 title: ChatWatsonx
 ---
 
-> ChatWatsonx 是 IBM [watsonx.ai](https://www.ibm.com/products/watsonx-ai) 基础模型的封装库（wrapper）。
+> ChatWatsonx 是 IBM [watsonx.ai](https://www.ibm.com/products/watsonx-ai) 基础模型的封装库（Wrapper）。
 
-本示例旨在展示如何使用 `LangChain` 的 LLMs API 与 `watsonx.ai` 模型进行通信。
+本示例的目的是展示如何使用 `LangChain` 的 LLMs API 与 `watsonx.ai` 模型进行通信。
 
-## 概览 (Overview)
+## 概述
 
-### 集成细节 (Integration details)
+### 集成详情
 
-| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/chat/ibm/) | 下载量 (Downloads) | 版本 (Version) |
+| 类 (Class) | 包 (Package) | 本地化 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/chat/ibm/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
 | [`ChatWatsonx`](https://reference.langchain.com/python/integrations/langchain_ibm/ChatWatsonx/) | [`langchain-ibm`](https://reference.langchain.com/python/integrations/langchain_ibm/) | ❌ | ❌ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-ibm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-ibm?style=flat-square&label=%20) |
 
-### 模型特性 (Model features)
+### 模型特性
 
-| [工具调用](/oss/langchain/tools/) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | 图像输入 | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools/) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | 图像输入 | 音频输入 | 视频输入 | [逐个 Token 流式传输](/oss/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/langchain/models#token-usage) | [对数几率 (Logprobs)](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ |
 
-## 设置 (Setup)
+## 设置
 
-要访问 IBM watsonx.ai 模型，您需要创建一个 IBM watsonx.ai 账户，获取一个 API 密钥，并安装 `langchain-ibm` 集成包。
+要访问 IBM watsonx.ai 模型，您需要创建一个 IBM watsonx.ai 账户，获取 API 密钥，并安装 `langchain-ibm` 集成包。
 
 ### 凭证 (Credentials)
 
-下面的代码块定义了与 watsonx 基础模型推理工作所需的凭证。
+下面的代码单元格定义了与 watsonx 基础模型推理交互所需的凭证。
 
-**操作:** 提供 IBM Cloud 用户 API 密钥。详情请参阅
+**操作:** 提供 IBM Cloud 用户 API 密钥。有关详细信息，请参阅
 [管理用户 API 密钥](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)。
 
 ```python
@@ -39,7 +39,7 @@ watsonx_api_key = getpass()
 os.environ["WATSONX_APIKEY"] = watsonx_api_key
 ```
 
-此外，您还可以通过环境变量传递额外的密钥信息。
+此外，您还可以将额外的密钥作为环境变量传递。
 
 ```python
 import os
@@ -51,7 +51,7 @@ os.environ["WATSONX_USERNAME"] = "your username for accessing the CPD cluster"
 os.environ["WATSONX_INSTANCE_ID"] = "your instance_id for accessing the CPD cluster"
 ```
 
-### 安装 (Installation)
+### 安装
 
 LangChain IBM 集成位于 `langchain-ibm` 包中：
 
@@ -61,7 +61,7 @@ LangChain IBM 集成位于 `langchain-ibm` 包中：
 
 ## 实例化 (Instantiation)
 
-您可能需要根据不同的模型或任务调整模型的 `parameters`（参数）。有关详细信息，请参阅 [可用 TextChatParameters](https://ibm.github.io/watsonx-ai-python-sdk/fm_schema.html#ibm_watsonx_ai.foundation_models.schema.TextChatParameters)。
+您可能需要针对不同的模型或任务调整模型 `parameters`（参数）。有关详细信息，请参阅 [Available TextChatParameters](https://ibm.github.io/watsonx-ai-python-sdk/fm_schema.html#ibm_watsonx_ai.foundation_models.schema.TextChatParameters)。
 
 ```python
 parameters = {
@@ -74,12 +74,12 @@ parameters = {
 
 **注意**:
 
-- 要为 API 调用提供上下文，您必须传递 `project_id` 或 `space_id`。要获取项目或空间 ID，请打开您的项目或空间，转到 **管理 (Manage)** 选项卡，然后单击 **常规 (General)**。更多信息请参见：[项目文档](https://www.ibm.com/docs/en/watsonx-as-a-service?topic=projects) 或 [部署空间文档](https://www.ibm.com/docs/en/watsonx/saas?topic=spaces-creating-deployment)。
-- 根据您实例的服务区域，使用 [watsonx.ai API 认证](https://ibm.github.io/watsonx-ai-python-sdk/setup_cloud.html#authentication) 中列出的某个 URL。
+- 要为 API 调用提供上下文，您必须传入 `project_id` 或 `space_id`。要获取项目或空间 ID，请打开您的项目或空间，转到 **管理 (Manage)** 选项卡，然后单击 **常规 (General)**。更多信息请参阅：[项目文档](https://www.ibm.com/docs/en/watsonx-as-a-service?topic=projects) 或 [部署空间文档](https://www.ibm.com/docs/en/watsonx/saas?topic=spaces-creating-deployment)。
+- 根据您配置的服务实例的区域，使用 [watsonx.ai API 认证](https://ibm.github.io/watsonx-ai-python-sdk/setup_cloud.html#authentication) 中列出的其中一个 URL。
 
-在此示例中，我们将使用 `project_id` 和 Dallas URL。
+在此示例中，我们将使用 `project_id` 和达拉斯 (Dallas) URL。
 
-您需要指定用于推理的 `model_id`。您可以在 [支持的聊天模型](https://ibm.github.io/watsonx-ai-python-sdk/fm_helpers.html#ibm_watsonx_ai.foundation_models_manager.FoundationModelsManager.get_chat_model_specs) 列表中找到所有可用模型的列表。
+您需要指定用于推理的 `model_id`。您可以在 [支持的聊天模型](https://ibm.github.io/watsonx-ai-python-sdk/fm_helpers.html#ibm_watsonx_ai.foundation_models_manager.FoundationModelsManager.get_chat_model_specs) 中找到所有可用模型的列表。
 
 ```python
 from langchain_ibm import ChatWatsonx
@@ -92,7 +92,7 @@ chat = ChatWatsonx(
 )
 ```
 
-备选方案是使用 Cloud Pak for Data 凭证。详情请参阅 [watsonx.ai 软件设置](https://ibm.github.io/watsonx-ai-python-sdk/setup_cpd.html)。
+或者，您可以使用 Cloud Pak for Data 凭证。有关详细信息，请参阅 [watsonx.ai 软件设置](https://ibm.github.io/watsonx-ai-python-sdk/setup_cpd.html)。
 
 ```python
 chat = ChatWatsonx(
@@ -107,7 +107,7 @@ chat = ChatWatsonx(
 )
 ```
 
-您可以用先前部署模型所引用的 `deployment_id` 替换 `model_id`，该模型需引用一个 Prompt Template（提示模板）：[部署模型参考](https://cloud.ibm.com/apidocs/watsonx-ai#deployments-text-chat)。
+您可以将 `model_id` 替换为先前[部署模型的 `deployment_id`，该模型引用了 Prompt 模板](https://cloud.ibm.com/apidocs/watsonx-ai#deployments-text-chat)。
 
 ```python
 chat = ChatWatsonx(
@@ -118,7 +118,7 @@ chat = ChatWatsonx(
 )
 ```
 
-对于某些特定需求，可以选择将 IBM 的 [`APIClient`](https://ibm.github.io/watsonx-ai-python-sdk/base.html#apiclient) 对象传递给 `ChatWatsonx` 类。
+对于某些要求，可以选择将 IBM 的 [`APIClient`](https://ibm.github.io/watsonx-ai-python-sdk/base.html#apiclient) 对象传递给 `ChatWatsonx` 类。
 
 ```python
 from ibm_watsonx_ai import APIClient
@@ -133,13 +133,13 @@ chat = ChatWatsonx(
 
 ## 调用 (Invocation)
 
-要获取补全内容，您可以直接使用字符串提示（prompt）调用模型。
+要获取补全结果，您可以通过字符串提示直接调用模型。
 
 ```python
-# 调用 (Invocation)
+# 调用
 
 messages = [
-    ("system", "You are a helpful assistant that translates English to French."),
+    ("system", "你是一个乐于助人的助手，将英语翻译成法语。"),
     (
         "human",
         "I love you for listening to Rock.",
@@ -154,14 +154,14 @@ AIMessage(content="J'adore que tu escois de écouter de la rock ! ", additional_
 ```
 
 ```python
-# 多轮对话调用 (Invocation multiple chat)
+# 多次聊天调用
 from langchain.messages import (
     HumanMessage,
     SystemMessage,
 )
 
 system_message = SystemMessage(
-    content="You are a helpful assistant which telling short-info about provided topic."
+    content="你是一个乐于助人的助手，提供所提供主题的简短信息。"
 )
 human_message = HumanMessage(content="horse")
 
@@ -174,13 +174,13 @@ AIMessage(content='horses are quadrupedal mammals that are members of the family
 
 ## 链式调用 (Chaining)
 
-创建 `ChatPromptTemplate` 对象，这些对象负责生成随机问题。
+创建 `ChatPromptTemplate` 对象，该对象将负责生成一个随机问题。
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 
 system = (
-    "You are a helpful assistant that translates {input_language} to {output_language}."
+    "你是一个乐于助人的助手，将 {input_language} 翻译成 {output_language}。"
 )
 human = "{input}"
 prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
@@ -205,11 +205,11 @@ AIMessage(content='Ich liebe Python.', additional_kwargs={}, response_metadata={
 
 ## 流式传输模型输出 (Streaming the Model output)
 
-您可以对模型的输出进行流式传输。
+您可以对模型输出进行流式传输。
 
 ```python
 system_message = SystemMessage(
-    content="You are a helpful assistant which telling short-info about provided topic."
+    content="你是一个乐于助人的助手，提供所提供主题的简短信息。"
 )
 human_message = HumanMessage(content="moon")
 
@@ -223,18 +223,18 @@ The Moon is the fifth largest moon in the solar system and the largest relative 
 
 ## 批量处理模型输出 (Batch the Model output)
 
-您可以对模型的输出进行批量处理。
+您可以对模型输出进行批量处理。
 
 ```python
 message_1 = [
     SystemMessage(
-        content="You are a helpful assistant which telling short-info about provided topic."
+        content="你是一个乐于助人的助手，提供所提供主题的简短信息。"
     ),
     HumanMessage(content="cat"),
 ]
 message_2 = [
     SystemMessage(
-        content="You are a helpful assistant which telling short-info about provided topic."
+        content="你是一个乐于助人的助手，提供所提供主题的简短信息。"
     ),
     HumanMessage(content="dog"),
 ]
@@ -267,9 +267,9 @@ from pydantic import BaseModel, Field
 
 
 class GetWeather(BaseModel):
-    """Get the current weather in a given location"""
+    """获取指定地点的当前天气"""
 
-    location: str = Field(..., description="The city and state, e.g. San Francisco, CA")
+    location: str = Field(..., description="城市和州，例如 San Francisco, CA")
 
 
 llm_with_tools = chat.bind_tools([GetWeather])
@@ -277,7 +277,7 @@ llm_with_tools = chat.bind_tools([GetWeather])
 
 ```python
 ai_msg = llm_with_tools.invoke(
-    "Which city is hotter today: LA or NY?",
+    "今天 LA 和 NY 哪个城市更热？",
 )
 ai_msg
 ```
@@ -288,7 +288,7 @@ AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'chatcmpl-tool-6c
 
 ### AIMessage.tool_calls
 
-请注意，`AIMessage` 有一个 `tool_calls` 属性。它以标准化的 `ToolCall` 格式包含信息，这种格式与模型提供商无关。
+请注意，`AIMessage` 具有 @[`tool_calls`][AIMessage.tool_calls] 属性。它以标准化的 `ToolCall` 格式包含信息，与模型提供商无关。
 
 ```python
 ai_msg.tool_calls
@@ -307,6 +307,6 @@ ai_msg.tool_calls
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 `ChatWatsonx` 所有功能和配置的详细文档，请前往 [API 参考](https://reference.langchain.com/python/integrations/langchain_ibm/ChatWatsonx/) 页面。
+有关 `ChatWatsonx` 所有功能和配置的详细文档，请参阅 [API 参考](https://reference.langchain.com/python/integrations/langchain_ibm/ChatWatsonx/)。

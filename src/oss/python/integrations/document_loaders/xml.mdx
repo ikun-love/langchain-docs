@@ -2,38 +2,38 @@
 title: UnstructuredXMLLoader
 ---
 
-本指南提供了关于如何开始使用 `UnstructuredXMLLoader` [文档加载器](https://python.langchain.com/docs/concepts/document_loaders)的快速概览。`UnstructuredXMLLoader` 用于加载 `XML` 文件。该加载器支持 `.xml` 文件。页面内容将是**从 XML 标签中提取的文本**。
+本指南为入门 `UnstructuredXMLLoader` [文档加载器](https://python.langchain.com/docs/concepts/document_loaders) 提供了快速概述。`UnstructuredXMLLoader` 用于加载 `XML` 文件。该加载器适用于 `.xml` 文件。页面内容将是从 XML 标签中提取的文本。
 
-## 概述 (Overview)
+## 概述
 
-### 集成详情 (Integration details)
+### 集成详情
 
-| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
+| 类 | 包 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/file_loaders/unstructured/)|
 | :--- | :--- | :---: | :---: |  :---: |
 | [UnstructuredXMLLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.xml.UnstructuredXMLLoader.html) | [langchain_community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ✅ |
 
-### 加载器功能 (Loader features)
+### 加载器特性
 
-| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
+| 源 | 文档延迟加载 | 原生异步支持
 | :---: | :---: | :---: |
 | UnstructuredXMLLoader | ✅ | ❌ |
 
-## 设置 (Setup)
+## 设置
 
-要使用 `UnstructuredXMLLoader` 文档加载器，您需要安装 `langchain-community` 集成包。
+要访问 UnstructuredXMLLoader 文档加载器，您需要安装 `langchain-community` 集成包。
 
-### 凭证 (Credentials)
+### 凭证
 
-使用 `UnstructuredXMLLoader` **不需要任何凭证**。
+使用 UnstructuredXMLLoader **不需要**任何凭证。
 
-如需启用模型调用的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-### 安装 (Installation)
+### 安装
 
 安装 **langchain_community**。
 
@@ -41,9 +41,9 @@ os.environ["LANGSMITH_TRACING"] = "true"
 pip install -qU langchain_community
 ```
 
-## 初始化 (Initialization)
+## 初始化
 
-现在我们可以实例化模型对象并加载文档：
+现在我们可以实例化我们的模型对象并加载文档：
 
 ```python
 from langchain_community.document_loaders import UnstructuredXMLLoader
@@ -53,7 +53,7 @@ loader = UnstructuredXMLLoader(
 )
 ```
 
-## 加载 (Load)
+## 加载
 
 ```python
 docs = loader.load()
@@ -72,7 +72,7 @@ print(docs[0].metadata)
 {'source': './example_data/factbook.xml'}
 ```
 
-## 延迟加载 (Lazy Load)
+## 延迟加载
 
 ```python
 page = []
@@ -87,6 +87,6 @@ for doc in loader.lazy_load():
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关所有 __ModuleName__Loader 功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.xml.UnstructuredXMLLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.xml.UnstructuredXMLLoader.html)
+有关所有 __ModuleName__Loader 特性和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.xml.UnstructuredXMLLoader.html](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.xml.UnstructuredXMLLoader.html)

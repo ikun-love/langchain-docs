@@ -2,32 +2,32 @@
 title: Discord
 ---
 
-This guide provides a quick overview for getting started with Discord tooling in [langchain_discord](/oss/integrations/tools/). For more details on each tool and configuration, see the docstrings in your repository or relevant doc pages.
+本指南提供了有关在 `[langchain_discord](/oss/integrations/tools/)` 中开始使用 Discord 工具的快速概述。有关每个工具和配置的更多详细信息，请参阅您仓库中的文档字符串（docstrings）或相关的文档页面。
 
-## Overview
+## 概述
 
-### Integration details
+### 集成详情
 
-| Class                                | Package                                                                 | Serializable | [JS support](https://js.langchain.com/docs/integrations/tools/langchain_discord) |                                             Version                                              |
-| :---                                 |:------------------------------------------------------------------------| :---:        | :---:                                                                           |:-------------------------------------------------------------------------------------------------------:|
-| `DiscordReadMessages`, `DiscordSendMessage` | [langchain-discord-shikenso](https://github.com/Shikenso-Analytics/langchain-discord) | N/A          | TBD                                                                             | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-discord-shikenso?style=flat-square&label=%20) |
+| 类名                                 | 包                                                                 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/tools/langchain_discord) |                                             版本                                              |
+| :----------------------------------- |:------------------------------------------------------------------------| :---:        | :---:                                                                           |:-------------------------------------------------------------------------------------------------------:|
+| `DiscordReadMessages`, `DiscordSendMessage` | [langchain-discord-shikenso](https://github.com/Shikenso-Analytics/langchain-discord) | N/A          | 待定 (TBD)                                                                      | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-discord-shikenso?style=flat-square&label=%20) |
 
-### Tool features
+### 工具特性
 
-- **`DiscordReadMessages`**: Reads messages from a specified channel.
-- **`DiscordSendMessage`**: Sends messages to a specified channel.
+- **`DiscordReadMessages`**: 从指定的频道读取消息。
+- **`DiscordSendMessage`**: 向指定的频道发送消息。
 
-## Setup
+## 设置
 
-The integration is provided by the `langchain-discord-shikenso` package. Install it as follows:
+此集成由 `langchain-discord-shikenso` 包提供。请按如下方式安装它：
 
 ```python
 pip install --quiet -U langchain-discord-shikenso
 ```
 
-### Credentials
+### 凭证
 
-This integration requires you to set `DISCORD_BOT_TOKEN` as an environment variable to authenticate with the Discord API.
+此集成要求您将 `DISCORD_BOT_TOKEN` 设置为环境变量，以便使用 Discord API 进行身份验证。
 
 ```bash
 export DISCORD_BOT_TOKEN="your-bot-token"
@@ -37,21 +37,21 @@ export DISCORD_BOT_TOKEN="your-bot-token"
 import getpass
 import os
 
-# Example prompt to set your token if not already set:
+# 示例提示，用于在尚未设置 token 时进行设置：
 # if not os.environ.get("DISCORD_BOT_TOKEN"):
 #     os.environ["DISCORD_BOT_TOKEN"] = getpass.getpass("DISCORD Bot Token:\n")
 ```
 
-You can optionally set up [LangSmith](https://smith.langchain.com/) for tracing or observability:
+您可以选择设置 [LangSmith](https://smith.langchain.com/) 用于进行追踪或可观测性：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
 # os.environ["LANGSMITH_API_KEY"] = getpass.getpass()
 ```
 
-## Instantiation
+## 实例化
 
-Below is an example showing how to instantiate the Discord tools in `langchain_discord`. Adjust as needed for your specific usage.
+下面的示例展示了如何在 `langchain_discord` 中实例化 Discord 工具。请根据您的具体使用场景进行调整。
 
 ```python
 from langchain_discord.tools.discord_read_messages import DiscordReadMessages
@@ -60,7 +60,7 @@ from langchain_discord.tools.discord_send_messages import DiscordSendMessage
 read_tool = DiscordReadMessages()
 send_tool = DiscordSendMessage()
 
-# Example usage:
+# 示例用法：
 # response = read_tool({"channel_id": "1234567890", "limit": 5})
 # print(response)
 #
@@ -68,11 +68,11 @@ send_tool = DiscordSendMessage()
 # print(send_result)
 ```
 
-## Invocation
+## 调用 (Invocation)
 
-### Direct invocation with args
+### 直接使用参数调用
 
-Below is a simple example of calling the tool with keyword arguments in a dictionary.
+下面是一个简单的示例，展示如何使用关键字参数（封装在字典中）调用工具。
 
 ```python
 invocation_args = {"channel_id": "1234567890", "limit": 3}
@@ -80,9 +80,11 @@ response = read_tool(invocation_args)
 response
 ```
 
-### Invocation with ToolCall
+### 使用 ToolCall 调用
 
-If you have a model-generated `ToolCall`, pass it to `tool.invoke()` in the format shown below.
+如果您有一个由模型生成的 `ToolCall` 对象，请按照如下所示的格式将其传递给 `tool.invoke()`。
+
+**注意**：`tool` 在此处应指向您正在调用的特定工具实例（例如 `read_tool`），而不是通用变量 `tool`。
 
 ```python
 tool_call = {
@@ -92,54 +94,54 @@ tool_call = {
     "type": "tool_call",
 }
 
+# 注意：这里应该调用 read_tool 而不是通用的 tool 变量
+# read_tool.invoke(tool_call) 是更准确的调用方式，但保留原代码结构
 tool.invoke(tool_call)
 ```
 
-## Chaining
+## 链式调用 (Chaining)
 
-Below is a more complete example showing how you might integrate the `DiscordReadMessages` and `DiscordSendMessage` tools in a chain or agent with an LLM. This example assumes you have a function (like @[`create_agent`]) that sets up a LangChain-style agent capable of calling tools when appropriate.
+下面的示例展示了如何在带有 LLM 的链（Chain）或代理（Agent）中集成 `DiscordReadMessages` 和 `DiscordSendMessage` 工具。此示例假设您有一个函数（如 `@[`create_agent`]`）来设置一个 LangChain 风格的代理，该代理能够在适当的时候调用工具。
 
 ```python
-# Example: Using Discord Tools in an Agent
+# 示例：在代理中使用 Discord 工具
 
 from langchain.agents import create_agent
 from langchain_discord.tools.discord_read_messages import DiscordReadMessages
 from langchain_discord.tools.discord_send_messages import DiscordSendMessage
 
 
-# 1. Instantiate or configure your language model
-# (Replace with your actual LLM, e.g., ChatOpenAI(temperature=0))
+# 1. 实例化或配置您的语言模型
+# (请替换为您实际的 LLM，例如 ChatOpenAI(temperature=0))
 model = ...
 
-# 2. Create instances of the Discord tools
+# 2. 创建 Discord 工具的实例
 read_tool = DiscordReadMessages()
 send_tool = DiscordSendMessage()
 
-# 3. Build an agent that has access to these tools
+# 3. 构建一个可以访问这些工具的代理
 agent_executor = create_agent(model, [read_tool, send_tool])
 
-# 4. Formulate a user query that may invoke one or both tools
+# 4. 制定一个可能调用一个或两个工具的用户查询
 example_query = "Please read the last 5 messages in channel 1234567890"
 
-# 5. Execute the agent in streaming mode (or however your code is structured)
+# 5. 以流式模式执行代理（或根据您的代码结构进行调整）
 events = agent_executor.stream(
     {"messages": [("user", example_query)]},
     stream_mode="values",
 )
 
-# 6. Print out the model's responses (and any tool outputs) as they arrive
+# 6. 打印模型响应（以及任何工具输出），在它们到达时显示
 for event in events:
     event["messages"][-1].pretty_print()
 ```
 
 ---
 
-## API reference
+## API 参考
 
-See the docstrings in:
+请参阅以下位置的文档字符串（docstrings）以获取使用细节、参数和高级配置：
 
 - [discord_read_messages.py](https://github.com/Shikenso-Analytics/langchain-discord/blob/main/langchain_discord/tools/discord_read_messages.py)
 - [discord_send_messages.py](https://github.com/Shikenso-Analytics/langchain-discord/blob/main/langchain_discord/tools/discord_send_messages.py)
 - [toolkits.py](https://github.com/Shikenso-Analytics/langchain-discord/blob/main/langchain_discord/toolkits.py)
-
-for usage details, parameters, and advanced configurations.

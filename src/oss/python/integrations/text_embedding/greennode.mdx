@@ -1,17 +1,17 @@
 ---
-title: GreenNode 嵌入模型
+title: GreenNodeEmbeddings
 ---
 
->[GreenNode](https://greennode.ai/) 是一家全球性的 AI 解决方案提供商，同时也是 **NVIDIA 优先合作伙伴**，致力于为遍布美国、中东和亚太地区的各类企业提供从基础设施到应用的完整全栈 AI 能力。GreenNode 运营着世界一流的基础设施（LEED 金级认证、TIA-942、Uptime Tier III），为企业、初创公司和研究人员提供全面的 AI 服务组合。
+>[GreenNode](https://greennode.ai/) 是一家全球性 AI 解决方案提供商，同时也是 **NVIDIA 优先合作伙伴**，为横跨美国、中东和北非（MENA）以及亚太地区（APAC）的企业提供从基础设施到应用的**全栈 AI 能力**。GreenNode 运营着世界一流的基础设施（LEED 黄金认证、TIA‑942、Uptime Tier III），致力于为企业、初创公司和研究人员提供全面的 AI 服务。
 
-本指南将介绍如何开始使用 `GreenNodeEmbeddings`。它允许您通过生成高质量的文本向量表示，利用各种内置连接器或您自己的自定义数据源执行语义文档搜索。
+本指南将介绍如何开始使用 `GreenNodeEmbeddings`。它使您能够通过生成高质量的文本向量表示，使用各种内置连接器或您自己的自定义数据源来执行语义文档搜索。
 
 ## 概述
 
 ### 集成详情
 
-| 提供商 | 包名 |
-|:------:|:----:|
+| 提供商 | 包 |
+|:---:|:---:|
 | [GreenNode](/oss/integrations/providers/greennode/) | [langchain-greennode](https://python.langchain.com/v0.2/api_reference/langchain_greennode/embeddings/langchain_greennode.embeddingsGreenNodeEmbeddings.html) |
 
 ## 设置
@@ -20,21 +20,21 @@ title: GreenNode 嵌入模型
 
 ### 凭证
 
-GreenNode 要求提供 API 密钥进行身份验证。该密钥可以在初始化时作为 `api_key` 参数提供，也可以设置为环境变量 `GREENNODE_API_KEY`。您可以通过在 [GreenNode Serverless AI](https://aiplatform.console.greennode.ai/playground) 上注册一个账户来获取 API 密钥。
+GreenNode 需要一个 API 密钥进行身份验证。您可以在初始化时将其作为 `api_key` 参数提供，或者将其设置为环境变量 `GREENNODE_API_KEY`。您可以通过在 [GreenNode Serverless AI](https://aiplatform.console.greennode.ai/playground) 上注册账户来获取 API 密钥。
 
 ```python
 import getpass
 import os
 
 if not os.getenv("GREENNODE_API_KEY"):
-    os.environ["GREENNODE_API_KEY"] = getpass.getpass("请输入您的 GreenNode API 密钥: ")
+    os.environ["GREENNODE_API_KEY"] = getpass.getpass("Enter your GreenNode API key: ")
 ```
 
-如果您希望对模型调用进行自动化跟踪，您可以取消注释以下代码行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想对模型调用进行自动跟踪，也可以取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("请输入您的 LangSmith API 密钥: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
 ```
 
 ### 安装
@@ -47,28 +47,28 @@ pip install -qU langchain-greennode
 
 ## 实例化
 
-`GreenNodeEmbeddings` 类可以使用可选的 API 密钥和模型名称参数进行实例化：
+`GreenNodeEmbeddings` 类可以用可选的 API 密钥和模型名称参数进行实例化：
 
 ```python
 from langchain_greennode import GreenNodeEmbeddings
 
 # 初始化嵌入模型
 embeddings = GreenNodeEmbeddings(
-    # api_key="YOUR_API_KEY",  # 您可以直接传入 API 密钥
+    # api_key="YOUR_API_KEY",  # 您可以直接传递 API 密钥
     model="BAAI/bge-m3"  # 默认的嵌入模型
 )
 ```
 
 ## 索引和检索
 
-嵌入模型在检索增强生成 (RAG) 工作流中起着关键作用，它支持内容的索引和高效检索。
-下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用 `InMemoryVectorStore` 来索引和检索一个示例文档。
+嵌入模型在检索增强生成（RAG）工作流中起着关键作用，它既能实现内容的索引，又能实现内容的有效检索。
+下面展示了如何使用我们上面初始化的 `embeddings` 对象进行数据索引和检索。在这个例子中，我们将对一个示例文档进行索引，并使用 `InMemoryVectorStore` (内存向量存储) 进行检索。
 
 ```python
 # 使用示例文本创建一个向量存储
 from langchain_core.vectorstores import InMemoryVectorStore
 
-text = "LangChain 是用于构建上下文感知推理应用的框架"
+text = "LangChain is the framework for building context-aware reasoning applications"
 
 vectorstore = InMemoryVectorStore.from_texts(
     [text],
@@ -79,23 +79,23 @@ vectorstore = InMemoryVectorStore.from_texts(
 retriever = vectorstore.as_retriever()
 
 # 检索最相似的文本
-retrieved_documents = retriever.invoke("LangChain 是什么？")
+retrieved_documents = retriever.invoke("What is LangChain?")
 
 # 显示检索到的文档内容
 retrieved_documents[0].page_content
 ```
 
 ```output
-'LangChain 是用于构建上下文感知推理应用的框架'
+'LangChain is the framework for building context-aware reasoning applications'
 ```
 
 ## 直接使用
 
-`GreenNodeEmbeddings` 类可以独立使用，用于生成文本嵌入，而无需依赖向量存储。这对于相似度评分、聚类或自定义处理管道等任务非常有用。
+`GreenNodeEmbeddings` 类可以独立用于生成文本嵌入，而无需向量存储。这对于诸如相似度评分、聚类或自定义处理管道等任务非常有用。
 
 ### 嵌入单个文本
 
-您可以使用 `embed_query` 嵌入单个文本或文档：
+您可以使用 `embed_query` 来嵌入单个文本或文档：
 
 ```python
 single_vector = embeddings.embed_query(text)
@@ -108,11 +108,11 @@ print(str(single_vector)[:100])  # 显示向量的前 100 个字符
 
 ### 嵌入多个文本
 
-您可以使用 `embed_documents` 嵌入多个文本：
+您可以使用 `embed_documents` 来嵌入多个文本：
 
 ```python
 text2 = (
-    "LangGraph 是一个用于使用 LLM 构建有状态、多参与者应用的库"
+    "LangGraph is a library for building stateful, multi-actor applications with LLMs"
 )
 two_vectors = embeddings.embed_documents([text, text2])
 for vector in two_vectors:
@@ -134,17 +134,17 @@ import asyncio
 
 async def generate_embeddings_async():
     # 嵌入单个查询
-    query_result = await embeddings.aembed_query("法国的首都是哪里？")
-    print(f"异步查询嵌入维度: {len(query_result)}")
+    query_result = await embeddings.aembed_query("What is the capital of France?")
+    print(f"Async query embedding dimension: {len(query_result)}")
 
     # 嵌入多个文档
     docs = [
-        "巴黎是法国的首都",
-        "柏林是德国的首都",
-        "罗马是意大利的首都",
+        "Paris is the capital of France",
+        "Berlin is the capital of Germany",
+        "Rome is the capital of Italy",
     ]
     docs_result = await embeddings.aembed_documents(docs)
-    print(f"异步文档嵌入数量: {len(docs_result)}")
+    print(f"Async document embeddings count: {len(docs_result)}")
 
 
 await generate_embeddings_async()
@@ -163,29 +163,29 @@ from scipy.spatial.distance import cosine
 
 # 创建一些文档
 documents = [
-    "机器学习算法根据样本数据构建数学模型",
-    "深度学习使用具有多层的神经网络",
-    "气候变化是一个主要的全球环境挑战",
-    "神经网络的灵感来源于人脑的结构",
+    "Machine learning algorithms build mathematical models based on sample data",
+    "Deep learning uses neural networks with many layers",
+    "Climate change is a major global environmental challenge",
+    "Neural networks are inspired by the human brain's structure",
 ]
 
 # 嵌入文档
 embeddings_list = embeddings.embed_documents(documents)
 
 
-# 计算相似度函数
+# 计算相似度的函数
 def calculate_similarity(embedding1, embedding2):
     return 1 - cosine(embedding1, embedding2)
 
 
 # 打印相似度矩阵
-print("文档相似度矩阵:")
+print("Document Similarity Matrix:")
 for i, emb_i in enumerate(embeddings_list):
     similarities = []
     for j, emb_j in enumerate(embeddings_list):
         similarity = calculate_similarity(emb_i, emb_j)
         similarities.append(f"{similarity:.4f}")
-    print(f"文档 {i + 1}: {similarities}")
+    print(f"Document {i + 1}: {similarities}")
 ```
 
 ```output

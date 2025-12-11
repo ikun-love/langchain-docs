@@ -1,36 +1,15 @@
 ---
-title: LangGraph 概览
-sidebarTitle: 概览
+title: LangGraph 概述
+sidebarTitle: 概述
 ---
 
-:::python
-<Callout icon="bullhorn" color="#DFC5FE" iconType="regular">
-    **LangGraph v1.x 现已发布！**
+LangGraph 受到 Klarna、Replit、Elastic 等塑造未来的公司的信任。它是一个**低级编排框架和运行时环境**，用于构建、管理和部署长期运行的、有状态的智能体（Agent）。
 
-    有关变更的完整列表以及升级代码的说明，请参阅 [发布说明](/oss/releases/langgraph-v1) 和 [迁移指南](/oss/migrate/langgraph-v1)。
+LangGraph 的级别非常低，完全专注于智能体的**编排（orchestration）**。在开始使用 LangGraph 之前，我们建议您先熟悉一些用于构建智能体的核心组件，例如 [模型 (models)](/oss/langchain/models) 和 [工具 (tools)](/oss/langchain/tools)。
 
-    如果您遇到任何问题或有任何反馈，请 [打开一个 Issue](https://github.com/langchain-ai/docs/issues/new?template=02-langgraph.yml&labels=langgraph,python)，以便我们进行改进。要查看 v0.x 文档，请 [访问存档内容](https://github.com/langchain-ai/langgraph/tree/main/docs/docs)。
-</Callout>
-:::
+在整个文档中，我们将频繁使用 [LangChain](/oss/langchain/overview) 组件来集成模型和工具，但您**不一定**需要使用 LangChain 才能使用 LangGraph。如果您刚开始接触智能体，或者需要一个更高层次的抽象，我们推荐使用 LangChain 的 [Agents](/oss/langchain/agents)，它们为常见的 LLM 和工具调用循环提供了预构建的架构。
 
-:::js
-<Callout icon="bullhorn" color="#DFC5FE" iconType="regular">
-
-    **LangGraph v1.x 现已发布！**
-
-    有关变更的完整列表以及升级代码的说明，请参阅 [发布说明](/oss/releases/langgraph-v1) 和 [迁移指南](/oss/migrate/langgraph-v1)。
-
-    如果您遇到任何问题或有任何反馈，请 [打开一个 Issue](https://github.com/langchain-ai/docs/issues/new?template=02-langgraph.yml&labels=langgraph,js/ts)，以便我们进行改进。要查看 v0.x 文档，请 [访问存档内容](https://github.com/langchain-ai/langgraphjs/tree/main/docs/docs)。
-</Callout>
-:::
-
-LangGraph 得到了塑造智能体未来的公司（包括 Klarna, Replit, Elastic 等）的信赖。它是一个**低级的编排框架和运行时**，用于构建、管理和部署**长期运行、有状态的智能体**。
-
-LangGraph 级别非常底层，完全专注于智能体的**编排**。在使用 LangGraph 之前，建议您先熟悉用于构建智能体的组件，从 [模型](/oss/langchain/models) 和 [工具](/oss/langchain/tools) 开始。
-
-在整个文档中，我们将经常使用 [LangChain](/oss/langchain/overview) 组件来集成模型和工具，但您**不需要**使用 LangChain 才能使用 LangGraph。如果您刚开始接触智能体，或者需要一个更高级别的抽象，我们建议您使用 LangChain 的 [智能体](/oss/langchain/agents)，它们为常见的 LLM 和工具调用循环提供了预构建的架构。
-
-LangGraph 专注于对智能体编排至关重要的底层能力：持久化执行、流式传输（Streaming）、人工干预（Human-in-the-loop）等。
+LangGraph 专注于智能体编排所需的基础能力：持久化执行（durable execution）、流式传输（streaming）、人机协作（human-in-the-loop）等等。
 
 ## <Icon icon="download" size={20} /> 安装
 
@@ -66,7 +45,7 @@ bun add @langchain/langgraph @langchain/core
 </CodeGroup>
 :::
 
-然后，创建一个简单的 "hello world" 示例：
+然后，创建一个简单的 hello world 示例：
 
 :::python
 ```python
@@ -105,32 +84,32 @@ await graph.invoke({ messages: [{ role: "user", content: "hi!" }] });
 
 ## 核心优势
 
-LangGraph 为*任何*长期运行、有状态的工作流或智能体提供低级支持性基础设施。LangGraph 不会抽象化提示词或架构，并提供以下核心优势：
+LangGraph 为**任何**长期运行、有状态的工作流或智能体提供了低级别的支持性基础架构。LangGraph 不会对提示词（prompts）或架构进行抽象化，而是提供以下核心优势：
 
-* [持久化执行](/oss/langgraph/durable-execution)：构建能够**在出现故障时得以持久**并可长时间运行的智能体，并能从中断处恢复执行。
-* [人工干预（Human-in-the-loop）](/oss/langgraph/interrupts)：通过在任何时刻检查和修改智能体状态，纳入人工监督。
-* [全面的内存管理](/oss/concepts/memory)：创建有状态的智能体，同时具备用于持续推理的**短期工作记忆**和跨会话的**长期记忆**。
-* [使用 LangSmith 进行调试](/langsmith/home)：通过跟踪执行路径、捕获状态转换和提供详细运行时指标的可视化工具，深入了解复杂的智能体行为。
-* [面向生产的部署](/langsmith/deployments)：使用专为处理有状态、长期运行工作流的独特挑战而设计的可扩展基础设施，自信地部署复杂的智能体系统。
+* [持久化执行 (Durable execution)](/oss/langgraph/durable-execution)：构建能够抵御故障并可长时间运行的智能体，使其可以从中断的位置恢复执行。
+* [人机协作 (Human-in-the-loop)](/oss/langgraph/interrupts)：通过在任何时间点检查和修改智能体的状态，纳入人工监督。
+* [全面的内存管理 (Comprehensive memory)](/oss/concepts/memory)：创建有状态的智能体，同时拥有用于持续推理的短期工作记忆和跨会话的长期记忆。
+* [使用 LangSmith 进行调试 (Debugging with LangSmith)](/langsmith/home)：通过可视化工具深入了解复杂的智能体行为，这些工具可以跟踪执行路径、捕获状态转换并提供详细的运行时指标。
+* [面向生产的部署 (Production-ready deployment)](/langsmith/deployments)：利用专为处理有状态、长期运行的工作流的独特挑战而设计的可扩展基础设施，自信地部署复杂的智能体系统。
 
 ## LangGraph 生态系统
 
-虽然 LangGraph 可以独立使用，但它也能与任何 LangChain 产品无缝集成，为开发者提供全套的智能体构建工具。要改进您的 LLM 应用开发，请将 LangGraph 与以下组件配合使用：
+虽然 LangGraph 可以独立使用，但它也能与任何 LangChain 产品无缝集成，为开发人员提供一套完整的智能体构建工具。为了提升您的 LLM 应用开发体验，可以将 LangGraph 与以下组件搭配使用：
 
 <Columns cols={1}>
     <Card title="LangSmith" icon="chart-line" href="http://www.langchain.com/langsmith" arrow cta="了解更多">
-        在一个地方跟踪请求、评估输出和监控部署。在本地使用 LangGraph 进行原型设计，然后通过集成的可观测性和评估转移到生产环境，以构建更可靠的智能体系统。
+        在一个地方跟踪请求、评估输出和监控部署。使用 LangGraph 进行本地原型设计，然后通过集成的可观测性和评估迁移到生产环境，以构建更可靠的智能体系统。
     </Card>
 
     <Card title="LangGraph" icon="server" href="/langsmith/agent-server" arrow cta="了解更多">
-        使用专为长期运行、有状态工作流而构建的部署平台，轻松部署和扩展智能体。发现、重用、配置和共享跨团队的智能体——并通过 Studio 中的可视化原型设计快速迭代。
+        使用专为长期运行、有状态工作流而构建的部署平台，轻松部署和扩展智能体。在 Studio 中发现、重用、配置和共享团队间的智能体，并进行快速的可视化原型迭代。
     </Card>
 
     <Card title="LangChain" icon="link" href="/oss/langchain/overview" arrow cta="了解更多">
-        提供集成和可组合的组件，以简化 LLM 应用的开发。包含基于 LangGraph 构建的智能体抽象。
+        提供集成和可组合的组件，以简化 LLM 应用开发。包含构建在 LangGraph 之上的智能体抽象层。
     </Card>
 </Columns>
 
 ## 致谢
 
-LangGraph 的灵感来源于 [Pregel](https://research.google/pubs/pub37252/) 和 [Apache Beam](https://beam.apache.org/)。其公共接口的灵感借鉴了 [NetworkX](https://networkx.org/documentation/latest/)。LangGraph 由 LangChain Inc.（LangChain 的创建者）构建，但可以独立于 LangChain 使用。
+LangGraph 的灵感来源于 [Pregel](https://research.google/pubs/pub37252/) 和 [Apache Beam](https://beam.apache.org/)。其公共接口借鉴了 [NetworkX](https://networkx.org/documentation/latest/)。LangGraph 由 LangChain 的创建者 LangChain Inc. 构建，但可以独立于 LangChain 使用。

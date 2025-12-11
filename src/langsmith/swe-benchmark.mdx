@@ -1,13 +1,14 @@
+```markdown
 ---
-title: Run SWE-bench with LangSmith
-sidebarTitle: Run SWE-bench
+title: 使用 LangSmith 运行 SWE-bench
+sidebarTitle: 运行 SWE-bench
 ---
 
-SWE-bench is one of the most popular (and difficult!) benchmarks for developers to test their coding agents against. In this walkthrough we will show you how to load the SWE-bench dataset into LangSmith and easily run evals on it, allowing you to have much better visibility into your agents behaviour then using the off-the-shelf SWE-bench eval suite. This allows you to pin specific problems quicker and iterate on your agent rapidly to improve performance!
+SWE-bench 是开发者用来测试其代码代理（coding agents）的最流行（也是最难的！）基准测试之一。在本指南中，我们将向您展示如何将 SWE-bench 数据集加载到 LangSmith 中，并轻松地在其上运行评估（evals）。这样做可以为您提供比使用现成的 SWE-bench 评估套件时**更清晰的可见性**来观察代理的行为。这使得您可以更快地锁定特定问题，并快速迭代您的代理以提高性能！
 
-## Loading the data
+## 加载数据
 
-To load the data, we will pull the `dev` split from Hugging Face, but for your use case you may wish to pull one of the `test`, or `train` splits, and if you want to combine multiple splits you can use `pd.concat`.
+要加载数据，我们将从 Hugging Face 拉取 `dev` 分片（split）。但根据您的具体用例，您可能希望拉取 `test` 或 `train` 分片中的一个。如果您想组合多个分片，可以使用 `pd.concat`。
 
 ```python
 import pandas as pd
@@ -21,47 +22,47 @@ splits = {
 df = pd.read_parquet("hf://datasets/princeton-nlp/SWE-bench/" + splits["dev"])
 ```
 
-### Editing the 'version' column
+### 编辑 'version' 列
 
 <Note>
-This is a very important step! If you skip, the rest of the code WILL NOT WORK!
+这是一个非常重要的步骤！如果跳过，其余代码将**无法工作**！
 </Note>
 
-The `version` column contains all string values but all are in float format so they get converted to floats when you upload the CSV to create a LangSmith dataset. Although you can convert the values to strings during your experiments, the issue arises with values like `"0.10"`. When getting converted to a float, you get the value `0.1`, which would become `"0.1"` if you converted it to a string - causing a key error during execution of your proposed patch.
+`version` 列包含所有字符串值，但它们都是浮点数格式，因此当您上传 CSV 创建 LangSmith 数据集时，它们会被转换为浮点数。尽管您可以在实验过程中将这些值转换为字符串，但问题出现在像 `"0.10"` 这样的值上。当转换为浮点数时，您会得到值 `0.1`，如果再将其转换为字符串，它将变成 `"0.1"`，这会在执行您提出的补丁时导致键错误（key error）。
 
-In order to fix this, we need LangSmith to stop trying to convert the `version` column to floats. In order to do this, we can just append a string prefix to each of them that is not float compatible. We then need to split on this prefix when doing evaluation to get the actual `version` value. The prefix we choose here is the string `"version:"`.
+为了解决这个问题，我们需要阻止 LangSmith 尝试将 `version` 列转换为浮点数。为此，我们可以简单地在每个值前追加一个不兼容浮点数的字符串前缀。然后，在进行评估时，我们需要根据此前缀进行拆分，以获取实际的 `version` 值。我们这里选择的前缀是字符串 `"version:"`。
 
 <Note>
-The ability to select column types when uploading a CSV to LangSmith will be added in the future to avoid having to use this workaround.
+未来将添加在上传 CSV 到 LangSmith 时选择列类型的能力，以避免使用此变通方法。
 </Note>
 
 ```python
 df['version'] = df['version'].apply(lambda x: f"version:{x}")
 ```
 
-## Upload the data to LangSmith
+## 将数据上传到 LangSmith
 
-### Save to CSV
+### 保存到 CSV
 
-To upload the data to LangSmith, we first need to save it to a CSV, which we can do using the `to_csv` function provided by pandas. Make sure to save this file somewhere that is easily accessible to you.
+要将数据上传到 LangSmith，我们首先需要使用 pandas 提供的 `to_csv` 函数将其保存到 CSV 文件中。请确保将此文件保存在易于访问的位置。
 
 ```python
 df.to_csv("./../SWE-bench.csv",index=False)
 ```
 
-### Upload CSV to LangSmith Manually
+### 手动上传 CSV 到 LangSmith
 
-We are now ready to upload the CSV to LangSmith. Once you are on the [LangSmith website ](https://smith.langchain.com), go to the `Datasets & Testing` tab on the left side navigation bar, and then click the `+ New Dataset` button in the top right corner.
+现在我们准备将 CSV 上传到 LangSmith。在您访问 [LangSmith 网站 ](https://smith.langchain.com)后，点击左侧导航栏中的 `Datasets & Testing`（数据集与测试）选项卡，然后在右上角点击 `+ New Dataset`（新建数据集）按钮。
 
-Then click the `Upload CSV` button on the top, and select the CSV file you saved in the previous step. You can then give your dataset a name and description.
+然后点击顶部 `Upload CSV`（上传 CSV）按钮，并选择您在上一步中保存的 CSV 文件。您可以为数据集命名并添加描述。
 
-Next, select `Key-Value` as the dataset type. Lastly head to the `Create Schema` section and add ALL OF THE KEYS as `Input fields`. There are no `Output fields` in this example because our evaluator is not comparing against a reference, but instead will run the output of our experiments in docker containers to ensure that the code actually solves the PR issue.
+接下来，选择 `Key-Value` 作为数据集类型。最后，转到 `Create Schema`（创建模式）部分，并将**所有键**添加为 `Input fields`（输入字段）。在这个例子中，我们没有 `Output fields`（输出字段），因为我们的评估器不是与参考答案（reference）进行比较，而是将在 Docker 容器中运行我们实验的输出来验证代码是否真正解决了 PR（Pull Request）问题。
 
-Once you have populated the `Input fields` (and left the `Output fields` empty!) you can click the blue `Create` button in the top right corner, and your dataset will be created!
+完成输入字段的填充（并保持输出字段为空！）后，您可以点击右上角的蓝色 `Create` 按钮，您的数据集就会被创建！
 
-### Upload CSV to LangSmith Programmatically
+### 以编程方式上传 CSV 到 LangSmith
 
-Alternatively you can upload your csv to LangSmith using the sdk as shown in the code block below:
+或者，您可以使用如下代码块所示的 SDK 以编程方式将 CSV 上传到 LangSmith：
 
 ```python
 dataset = client.upload_csv(
@@ -74,13 +75,13 @@ dataset = client.upload_csv(
 )
 ```
 
-### Create dataset split for quicker testing
+### 创建数据集分片以加快测试速度
 
-Since running the SWE-bench evaluator takes a long time when run on all examples, you can create a "test" split for quickly testing the evaluator and your code. Read [this guide](/langsmith/manage-datasets-in-application#create-and-manage-dataset-splits) to learn more about managing dataset splits.
+由于在所有示例上运行 SWE-bench 评估器需要很长时间，您可以创建一个 "test" 分片，用于快速测试评估器和您的代码。请阅读 [此指南](/langsmith/manage-datasets-in-application#create-and-manage-dataset-splits) 以了解有关管理数据集分片的更多信息。
 
-## Running our prediction function
+## 运行我们的预测函数
 
-Running evaluation over SWE-bench works a little differently than most evals you will typically run on LangSmith since we don't have a reference output. Because of this, we first generate all of our outputs without running an evaluator (note how the `evaluate` call doesn't have the `evaluators` parameter set). In this case we returned a dummy predict function, but you can insert your agent logic inside the `predict` function to make it work as intended.
+在 LangSmith 上运行 SWE-bench 评估与您通常运行的大多数评估略有不同，因为我们没有参考输出。因此，我们首先在不运行评估器的情况下生成所有输出（注意 `evaluate` 调用中没有设置 `evaluators` 参数）。在此示例中，我们返回了一个虚拟的 `predict` 函数，但您可以将您的代理逻辑插入到 `predict` 函数中以使其按预期工作。
 
 ```python
 from langsmith import evaluate
@@ -104,17 +105,17 @@ result = evaluate(
 )
 ```
 
-View the evaluation results for experiment: ['perfect-lip-22'](https://smith.langchain.com/o/ebbaf2eb-769b-4505-aca2-d11de10372a4/datasets/a9bffcdf-1dfe-4aef-8805-8806f0110067/compare?selectedSessions=182de5dc-fc9d-4065-a3e1-34527f952fd8)
+查看实验结果：['perfect-lip-22'](https://smith.langchain.com/o/ebbaf2eb-769b-4505-aca2-d11de10372a4/datasets/a9bffcdf-1dfe-4aef-8805-8806f0110067/compare?selectedSessions=182de5dc-fc9d-4065-a3e1-34527f952fd8)
 
-## Evaluating our predictions using SWE-bench
+## 使用 SWE-bench 评估我们的预测
 
-Now we can run the following code to run the predicted patches we generated above in Docker. This code is edited slightly from the `SWE-bench` [run\_evaluation.py](https://github.com/princeton-nlp/SWE-bench/blob/main/swebench/harness/run_evaluation.py) file.
+现在我们可以运行以下代码，在 Docker 中执行我们上面生成的预测补丁。此代码略微修改自 SWE-bench 的 [run\_evaluation.py](https://github.com/princeton-nlp/SWE-bench/blob/main/swebench/harness/run_evaluation.py) 文件。
 
-Basically, the code sets up docker images to run the predictions in parallel, which greatly reduces the time needed for evaluation. This screenshot explains the basics of how `SWE-bench` does evaluation under the hood. To understand it in full, make sure to read through the code in the [GitHub repository](https://github.com/princeton-nlp/SWE-bench).
+基本上，这段代码设置了 Docker 镜像以并行运行预测，这大大减少了评估所需的时间。下面的截图解释了 `SWE-bench` 评估机制的底层原理。要完全理解，请务必阅读 [GitHub 仓库](https://github.com/princeton-nlp/SWE-bench) 中的代码。
 
 ![Eval Diagram](/langsmith/images/swebench-evaluation.png)
 
-The function `convert_runs_to_langsmith_feedback` converts the logs generated by the docker file into a nice .json file that contains feedback in the typical key/score method of LangSmith.
+函数 `convert_runs_to_langsmith_feedback` 将 Docker 文件生成的日志转换成一个漂亮的 `.json` 文件，该文件包含具有 LangSmith 典型键/分数方法的反馈信息。
 
 ```python
 from swebench.harness.run_evaluation import run_instances
@@ -135,11 +136,11 @@ def convert_runs_to_langsmith_feedback(
     run_id: str
 ) -> float:
     """
-    Convert logs from docker containers into LangSmith feedback.
+    将 Docker 容器的日志转换为 LangSmith 反馈。
     Args:
-        predictions (dict): Predictions dict generated by the model
-        full_dataset (list): List of all instances
-        run_id (str): Run ID
+        predictions (dict): 模型生成的预测字典
+        full_dataset (list): 所有实例的列表
+        run_id (str): 运行 ID
     """
     feedback_for_all_instances = {}
     for instance in full_dataset:
@@ -148,7 +149,7 @@ def convert_runs_to_langsmith_feedback(
         prediction = predictions[instance_id]
 
         if prediction.get("model_patch", None) in ["", None]:
-            # Prediction returned an empty patch
+            # 预测返回了空补丁
             feedback_for_all_instances[prediction['run_id']] = [
                 {"key": "non-empty-patch", "score": 0},
                 {"key": "completed-patch", "score": 0},
@@ -166,16 +167,16 @@ def convert_runs_to_langsmith_feedback(
         )
 
         if report_file.exists():
-            # If report file exists, then the instance has been run
+            # 如果报告文件存在，则实例已运行
             feedback_for_instance.append({"key": "completed-patch", "score": 1})
             report = json.loads(report_file.read_text())
-            # Check if instance actually resolved the PR
+            # 检查实例是否真正解决了 PR
             if report[instance_id]["resolved"]:
                 feedback_for_instance.append({"key": "resolved-patch", "score": 1})
             else:
                 feedback_for_instance.append({"key": "resolved-patch", "score": 0})
         else:
-            # The instance did not run successfully
+            # 实例未能成功运行
             feedback_for_instance += [
                 {"key": "completed-patch", "score": 0},
                 {"key": "resolved-patch", "score": 0}
@@ -198,20 +199,20 @@ def evaluate_predictions(
     timeout: int,
 ):
     """
-    Run evaluation harness for the given dataset and predictions.
+    为给定数据集和预测运行评估器。
     """
-    # set open file limit
-    assert len(run_id) > 0, "Run ID must be provided"
+    # 设置打开文件限制
+    assert len(run_id) > 0, "必须提供 Run ID"
     resource.setrlimit(resource.RLIMIT_NOFILE, (open_file_limit, open_file_limit))
     client = docker.from_env()
     existing_images = list_images(client)
     print(f"Running {len(dataset)} unevaluated instances...")
 
-    # build environment images + run instances
+    # 构建环境镜像 + 运行实例
     build_env_images(client, dataset, force_rebuild, max_workers)
     run_instances(predictions, dataset, cache_level, clean, force_rebuild, max_workers, run_id, timeout)
 
-    # clean images + make final report
+    # 清理镜像 + 生成最终报告
     clean_images(client, existing_images, cache_level, clean)
     convert_runs_to_langsmith_feedback(predictions, dataset, run_id)
 ```
@@ -272,9 +273,9 @@ evaluate_predictions(
     Removed 0 images.
 ```
 
-## Sending Evaluation to LangSmith
+## 将评估发送到 LangSmith
 
-Now, we can actually send our evaluation feedback to LangSmith by using the `evaluate_existing` function. Our evaluate function is incredibly simple in this case, because the `convert_runs_to_langsmith_feedback` function above made our life very easy by saving all the feedback to a single file.
+现在，我们可以通过使用 `evaluate_existing` 函数实际将我们的评估反馈发送到 LangSmith。在这个特定的案例中，我们的评估函数非常简单，因为上面的 `convert_runs_to_langsmith_feedback` 函数已经非常方便地将所有反馈保存到了一个文件中。
 
 ```python
 from langsmith import evaluate_existing
@@ -296,6 +297,7 @@ evaluate_existing(experiment_name, evaluators=[swe_bench_evaluator])
     <ExperimentResults perfect-lip-22>
 ```
 
-After running, we can go to the experiments tab of our dataset, and check that our feedback keys were properly assigned. If they were, you should see something that resembles the following image:
+运行完成后，我们可以转到数据集的“实验”选项卡，并检查反馈键是否已正确分配。如果设置正确，您应该会看到类似于下图的内容：
 
 ![LangSmith feedback](/langsmith/images/swebench-langsmith-feedback.png)
+```

@@ -3,40 +3,40 @@ title: 连接到自定义模型
 sidebarTitle: 自定义模型
 ---
 
-LangSmith 游乐场（Playground）允许您使用自己的自定义模型。您可以部署一个模型服务器，该服务器通过 [FastAPI]（请注意：原文未明确指出是哪个库，根据上下文推断是 FastAPI，此处保留开放性，仅翻译已有内容） 暴露模型的 API。在后台，游乐场将与您的模型服务器进行交互以生成响应。
+LangSmith 实验场（Playground）允许您使用自己的**自定义模型**。您可以部署一个模型服务器，该服务器通过 [LangServe](https://github.com/langchain-ai/langserve) (一个用于部署 LangChain 应用的开源库) 来暴露模型的 API。在后台，实验场将与您的模型服务器交互以生成响应。
 
 ## 部署自定义模型服务器
 
-为了方便您，我们提供了一个可供参考的示例模型服务器。您可以在[此处](https://github.com/langchain-ai/langsmith-model-server)找到该示例。我们强烈建议将示例模型服务器作为起点。
+为了方便您使用，我们提供了一个**示例模型服务器**供您参考。您可以在[此处](https://github.com/langchain-ai/langsmith-model-server)找到该示例。我们强烈建议使用此示例模型服务器作为起点。
 
-根据您的模型是指令式（instruct-style）还是对话式（chat-style）模型，您需要分别实现 `custom_model.py` 或 `custom_chat_model.py` 文件。
+根据您的模型是**指令样式模型 (instruct-style)** 还是**聊天样式模型 (chat-style)**，您需要分别实现 `custom_model.py` 或 `custom_chat_model.py` 文件。
 
 ## 添加可配置字段
 
-通常，使用不同的参数来配置模型是非常有用的。这些参数可能包括 `temperature`（温度）、`model_name`（模型名称）、`max_tokens`（最大令牌数）等。
+通常情况下，需要使用不同的参数来配置您的模型，例如 `temperature` (温度), `model_name` (模型名称), `max_tokens` (最大令牌数) 等。
 
-要在 LangSmith 游乐场中使您的模型可配置，您需要在模型服务器中添加可配置字段（configurable fields）。这些字段可用于从游乐场更改模型参数。
+为了使您的模型在 LangSmith 实验场中可配置，您需要在模型服务器中添加**可配置字段 (configurable fields)**。这些字段可用于从实验场中更改模型参数。
 
 您可以通过在 `config.py` 文件中实现 `with_configurable_fields` 函数来添加可配置字段。
 
 ```python
 def with_configurable_fields(self) -> Runnable:
-    """暴露您希望在游乐场中可配置的字段。我们将自动将这些字段暴露给游乐场。如果您不想暴露任何字段，可以删除此方法。"""
+    """暴露您希望在实验场中可配置的字段。我们将自动将这些字段暴露给实验场。如果您不想暴露任何字段，可以删除此方法。"""
     return self.configurable_fields(n=ConfigurableField(
         id="n",
         name="字符数",
-        description="从输入提示词中返回的字符数量。",
+        description="从输入提示词 (prompt) 中返回的字符数量。",
     ))
 ```
 
-## 在 LangSmith 游乐场中使用模型
+## 在 LangSmith 实验场中使用模型
 
-部署模型服务器后，您就可以在 LangSmith 游乐场中使用它了。进入游乐场，为您是对话式模型还是指令式模型，选择 `ChatCustomModel` 或 `CustomModel` 提供商。
+在部署好模型服务器后，您就可以在 LangSmith 实验场中使用它了。进入实验场，为聊天样式模型选择 `ChatCustomModel` 提供商，或为指令样式模型选择 `CustomModel` 提供商。
 
-输入 `URL`。游乐场会自动检测可用的端点和可配置字段。然后，您可以使用所需的参数来调用该模型。
+输入您部署的模型服务器的 **`URL`**。实验场将自动检测到可用的端点和可配置字段。然后，您可以使用所需的参数来调用模型。
 
 ![ChatCustomModel in Playground](/langsmith/images/playground-custom-model.png)
 
-如果一切设置正确，您应该能在游乐场中看到模型的响应，以及在 `with_configurable_fields` 中指定的那些可配置字段。
+如果一切设置正确，您应该能在实验场中看到模型的响应，以及在 `with_configurable_fields` 中指定的那些可配置字段。
 
-关于如何存储模型配置以供将来使用，请参阅[此处](/langsmith/managing-model-configurations)。
+关于如何存储您的模型配置以供将来使用，请参阅[此处](/langsmith/managing-model-configurations)的说明。

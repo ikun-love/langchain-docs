@@ -8,9 +8,9 @@ title: MemgraphToolkit
 
 ## 设置 (Setup)
 
-为了能够按照以下步骤操作，请确保您的本地主机上正在运行 Memgraph 实例。有关如何运行 Memgraph 的更多详细信息，请参阅 [Memgraph 文档](https://memgraph.com/docs/getting-started)。
+为了能够遵循以下步骤，请确保您的本地主机上有一个正在运行的 Memgraph 实例。有关如何运行 Memgraph 的更多详细信息，请参阅 [Memgraph 文档](https://memgraph.com/docs/getting-started)。
 
-如果您想从单个工具的运行中获取自动化的跟踪记录，您还可以取消注释下面的内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望从单个工具的运行中获得自动化的追踪记录，您还可以通过取消注释以下代码块来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -19,7 +19,7 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ### 安装 (Installation)
 
-该工具包位于 `langchain-memgraph` 包中：
+此工具包包含在 `langchain-memgraph` 包中：
 
 ```python
 pip install -qU langchain-memgraph
@@ -46,7 +46,7 @@ toolkit = MemgraphToolkit(
 
 ## 工具 (Tools)
 
-查看可用的工具：
+查看可用工具：
 
 ```python
 toolkit.get_tools()
@@ -54,12 +54,12 @@ toolkit.get_tools()
 
 ## 调用 (Invocation)
 
-可以通过传递参数来单独调用工具，对于 `QueryMemgraphTool`，调用方式如下：
+可以通过传入参数单独调用工具，对于 `QueryMemgraphTool` 的调用方式如下：
 
 ```python
 from langchain_memgraph.tools import QueryMemgraphTool
 
-# 为简洁起见，省略了其余代码
+# 其它代码为简洁省略
 
 tool.invoke({QueryMemgraphTool({"query": "MATCH (n) RETURN n LIMIT 5"})})
 ```

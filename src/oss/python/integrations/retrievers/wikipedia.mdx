@@ -2,9 +2,9 @@
 title: 维基百科
 ---
 
->[维基百科](https://wikipedia.org/) 是一个多语言的免费在线百科全书，由一群被称为“维基人”的志愿者通过开放协作，并使用一种名为 MediaWiki 的基于 wiki 的编辑系统来撰写和维护。`Wikipedia` 是历史上最大、阅读量最大的参考资料。
+>[维基百科 (Wikipedia)](https://wikipedia.org/) 是一个多语言的免费在线百科全书，由一群称作“维基人”的志愿者通过开放协作和使用名为 MediaWiki 的基于 wiki 的编辑系统来编写和维护。`Wikipedia` 是历史上规模最大、阅读人数最多的参考著作。
 
-本 Notebook 展示了如何从 `wikipedia.org` 中检索维基百科页面，并将其转换为下游所使用的 [Document](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) 格式。
+本 Notebook 展示了如何从 `wikipedia.org` 中检索维基百科页面，并将其转换为下游流程中使用的 [Document](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) 格式。
 
 ### 集成详情
 
@@ -12,7 +12,7 @@ title: 维基百科
 
 ## 设置
 
-为了启用对单个工具的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+为了启用对单个工具的自动追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -21,7 +21,7 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ### 安装
 
-此集成位于 `langchain-community` 包中。我们还需要安装 `wikipedia` Python 包本身。
+该集成位于 `langchain-community` 包中。我们还需要安装 `wikipedia` Python 包本身。
 
 ```python
 pip install -qU langchain-community wikipedia
@@ -31,11 +31,11 @@ pip install -qU langchain-community wikipedia
 
 现在我们可以实例化我们的检索器：
 
-`WikipediaRetriever` 的参数包括：
+`WikipediaRetriever` 参数包括：
 
-- 可选的 `lang`：默认为 `"en"`。使用它可以搜索维基百科中特定语言的部分。
-- 可选的 `load_max_docs`：默认为 `100`。用于限制下载文档的数量。下载全部 100 个文档会花费时间，因此实验时请使用较小的数字。目前有一个 300 的硬性限制。
-- 可选的 `load_all_available_meta`：默认为 `False`。默认情况下，只下载最主要的字段：`Published`（文档发布/最后更新的日期）、`title`、`Summary`。如果设置为 `True`，则会下载其他字段。
+- 可选 `lang`：默认为 `"en"`。用于在维基百科的特定语言部分中进行搜索。
+- 可选 `load_max_docs`：默认为 `100`。用于限制下载的文档数量。下载全部 100 个文档会耗费时间，因此实验时请使用较小的数字。目前有一个 300 的硬性限制。
+- 可选 `load_all_available_meta`：默认为 `False`。默认情况下，只下载最重要的字段：`Published`（文档发布/最后更新日期）、`title`、`Summary`（摘要）。如果设置为 `True`，则也会下载其他字段。
 
 `get_relevant_documents()` 有一个参数 `query`：用于在维基百科中查找文档的自由文本。
 

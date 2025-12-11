@@ -2,22 +2,22 @@
 title: 英特尔的视觉数据管理系统 (VDMS)
 ---
 
-本 Notebook 介绍如何开始使用 VDMS 作为向量存储（vector store）。
+本指南介绍如何开始将 VDMS 用作向量存储。
 
->英特尔的 [视觉数据管理系统 (VDMS)](https://github.com/IntelLabs/vdms) 是一种用于高效访问大型“视觉”数据的存储解决方案，旨在通过**基于存储为图的视觉元数据**来搜索相关视觉数据，并实现机器友好的视觉数据增强以加快访问速度，从而达到云规模。VDMS 使用 MIT 许可证授权。有关 `VDMS` 的更多信息，请访问 [此页面](https://github.com/IntelLabs/vdms/wiki)，LangChain API 参考请[在此处](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.vdms.VDMS.html)查找。
+>英特尔的 [视觉数据管理系统 (VDMS)](https://github.com/IntelLabs/vdms) 是一种用于高效访问海量“视觉”数据的存储解决方案，它旨在通过基于图存储的视觉元数据来搜索相关视觉数据，并启用面向机器的视觉数据增强以实现更快访问，从而达到云规模。VDMS 采用 MIT 许可证。有关 `VDMS` 的更多信息，请访问 [此页面](https://github.com/IntelLabs/vdms/wiki)，LangChain API 参考请点击 [此处](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.vdms.VDMS.html)。
 
 VDMS 支持：
 
-* K 近邻搜索 (K nearest neighbor search)
+* K 近邻搜索
 * 欧几里得距离 (L2) 和内积 (IP)
-* 用于索引和计算距离的库：FaissFlat (默认), FaissHNSWFlat, FaissIVFFlat, Flinng, TileDBDense, TileDBSparse
-* 文本、图像和视频嵌入 (Embeddings)
+* 索引和距离计算库：FaissFlat (默认), FaissHNSWFlat, FaissIVFFlat, Flinng, TileDBDense, TileDBSparse
+* 文本、图像和视频的嵌入
 * 向量和元数据搜索
 
-## 设置 (Setup)
+## 设置
 
-要访问 VDMS 向量存储，您需要安装 `langchain-vdms` 集成包，并通过公开的 Docker 镜像部署 VDMS 服务器。
-为简化操作，本 Notebook 将在本地主机（local host）上使用 55555 端口部署 VDMS 服务器。
+要访问 VDMS 向量存储，您需要安装 `langchain-vdms` 集成包，并通过公开的 Docker 镜像部署一个 VDMS 服务器。
+为简化操作，本指南将在本地主机上使用端口 55555 部署一个 VDMS 服务器。
 
 ```python
 pip install -qU "langchain-vdms>=0.1.3"
@@ -25,20 +25,20 @@ pip install -qU "langchain-vdms>=0.1.3"
 !sleep 5
 ```
 
-### 凭证 (Credentials)
+### 凭证
 
 您可以在**不使用任何凭证**的情况下使用 `VDMS`。
 
-要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+若要启用对模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
-os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
 os.environ["LANGSMITH_TRACING"] = "true"
 ```
 
-## 初始化 (Initialization)
+## 初始化
 
-使用 VDMS 客户端连接到 VDMS 向量存储，默认使用 FAISS IndexFlat 索引和欧几里得距离 (L2) 作为相似性搜索的距离度量。
+使用 VDMS 客户端连接到 VDMS 向量存储，默认使用 FAISS IndexFlat 索引和欧几里得距离 (L2) 作为相似性搜索的距离度量标准。
 
 <EmbeddingTabs/>
 
@@ -68,9 +68,9 @@ vector_store = VDMS(
 )
 ```
 
-## 管理向量存储 (Manage vector store)
+## 管理向量存储
 
-### 向向量存储添加条目 (Add items to vector store)
+### 向向量存储添加条目
 
 ```python
 import logging
@@ -160,7 +160,8 @@ vector_store.add_documents(documents=documents, ids=doc_ids)
 ```output
 ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 ```
-如果提供了重复的 `id`，`add_documents` 不会检查 `id` 是否唯一。因此，请使用 `upsert` 来在添加前删除现有的 `id` 条目。
+
+如果提供的 ID 多次出现，`add_documents` 不会检查 ID 是否唯一。因此，请使用 `upsert` 在添加之前删除现有的 ID 条目。
 
 ```python
 vector_store.upsert(documents, ids=doc_ids)
@@ -171,7 +172,7 @@ vector_store.upsert(documents, ids=doc_ids)
  'failed': []}
 ```
 
-### 更新向量存储中的条目 (Update items in vector store)
+### 更新向量存储中的条目
 
 ```python
 updated_document_1 = Document(
@@ -193,7 +194,7 @@ vector_store.update_documents(
 )
 ```
 
-### 从向量存储中删除条目 (Delete items from vector store)
+### 从向量存储中删除条目
 
 ```python
 vector_store.delete(ids=doc_ids[-1])
@@ -203,13 +204,13 @@ vector_store.delete(ids=doc_ids[-1])
 True
 ```
 
-## 查询向量存储 (Query vector store)
+## 查询向量存储
 
-一旦您的向量存储创建完毕且相关的文档已添加，您很可能希望在链或代理运行时查询它。
+创建向量存储并将相关文档添加进去后，您很有可能希望在链或代理运行时对其进行查询。
 
-### 直接查询 (Query directly)
+### 直接查询
 
-执行简单的相似性搜索可以按如下方式完成：
+执行简单的相似性搜索可以如下进行：
 
 ```python
 results = vector_store.similarity_search(
@@ -263,9 +264,9 @@ INFO:langchain_vdms.vectorstores:VDMS similarity search took 0.0044 seconds
 * The weather forecast for tomorrow is sunny and warm, with a high of 82 degrees. [{'source': 'news'}]
 ```
 
-### 通过转换为检索器查询 (Query by turning into retriever)
+### 通过转换为检索器进行查询
 
-您还可以将向量存储转换为检索器 (retriever)，以便在链中使用更方便。
+您还可以将向量存储转换为检索器 (`retriever`)，以便在链中使用更为方便。
 
 ```python
 retriever = vector_store.as_retriever(
@@ -325,9 +326,9 @@ INFO:langchain_vdms.vectorstores:VDMS mmr search took 0.0042 secs
 * Robbers broke into the city bank and stole $1 million in cash. [{'source': 'news'}]
 ```
 
-### 删除集合 (Delete collection)
+### 删除集合
 
-先前，我们根据 `id` 删除了文档。在这里，由于未提供任何 ID，因此会删除所有文档。
+前面，我们根据 `id` 删除了文档。在这里，由于没有提供 ID，所有文档都将被删除。
 
 ```python
 print("Documents before deletion: ", vector_store.count())
@@ -342,7 +343,7 @@ Documents before deletion:  10
 Documents after deletion:  0
 ```
 
-## 用于检索增强生成 (RAG) 的用法
+## 用于检索增强生成 (RAG) 的使用方法
 
 有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
 
@@ -359,7 +360,7 @@ VDMS 支持各种用于索引和计算距离的库：FaissFlat (默认), FaissHN
 
 ### 使用 Faiss HNSWFlat 和欧几里得距离进行相似性搜索
 
-在这里，我们使用 Faiss IndexHNSWFlat 索引和 L2 作为相似性搜索的距离度量来向 VDMS 添加文档。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数以及文档。
+在这里，我们使用 Faiss IndexHNSWFlat 索引和 L2 作为距离度量标准，将文档添加到 VDMS 中进行相似性搜索。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数和文档。
 
 ```python
 db_FaissHNSWFlat = VDMS.from_documents(
@@ -392,7 +393,7 @@ INFO:langchain_vdms.vectorstores:VDMS similarity search took 0.1272 seconds
 
 ### 使用 Faiss IVFFlat 和内积 (IP) 距离进行相似性搜索
 
-我们使用 Faiss IndexIVFFlat 索引和 IP 作为相似性搜索的距离度量来向 VDMS 添加文档。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数以及文档。
+我们使用 Faiss IndexIVFFlat 索引和 IP 作为距离度量标准，将文档添加到 VDMS 中进行相似性搜索。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数和文档。
 
 ```python
 db_FaissIVFFlat = VDMS.from_documents(
@@ -424,7 +425,7 @@ INFO:langchain_vdms.vectorstores:VDMS similarity search took 0.0052 seconds
 
 ### 使用 FLINNG 和 IP 距离进行相似性搜索
 
-在本节中，我们使用 FLINNG（Filters to Identify Near-Neighbor Groups，识别近邻组的过滤器）索引和 IP 作为相似性搜索的距离度量来向 VDMS 添加文档。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数以及文档。
+在本节中，我们使用“筛选以识别近邻组 (Filters to Identify Near-Neighbor Groups, FLINNG)”索引和 IP 作为距离度量标准，将文档添加到 VDMS 中进行相似性搜索。我们搜索与查询相关的三个文档 (`k=3`)，并返回分数和文档。
 
 ```python
 db_Flinng = VDMS.from_documents(
@@ -454,13 +455,13 @@ INFO:langchain_vdms.vectorstores:VDMS similarity search took 0.0042 seconds
 * [SIM=0.000000] I had chocolate chip pancakes and scrambled eggs for breakfast this morning. [{'source': 'tweet'}]
 ```
 
-## 基于元数据进行筛选 (Filtering on metadata)
+## 在元数据上进行筛选
 
-在处理集合之前，最好先缩小范围。
+在处理集合之前，缩小范围可能很有帮助。
 
-例如，可以使用 `get_by_constraints` 方法根据元数据筛选集合。使用字典来筛选元数据。在这里，我们检索 `langchain_id = "2"` 的文档，并将其从向量存储中删除。
+例如，可以使用 `get_by_constraints` 方法根据元数据筛选集合。使用字典来筛选元数据。在这里，我们检索 `langchain_id = "2"` 的文档并将其从向量存储中删除。
 
-***注意：*** `id` 是作为整数附加元数据生成的，而 `langchain_id`（内部 ID）是每个条目的唯一字符串。
+***注意：*** `id` 是作为整数附加的元数据生成的，而 `langchain_id`（内部 ID）是每个条目的唯一字符串。
 
 ```python
 response, response_array = db_FaissIVFFlat.get_by_constraints(
@@ -504,7 +505,7 @@ for doc in response:
 * ID=1: I had chocolate chip pancakes and scrambled eggs for breakfast this morning. [{'source': 'tweet'}]
 ```
 
-这里我们使用 `id` 来筛选 ID 范围，因为 `id` 是一个整数。
+这里我们使用 `id` 来筛选一系列 ID，因为它是整数。
 
 ```python
 response, response_array = db_FaissIVFFlat.get_by_constraints(

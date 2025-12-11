@@ -4,22 +4,22 @@ title: (MODULE_NAME)
 
 如何使用此 Python 工具模板：
 
-- [ ] 将 (MODULE_NAME) 替换为您工具的实际名称（使用 `command + F` 查找和替换非常方便）。
-- [ ] 更新链接，使其指向正确的工具文档。
-- [ ] 在“详细信息”和“功能”表格下方，将相应的 ✅/❌ 更新为反映该工具实际能力的标记。
-- [ ] 如果有需要，请更新 PyPi/注册表中的包名称。
-- [ ] 如果有需要，请更新 API 密钥的环境变量名称。
+- [ ] 将 (MODULE_NAME) 替换为工具的实际名称（使用 `command + F` 查找和替换是您的好帮手）。
+- [ ] 更新链接，使其指向正确的工具文档或资源。
+- [ ] 在“详细信息”和“功能”表格下方，更新 ✅/❌ 图标以反映工具的实际能力。
+- [ ] 如果需要，请更新 PyPi/注册表中的包名称。
+- [ ] 如果需要，请更新 API 密钥的环境变量名称。
 
 模板从以下行开始...
 
-本指南提供了使用 (MODULE_NAME) [工具](/oss/langchain/tools) 的快速入门概述。有关 (MODULE_NAME) 所有功能、参数和配置的详细列表，请参阅 [(MODULE_NAME) API 参考文档](<LINK>)。
+本指南快速概述了如何开始使用 (MODULE_NAME) [工具](/oss/langchain/tools)。有关 (MODULE_NAME) 所有功能、参数和配置的详细列表，请转到 [(MODULE_NAME) API 参考](<LINK>)。
 
 ## 概述
 
 ### 详细信息
 
-| 类 | 包 | 可序列化 | [JS 支持](https://js.langchain.com/docs/integrations/chat/anthropic) | 下载量 | 版本 |
-| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| 类 (Class) | 包 (Package) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/chat/anthropic) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: |
 | [(MODULE_NAME)](<LINK>) | [langchain-(MODULE_NAME)](<LINK>) | beta/❌ | ✅/❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-(MODULE_NAME)?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-(MODULE_NAME)?style=flat-square&label=%20) |
 
 ### 功能
@@ -30,7 +30,7 @@ title: (MODULE_NAME)
 
 ## 设置
 
-要访问 (MODULE_NAME) 工具，您需要创建一个 (MODULE_NAME) 账户，获取 API 密钥，并安装 `langchain-(MODULE_NAME)` 集成包。
+要访问 (MODULE_NAME) 工具，您需要创建一个 (MODULE_NAME) 帐户，获取 API 密钥，并安装 `langchain-(MODULE_NAME)` 集成包。
 
 ### 凭证
 
@@ -42,7 +42,7 @@ if "(MODULE_NAME)_API_KEY" not in os.environ:
     os.environ["(MODULE_NAME)_API_KEY"] = getpass.getpass("输入您的 (MODULE_NAME) API 密钥: ")
 ```
 
-设置 LangSmith 也是很有帮助的（但不是必需的），它可以提供一流的集成可观测性/延迟（<Tooltip tip="记录模型执行的每一步，以便调试和改进">跟踪</Tooltip>）您的工具调用。要启用自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+设置 LangSmith 也是有帮助的（但不是必需的），以便为工具调用提供一流的可观察性/<Tooltip tip="将模型执行的每一步记录下来，以便调试和改进">跟踪</Tooltip>。要启用自动跟踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python 启用跟踪 icon="flask"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
@@ -66,7 +66,7 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ## 实例化
 
-现在，我们可以使用以下方法实例化 (MODULE_NAME) 工具的一个实例：
+现在，我们可以使用以下代码实例化 (MODULE_NAME) 工具的一个实例：
 
 ```python 初始化工具实例 icon="robot"
 from langchain_(MODULE_NAME) import (MODULE_NAME)
@@ -80,7 +80,7 @@ tool = (MODULE_NAME)(...)
 
 ### 直接调用
 
-待办：描述工具的参数，并填充它们。
+TODO：描述工具参数是什么，并填写它们
 
 ```python 调用工具 icon="rocket"
 tool.invoke({...})
@@ -88,12 +88,12 @@ tool.invoke({...})
 
 ### 作为 ToolCall 调用
 
-我们也可以使用模型生成的 `ToolCall` 来调用工具，在这种情况下会返回一个 @[`ToolMessage`]：
+我们也可以使用模型生成的 `ToolCall` 来调用该工具，在这种情况下将返回一个 @[`ToolMessage`]：
 
 ```python ToolCall icon="toolbox"
-# 这通常由模型生成，但我们在此处直接为演示目的创建一个工具调用。
+# 这通常由模型生成，但为了演示目的，我们将直接创建一个工具调用。
 model_generated_tool_call = {
-    "args": {...},  # TODO: 填写内容
+    "args": {...},  # TODO: 填写
     "id": "1",
     "name": tool.name,
     "type": "tool_call",
@@ -103,7 +103,7 @@ tool.invoke(model_generated_tool_call)
 
 ### 在 Agent 中调用
 
-我们可以在 Agent 中使用我们的工具。为此，我们需要一个具有工具调用功能的模型。
+我们可以在 Agent 中使用我们的工具。为此，我们需要一个具有工具调用能力的模型。
 
 ```python 带有工具的 Agent icon="robot"
 # pip install -qU "langchain[anthropic]" 来调用模型
@@ -123,18 +123,18 @@ agent.invoke(
 
 ---
 
-## 待办：此工具的任何特定功能
+## TODO：任何特定于此工具的功能
 
 如果与本工具无关，请删除此部分。
 
-请参阅现有工具文档以获取示例，例如：
+请参阅现有工具文档以了解示例，例如：
 
 - [MCP Toolbox](/oss/integrations/tools/toolbox)
 - [Discord](/oss/integrations/tools/discord)
-- [DuckDuckGo Search](/oss/integrations/tools/ddg)
+- [DuckDuckGo 搜索](/oss/integrations/tools/ddg)
 
 ---
 
 ## API 参考
 
-有关 (MODULE_NAME) 所有功能和配置的详细文档，请参阅 [API 参考文档](<LINK>)。
+有关 (MODULE_NAME) 所有功能和配置的详细文档，请转到 [API 参考](<LINK>)。

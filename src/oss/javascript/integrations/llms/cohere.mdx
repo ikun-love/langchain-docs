@@ -5,12 +5,12 @@ title: Cohere
 <Warning>
 **遗留/过时 (Legacy)**
 
-Cohere 已将其大语言模型（LLM）的 `generate` 端点标记为弃用。请遵循其[迁移指南](https://docs.cohere.com/docs/migrating-from-cogenerate-to-cochat)，通过 [`ChatCohere`](/oss/integrations/chat/cohere) 集成开始使用其 Chat API。
+Cohere 已将他们的 LLM `generate` 端点标记为弃用。请遵循他们的[迁移指南](https://docs.cohere.com/docs/migrating-from-cogenerate-to-cochat)，通过 [`ChatCohere`](/oss/integrations/chat/cohere) 集成开始使用他们的 Chat API。
 </Warning>
 
-这将帮助您使用 LangChain 开始使用 Cohere 的补全模型（LLMs）。有关 `Cohere` 特性和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_cohere.Cohere.html)。
+本指南将帮助您开始使用 LangChain 中的 Cohere 补全模型（LLM）。有关 `Cohere` 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_cohere.Cohere.html)。
 
-## 概述 (Overview)
+## 概览 (Overview)
 
 ### 集成详情 (Integration details)
 
@@ -24,13 +24,13 @@ Cohere 已将其大语言模型（LLM）的 `generate` 端点标记为弃用。�
 
 ### 凭证 (Credentials)
 
-请访问 [cohere.com](https://cohere.com) 注册 Cohere 并生成 API 密钥。完成此操作后，设置 `COHERE_API_KEY` 环境变量：
+请访问 [cohere.com](https://cohere.com) 注册 Cohere 并生成 API 密钥。完成此操作后，请设置 `COHERE_API_KEY` 环境变量：
 
 ```bash
 export COHERE_API_KEY="your-api-key"
 ```
 
-如果您希望对您的模型调用进行自动追踪，您也可以取消注释下方代码以设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想对模型调用进行自动跟踪，您也可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -55,7 +55,7 @@ pnpm add @langchain/cohere @langchain/core
 
 ## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成聊天补全（chat completions）：
+现在我们可以实例化模型对象并生成聊天补全：
 
 ```typescript
 import { Cohere } from "@langchain/cohere"
@@ -69,11 +69,11 @@ const llm = new Cohere({
 })
 ```
 
-### 针对 Azure 上的 Cohere、AWS Bedrock 上的 Cohere 和独立 Cohere 实例的自定义客户端
+### 用于 Azure 上的 Cohere、AWS Bedrock 上的 Cohere 和独立 Cohere 实例的自定义客户端 (Custom client for Cohere on Azure, Cohere on AWS Bedrock, and Standalone Cohere Instance)
 
 我们可以实例化一个自定义的 `CohereClient` 并将其传递给 ChatCohere 构造函数。
 
-**注意：** 如果提供了自定义客户端，构造函数参数中的 `apiKey` 和 `COHERE_API_KEY` 环境变量都将被忽略。
+**注意：** 如果提供了自定义客户端，则构造函数中设置的 `COHERE_API_KEY` 环境变量和 `apiKey` 参数都将被忽略。
 
 ```typescript
 import { Cohere } from "@langchain/cohere";
@@ -81,7 +81,7 @@ import { CohereClient } from "cohere-ai";
 
 const client = new CohereClient({
   token: "<your-api-key>",
-  environment: "<your-cohere-deployment-url>", // 可选 (optional)
+  environment: "<your-cohere-deployment-url>", //可选 (optional)
   // other params
 });
 
@@ -94,7 +94,7 @@ const llmWithCustomClient = new Cohere({
 ## 调用 (Invocation)
 
 ```typescript
-const inputText = "Cohere 是一家 AI 公司，它 "
+const inputText = "Cohere is an AI company that "
 
 const completion = await llm.invoke(inputText)
 completion
@@ -108,4 +108,4 @@ Cohere is a company that provides natural language processing models that help c
 
 ## API 参考 (API reference)
 
-有关所有 Cohere 功能和配置的详细文档，请前往[API 参考](https://api.js.langchain.com/classes/langchain_cohere.Cohere.html)。
+有关所有 Cohere 功能和配置的详细文档，请转到[API 参考](https://api.js.langchain.com/classes/langchain_cohere.Cohere.html)。

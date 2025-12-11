@@ -2,7 +2,7 @@
 title: You.com 搜索
 ---
 
-[you.com API](https://api.you.com) 是一套工具集，旨在帮助开发者将大型语言模型（LLM）的输出锚定在最新的、最准确的、最相关的信息上，而这些信息可能未包含在其训练数据集中。
+[You.com API](https://api.you.com) 是一套工具集，旨在帮助开发者将大型语言模型（LLMs）的输出，基于最新、最准确、最相关的信息进行“接地”（grounding），这些信息可能未包含在其训练数据集中。
 
 ## 设置 (Setup)
 
@@ -29,7 +29,7 @@ os.environ["OPENAI_API_KEY"] = ""
 # dotenv.load_dotenv()
 ```
 
-设置 [LangSmith](https://smith.langchain.com/) (虽然不是必需的，但推荐用于获得一流的可观测性) 也是很有帮助的。
+设置 [LangSmith](https://smith.langchain.com/)（可选，但推荐）以获得最佳的监控能力：
 
 ```python
 os.environ["LANGSMITH_TRACING"] = "true"
@@ -49,11 +49,11 @@ tool
 ```
 
 ```output
-YouSearchTool(api_wrapper=YouSearchAPIWrapper(ydc_api_key='054da371-e73b-47c1-a6d9-3b0cddf0fa3e<__>1Obt7EETU8N2v5f4MxaH0Zhx', num_web_results=1, safesearch=None, country=None, k=None, n_snippets_per_hit=None, endpoint_type='search', n_hits=None))
+YouSearchTool(api_wrapper=YouSearchAPIWrapper(ydc_api_key='x', num_web_results=1, safesearch=None, country=None, k=None, n_snippets_per_hit=None, endpoint_type='search', n_hits=None))
 ```
 
 ```python
-# .invoke 会包装 utility.results
+# .invoke 会封装 utility.results
 response = tool.invoke("What is the weather in NY")
 
 # .invoke 应该为每个 `snippet` 返回一个 Document
@@ -76,10 +76,10 @@ page_content='- Humidity70%\n- UV Index1 of 11\n- Sunrise7:18 am\n- Sunset4:34 p
 
 ## 链式调用 (Chaining)
 
-我们在这里展示如何将其作为 [Agent](/oss/langchain/agents) 的一部分使用。我们将使用 OpenAI Functions Agent，因此需要设置并安装必要的依赖项。我们还将使用 [LangSmith Hub](https://smith.langchain.com/hub) 来拉取提示词，因此也需要安装它。
+我们在此展示如何将其作为 [Agent](/oss/langchain/agents) 的一部分使用。我们将使用 OpenAI Functions Agent，因此需要设置和安装相应的依赖项。我们还将使用 [LangSmith Hub](https://smith.langchain.com/hub) 从其拉取提示 (prompt)，因此也需要安装该依赖项。
 
 ```python
-# 您需要一个可用于链式调用的模型
+# 你需要一个用于 chain 的模型
 !pip install -qU langchain langchain-openai langchainhub langchain-community
 ```
 
@@ -87,6 +87,9 @@ page_content='- Humidity70%\n- UV Index1 of 11\n- Sunrise7:18 am\n- Sunset4:34 p
 from langchain_classic import hub
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_openai import ChatOpenAI
+from langchain_community.tools.you import YouSearchTool
+from langchain_community.utilities.you import YouSearchAPIWrapper
+
 
 instructions = """You are an assistant."""
 base_prompt = hub.pull("langchain-ai/openai-functions-template")
@@ -112,23 +115,23 @@ agent_executor.invoke({"input": "What is the weather in NY today?"})
 Invoking: `you_search` with `{'query': 'weather in NY today'}`
 
 
-[Document(page_content="New York City, NY Forecast\nWeather Today in New York City, NY\nFeels Like43°\n7:17 am\n4:32 pm\nHigh / Low\n--/39°\nWind\n3 mph\nHumidity\n63%\nDew Point\n31°\nPressure\n30.44 in\nUV Index\n0 of 11\nVisibility\n10 mi\nMoon Phase\nWaxing Gibbous\nAdvertisement\nLatest News\nHealth & Activities\nAdvertisement\nAir Quality Index\nGood\nAir quality is considered satisfactory, and air pollution poses little or no risk.\nAdvertisement\nHappening Near New York City, NY\nPopular Nextdoor posts\nHas anyone announced --in which case I apologize--that Bo's Bagels--opened yesterday where Tommy's pizza once was on uptown side of Broadway, bet 155 and 156.They have been incredibly successful in Harlem ( W.116th) and are now spreading their wings. Open 8-3 now, will go later soon, delivers and has many varieties baked on site!!! Just had lunch there!!\nWash Hts S (W155-W159-Bdway)\nNeighbor\n4d ago", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='time hearing racial slurs in my life and in NYC. So I don’t know why tonight’s encounter makes me feel so helpless and sad. Her apartment is on our usual route for walks, and now I’m already thinking about how I need to behave if this situation repeats again. This just doesn’t feel fair. How would you handle it? Thanks for reading!', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content="Hell's Kitchen\nNeighbor\n4d ago\nJust curious.Are the M100/M100 and BX19 buses free? It seems like I'm the only one who pays. Even had a group of non-payers give attitude because I held up the line to pay my fare. Non-payers being whole families, men and women of all ages. I remember when you used to be scared to walk on for free but do understand the drivers are told not to intervene. Still it should either be free or paid fare.\nHamilton Hts (W148St-Broadway)\nNeighbor\n4d ago\nHey there, I am a journalism student at Craig Newmark School of Journalism looking for stories in the Lower East Side and East Village.Any ideas?\nAlphabet City\nNeighbor\n8d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='Review All Privacy and Ad Settings\nChoose how my information is shared', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='2d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content="Lenox Hill\nNeighbor\n8d ago\nParking.It is getting worst. What happened to resident-only neighborhood parking program? With this upcoming congested traffic tolling below 96th Street, competition for parking bordering the zone is going to get tougher. This should be part of the congested traffic agenda.\nCent Harlem S (120-FDouglass)\nNeighbor\n9d ago\nI thought these sites were much more localized.If there is one for the UWS I'll join it but have no reason to be reading about Yorkville or Union NJ.\nLincoln Sq (W70-Amst-66-WEnd)\nNeighbor\n10d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'})]The weather in New York City today is as follows:
-- Feels Like: 43°F
-- High/Low: --/39°F
-- Wind: 3 mph
-- Humidity: 63%
-- Dew Point: 31°F
-- Pressure: 30.44 in
-- UV Index: 0 of 11
-- Visibility: 10 mi
-- Moon Phase: Waxing Gibbous
+[Document(page_content="New York City, NY Forecast\nWeather Today in New York City, NY\nFeels Like43°\n7:17 am\n4:32 pm\nHigh / Low\n--/39°\nWind\n3 mph\nHumidity\n63%\nDew Point\n31°\nPressure\n30.44 in\nUV Index\n0 of 11\nVisibility\n10 mi\nMoon Phase\nWaxing Gibbous\nAdvertisement\nLatest News\nHealth & Activities\nAdvertisement\nAir Quality Index\nGood\nAir quality is considered satisfactory, and air pollution poses little or no risk.\nAdvertisement\nHappening Near New York City, NY\nPopular Nextdoor posts\nHas anyone announced --in which case I apologize--that Bo's Bagels--opened yesterday where Tommy's pizza once was on uptown side of Broadway, bet 155 and 156.They have been incredibly successful in Harlem ( W.116th) and are now spreading their wings. Open 8-3 now, will go later soon, delivers and has many varieties baked on site!!! Just had lunch there!!\nWash Hts S (W155-W159-Bdway)\nNeighbor\n4d ago", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='time hearing racial slurs in my life and in NYC. So I don’t know why tonight’s encounter makes me feel so helpless and sad. Her apartment is on our usual route for walks, and now I’m already thinking about how I need to behave if this situation repeats again. This just doesn’t feel fair. How would you handle it? Thanks for reading!', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content="Hell's Kitchen\nNeighbor\n4d ago\nJust curious.Are the M100/M100 and BX19 buses free? It seems like I'm the only one who pays. Even had a group of non-payers give attitude because I held up the line to pay my fare. Non-payers being whole families, men and women of all ages. I remember when you used to be scared to walk on for free but do understand the drivers are told not to intervene. Still it should either be free or paid fare.\nHamilton Hts (W148St-Broadway)\nNeighbor\n4d ago\nHey there, I am a journalism student at Craig Newmark School of Journalism looking for stories in the Lower East Side and East Village.Any ideas?\nAlphabet City\nNeighbor\n8d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='Review All Privacy and Ad Settings\nChoose how my information is shared', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content='2d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared', metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'}), Document(page_content="Lenox Hill\nNeighbor\n8d ago\nParking.It is getting worst. What happened to resident-only neighborhood parking program? With this upcoming congested traffic tolling below 96th Street, competition for parking bordering the zone is going to get tougher. This should be part of the congested traffic agenda.\nCent Harlem S (120-FDouglass)\nNeighbor\n9d ago\nI thought these sites were much more localized.If there is one for the UWS I'll join it but have no reason to be reading about Yorkville or Union NJ.\nLincoln Sq (W70-Amst-66-WEnd)\nNeighbor\n10d ago\nProvided by\nAdvertisement\nYour Privacy\nTo personalize your product experience, we collect data from your device. We also may use or disclose to specific data vendors your precise geolocation data to provide the Services. To learn more please refer to our Privacy Policy.\nReview All Privacy and Ad Settings\nChoose how my information is shared", metadata={'url': 'https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84', 'thumbnail_url': None, 'title': 'Weather Forecast and Conditions for New York City, NY - The Weather ...', 'description': 'Today’s and tonight’s New York City, NY weather forecast, weather conditions and Doppler radar from The Weather Channel and Weather.com'})]纽约市今天的天气如下：
+- 体感温度 (Feels Like): 43°F
+- 最高/最低温度 (High / Low): --/39°F
+- 风速 (Wind): 3 mph
+- 湿度 (Humidity): 63%
+- 露点 (Dew Point): 31°F
+- 气压 (Pressure): 30.44 in
+- 紫外线指数 (UV Index): 0 of 11
+- 能见度 (Visibility): 10 mi
+- 月相 (Moon Phase): 盈凸月 (Waxing Gibbous)
 
-For more details, you can visit [The Weather Channel](https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84).
+如需更多详情，您可以访问 [The Weather Channel](https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84)。
 
 > Finished chain.
 ```
 
 ```output
 {'input': 'What is the weather in NY today?',
- 'output': 'The weather in New York City today is as follows:\n- Feels Like: 43°F\n- High/Low: --/39°F\n- Wind: 3 mph\n- Humidity: 63%\n- Dew Point: 31°F\n- Pressure: 30.44 in\n- UV Index: 0 of 11\n- Visibility: 10 mi\n- Moon Phase: Waxing Gibbous\n\nFor more details, you can visit [The Weather Channel](https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84).'}
+ 'output': '纽约市今天的天气如下：\n- 体感温度 (Feels Like): 43°F\n- 最高/最低温度 (High / Low): --/39°F\n- 风速 (Wind): 3 mph\n- 湿度 (Humidity): 63%\n- 露点 (Dew Point): 31°F\n- 气压 (Pressure): 30.44 in\n- 紫外线指数 (UV Index): 0 of 11\n- 能见度 (Visibility): 10 mi\n- 月相 (Moon Phase): 盈凸月 (Waxing Gibbous)\n\n如需更多详情，您可以访问 [The Weather Channel](https://weather.com/weather/today/l/96f2f84af9a5f5d452eb0574d4e4d8a840c71b05e22264ebdc0056433a642c84)。'}
 ```

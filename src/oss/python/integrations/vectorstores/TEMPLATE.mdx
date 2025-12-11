@@ -1,22 +1,21 @@
-```markdown
 ---
 title: (MODULE_NAME)向量存储
 ---
 
 如何使用此 Python 向量存储模板：
 
-- [ ] 将 (MODULE_NAME) 替换为模块的名称，例如 Anthropic、OpenAI 等（使用 `command + F` 快捷键会很方便）。
+- [ ] 将 `(MODULE_NAME)` 替换为模块的名称，例如 Anthropic、OpenAI 等（使用 `command + F` 组合键会更方便）。
 - [ ] 更新链接以指向正确的模块。
-- [ ] 根据需要更新 PyPi/注册表包名称。
+- [ ] 根据需要更新 PyPi/注册表包的名称。
 - [ ] 根据需要更新 API 密钥的环境变量名称。
 
 模板从以下行开始...
 
-本指南提供了有关启动使用 (MODULE_NAME) [向量存储](/oss/integrations/vectorstores#overview) 的快速概述。有关所有 (MODULE_NAME)VectorStore 功能、参数和配置的详细列表，请参阅 [(MODULE_NAME)VectorStore API 参考](<LINK>)。
+本指南为快速开始使用 `(MODULE_NAME)` [向量存储](/oss/integrations/vectorstores#overview) 提供了概述。有关 `(MODULE_NAME)VectorStore` 所有功能、参数和配置的详细列表，请前往 `(MODULE_NAME)VectorStore` API 参考文档（[LINK]）。
 
 ## 设置 (Setup)
 
-要访问 (MODULE_NAME) 向量存储，您需要创建一个 (MODULE_NAME) 账户，获取一个 API 密钥，并安装 `langchain-(MODULE_NAME)` 集成包。
+要访问 `(MODULE_NAME)` 向量存储，您需要创建一个（或拥有一个）`(MODULE_NAME)` 账户，获取一个 API 密钥，并安装 `langchain-(MODULE_NAME)` 集成包。
 
 ### 凭证 (Credentials)
 
@@ -28,7 +27,7 @@ if "(MODULE_NAME)_API_KEY" not in os.environ:
     os.environ["(MODULE_NAME)_API_KEY"] = getpass.getpass("输入您的 (MODULE_NAME) API 密钥: ")
 ```
 
-要启用模型调用的自动化 <Tooltip tip="将模型执行的每一步记录下来，用于调试和改进">跟踪 (tracing)</Tooltip>，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动化的 <Tooltip tip="记录模型执行的每一步，以便于调试和改进">跟踪 (tracing)</Tooltip>，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python 启用跟踪 icon="flask"
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥: ")
@@ -37,7 +36,7 @@ os.environ["LANGSMITH_TRACING"] = "true"
 
 ### 安装 (Installation)
 
-LangChain (MODULE_NAME) 集成位于 `langchain-(MODULE_NAME)` 包中：
+LangChain `(MODULE_NAME)` 集成位于 `langchain-(MODULE_NAME)` 包中：
 
 <CodeGroup>
     ```python pip
@@ -52,7 +51,7 @@ LangChain (MODULE_NAME) 集成位于 `langchain-(MODULE_NAME)` 包中：
 
 ## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成响应：
+现在我们可以实例化我们的模型对象并生成响应：
 
 ```python 初始化向量存储 icon="database"
 from langchain_(MODULE_NAME).vectorstores import (MODULE_NAME)VectorStore
@@ -97,11 +96,11 @@ vector_store.delete(ids=["3"])
 
 ## 查询向量存储 (Query vector store)
 
-一旦您的向量存储被创建并且相关的文档已被添加，您很可能希望在链或代理运行时查询它。
+一旦创建了向量存储并将相关文档添加进去，您很可能希望在链或代理运行时对其进行查询。
 
 ### 直接查询 (Directly)
 
-如下所示，可以执行简单的相似性搜索：
+可以按以下方式执行简单的相似性搜索：
 
 ```python 相似性搜索 icon="folder-tree"
 results = vector_store.similarity_search(
@@ -111,7 +110,7 @@ for doc in results:
     print(f"* {doc.page_content} [{doc.metadata}]")
 ```
 
-如果您想执行相似性搜索并接收相应的得分，可以运行：
+如果您想执行相似性搜索并接收相应的分数，可以运行：
 
 ```python 带分数的相似性搜索 icon="star-half-stroke"
 results = vector_store.similarity_search_with_score(
@@ -123,7 +122,7 @@ for doc, score in results:
 
 ### 转换为检索器 (By turning into retriever)
 
-您还可以将向量存储转换为检索器（retriever），以便在链中使用更方便。
+您也可以将向量存储转换为检索器（retriever），以便在链中使用更方便。
 
 ```python 创建检索器 icon="robot"
 retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 1})
@@ -132,7 +131,7 @@ retriever.invoke("thud")
 
 ---
 
-## 用于检索增强生成 (RAG) 的使用
+## 用于检索增强生成 (RAG) 的用法
 
 <Card
     title="(MODULE_NAME) 向量存储 RAG 指南"
@@ -140,32 +139,31 @@ retriever.invoke("thud")
     icon="magnifying-glass"
     arrow
 >
-    有关如何使用此向量存储进行检索增强生成 (RAG) 的指南
+    关于如何使用此向量存储进行检索增强生成 (RAG) 的指南
 </Card>
 
 ---
 
 ## TODO: 此向量存储的任何特定功能
 
-如果无关则删除。
+如果与当前实现不相关，请删除此部分。
 
-查看现有向量存储文档以获取示例，例如：
+请参考现有向量存储文档以获取示例，例如：
 
 - [Qdrant](/oss/integrations/vectorstores/qdrant)
 - [FAISS](/oss/integrations/vectorstores/faiss)
 - [Chroma](/oss/integrations/vectorstores/chroma)
 
 示例：
-- <Icon icon="ruler-horizontal" size={16}/> 距离函数
-- <Icon icon="chart-simple" size={16}/> 相关性
-- <Icon icon="filter" size={16}/> 过滤
-- <Icon icon="server" size={16} /> 外部存储选项
-- <Icon icon="tags" size={16} /> 索引
-- <Icon icon="code-merge" size={16} /> 合并
+- <Icon icon="ruler-horizontal" size={16}/> 距离函数 (Distance functions)
+- <Icon icon="chart-simple" size={16}/> 相关性 (Relevance)
+- <Icon icon="filter" size={16}/> 过滤 (Filtering)
+- <Icon icon="server" size={16} /> 外部存储选项 (External storage options)
+- <Icon icon="tags" size={16} /> 索引 (Indexing)
+- <Icon icon="code-merge" size={16} /> 合并 (Merging)
 
 ---
 
 ## API 参考 (API reference)
 
-有关所有 (MODULE_NAME)VectorStore 功能和配置的详细文档，请参阅 [API 参考](<LINK>)。
-```
+有关所有 `(MODULE_NAME)VectorStore` 功能和配置的详细文档，请前往 [API 参考](<LINK>)。

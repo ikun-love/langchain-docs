@@ -1,28 +1,30 @@
+```markdown
 ---
 title: BedrockEmbeddings
 ---
 
-[Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，它通过统一的 API 提供了来自领先 AI 公司（如 AI21 Labs、Anthropic、Cohere、Meta、Stability AI 和 Amazon）的高性能基础模型（FMs）供您选择，并提供构建生成式 AI 应用所需的广泛功能，同时确保安全、隐私和负责任的 AI。
 
-本文将指导您使用 LangChain 开始使用 Amazon Bedrock [嵌入模型](/oss/integrations/text_embedding)。有关 `Bedrock` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_aws.BedrockEmbeddings.html)。
+[Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，它通过单一 API 提供了来自领先 AI 公司（如 AI21 Labs、Anthropic、Cohere、Meta、Stability AI 和 Amazon）的高性能基础模型（FMs）供您选择，并提供构建生成式 AI 应用所需的广泛功能，同时兼顾安全性、隐私性和负责任的 AI。
+
+本指南将帮助您使用 LangChain 开始使用 Amazon Bedrock [嵌入模型](/oss/integrations/text_embedding)。有关 `Bedrock` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_aws.BedrockEmbeddings.html)。
 
 ## 概述
 
 ### 集成详情
 
-| 类 | 包 | 本地 | [Py 支持](https://python.langchain.com/docs/integrations/text_embedding/bedrock/) | 下载量 | 版本 |
+| 类 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/text_embedding/bedrock/) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [Bedrock](https://api.js.langchain.com/classes/langchain_aws.BedrockEmbeddings.html) | [@langchain/aws](https://api.js.langchain.com/modules/langchain_aws.html) | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/aws?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/aws?style=flat-square&label=%20&) |
 
 ## 设置
 
-要使用 Bedrock 嵌入模型，您需要创建一个 AWS 账户，获取 API 密钥，并安装 `@langchain/aws` 集成包。
+要访问 Bedrock 嵌入模型，您需要创建一个 AWS 账户、获取一个 API 密钥，并安装 `@langchain/aws` 集成包。
 
-请访问 [AWS 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started.html) 注册 AWS 并设置您的凭证。您还需要为您的账户启用模型访问权限，可以按照 [这些说明](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) 进行操作。
+请访问 [AWS 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started.html) 注册 AWS 并设置您的凭证。您还需要为您账户开启模型访问权限，具体操作可以 [遵循这些说明](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html)。
 
-### 凭证
+### 凭证 (Credentials)
 
-如果您希望对模型调用进行自动跟踪，还可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动化追踪，您也可以取消注释下方代码行，设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -31,7 +33,7 @@ title: BedrockEmbeddings
 
 ### 安装
 
-LangChain Bedrock 集成位于 `@langchain/aws` 包中：
+LangChain Bedrock 集成包位于 `@langchain/aws` 中：
 
 <CodeGroup>
 ```bash npm
@@ -47,9 +49,9 @@ pnpm add @langchain/aws @langchain/core
 
 ## 实例化
 
-现在我们可以实例化我们的模型对象并嵌入文本了。
+现在我们可以实例化模型对象并嵌入文本了。
 
-有几种不同的方式可以向 AWS 进行身份验证——以下示例依赖于在您的环境变量中设置的访问密钥 (`access key`)、密钥访问密钥 (`secret access key`) 和区域 (`region`)：
+连接 AWS 的方式有几种——以下示例依赖于设置在环境变量中的访问密钥 (access key)、密钥访问密钥 (secret access key) 和区域 (region)：
 
 ```typescript
 import { BedrockEmbeddings } from "@langchain/aws";
@@ -66,12 +68,12 @@ const embeddings = new BedrockEmbeddings({
 
 ## 索引与检索
 
-嵌入模型通常用于检索增强生成（RAG）流程中，既作为索引数据的一部分，也用于后续的检索。有关更详细的说明，请参阅 [**学习** 选项卡](/oss/learn/) 下的 RAG 教程。
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以用于后续的检索。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡](/oss/learn/) 下的 RAG 教程。
 
 下面展示了如何使用我们上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
 
 ```typescript
-// 使用示例文本创建一个向量存储
+// 使用示例文本创建向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const text = "LangChain is the framework for building context-aware reasoning applications";
@@ -81,7 +83,7 @@ const vectorstore = await MemoryVectorStore.fromDocuments(
   embeddings,
 );
 
-// 将向量存储用作检索器，返回单个文档
+// 使用向量存储作为检索器，返回单个文档
 const retriever = vectorstore.asRetriever(1);
 
 // 检索最相似的文本
@@ -96,13 +98,13 @@ LangChain is the framework for building context-aware reasoning applications
 
 ## 直接使用
 
-在底层，向量存储和检索器实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 中使用的文本和检索器的 `invoke` 操作创建嵌入向量。
+在底层，向量存储和检索器实现在索引数据时会调用 `embeddings.embedDocument(...)`，在检索器的 `invoke` 操作时会调用 `embeddings.embedQuery(...)` 来创建文本的嵌入向量。
 
-您可以直接调用这些方法来获取嵌入向量，以用于您自己的用例。
+您可以直接调用这些方法来获取用于您自己用例的嵌入向量。
 
-### 嵌入单个文本
+### 嵌入单条文本
 
-您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于该查询的向量表示：
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这将生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -135,9 +137,9 @@ console.log(singleVector.slice(0, 100));
 ]
 ```
 
-### 嵌入多个文本
+### 嵌入多条文本
 
-您可以使用 `embedDocuments` 来嵌入多个文本，以便进行索引。此方法内部使用的逻辑可能（但不一定）与嵌入查询的方式不同：
+您可以使用 `embedDocuments` 来嵌入多条文本用于索引。此方法的内部机制（但不限于）可能与嵌入查询的方法有所不同：
 
 ```typescript
 const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
@@ -179,7 +181,7 @@ console.log(vectors[1].slice(0, 100));
    -0.34765625,    0.35351562,   -0.28710938,   0.009521484, 0.083496094,
    0.040283203,   -0.25390625,    0.17871094,   0.044189453, -0.19628906,
     0.45898438,    0.21191406,    0.67578125,     0.8359375, -0.29101562,
-   0.021118164,    0.13671875,   0.083984375,    0.34570312,  0.30859375,
+   0.021118164,    0.13671875,    0.083984375,    0.34570312,  0.30859375,
   -0.001625061,    0.31835938,   -0.18164062, -0.0058288574,  0.22460938,
     0.26757812,   -0.09082031,    0.17480469,     1.4921875, -0.24316406,
     0.36523438,    0.14550781,     -0.609375,    0.33007812,  0.10595703,
@@ -195,9 +197,9 @@ console.log(vectors[1].slice(0, 100));
 ]
 ```
 
-## 配置 Bedrock Runtime 客户端
+## 配置 Bedrock 运行时客户端 (Bedrock Runtime Client)
 
-如果您想自定义选项，例如 `credentials`、`region`、`retryPolicy` 等，您可以传入自己实例化的 `BedrockRuntimeClient`。
+如果您希望自定义诸如 `credentials`、`region`、`retryPolicy` 等选项，您可以传入自己实例化的 `BedrockRuntimeClient`。
 
 ```typescript
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
@@ -223,3 +225,4 @@ const embeddingsWithCustomClient = new BedrockEmbeddings({
 ## API 参考
 
 有关所有 Bedrock 功能和配置的详细文档，请前往 [API 参考](https://api.js.langchain.com/classes/langchain_aws.BedrockEmbeddings.html)。
+```

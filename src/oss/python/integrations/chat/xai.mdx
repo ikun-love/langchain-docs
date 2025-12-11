@@ -4,15 +4,15 @@ description: 在 LangChain 中开始使用 xAI 的 [chat 模型](/oss/langchain/
 ---
 
 <Warning>
-    此页面引用了 [xAI](https://docs.x.ai/docs/overview) 提供的 Grok 模型——请勿与 Groq (一家独立的人工智能硬件和软件公司) 混淆。请参阅 [Groq 提供商页面](/oss/integrations/providers/groq)。
+    此页面引用了由 [xAI](https://docs.x.ai/docs/overview) 提供的 Grok 模型——请勿与 Groq 混淆，后者是一家独立的人工智能硬件和软件公司。请参阅 [Groq 提供商页面](/oss/integrations/providers/groq)。
 </Warning>
 
-[xAI](https://console.x.ai/) 提供了一个 API 接口，用于与 Grok 模型进行交互。
+[xAI](https://console.x.ai/) 提供了一个 API 用于与 Grok 模型进行交互。
 
 <Tip>
     **API 参考**
 
-    如需了解所有功能和配置选项的详细文档，请访问 @[`ChatXAI`] API 参考。
+    有关所有功能和配置选项的详细文档，请前往 @[`ChatXAI`] API 参考。
 </Tip>
 
 ## 概述
@@ -25,7 +25,7 @@ description: 在 LangChain 中开始使用 xAI 的 [chat 模型](/oss/langchain/
 
 ### 模型特性
 
-| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming#llm-tokens) | 原生异步 | [Token 使用情况](/oss/langchain/models#token-usage) | [对数概率](/oss/langchain/models#log-probabilities) |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/langchain/streaming#llm-tokens) | 原生异步 | [Token 使用情况](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
 | :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ |
 
@@ -33,9 +33,9 @@ description: 在 LangChain 中开始使用 xAI 的 [chat 模型](/oss/langchain/
 
 要访问 xAI 模型，您需要创建一个 xAI 账户，获取一个 API 密钥，并安装 `langchain-xai` 集成包。
 
-### 凭证 (Credentials)
+### 凭证
 
-访问 [此页面](https://console.x.ai/) 注册 xAI 并生成一个 API 密钥。完成此操作后，请设置 `XAI_API_KEY` 环境变量：
+前往 [此页面](https://console.x.ai/) 注册 xAI 并生成 API 密钥。完成此操作后，设置 `XAI_API_KEY` 环境变量：
 
 ```python
 import getpass
@@ -45,7 +45,7 @@ if "XAI_API_KEY" not in os.environ:
     os.environ["XAI_API_KEY"] = getpass.getpass("Enter your xAI API key: ")
 ```
 
-要启用对您的模型调用的自动追踪，可以设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+要启用模型调用的自动追踪，请设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -77,13 +77,13 @@ llm = ChatXAI(
 )
 ```
 
-## 调用 (Invocation)
+## 调用
 
 ```python
 messages = [
     (
         "system",
-        "你是一个乐于助人的助手，负责将英语翻译成法语。请翻译用户输入的句子。",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
     ),
     ("human", "I love programming."),
 ]
@@ -103,9 +103,9 @@ print(ai_msg.content)
 J'adore programmer.
 ```
 
-## 工具调用 (Tool calling)
+## 工具调用
 
-ChatXAI 具有一个 [工具调用](https://docs.x.ai/docs#capabilities) API（在此我们交替使用“工具调用”和“函数调用”），它允许您描述工具及其参数，并让模型返回一个包含要调用的工具和该工具输入的 JSON 对象。工具调用对于构建使用工具的链和代理，以及更普遍地从模型中获取结构化输出来说极其有用。
+ChatXAI 具有 [工具调用](https://docs.x.ai/docs#capabilities) API（在此处我们交替使用“工具调用”和“函数调用”），它允许您描述工具及其参数，并让模型返回包含要调用的工具和该工具输入的 JSON 对象。工具调用对于构建使用工具的链和代理，以及更普遍地从模型获取结构化输出，非常有用。
 
 ### ChatXAI.bind_tools()
 
@@ -119,16 +119,16 @@ ChatXAI 具有一个 [工具调用](https://docs.x.ai/docs#capabilities) API（�
 }
 ```
 
-并在每次模型调用中传入。
+并在每次模型调用中传递。
 
 ```python
 from pydantic import BaseModel, Field
 
 
 class GetWeather(BaseModel):
-    """获取指定地点的当前天气"""
+    """Get the current weather in a given location"""
 
-    location: str = Field(..., description="城市和州，例如：San Francisco, CA")
+    location: str = Field(..., description="The city and state, e.g. San Francisco, CA")
 
 
 llm_with_tools = llm.bind_tools([GetWeather])
@@ -147,7 +147,7 @@ AIMessage(content='I am retrieving the current weather for San Francisco.', addi
 
 ## 实时搜索 (Live Search)
 
-xAI 支持 [实时搜索 (Live Search)](https://docs.x.ai/docs/guides/live-search) 功能，该功能使 Grok 能够利用网络搜索结果来充实其答案：
+xAI 支持 [实时搜索](https://docs.x.ai/docs/guides/live-search) 功能，该功能使 Grok 能够利用网络搜索结果来增强其答案：
 
 ```python
 from langchain_xai import ChatXAI
@@ -156,7 +156,7 @@ llm = ChatXAI(
     model="grok-3-latest",
     search_parameters={
         "mode": "auto",
-        # 示例可选参数如下：
+        # Example optional parameters below:
         "max_search_results": 3,
         "from_date": "2025-05-26",
         "to_date": "2025-05-27",
@@ -172,4 +172,4 @@ llm.invoke("Provide me a digest of world news in the last 24 hours.")
 
 ## API 参考
 
-如需了解 `ChatXAI` 所有功能和配置的详细文档，请访问 [API 参考](https://reference.langchain.com/python/integrations/langchain_xai/)。
+有关所有 `ChatXAI` 功能和配置的详细文档，请前往 [API 参考](https://reference.langchain.com/python/integrations/langchain_xai/)。

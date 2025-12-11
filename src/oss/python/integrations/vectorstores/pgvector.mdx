@@ -1,26 +1,24 @@
-```markdown
 ---
 title: PGVector
 ---
 
-> 使用 `postgres` 作为后端，并利用 `pgvector` 扩展实现的 LangChain 向量存储抽象封装。
+> 使用 `postgres` 作为后端，并利用 `pgvector` 扩展来实现 LangChain 向量存储抽象的实现。
 
-该代码位于一个集成包中：[langchain-postgres](https://github.com/langchain-ai/langchain-postgres/)。
+代码位于名为 `langchain-postgres` 的集成包中：[langchain-postgres](https://github.com/langchain-ai/langchain-postgres/)。
 
 ## 状态 (Status)
 
-此代码已从 `langchain-community` 迁移到一个专用的包：`langchain-postgres`。进行了以下更改：
+这段代码已从 `langchain-community` 迁移到一个专用的包 `langchain-postgres` 中。进行了以下更改：
 
-* `langchain-postgres` 仅支持 psycopg3。请将您的连接字符串从 `postgresql+psycopg2://...` 更新为 `postgresql+psycopg://langchain:langchain@...`（注意：驱动名称是 `psycopg` 而不是 `psycopg3`，但它会使用 `psycopg3`）。
-* 嵌入存储和集合的 Schema 已更改，以便使用用户指定的 ID 调用 `add_documents` 时能正常工作。
-* 现在必须传入一个显式的连接对象 (`connection object`)。
+*   `langchain-postgres` **只**支持 `psycopg3`。请将您的连接字符串从 `postgresql+psycopg2://...` 更新为 `postgresql+psycopg://langchain:langchain@...`（是的，驱动名称是 `psycopg` 而不是 `psycopg3`，但它会使用 `psycopg3`）。
+*   嵌入存储（embedding store）和集合（collection）的 Schema 已更改，以确保 `add_documents` 函数在使用用户指定的 ID 时能正确工作。
+*   现在必须传入一个显式的连接对象（connection object）。
 
-当前版本**没有**内置机制支持在 Schema 发生更改时轻松进行数据迁移。因此，向量存储中任何 Schema 更改都要求用户重新创建表并重新添加文档。
-如果这对您是问题，请考虑使用其他向量存储。如果不是，此实现应能满足您的使用场景。
+当前，**没有**机制支持在 Schema 更改时进行简单的数据迁移。因此，向量存储中任何 Schema 的更改都要求用户重新创建表并将文档重新添加进去。如果这对您很重要，请使用其他向量存储。如果不是，此实现应该能满足您的使用场景。
 
 ## 设置 (Setup)
 
-首先，下载配套包：
+首先下载配套包：
 
 ```python
 pip install -qU langchain-postgres
@@ -34,9 +32,9 @@ pip install -qU langchain-postgres
 
 ### 凭证 (Credentials)
 
-运行此 Notebook 不需要任何特定凭证，只需确保您已下载 `langchain-postgres` 包并成功启动了 Postgres 容器即可。
+运行此 Notebook 不需要任何凭证，只需确保您已下载 `langchain-postgres` 包并正确启动了 Postgres 容器即可。
 
-如果您希望对模型调用进行一流的自动化跟踪，您还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您想获得一流的、自动化的模型调用追踪，您还可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```python
 os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
@@ -58,7 +56,7 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 ```python
 from langchain_postgres import PGVector
 
-# 请参考上方 docker 命令来启动一个启用了 pgvector 的 postgres 实例。
+# 请参考上方 docker 命令以启动启用了 pgvector 的 postgres 实例。
 connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"  # 使用 psycopg3!
 collection_name = "my_docs"
 
@@ -72,9 +70,9 @@ vector_store = PGVector(
 
 ## 管理向量存储 (Manage vector store)
 
-### 向向量存储添加条目 (Add items to vector store)
+### 向向量存储中添加条目
 
-请注意，通过 ID 添加文档将**覆盖**任何匹配该 ID 的现有文档。
+请注意，通过 ID 添加文档会**覆盖**任何具有相同 ID 的现有文档。
 
 ```python
 from langchain_core.documents import Document
@@ -129,7 +127,7 @@ vector_store.add_documents(docs, ids=[doc.metadata["id"] for doc in docs])
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ```
 
-### 从向量存储中删除条目 (Delete items from vector store)
+### 从向量存储中删除条目
 
 ```python
 vector_store.delete(ids=["3"])
@@ -137,31 +135,31 @@ vector_store.delete(ids=["3"])
 
 ## 查询向量存储 (Query vector store)
 
-一旦向量存储被创建并且相关的文档已被添加，您很可能希望在链或代理运行时对其进行查询。
+一旦创建了向量存储并将相关文档添加进去，在运行链或代理时，您很可能会希望对其进行查询。
 
 ### 过滤支持 (Filtering Support)
 
-该向量存储支持一组可以针对文档的元数据字段应用的过滤器。
+向量存储支持一组可应用于文档元数据字段的过滤器。
 
-| 运算符 | 含义/类别 |
-|----------|-------------------------|
-| \$eq      | 等于 (==) |
-| \$ne      | 不等于 (!=) |
-| \$lt      | 小于 (<) |
-| \$lte     | 小于等于 (<=) |
-| \$gt      | 大于 (>) |
-| \$gte     | 大于等于 (>=) |
-| \$in      | 特殊处理 (在...中) |
-| \$nin     | 特殊处理 (不在...中) |
-| \$between | 特殊处理 (介于...之间) |
-| \$like    | 文本 (like) |
-| \$ilike   | 文本 (不区分大小写的 like) |
-| \$and     | 逻辑 (与) |
-| \$or      | 逻辑 (或) |
+| 运算符 (Operator) | 含义/类别        |
+|-------------------|-------------------------|
+| \$eq              | 等值 (==)           |
+| \$ne              | 不等值 (!=)           |
+| \$lt              | 小于 (<)           |
+| \$lte             | 小于或等于 (<=) |
+| \$gt              | 大于 (>)           |
+| \$gte             | 大于或等于 (>=) |
+| \$in              | 特殊处理 (在...中)      |
+| \$nin             | 特殊处理 (不在...中)    |
+| \$between         | 特殊处理 (介于...之间) |
+| \$like            | 文本 (like)             |
+| \$ilike           | 文本 (不区分大小写的 like)|
+| \$and             | 逻辑 (与)           |
+| \$or              | 逻辑 (或)           |
 
 ### 直接查询 (Query directly)
 
-执行简单的相似性搜索可以按如下方式完成：
+可以通过如下方式执行简单的相似性搜索：
 
 ```python
 results = vector_store.similarity_search(
@@ -178,7 +176,7 @@ for doc in results:
 * the new art exhibit is fascinating [{'id': 5, 'topic': 'art', 'location': 'museum'}]
 ```
 
-如果您提供一个包含多个字段但没有运算符的字典，顶层将被解释为逻辑 **AND** 过滤器。
+如果您提供一个包含多个字段但未指定操作符的字典，顶层将被解释为逻辑 **AND** 过滤器。
 
 ```python
 vector_store.similarity_search(
@@ -211,7 +209,7 @@ vector_store.similarity_search(
  Document(metadata={'id': 2, 'topic': 'animals', 'location': 'pond'}, page_content='ducks are also found in the pond')]
 ```
 
-如果您想执行相似性搜索并接收相应的分数，可以运行：
+如果您想执行相似性搜索并获取相应的得分，可以运行：
 
 ```python
 results = vector_store.similarity_search_with_score(query="cats", k=1)
@@ -225,7 +223,7 @@ for doc, score in results:
 
 有关您可以对 `PGVector` 向量存储执行的不同搜索类型的完整列表，请参阅 [API 参考](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html)。
 
-### 通过转换为检索器进行查询 (Query by turning into retriever)
+### 通过转换为检索器 (Retriever) 进行查询
 
 您也可以将向量存储转换为检索器，以便在链中使用更方便。
 
@@ -240,15 +238,14 @@ retriever.invoke("kitty")
 
 ## 用于检索增强生成 (RAG) 的用法
 
-有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
+有关如何将此向量存储用于检索增强生成（RAG）的指南，请参阅以下部分：
 
-* [教程](/oss/langchain/rag)
-* [操作指南：使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
-* [检索概念文档](https://python.langchain.com/docs/concepts/retrieval)
+*   [教程](/oss/langchain/rag)
+*   [操作指南：使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
+*   [检索概念文档](https://python.langchain.com/docs/concepts/retrieval)
 
 ---
 
-## API 参考 (API reference)
+## API 参考
 
-有关 __ModuleName__VectorStore 的所有功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html)
-```
+有关 __ModuleName__VectorStore 所有功能的详细文档和配置，请访问 API 参考：[python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html)

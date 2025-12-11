@@ -3,40 +3,40 @@ title: 连接到外部 PostgreSQL 数据库
 sidebarTitle: 连接到外部 PostgreSQL 数据库
 ---
 
-LangSmith 使用 PostgreSQL 数据库作为事务性工作负载和操作数据（几乎所有除了运行记录 Run 之外的数据）的主要数据存储。默认情况下，LangSmith 自托管（Self-Hosted）会使用一个内部的 PostgreSQL 数据库。然而，您可以配置 LangSmith 以使用外部 PostgreSQL 数据库。通过配置外部 PostgreSQL 数据库，您可以更轻松地管理数据库的备份、扩展和其他操作任务。
+LangSmith 使用 PostgreSQL 数据库作为事务工作负载和操作数据（几乎所有非运行数据）的主要数据存储。默认情况下，LangSmith 自托管（Self-Hosted）会使用一个内部 PostgreSQL 数据库。但是，您可以配置 LangSmith 以使用外部 PostgreSQL 数据库。通过配置外部 PostgreSQL 数据库，您可以更轻松地管理数据库的备份、扩展和其他操作任务。
 
 ## 要求 (Requirements)
 
-*   一个已预配的 PostgreSQL 数据库，您的 LangSmith 实例能够通过网络访问该数据库。我们推荐使用托管的 PostgreSQL 服务，例如：
+* 一个已配置的 PostgreSQL 数据库，LangSmith 实例可以对其进行网络访问。我们推荐使用托管的 PostgreSQL 服务，例如：
 
-    *   [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
-    *   [Google Cloud SQL](https://cloud.google.com/curated-resources/cloud-sql#section-1)
-    *   [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql#features)
+  * [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
+  * [Google Cloud SQL](https://cloud.google.com/curated-resources/cloud-sql#section-1)
+  * [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql#features)
 
-*   注意：我们**只官方支持** PostgreSQL 版本 $\ge 14$。
+* 注意：我们仅正式支持 PostgreSQL 版本 `>= 14`。
 
-*   一个对 PostgreSQL 数据库具有管理员权限的用户。该用户将用于创建必要的表、索引和模式（schema）。
+* 拥有 PostgreSQL 数据库管理员权限的用户。该用户将用于创建必要的表、索引和模式 (schemas)。
 
-*   该用户还需要具备在数据库中创建扩展（extension）的能力。我们会使用/尝试安装 `btree_gin`、`btree_gist`、`pgcrypto`、`citext`、`ltree` 和 `pg_trgm` 这些扩展。
+* 该用户还需要有能力在数据库中创建扩展 (extensions)。我们会使用/尝试安装 `btree_gin`, `btree_gist`, `pgcrypto`, `citext`, `ltree` 和 `pg_trgm` 扩展。
 
-*   如果使用的 schema 不是 `public`，请确保您没有在其他任何 schema 中启用这些扩展，或者您必须将这些扩展包含在您的搜索路径（search path）中。
+* 如果使用的模式 (schema) 不是 `public`，请确保您没有在其他任何模式中启用扩展，否则您必须将这些扩展包含在您的搜索路径 (search path) 中。
 
-*   对 `pgbouncer` 和其他连接池器的支持是基于社区的。社区成员报告说，`pgbouncer` 在使用 `pool_mode` = `session` 且 `ignore_startup_parameters` 设置合适时可以正常工作（截至撰写本文时，需要忽略 `search_path` 和 `lock_timeout`）。需要小心以避免污染连接池；因此，建议具备一定级别的 PostgreSQL 专业知识。LangChain Inc 目前没有将 `pgbouncer`、`amazon rds proxy` 或任何其他池器的正式测试覆盖或商业支持纳入路线图的计划，但社区欢迎通过 GitHub Issue 讨论和协作支持事宜。
+* 对 pgbouncer 和其他连接池器的支持是基于社区的。社区成员报告称，pgbouncer 在 `pool_mode` = `session` 和适当的 `ignore_startup_parameters` 设置下可以正常工作（截至撰写本文时，需要忽略 `search_path` 和 `lock_timeout`）。需要小心以避免污染连接池；建议具备一定级别的 PostgreSQL 专业知识。LangChain Inc 目前没有将 pgbouncer 或 amazon rds proxy 或任何其他连接池器的正式测试覆盖或商业支持纳入路线图，但社区欢迎通过 GitHub issues 讨论和协作支持事宜。
 
-*   默认情况下，我们推荐至少配备 2 个 vCPU 和 8GB 内存的实例。但是，实际要求将取决于您的工作负载和用户数量。我们建议监控您的 PostgreSQL 实例，并根据需要向上扩展。
+* 默认情况下，我们推荐的实例至少具有 **2 个 vCPU 和 8GB 内存**。然而，实际需求将取决于您的工作负载和用户数量。我们建议监控您的 PostgreSQL 实例，并根据需要进行扩展。
 
 ## 连接字符串 (Connection String)
 
 您需要提供一个到您的 PostgreSQL 数据库的连接字符串。此连接字符串应包含以下信息：
 
-*   主机 (Host)
-*   端口 (Port)
-*   数据库 (Database)
-*   用户名 (Username)
-*   密码 (Password) (如果存在特殊字符，请确保对其进行 URL 编码)
-*   URL 参数 (URL params)
+* Host (主机)
+* Port (端口)
+* Database (数据库)
+* Username (用户名)
+* Password (密码) (如果存在任何特殊字符，请确保对其进行 URL 编码)
+* URL params (URL 参数)
 
-其形式如下：
+格式如下：
 
 ```
 username:password@host:port/database?<url_params>
@@ -48,7 +48,7 @@ username:password@host:port/database?<url_params>
 myuser:mypassword@myhost:5432/mydatabase?sslmode=disable
 ```
 
-如果没有 URL 参数，连接字符串应如下所示：
+如果没有 URL 参数，连接字符串将如下所示：
 
 ```
 myuser:mypassword@myhost:5432/mydatabase
@@ -74,4 +74,110 @@ POSTGRES_DATABASE_URI="Your connection url"
 
 </CodeGroup>
 
-配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在应该会使用您的外部 PostgreSQL 数据库了。
+配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在应该正在使用您的外部 PostgreSQL 数据库了。
+
+## 与 PostgreSQL 的 TLS
+
+使用此部分配置 PostgreSQL 连接的 TLS。有关挂载内部/公共 CA 以便 LangSmith 信任您的 PostgreSQL 服务器证书，请参阅 [配置自定义 TLS 证书](/langsmith/self-host-custom-tls-certificates#mount-internal-cas-for-tls)。
+
+### 服务器 TLS（单向）
+
+要验证 PostgreSQL 服务器证书：
+
+* 使用 `config.customCa.secretName` 和 `config.customCa.secretKey` 提供一个 CA bundle。
+* 在连接 URL 中使用 `sslmode=require` 或 `sslmode=verify-full`，以及 `sslrootcert=system`。
+
+<Warning>
+仅当您的 PostgreSQL 服务器使用内部或私有 CA 时，才挂载自定义 CA。公共受信任的 CA 不需要此配置。
+</Warning>
+
+<CodeGroup>
+
+```yaml Helm (server TLS)
+config:
+  customCa:
+    secretName: "langsmith-custom-ca"  # 包含您的 CA bundle 的 Secret
+    secretKey: "ca.crt"    # 包含 CA bundle 的 Secret 中的 Key
+postgres:
+  external:
+    enabled: true
+    connectionUrl: "myuser:mypassword@myhost:5432/mydatabase?sslmode=verify-full&sslrootcert=system"
+    customTls: true
+```
+
+```yaml Kubernetes Secret (CA bundle)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: langsmith-custom-ca
+type: Opaque
+stringData:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    <ROOT_OR_INTERMEDIATE_CA_CERT_CHAIN>
+    -----END CERTIFICATE-----
+```
+
+</CodeGroup>
+
+### 客户端身份验证的相互 TLS (mTLS)
+
+从 LangSmith helm chart 版本 **0.12.29** 开始，我们支持 PostgreSQL 客户端的 mTLS。对于 mTLS 中的服务器端身份验证，请在执行以下客户端证书配置的基础上，使用 [服务器 TLS 步骤](#server-tls-one-way)（自定义 CA）。
+
+如果您的 PostgreSQL 服务器要求客户端证书身份验证：
+
+* 提供一个包含客户端证书和私钥的 Secret。
+* 通过 `postgres.external.clientCert.secretName` 引用它，并通过 `certSecretKey` 和 `keySecretKey` 指定密钥。
+* 在连接 URL 中使用 `sslmode=verify-full` 和 `sslrootcert=system`。
+
+<CodeGroup>
+
+```yaml Helm (client Auth)
+postgres:
+  external:
+    enabled: true
+    connectionUrl: "myuser:mypassword@myhost:5432/mydatabase?sslmode=verify-full&sslrootcert=system"
+    customTls: true
+    clientCert:
+      secretName: "postgres-mtls-secret"
+      certSecretKey: "tls.crt"
+      keySecretKey: "tls.key"
+```
+
+```yaml Kubernetes Secret (client cert/key)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-mtls-secret
+type: Opaque
+stringData:
+  tls.crt: |
+    -----BEGIN CERTIFICATE-----
+    <CLIENT_CERT>
+    -----END CERTIFICATE-----
+  tls.key: |
+    -----BEGIN PRIVATE KEY-----
+    <CLIENT_KEY>
+    -----END PRIVATE KEY-----
+```
+
+</CodeGroup>
+
+#### 证书卷的 Pod 安全上下文
+
+为 mTLS 挂载的证书卷受到文件访问限制的保护。为确保所有 LangSmith Pod 都能读取证书文件，您必须在 Pod 安全上下文中设置 `fsGroup: 1000`。
+
+您可以通过以下两种方式之一配置此项：
+
+**选项 1：使用 `commonPodSecurityContext`**
+
+在顶层设置 `fsGroup` 以将其应用于所有 Pod：
+
+```yaml
+commonPodSecurityContext:
+  fsGroup: 1000
+```
+
+**选项 2：添加到单独的 Pod 安全上下文**
+
+如果您需要更精细的控制，请将 `fsGroup` 添加到每个 Pod 的安全上下文中。有关完整参考，请参阅 [mTLS 配置示例](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/examples/mtls_config.yaml)。

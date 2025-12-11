@@ -1,25 +1,24 @@
-```markdown
 ---
 title: OllamaEmbeddings
 ---
 
-这将帮助您开始使用 LangChain 中的 Ollama [嵌入模型](/oss/integrations/text_embedding)。有关 `OllamaEmbeddings` 功能和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_ollama.OllamaEmbeddings.html)。
+这将帮助您开始使用 LangChain 中的 Ollama [嵌入模型](/oss/integrations/text_embedding)。有关 `OllamaEmbeddings` 特性和配置选项的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_ollama.OllamaEmbeddings.html)。
 
 ## 概述
 
 ### 集成详情
 
-| 类名 | 包名 | 本地支持 | [Py 支持](https://python.langchain.com/docs/integrations/text_embedding/ollama/) | 下载量 | 版本 |
+| 类名 | 包名 | 本地 | [Python 支持](https://python.langchain.com/docs/integrations/text_embedding/ollama/) | 下载量 | 版本 |
 | :--- | :--- | :---: | :---: |  :---: | :---: |
 | [`OllamaEmbeddings`](https://api.js.langchain.com/classes/langchain_ollama.OllamaEmbeddings.html) | [`@langchain/ollama`](https://npmjs.com/@langchain/ollama) | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/ollama?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/ollama?style=flat-square&label=%20&) |
 
 ## 设置
 
-要访问 Ollama 嵌入模型，您需要按照 [这些说明](https://github.com/jmorganca/ollama) 安装 Ollama，并安装 `@langchain/ollama` 集成包。
+要访问 Ollama 嵌入模型，您需要按照[这些说明](https://github.com/jmorganca/ollama)来安装 Ollama，并安装 `@langchain/ollama` 集成包。
 
-### 凭证
+### 凭证 (Credentials)
 
-如果您希望对模型调用进行自动追踪，您还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动追踪，您可以通过取消注释下面的内容来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -44,7 +43,7 @@ pnpm add @langchain/ollama @langchain/core
 
 ## 实例化
 
-现在我们可以实例化您的模型对象并嵌入文本：
+现在我们可以实例化我们的模型对象并嵌入文本：
 
 ```typescript
 import { OllamaEmbeddings } from "@langchain/ollama";
@@ -57,12 +56,12 @@ const embeddings = new OllamaEmbeddings({
 
 ## 索引和检索
 
-嵌入模型通常用于检索增强生成 (RAG) 流程中，既可以作为数据索引的一部分，也可以在后续检索中使用。有关更详细的说明，请参阅 [**学习** 选项卡](/oss/learn/) 下的 RAG 教程。
+嵌入模型通常用于检索增强生成 (RAG) 流程中，既可用于数据索引，也可用于后续检索。有关更详细的说明，请参阅 [**学习 (Learn)** 选项卡下的 RAG 教程](/oss/learn/)。
 
-下面展示了如何使用上面初始化的 `embeddings` 对象来索引和检索数据。在此示例中，我们将使用演示的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索一个示例文档。
+下面展示了如何使用上面初始化的 `embeddings` 对象进行数据索引和检索。在此示例中，我们将使用演示用的 [`MemoryVectorStore`](/oss/integrations/vectorstores/memory) 来索引和检索示例文档。
 
 ```typescript
-// 使用示例文本创建一个向量存储
+// 使用示例文本创建向量存储
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const text = "LangChain is the framework for building context-aware reasoning applications";
@@ -87,13 +86,13 @@ LangChain is the framework for building context-aware reasoning applications
 
 ## 直接使用
 
-在底层，向量存储和检索器的实现分别调用 `embeddings.embedDocument(...)` 和 `embeddings.embedQuery(...)` 来为 `fromDocuments` 中使用的文本和检索器的 `invoke` 操作中使用的文本创建嵌入向量。
+在底层，向量存储和检索器的实现在调用 `fromDocuments` 时会调用 `embeddings.embedDocument(...)` 来创建文本的嵌入，在调用检索器的 `invoke` 操作时会调用 `embeddings.embedQuery(...)` 来创建查询的嵌入。
 
-您可以直接调用这些方法来获取用于您自己使用场景的嵌入向量。
+您可以直接调用这些方法来为您的用例获取嵌入向量。
 
 ### 嵌入单个文本
 
-您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于该查询的向量表示：
+您可以使用 `embedQuery` 来嵌入用于搜索的查询。这会生成一个特定于查询的向量表示：
 
 ```typescript
 const singleVector = await embeddings.embedQuery(text);
@@ -128,7 +127,7 @@ console.log(singleVector.slice(0, 100));
 
 ### 嵌入多个文本
 
-您可以使用 `embedDocuments` 来嵌入多个文本用于索引。此方法内部使用的机制可能（但不一定）与嵌入查询的方式不同：
+您可以使用 `embedDocuments` 嵌入多个文本用于索引。该方法的内部机制可能（但不一定）不同于嵌入查询：
 
 ```typescript
 const text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs";
@@ -169,7 +168,7 @@ console.log(vectors[1].slice(0, 100));
     0.036224432,  -0.051760387,  -0.030165697,  -0.008899774,  -0.024518963,
     0.010077767,   0.032209765,    -0.0854303,  -0.038666975,  -0.036021013,
     0.060899545,   0.045867186,   0.003365381,    0.09387081,   0.038216405,
-    0.011449426,  -0.016495887,   0.020602569,   -0.02368503,  -0.014733645,
+    0.011449426,  -0.016495887,   0.020602569,  -0.02368503,  -0.014733645,
    -0.065408126, -0.0065152845,  -0.027103946, 0.00038956117,   -0.08648814,
     0.029316466,  -0.054449145,   0.034129277,  -0.055225655,  -0.043182302,
    0.0011148591,   0.044116337,  -0.046552557,   0.032423045,   -0.03269365,
@@ -181,7 +180,7 @@ console.log(vectors[1].slice(0, 100));
     0.056027107, -0.0019782048,  -0.015204176,  -0.008684945, -0.0010460864,
     0.054642987,   0.044149086,  -0.032964867,  -0.012044753,  -0.019075096,
    -0.027932597,   0.018542245,   -0.02602878,   -0.04645578,  -0.020976603,
-    0.018999187,   0.050663687,   0.016725155,  0.0076955976,    0.011448177,
+    0.018999187,   0.050663687,   0.016725155,  0.0076955976,   0.011448177,
     0.053931057,   -0.03234989,   0.024429373,  -0.023123834,    0.02197912
 ]
 ```
@@ -193,9 +192,9 @@ import { OllamaEmbeddings } from "@langchain/ollama";
 
 const embeddingsCustomParams = new OllamaEmbeddings({
   requestOptions: {
-    useMmap: true, // 对应 use_mmap 1
-    numThread: 6, // 对应 num_thread 6
-    numGpu: 1, // 对应 num_gpu 1
+    useMmap: true, // use_mmap 1
+    numThread: 6, // num_thread 6
+    numGpu: 1, // num_gpu 1
   },
 });
 ```
@@ -209,5 +208,4 @@ const embeddingsCustomParams = new OllamaEmbeddings({
 
 ## API 参考
 
-有关 `OllamaEmbeddings` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_ollama.OllamaEmbeddings.html)
-```
+如需了解所有 `OllamaEmbeddings` 特性和配置的详细文档，请访问[API 参考](https://api.js.langchain.com/classes/langchain_ollama.OllamaEmbeddings.html)

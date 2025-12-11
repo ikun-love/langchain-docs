@@ -2,48 +2,48 @@
 title: ChatXAI
 ---
 
-[xAI](https://x.ai/) 是一家开发大型语言模型（LLM）的人工智能公司。其旗舰模型 Grok 经过实时 X（以前称为 Twitter）数据训练，旨在提供富有智慧、个性鲜明的回应，同时保持在技术任务上的高能力。
+[xAI](https://x.ai/) 是一家人工智能公司，专注于开发大型语言模型（LLM）。其旗舰模型 Grok 接受了实时 X（前身为 Twitter）数据的训练，目标是在提供幽默风趣、富有鲜明个性的回复的同时，保持在技术任务上的高能力。
 
-本指南将帮助您开始使用 `ChatXAI` [聊天模型](/oss/langchain/models)。有关 `ChatXAI` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html)。
+本指南将帮助您开始使用 `ChatXAI` [聊天模型](/oss/langchain/models)。有关 `ChatXAI` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html)。
 
-## 概述
+## 概览 (Overview)
 
-### 集成详情
+### 集成详情 (Integration details)
 
-| 类名 | 包名 | 本地 | 可序列化 | PY 支持 | 下载量 | 版本 |
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | PY 支持 (PY support) | 下载量 (Downloads) | 版本 (Version) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | [ChatXAI](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html) | [`@langchain/xai`](https://www.npmjs.com/package/@langchain/xai) | ❌ | ✅ | ❌ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/xai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/xai?style=flat-square&label=%20&) |
 
-### 模型特性
+### 模型特性 (Model features)
 
-有关如何使用特定功能的指南，请参阅下方表头中的链接。
+有关如何使用特定功能的指南，请参阅下表中表头的链接。
 
-| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/langchain/streaming/) | [Token 用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| [工具调用](/oss/langchain/tools) | [结构化输出](/oss/langchain/structured-output) | JSON 模式 (JSON mode) | [图像输入](/oss/langchain/messages#multimodal) | 音频输入 (Audio input) | 视频输入 (Video input) | [Token 级流式传输](/oss/langchain/streaming/) | [Token 使用量](/oss/langchain/models#token-usage) | [Logprobs](/oss/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
 | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 
-## 设置
+## 设置 (Setup)
 
-要访问 `ChatXAI` 模型，您需要创建一个 xAI 账户，[获取 API 密钥](https://console.x.ai/)，并安装 `@langchain/xai` 集成包。
+要访问 `ChatXAI` 模型，您需要创建一个 xAI 账户，[获取一个 API 密钥](https://console.x.ai/)，并安装 `@langchain/xai` 集成包。
 
-### 凭证
+### 凭证 (Credentials)
 
-请访问 [xAI 网站](https://x.ai) 注册 xAI 并生成 API 密钥。完成之后，设置 `XAI_API_KEY` 环境变量：
+请访问 [xAI 网站](https://x.ai) 注册 xAI 并生成 API 密钥。完成此操作后，设置 `XAI_API_KEY` 环境变量：
 
 ```bash
 export XAI_API_KEY="your-api-key"
 ```
 
-如果您想获取模型调用的自动化追踪记录，也可以取消注释以下内容，设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+如果您希望对模型调用进行自动跟踪，也可以通过取消注释以下行来设置您的 [LangSmith](https://docs.langchain.com/langsmith/home) API 密钥：
 
 ```bash
 # export LANGSMITH_TRACING="true"
 # export LANGSMITH_API_KEY="your-api-key"
 ```
 
-### 安装
+### 安装 (Installation)
 
-LangChain `ChatXAI` 集成位于 `@langchain/xai` 包中：
+LangChain 的 `ChatXAI` 集成位于 `@langchain/xai` 包中：
 
 <CodeGroup>
 ```bash npm
@@ -57,9 +57,9 @@ pnpm add @langchain/xai @langchain/core
 ```
 </CodeGroup>
 
-## 实例化
+## 实例化 (Instantiation)
 
-现在我们可以实例化模型对象并生成聊天补全：
+现在我们可以实例化模型对象并生成聊天完成内容：
 
 ```typescript
 import { ChatXAI } from "@langchain/xai"
@@ -73,7 +73,7 @@ const llm = new ChatXAI({
 })
 ```
 
-## 调用
+## 调用 (Invocation)
 
 ```typescript
 const aiMsg = await llm.invoke([
@@ -127,6 +127,6 @@ J'adore programmer.
 
 ---
 
-## API 参考
+## API 参考 (API reference)
 
-有关 ChatXAI 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html)。
+有关 ChatXAI 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html)。

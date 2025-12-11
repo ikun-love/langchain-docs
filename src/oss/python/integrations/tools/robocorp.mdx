@@ -2,13 +2,13 @@
 title: Robocorp 工具包
 ---
 
-本指南介绍了如何开始使用 [Robocorp Action Server](https://github.com/robocorp/robocorp) Action Toolkit 和 LangChain。
+本指南涵盖了如何开始使用 [Robocorp Action Server](https://github.com/robocorp/robocorp) Action Toolkit 以及 LangChain。
 
-Robocorp 是扩展 AI 智能体（Agents）、助手（Assistants）和副驾驶（Copilots）功能，以集成自定义操作（Actions）的最简便方法。
+Robocorp 是扩展 AI 代理（Agent）、助手（Assistant）和副驾驶（Copilot）功能，以集成自定义操作（Action）的最简单方式。
 
 ## 安装
 
-首先，请参考 [Robocorp 快速入门](https://github.com/robocorp/robocorp#quickstart) 了解如何设置 `Action Server` 并创建您的 Actions。
+首先，请查阅 [Robocorp 快速入门](https://github.com/robocorp/robocorp#quickstart) 文档，了解如何设置 `Action Server` 并创建您的操作。
 
 在您的 LangChain 应用程序中，安装 `langchain-robocorp` 包：
 
@@ -17,13 +17,13 @@ Robocorp 是扩展 AI 智能体（Agents）、助手（Assistants）和副驾驶
 pip install -qU langchain-robocorp
 ```
 
-当您按照上述快速入门指南创建新的 `Action Server` 时。
+按照上述快速入门创建新的 `Action Server` 时。
 
-它会创建一个包含文件的目录，其中包括 `action.py`。
+它会创建一个包含文件的目录，其中有 `action.py` 文件。
 
-我们可以像 [此处](https://github.com/robocorp/robocorp/tree/master/actions#describe-your-action) 所示那样，将 Python 函数添加为操作。
+如 [此处](https://github.com/robocorp/robocorp/tree/master/actions#describe-your-action) 所示，我们可以将 Python 函数添加为操作。
 
-让我们向 `action.py` 中添加一个虚拟函数。
+让我们向 `action.py` 添加一个虚拟函数。
 
 ```python
 @action
@@ -32,9 +32,9 @@ def get_weather_forecast(city: str, days: int, scale: str = "celsius") -> str:
     返回给定城市的天气预报。
 
     Args:
-        city (str): 获取天气状况的目标城市
-        days: 需要返回的天气预报天数
-        scale (str): 要使用的温度单位，应为 "celsius" 或 "fahrenheit" 之一
+        city (str): 要查询天气状况的目标城市
+        days: 要返回的天气预报天数
+        scale (str): 要使用的温度单位，应为 "celsius" (摄氏度) 或 "fahrenheit" (华氏度)
 
     Returns:
         str: 所请求的天气状况预报
@@ -55,17 +55,17 @@ Found new action: get_weather_forecast
 
 ```
 
-在本地测试：访问正在运行的服务器 `http://localhost:8080`，并使用 UI 来运行该函数。
+请在本地测试，访问运行中的服务器地址 `http://localhost:8080`，并使用 UI 来运行该函数。
 
-## 环境设置
+## 环境配置
 
-您可以选择设置以下环境变量：
+您可以选择性地设置以下环境变量：
 
-- `LANGSMITH_TRACING=true`：启用 LangSmith 运行追踪日志，此日志也可以绑定到相应的 Action Server 操作运行日志。更多信息请参阅 [LangSmith 文档](https://docs.smith.langchain.com/tracing#log-runs)。
+- `LANGSMITH_TRACING=true`: 用于启用 LangSmith 运行跟踪，这些跟踪也可以绑定到相应的 Action Server 操作运行日志。更多信息请参阅 [LangSmith 文档](https://docs.langchain.com/langsmith/observability-quickstart#log-runs)。
 
 ## 使用方法
 
-如上所示，我们启动了本地 action server，它运行在 `http://localhost:8080`。
+我们如上启动了本地 Action Server，它正在 `http://localhost:8080` 上运行。
 
 ```python
 from langchain.agents import AgentExecutor, OpenAIFunctionsAgent
@@ -73,7 +73,7 @@ from langchain.messages import SystemMessage
 from langchain_openai import ChatOpenAI
 from langchain_robocorp import ActionServerToolkit
 
-# 初始化 LLM（大语言模型）聊天模型
+# 初始化 LLM 聊天模型
 llm = ChatOpenAI(model="gpt-4", temperature=0)
 
 # 初始化 Action Server 工具包
@@ -81,7 +81,7 @@ toolkit = ActionServerToolkit(url="http://localhost:8080", report_trace=True)
 tools = toolkit.get_tools()
 
 # 初始化 Agent
-system_message = SystemMessage(content="You are a helpful assistant")
+system_message = SystemMessage(content="你是一个乐于助人的助手")
 prompt = OpenAIFunctionsAgent.create_prompt(system_message)
 agent = OpenAIFunctionsAgent(llm=llm, prompt=prompt, tools=tools)
 
@@ -91,14 +91,14 @@ executor.invoke("What is the current weather today in San Francisco in fahrenhei
 ```
 
 ```output
-> Entering new AgentExecutor chain...
+> 正在进入 AgentExecutor 链...
 
-Invoking: `robocorp_action_server_get_weather_forecast` with `{'city': 'San Francisco', 'days': 1, 'scale': 'fahrenheit'}`
+调用: `robocorp_action_server_get_weather_forecast` 参数: `{'city': 'San Francisco', 'days': 1, 'scale': 'fahrenheit'}`
 
 
-"75F and sunny :)"The current weather today in San Francisco is 75F and sunny.
+"75F and sunny :)"旧金山今天的天气是 75F 并且晴朗。
 
-> Finished chain.
+> 链结束。
 ```
 
 ```output
@@ -106,11 +106,11 @@ Invoking: `robocorp_action_server_get_weather_forecast` with `{'city': 'San Fran
  'output': 'The current weather today in San Francisco is 75F and sunny.'}
 ```
 
-### 单输入工具 (Single input tools)
+### 单输入工具（Single input tools）
 
 默认情况下，`toolkit.get_tools()` 会返回结构化工具（Structured Tools）形式的操作。
 
-要返回单输入工具，请向 `get_tools()` 方法中传递一个 Chat 模型以用于处理输入。
+如果希望返回单输入工具，请传入一个 Chat 模型用于处理输入。
 
 ```python
 # 初始化单输入 Action Server 工具包
