@@ -1,0 +1,267 @@
+---
+title: 如何使用 REST API 上传在 LangSmith 外部运行的实验
+sidebarTitle: 上传在 LangSmith 外部运行的实验
+---
+
+有些用户倾向于在 LangSmith 之外管理他们的数据集和运行实验，但希望使用 LangSmith 的 UI 来查看结果。这可以通过我们的 API 端点来实现。
+
+本指南将向您展示如何使用 REST API 上传评估（evals）。我们以 Python 中的 `requests` 库为例进行说明。然而，同样的原理适用于任何编程语言。
+
+## 请求体 Schema
+
+上传实验需要为您实验和数据集指定相关的高层信息，以及实验中各个示例（examples）和运行（runs）的详细数据。`results` 中的每个对象代表实验中的一行（“row”）——即单个数据集示例及其关联的运行。请注意，`dataset_id` 和 `dataset_name` 指的是您在外部系统中的数据集标识符，它们将用于将外部实验分组到同一个数据集中。**它们不应引用 LangSmith 中已存在的任何数据集**（除非该数据集是通过此端点创建的）。
+
+您可以使用以下 Schema 将实验上传到 `/datasets/upload-experiment` 端点：
+
+```json
+{
+  "experiment_name": "string (必需)",
+  "experiment_description": "string (可选)",
+  "experiment_start_time": "datetime (必需)",
+  "experiment_end_time": "datetime (必需)",
+  "dataset_id": "uuid (可选 - 外部数据集 ID，用于将实验分组)",
+  "dataset_name": "string (可选 - 必须提供 dataset_id 或 dataset_name 之一)",
+  "dataset_description": "string (可选)",
+  "experiment_metadata": { // Object (任意结构 - 可选)
+    "key": "value"
+  },
+  "summary_experiment_scores": [ // 摘要反馈对象列表 (可选)
+    {
+      "key": "string (必需)",
+      "score": "number (可选)",
+      "value": "string (可选)",
+      "comment": "string (可选)",
+      "feedback_source": { // Object (可选)
+        "type": "string (必需)"
+      },
+      "feedback_config": { // Object (可选)
+        "type": "string enum: continuous, categorical, or freeform",
+        "min": "number (可选)",
+        "max": "number (可选)",
+        "categories": [ // 反馈类别对象列表 (可选)
+          {
+            "value": "number (必需)",
+            "label": "string (可选)"
+          }
+        ]
+      },
+      "created_at": "datetime (可选 - 默认为当前时间)",
+      "modified_at": "datetime (可选 - 默认为当前时间)",
+      "correction": "Object 或 string (可选)"
+    }
+  ],
+  "results": [ // 实验行（row）对象列表 (必需)
+    {
+      "row_id": "uuid (必需)",
+      "inputs": { // Object (必需 - 任意结构)。这将是运行和数据集示例的输入。
+        "key": "val" 
+      },
+      "expected_outputs": { // Object (可选 - 任意结构)。这将是数据集示例的预期输出。
+        "key": "val" 
+      },
+      "actual_outputs": { // Object (可选 - 任意结构)。这将是运行的实际输出。
+        "key": "val" 
+      },
+      "evaluation_scores": [ // 运行的反馈对象列表 (可选)
+        {
+          "key": "string (必需)",
+          "score": "number (可选)",
+          "value": "string (可选)",
+          "comment": "string (可选)",
+          "feedback_source": { // Object (可选)
+            "type": "string (必需)"
+          },
+          "feedback_config": { // Object (可选)
+            "type": "string enum: continuous, categorical, or freeform",
+            "min": "number (可选)",
+            "max": "number (可选)",
+            "categories": [ // 反馈类别对象列表 (可选)
+              {
+                "value": "number (必需)",
+                "label": "string (可选)"
+              }
+            ]
+          },
+          "created_at": "datetime (可选 - 默认为当前时间)",
+          "modified_at": "datetime (可选 - 默认为当前时间)",
+          "correction": "Object 或 string (可选)"
+        }
+      ],
+      "start_time": "datetime (必需)", // 运行的开始/结束时间将用于计算延迟（latency）。它们必须全部落在实验的开始和结束时间之间。
+      "end_time": "datetime (必需)", 
+      "run_name": "string (可选)", 
+      "error": "string (可选)",
+      "run_metadata": { // Object (任意结构 - 可选)
+        "key": "value"
+      }
+    }
+  ]
+}
+```
+
+响应的 JSON 将是一个包含 `experiment` 和 `dataset` 键的字典，其中每个键对应一个对象，其中包含有关创建的实验和数据集的相关信息。
+
+## 注意事项
+
+您可以通过在多次调用中提供相同的 `dataset_id` 或 `dataset_name` 来将多个实验上传到同一个数据集。您的实验将被分组到单个数据集中，您将能够[使用比较视图来比较实验之间的结果](/langsmith/compare-experiment-results)。
+
+请确保您各个行的开始和结束时间都在实验的开始和结束时间之间。
+
+您必须提供 `dataset_id` 或 `dataset_name` 之一。如果您只提供 ID 且数据集尚不存在，我们将为您生成一个名称；反之亦然，如果您只提供名称。
+
+您**不能**将实验上传到未通过此端点创建的数据集。仅支持为外部管理（externally-managed）的数据集上传实验。
+
+## 示例请求
+
+下面是一个调用 `/datasets/upload-experiment` 的简单示例。这是一个基础示例，仅使用了最重要的字段进行说明。
+
+```python
+import os
+import requests
+
+body = {
+    "experiment_name": "My external experiment",
+    "experiment_description": "An experiment uploaded to LangSmith",
+    "dataset_name": "my-external-dataset",
+    "summary_experiment_scores": [
+        {
+            "key": "summary_accuracy",
+            "score": 0.9,
+            "comment": "Great job!"
+        }
+    ],
+    "results": [
+        {
+            "row_id": "<<uuid>>",
+            "inputs": {
+                "input": "Hello, what is the weather in San Francisco today?"
+            },
+            "expected_outputs": {
+                "output": "Sorry, I am unable to provide information about the current weather."
+            },
+            "actual_outputs": {
+                "output": "The weather is partly cloudy with a high of 65."
+            },
+            "evaluation_scores": [
+                {
+                    "key": "hallucination",
+                    "score": 1,
+                    "comment": "The chatbot made up the weather instead of identifying that "
+                               "they don't have enough info to answer the question. This is "
+                               "a hallucination."
+                }
+            ],
+            "start_time": "2024-08-03T00:12:39",
+            "end_time": "2024-08-03T00:12:41",
+            "run_name": "Chatbot"
+        },
+        {
+            "row_id": "<<uuid>>",
+            "inputs": {
+                "input": "Hello, what is the square root of 49?"
+            },
+            "expected_outputs": {
+                "output": "The square root of 49 is 7."
+            },
+            "actual_outputs": {
+                "output": "7."
+            },
+            "evaluation_scores": [
+                {
+                    "key": "hallucination",
+                    "score": 0,
+                    "comment": "The chatbot correctly identified the answer. This is not a "
+                               "hallucination."
+                }
+            ],
+            "start_time": "2024-08-03T00:12:40",
+            "end_time": "2024-08-03T00:12:42",
+            "run_name": "Chatbot"
+        }
+    ],
+    "experiment_start_time": "2024-08-03T00:12:38",
+    "experiment_end_time": "2024-08-03T00:12:43"
+}
+
+resp = requests.post(
+    "https://api.smith.langchain.com/api/v1/datasets/upload-experiment", # 对于自托管安装或欧盟地区请相应更新
+    json=body,
+    headers={"x-api-key": os.environ["LANGSMITH_API_KEY"]}
+)
+
+print(resp.json())
+```
+
+收到的响应如下所示：
+
+```json
+{
+  "dataset": {
+    "name": "my-external-dataset",
+    "description": null,
+    "created_at": "2024-08-03T00:36:23.289730+00:00",
+    "data_type": "kv",
+    "inputs_schema_definition": null,
+    "outputs_schema_definition": null,
+    "externally_managed": true,
+    "id": "<<uuid>>",
+    "tenant_id": "<<uuid>>",
+    "example_count": 0,
+    "session_count": 0,
+    "modified_at": "2024-08-03T00:36:23.289730+00:00",
+    "last_session_start_time": null
+  },
+  "experiment": {
+    "start_time": "2024-08-03T00:12:38",
+    "end_time": "2024-08-03T00:12:43+00:00",
+    "extra": null,
+    "name": "My external experiment",
+    "description": "An experiment uploaded to LangSmith",
+    "default_dataset_id": null,
+    "reference_dataset_id": "<<uuid>>",
+    "trace_tier": "longlived",
+    "id": "<<uuid>>",
+    "run_count": null,
+    "latency_p50": null,
+    "latency_p99": null,
+    "first_token_p50": null,
+    "first_token_p99": null,
+    "total_tokens": null,
+    "prompt_tokens": null,
+    "completion_tokens": null,
+    "total_cost": null,
+    "prompt_cost": null,
+    "completion_cost": null,
+    "tenant_id": "<<uuid>>",
+    "last_run_start_time": null,
+    "last_run_start_time_live": null,
+    "feedback_stats": null,
+    "session_feedback_stats": null,
+    "run_facets": null,
+    "error_rate": null,
+    "streaming_rate": null,
+    "test_run_number": 1
+  }
+}
+```
+
+请注意，实验结果中的延迟（latency）和反馈统计数据（feedback stats）为 null，因为运行尚未持久化（这可能需要几秒钟）。如果您保存实验 ID 并在几秒后再次查询，您将看到所有统计数据（尽管 token/cost 仍将为 null，因为我们在请求体中没有请求这些信息）。
+
+## 在 UI 中查看实验
+
+现在，登录 UI 并点击您新创建的数据集！您应该会看到一个实验：![Uploaded experiments table](/langsmith/images/uploaded-dataset.png)
+
+您的示例也应该已被上传：![Uploaded examples](/langsmith/images/uploaded-dataset-examples.png)
+
+点击您的实验将带您进入比较视图：![Uploaded experiment comparison view](/langsmith/images/uploaded-experiment.png)
+
+随着您向数据集上传更多实验，您将能够在比较视图中轻松地比较结果并识别退化（regressions）。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\upload-existing-experiments.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

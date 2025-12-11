@@ -1,0 +1,110 @@
+---
+title: Snowflake Cortex
+---
+
+[Snowflake Cortex](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions) 提供了即时访问行业领先的大型语言模型（LLM）的能力，这些模型由 Mistral、Reka、Meta 和 Google 等公司的研究人员训练而成，其中就包括 Snowflake 开发的开源企业级模型 [Snowflake Arctic](https://www.snowflake.com/en/data-cloud/arctic/)。
+
+本示例将介绍如何使用 LangChain 来与 Snowflake Cortex 进行交互。
+
+### 安装与设置
+
+我们首先使用下面的命令安装 `snowflake-snowpark-python` 库。然后，您可以将连接到 Snowflake 的凭证配置为环境变量，或者直接传入。
+
+```python
+pip install -qU snowflake-snowpark-python
+```
+
+```python
+import getpass
+import os
+
+# 第一步是设置环境变量，以便连接到 Snowflake；
+# 您也可以在实例化模型时直接传入这些 Snowflake 凭证
+
+if os.environ.get("SNOWFLAKE_ACCOUNT") is None:
+    os.environ["SNOWFLAKE_ACCOUNT"] = getpass.getpass("Account: ")
+
+if os.environ.get("SNOWFLAKE_USERNAME") is None:
+    os.environ["SNOWFLAKE_USERNAME"] = getpass.getpass("Username: ")
+
+if os.environ.get("SNOWFLAKE_PASSWORD") is None:
+    os.environ["SNOWFLAKE_PASSWORD"] = getpass.getpass("Password: ")
+
+if os.environ.get("SNOWFLAKE_DATABASE") is None:
+    os.environ["SNOWFLAKE_DATABASE"] = getpass.getpass("Database: ")
+
+if os.environ.get("SNOWFLAKE_SCHEMA") is None:
+    os.environ["SNOWFLAKE_SCHEMA"] = getpass.getpass("Schema: ")
+
+if os.environ.get("SNOWFLAKE_WAREHOUSE") is None:
+    os.environ["SNOWFLAKE_WAREHOUSE"] = getpass.getpass("Warehouse: ")
+
+if os.environ.get("SNOWFLAKE_ROLE") is None:
+    os.environ["SNOWFLAKE_ROLE"] = getpass.getpass("Role: ")
+```
+
+```python
+from langchain_community.chat_models import ChatSnowflakeCortex
+from langchain.messages import HumanMessage, SystemMessage
+
+# 默认情况下，我们将使用 Cortex 提供的模型：`mistral-large`，以及函数：`complete`
+chat = ChatSnowflakeCortex()
+```
+
+上面的代码块假设您的 Snowflake 凭证已在环境变量中设置。如果您更愿意手动指定它们，请使用以下代码：
+
+```python
+chat = ChatSnowflakeCortex(
+    # 更改默认的 cortex 模型和函数
+    model="mistral-large",
+    cortex_function="complete",
+
+    # 更改默认的生成参数
+    temperature=0,
+    max_tokens=10,
+    top_p=0.95,
+
+    # 指定您的 Snowflake 凭证
+    account="YOUR_SNOWFLAKE_ACCOUNT",
+    username="YOUR_SNOWFLAKE_USERNAME",
+    password="YOUR_SNOWFLAKE_PASSWORD",
+    database="YOUR_SNOWFLAKE_DATABASE",
+    schema="YOUR_SNOWFLAKE_SCHEMA",
+    role="YOUR_SNOWFLAKE_ROLE",
+    warehouse="YOUR_SNOWFLAKE_WAREHOUSE"
+)
+```
+
+### 调用聊天模型
+
+我们现在可以使用 `invoke` 或 `stream` 方法来调用聊天模型。
+
+messages = [
+        SystemMessage(content="You are a friendly assistant."),
+        HumanMessage(content="What are large language models?"),
+]
+chat.invoke(messages)
+
+### 流式传输 (Stream)
+
+```python
+# 示例输入提示
+messages = [
+    SystemMessage(content="You are a friendly assistant."),
+    HumanMessage(content="What are large language models?"),
+]
+
+# 调用流式传输方法，并在接收到每一块数据时打印出来
+print("Stream Method Response:")
+for chunk in chat._stream(messages):
+    print(chunk.message.content)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\snowflake.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

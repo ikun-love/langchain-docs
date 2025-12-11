@@ -1,0 +1,193 @@
+```markdown
+---
+title: Connery 工具包和工具
+---
+
+使用 Connery 工具包和工具，您可以将 Connery Actions 集成到您的 LangChain 智能体（Agent）中。
+
+## 什么是 Connery？
+
+Connery 是一个开源的 AI 插件基础设施。
+
+借助 Connery，您可以轻松创建包含一组操作的自定义插件，并将它们无缝集成到您的 LangChain Agent 中。Connery 将负责处理运行时、授权、密钥管理、访问管理、审计日志和其他关键方面的集成。
+
+此外，在社区的支持下，Connery 还提供了一个多样化的现成开源插件集合，以增加便捷性。
+
+了解更多关于 Connery 的信息：
+
+- GitHub: [github.com/connery-io/connery](https://github.com/connery-io/connery)
+- 文档 (Documentation): [docs.connery.io](https://docs.connery.io)
+
+## 设置 (Setup)
+
+### 安装
+
+您需要安装 `langchain_community` 包才能使用 Connery 工具。
+
+```python
+pip install -qU langchain-community
+```
+
+### 凭证 (Credentials)
+
+要在您的 LangChain Agent 中使用 Connery Actions，您需要进行一些准备工作：
+
+1. 使用 [快速入门](https://docs.connery.io/docs/runner/quick-start/) 指南设置 Connery Runner。
+2. 在您的 Agent 中安装所有包含您想要使用操作的插件。
+3. 设置环境变量 `CONNERY_RUNNER_URL` 和 `CONNERY_RUNNER_API_KEY`，以便工具包能够与 Connery Runner 通信。
+
+```python
+import getpass
+import os
+
+for key in ["CONNERY_RUNNER_URL", "CONNERY_RUNNER_API_KEY"]:
+    if key not in os.environ:
+        os.environ[key] = getpass.getpass(f"Please enter the value for {key}: ")
+```
+
+## 工具包 (Toolkit)
+
+在下面的示例中，我们创建了一个 Agent，该 Agent 使用两个 Connery Actions 来总结一个公开网页并将摘要通过电子邮件发送出去：
+
+1. 来自 [Summarization](https://github.com/connery-io/summarization-plugin) 插件的 **Summarize public webpage**（总结公开网页）操作。
+2. 来自 [Gmail](https://github.com/connery-io/gmail) 插件的 **Send email**（发送电子邮件）操作。
+
+您可以在 [此处](https://smith.langchain.com/public/4af5385a-afe9-46f6-8a53-57fe2d63c5bc/r) 查看此示例的 LangSmith 追踪记录。
+
+```python
+import os
+
+from langchain.agents import AgentType, initialize_agent
+from langchain_community.agent_toolkits.connery import ConneryToolkit
+from langchain_community.tools.connery import ConneryService
+from langchain_openai import ChatOpenAI
+
+# 指定您的 Connery Runner 凭证。
+os.environ["CONNERY_RUNNER_URL"] = ""
+os.environ["CONNERY_RUNNER_API_KEY"] = ""
+
+# 指定 OpenAI API 密钥。
+os.environ["OPENAI_API_KEY"] = ""
+
+# 指定您接收带有摘要邮件的电子邮件地址（用于下面的示例）。
+recepient_email = "test@example.com"
+
+# 创建一个 Connery Toolkit，包含来自 Connery Runner 的所有可用操作。
+connery_service = ConneryService()
+connery_toolkit = ConneryToolkit.create_instance(connery_service)
+
+# 使用 OpenAI Functions Agent 来执行 Prompt，利用 Connery Toolkit 中的操作。
+llm = ChatOpenAI(temperature=0)
+agent = initialize_agent(
+    connery_toolkit.get_tools(), llm, AgentType.OPENAI_FUNCTIONS, verbose=True
+)
+result = agent.run(
+    f"""Make a short summary of the webpage http://www.paulgraham.com/vb.html in three sentences
+and send it to {recepient_email}. Include the link to the webpage into the body of the email."""
+)
+print(result)
+```
+
+```output
+> Entering new AgentExecutor chain...
+
+Invoking: `CA72DFB0AB4DF6C830B43E14B0782F70` with `{'publicWebpageUrl': 'http://www.paulgraham.com/vb.html'}`
+
+
+{'summary': 'The author reflects on the concept of life being short and how having children made them realize the true brevity of life. They discuss how time can be converted into discrete quantities and how limited certain experiences are. The author emphasizes the importance of prioritizing and eliminating unnecessary things in life, as well as actively pursuing meaningful experiences. They also discuss the negative impact of getting caught up in online arguments and the need to be aware of how time is being spent. The author suggests pruning unnecessary activities, not waiting to do things that matter, and savoring the time one has.'}
+Invoking: `CABC80BB79C15067CA983495324AE709` with `{'recipient': 'test@example.com', 'subject': 'Summary of the webpage', 'body': 'Here is a short summary of the webpage http://www.paulgraham.com/vb.html:\n\nThe author reflects on the concept of life being short and how having children made them realize the true brevity of life. They discuss how time can be converted into discrete quantities and how limited certain experiences are. The author emphasizes the importance of prioritizing and eliminating unnecessary things in life, as well as actively pursuing meaningful experiences. They also discuss the negative impact of getting caught up in online arguments and the need to be aware of how time is being spent. The author suggests pruning unnecessary activities, not waiting to do things that matter, and savoring the time one has.\n\nYou can find the full webpage [here](http://www.paulgraham.com/vb.html).'}`
+
+
+{'messageId': '[2f04b00e-122d-c7de-c91e-e78e0c3276d6@gmail.com](mailto:2f04b00e-122d-c7de-c91e-e78e0c3276d6@gmail.com)'}I have sent the email with the summary of the webpage to test@example.com. Please check your inbox.
+
+> Finished chain.
+I have sent the email with the summary of the webpage to test@example.com. Please check your inbox.
+```
+
+**注意 (NOTE):** Connery Action 是一种结构化工具，因此您只能在支持结构化工具的 Agent 中使用它。
+
+## 工具 (Tool)
+
+```python
+import os
+
+from langchain.agents import AgentType, initialize_agent
+from langchain_community.tools.connery import ConneryService
+from langchain_openai import ChatOpenAI
+
+# 指定您的 Connery Runner 凭证。
+os.environ["CONNERY_RUNNER_URL"] = ""
+os.environ["CONNERY_RUNNER_API_KEY"] = ""
+
+# 指定 OpenAI API 密钥。
+os.environ["OPENAI_API_KEY"] = ""
+
+# 指定您接收来自下面示例邮件的电子邮件地址。
+recepient_email = "test@example.com"
+
+# 通过 ID 从 Connery Runner 获取 SendEmail 操作。
+connery_service = ConneryService()
+send_email_action = connery_service.get_action("CABC80BB79C15067CA983495324AE709")
+```
+
+手动运行操作 (Run the action manually)。
+
+```python
+manual_run_result = send_email_action.run(
+    {
+        "recipient": recepient_email,
+        "subject": "Test email",
+        "body": "This is a test email sent from Connery.",
+    }
+)
+print(manual_run_result)
+```
+
+使用 OpenAI Functions Agent 运行操作 (Run the action using the OpenAI Functions agent)。
+
+您可以在 [此处](https://smith.langchain.com/public/a37d216f-c121-46da-a428-0e09dc19b1dc/r) 查看此示例的 LangSmith 追踪记录。
+
+```python
+llm = ChatOpenAI(temperature=0)
+agent = initialize_agent(
+    [send_email_action], llm, AgentType.OPENAI_FUNCTIONS, verbose=True
+)
+agent_run_result = agent.run(
+    f"Send an email to the {recepient_email} and say that I will be late for the meeting."
+)
+print(agent_run_result)
+```
+
+```output
+> Entering new AgentExecutor chain...
+
+Invoking: `CABC80BB79C15067CA983495324AE709` with `{'recipient': 'test@example.com', 'subject': 'Late for Meeting', 'body': 'Dear Team,\n\nI wanted to inform you that I will be late for the meeting today. I apologize for any inconvenience caused. Please proceed with the meeting without me and I will join as soon as I can.\n\nBest regards,\n[Your Name]'}`
+
+
+{'messageId': '[d34a694d-50e0-3988-25da-e86b4c51d7a7@gmail.com](mailto:d34a694d-50e0-3988-25da-e86b4c51d7a7@gmail.com)'}I have sent an email to test@example.com informing them that you will be late for the meeting.
+
+> Finished chain.
+I have sent an email to test@example.com informing them that you will be late for the meeting.
+```
+
+**注意 (NOTE):** Connery Action 是一种结构化工具，因此您只能在支持结构化工具的 Agent 中使用它。
+
+---
+
+## API 参考 (API reference)
+
+有关所有 Connery 功能和配置的详细文档，请访问 API 参考：
+
+- 工具包 (Toolkit): [python.langchain.com/api_reference/community/agent_toolkits/langchain_community.agent_toolkits.connery.toolkit.ConneryToolkit.html](https://python.langchain.com/api_reference/community/agent_toolkits/langchain_community.agent_toolkits.connery.toolkit.ConneryToolkit.html)
+- 工具 (Tool): [python.langchain.com/api_reference/community/tools/langchain_community.tools.connery.service.ConneryService.html](https://python.langchain.com/api_reference/community/tools/langchain_community.tools.connery.service.ConneryService.html)
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\connery.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

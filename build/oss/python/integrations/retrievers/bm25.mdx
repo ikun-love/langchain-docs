@@ -1,0 +1,101 @@
+---
+title: BM25
+---
+
+> [BM25 (维基百科)](https://en.wikipedia.org/wiki/Okapi_BM25) 也被称为 `Okapi BM25`，它是一种常用于信息检索系统中的排序函数，用于评估文档与给定搜索查询的相关性程度。
+>
+> `BM25Retriever` 使用 [`rank_bm25`](https://github.com/dorianbrown/rank_bm25) 软件包。
+
+```python
+pip install -qU  rank_bm25
+```
+
+```python
+from langchain_community.retrievers import BM25Retriever
+```
+
+## 使用文本创建新的检索器 (Create New Retriever with Texts)
+
+```python
+retriever = BM25Retriever.from_texts(["foo", "bar", "world", "hello", "foo bar"])
+```
+
+## 使用文档创建新的检索器 (Create a New Retriever with Documents)
+
+您现在可以使用创建的文档来初始化一个新的检索器。
+
+```python
+from langchain_core.documents import Document
+
+retriever = BM25Retriever.from_documents(
+    [
+        Document(page_content="foo"),
+        Document(page_content="bar"),
+        Document(page_content="world"),
+        Document(page_content="hello"),
+        Document(page_content="foo bar"),
+    ]
+)
+```
+
+## 使用检索器 (Use Retriever)
+
+现在我们可以使用这个检索器了！
+
+```python
+result = retriever.invoke("foo")
+```
+
+```python
+result
+```
+
+```output
+[Document(metadata={}, page_content='foo'),
+ Document(metadata={}, page_content='foo bar'),
+ Document(metadata={}, page_content='hello'),
+ Document(metadata={}, page_content='world')]
+```
+
+## 预处理函数 (Preprocessing Function)
+
+您可以向检索器传递一个自定义的预处理函数，以改进搜索结果。在词级别对文本进行分词（Tokenizing）可以增强检索效果，尤其是在使用 Chroma、Pinecone 或 Faiss 等向量存储并处理分块文档时。
+
+```python
+import nltk
+
+nltk.download("punkt_tab")
+```
+
+```python
+from nltk.tokenize import word_tokenize
+
+retriever = BM25Retriever.from_documents(
+    [
+        Document(page_content="foo"),
+        Document(page_content="bar"),
+        Document(page_content="world"),
+        Document(page_content="hello"),
+        Document(page_content="foo bar"),
+    ],
+    k=2,
+    preprocess_func=word_tokenize,
+)
+
+result = retriever.invoke("bar")
+result
+```
+
+```output
+[Document(metadata={}, page_content='bar'),
+ Document(metadata={}, page_content='foo bar')]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\bm25.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

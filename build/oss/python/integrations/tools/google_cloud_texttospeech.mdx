@@ -1,0 +1,49 @@
+---
+title: 谷歌云文本转语音
+---
+
+> [Google Cloud Text-to-Speech](https://cloud.google.com/text-to-speech) 使得开发者能够合成听起来自然的语音，提供了 100 多种音色选择，支持多种语言和变体。它应用了 DeepMind 在 WaveNet 方面开创性的研究成果和谷歌强大的神经网络技术，以提供尽可能高的音质保真度。
+>
+> 它支持多种语言，包括英语（English）、德语（German）、波兰语（Polish）、西班牙语（Spanish）、意大利语（Italian）、法语（French）、葡萄牙语（Portuguese）和印地语（Hindi）。
+
+本 Notebook 演示了如何与 `Google Cloud Text-to-Speech API` 进行交互，以实现语音合成功能。
+
+首先，您需要设置一个 Google Cloud 项目。您可以 \[在此处](https://cloud.google.com/text-to-speech/docs/before-you-begin) 查阅相关说明。
+
+```python
+!pip install -U langchain-google-community[texttospeech]
+```
+
+## 实例化 (Instantiation)
+
+```python
+from langchain_google_community import TextToSpeechTool
+```
+
+## 已弃用的 GoogleCloudTextToSpeechTool
+
+```python
+from langchain_community.tools import GoogleCloudTextToSpeechTool
+```
+
+```python
+text_to_speak = "Hello world!"
+
+tts = GoogleCloudTextToSpeechTool()
+tts.name
+```
+
+我们可以生成音频，将其保存到临时文件，然后播放该音频。
+
+```python
+speech_file = tts.run(text_to_speak)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\google_cloud_texttospeech.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

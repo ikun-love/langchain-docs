@@ -1,0 +1,56 @@
+---
+title: Jira
+---
+
+<Tip>
+**兼容性**
+
+仅在 Node.js 环境下可用。
+</Tip>
+
+本文档介绍了如何从 Jira 项目中的 Issue（问题）加载文档对象。
+
+## 凭证 (Credentials)
+
+- 您需要设置一个访问令牌（Access Token），并提供您的 Jira 用户名，以便对请求进行身份验证。
+- 您还需要提供包含待加载 Issue 的项目的项目密钥（Project Key）和主机 URL（Host URL）。
+
+## 用法 (Usage)
+
+```typescript
+import { JiraProjectLoader } from "@langchain/community/document_loaders/web/jira";
+
+const host = process.env.JIRA_HOST || "https://jira.example.com";
+const username = process.env.JIRA_USERNAME;
+const accessToken = process.env.JIRA_ACCESS_TOKEN;
+const projectKey = process.env.JIRA_PROJECT_KEY || "PROJ";
+
+if (username && accessToken) {
+  // 创建时间在最近 30 天内
+  const createdAfter = new Date();
+  createdAfter.setDate(createdAfter.getDate() - 30);
+  const loader = new JiraProjectLoader({
+    host,
+    projectKey,
+    username,
+    accessToken,
+    createdAfter,
+  });
+
+  const documents = await loader.load();
+  console.log(`已加载 ${documents.length} 个 Jira 文档`);
+} else {
+  console.log(
+    "您必须提供用户名和访问令牌才能运行此示例。"
+  );
+}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_loaders\web_loaders\jira.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

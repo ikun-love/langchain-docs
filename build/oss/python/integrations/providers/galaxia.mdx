@@ -1,0 +1,50 @@
+---
+title: Smabbler
+---
+
+> Smabbler 的图谱驱动平台通过将数据转化为结构化的知识基础，加速了 AI 的开发进程。
+
+## Galaxia
+
+> Galaxia 知识库是专为 RAG（检索增强生成）设计的一体化知识库和检索机制。与标准解决方案不同，它基于使用符号自然语言处理（Symbolic NLP）和知识表示解决方案构建的知识图谱。它会分析提供的文本，并将其转换为包含文本、语言和语义信息的图谱。这种丰富的结构使得检索可以基于**语义信息**，而非依赖于向量相似度/距离。
+
+使用 Galaxia 实现 RAG 的过程首先是：将您的文件上传到 [Galaxia](https://beta.cloud.smabbler.com/home)，在那里进行分析，然后构建一个模型（即知识图谱）。模型构建完成后，您就可以使用 `GalaxiaRetriever` 连接到 API 并开始检索了。
+
+更多信息：[文档](https://smabbler.gitbook.io/smabbler)
+
+## 安装 (Installation)
+<CodeGroup>
+```bash pip
+pip install langchain-galaxia-retriever
+```
+
+```bash uv
+uv add langchain-galaxia-retriever
+```
+</CodeGroup>
+
+## 用法 (Usage)
+
+```python
+from langchain_galaxia_retriever.retriever import GalaxiaRetriever
+
+gr = GalaxiaRetriever(
+    api_url="beta.api.smabbler.com",
+    api_key="<key>",
+    knowledge_base_id="<knowledge_base_id>",
+    n_retries=10,
+    wait_time=5,
+)
+
+result = gr.invoke('<test question>')
+print(result)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\galaxia.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

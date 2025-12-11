@@ -1,0 +1,78 @@
+---
+title: StochasticAI
+---
+
+>[Stochastic Acceleration Platform](https://docs.stochastic.ai/docs/introduction/) 旨在简化深度学习模型的生命周期。它涵盖了从模型的上传和版本控制，到训练、压缩和加速，再到最终投入生产（部署）的整个过程。
+
+本示例将介绍如何使用 LangChain 与 `StochasticAI` 模型进行交互。
+
+您需要 [在此处](https://app.stochastic.ai/workspace/profile/settings?tab=profile) 获取 API_KEY 和 API_URL。
+
+```python
+from getpass import getpass
+
+STOCHAICAI_API_KEY = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+import os
+
+os.environ["STOCHAICAI_API_KEY"] = STOCHASTICAI_API_KEY
+```
+
+```python
+YOUR_API_URL = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms import StochasticAI
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+template = """问题: {question}
+
+答案: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+llm = StochasticAI(api_url=YOUR_API_URL)
+```
+
+```python
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+```python
+question = "在贾斯汀·比伯出生那年，哪支 NFL 球队赢得了超级碗？"
+
+llm_chain.run(question)
+```
+
+```output
+"\n\n第 1 步: 1999 年，圣路易斯公羊队赢得了超级碗。\n\n第 2 步: 比伯出生于 1999 年。\n\n第 3 步: 当时公羊队在洛杉矶。\n\n第 4 步: 所以他们那年没有参加超级碗。\n"
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\stochasticai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

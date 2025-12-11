@@ -1,0 +1,86 @@
+---
+title: Serper
+---
+
+本文介绍如何在 LangChain 中使用 [Serper](https://serper.dev) 谷歌搜索 API。Serper 是一个低成本的谷歌搜索 API，可用于获取谷歌搜索中的答案框（answer box）、知识图谱（knowledge graph）和自然搜索结果数据。
+
+内容分为两部分：设置（Setup），以及特定 Google Serper 包装器的引用（Wrappers）。
+
+## 设置 (Setup)
+
+- 访问 [serper.dev](https://serper.dev) 注册一个免费账户。
+- 获取 API 密钥，并将其设置为环境变量（`SERPER_API_KEY`）。
+
+## 包装器 (Wrappers)
+
+### 工具类 (Utility)
+
+有一个 `GoogleSerperAPIWrapper` 工具类用于封装此 API。要导入此工具类：
+
+```python
+from langchain_community.utilities import GoogleSerperAPIWrapper
+```
+
+您可以将其用作 Self Ask 链的一部分：
+
+```python
+from langchain_community.utilities import GoogleSerperAPIWrapper
+from langchain_openai import OpenAI
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+
+import os
+
+os.environ["SERPER_API_KEY"] = ""
+os.environ['OPENAI_API_KEY'] = ""
+
+llm = OpenAI(temperature=0)
+search = GoogleSerperAPIWrapper()
+tools = [
+    Tool(
+        name="Intermediate Answer",
+        func=search.run,
+        description="useful for when you need to ask with search"
+    )
+]
+
+self_ask_with_search = initialize_agent(tools, llm, agent=AgentType.SELF_ASK_WITH_SEARCH, verbose=True)
+self_ask_with_search.run("What is the hometown of the reigning men's U.S. Open champion?")
+```
+
+#### 输出
+```
+Entering new AgentExecutor chain...
+ Yes.
+Follow up: Who is the reigning men's U.S. Open champion?
+Intermediate answer: Current champions Carlos Alcaraz, 2022 men's singles champion.
+Follow up: Where is Carlos Alcaraz from?
+Intermediate answer: El Palmar, Spain
+So the final answer is: El Palmar, Spain
+
+> Finished chain.
+
+'El Palmar, Spain'
+```
+
+有关此包装器的更详细演练，请参阅[此页面](/oss/python/integrations/tools/google_serper)。
+
+### 工具 (Tool)
+
+您也可以轻松地将此包装器加载为一个工具（Tool，用于与 Agent 配合使用）。
+您可以通过以下方式实现：
+```python
+from langchain_community.agent_toolkits.load_tools import load_tools
+tools = load_tools(["google-serper"])
+```
+
+有关工具的更多信息，请参阅[此概述](/oss/python/integrations/tools)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\google_serper.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

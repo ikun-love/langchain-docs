@@ -1,0 +1,110 @@
+---
+title: Cassandra
+---
+
+> [Apache Cassandra®](https://cassandra.apache.org/) 是一个 NoSQL 的、面向行的、高可扩展性和高可用的数据库。
+> 从 5.0 版本开始，该数据库内置了[向量搜索功能](https://cassandra.apache.org/doc/trunk/cassandra/vector-search/overview.html)。
+
+本页面概述的集成可以与 `Cassandra` 以及其他兼容 CQL（即使用 `Cassandra Query Language` 协议）的数据库一起使用。
+
+
+## 安装和设置
+
+安装以下 Python 包：
+
+<CodeGroup>
+```bash pip
+pip install "cassio>=0.1.6"
+```
+
+```bash uv
+uv add "cassio>=0.1.6"
+```
+</CodeGroup>
+
+## 向量存储 (Vector Store)
+
+```python
+from langchain_community.vectorstores import Cassandra
+```
+
+请在[示例笔记本](/oss/python/integrations/vectorstores/cassandra)中了解更多信息。
+
+## LLM 缓存 (LLM Cache)
+
+```python
+from langchain.globals import set_llm_cache
+from langchain_community.cache import CassandraCache
+set_llm_cache(CassandraCache())
+```
+
+## 语义 LLM 缓存 (Semantic LLM Cache)
+
+```python
+from langchain.globals import set_llm_cache
+from langchain_community.cache import CassandraSemanticCache
+set_llm_cache(CassandraSemanticCache(
+    embedding=my_embedding,
+    table_name="my_store",
+))
+```
+
+## 文档加载器 (Document loader)
+
+```python
+from langchain_community.document_loaders import CassandraLoader
+```
+
+请在[示例笔记本](/oss/python/integrations/document_loaders/cassandra)中了解更多信息。
+
+#### 归属声明
+
+> Apache Cassandra, Cassandra 和 Apache 是 Apache 软件基金会 (The [Apache Software Foundation](http://www.apache.org/)) 在美国和/或其他国家的注册商标或商标。
+
+## 工具包 (Toolkit)
+
+`Cassandra 数据库工具包` (Cassandra Database toolkit) 使 AI 工程师能够高效地将代理与 Cassandra 数据集成。
+
+```python
+from langchain_community.agent_toolkits.cassandra_database.toolkit import (
+    CassandraDatabaseToolkit,
+)
+```
+
+请在[示例笔记本](/oss/python/integrations/tools/cassandra_database)中了解更多信息。
+
+
+Cassandra 数据库的独立工具：
+
+### 获取架构 (Get Schema)
+
+用于获取 Apache Cassandra 数据库中某个 keyspace 架构的工具。
+
+```python
+from langchain_community.tools import GetSchemaCassandraDatabaseTool
+```
+
+### 获取表数据 (Get Table Data)
+
+用于从 Apache Cassandra 数据库的表中获取数据的工具。
+
+```python
+from langchain_community.tools import GetTableDataCassandraDatabaseTool
+```
+
+### 查询 (Query)
+
+用于使用提供的 CQL 查询 Apache Cassandra 数据库的工具。
+
+```python
+from langchain_community.tools import QueryCassandraDatabaseTool
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\cassandra.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

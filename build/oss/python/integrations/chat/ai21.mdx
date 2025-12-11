@@ -1,0 +1,156 @@
+---
+title: ChatAI21
+---
+
+本 Notebook 介绍如何开始使用 AI21 的聊天模型。
+请注意，不同的聊天模型支持不同的参数。请参阅 [AI21 文档](https://docs.ai21.com/reference)，了解您所选模型中参数的更多信息。
+[查看所有 AI21 的 LangChain 组件](https://pypi.org/project/langchain-ai21/)。
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/chat/__package_name_short_snake__) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [ChatAI21](https://python.langchain.com/api_reference/ai21/chat_models/langchain_ai21.chat_models.ChatAI21.html#langchain_ai21.chat_models.ChatAI21) | [langchain-ai21](https://python.langchain.com/api_reference/ai21/index.html) | ❌ | beta | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-ai21?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-ai21?style=flat-square&label=%20) |
+
+### 模型特性
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/python/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+
+## 设置 (Setup)
+
+### 凭证 (Credentials)
+
+我们需要获取一个 [AI21 API 密钥](https://docs.ai21.com/) 并设置 `AI21_API_KEY` 环境变量：
+
+```python
+import os
+from getpass import getpass
+
+if "AI21_API_KEY" not in os.environ:
+    os.environ["AI21_API_KEY"] = getpass()
+```
+
+为了启用模型调用的自动跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+```
+
+### 安装 (Installation)
+
+!pip install -qU langchain-ai21
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化模型对象并生成聊天补全（chat completions）：
+
+```python
+from langchain_ai21 import ChatAI21
+
+llm = ChatAI21(model="jamba-instruct", temperature=0)
+```
+
+## 调用 (Invocation)
+
+```python
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    ),
+    ("human", "I love programming."),
+]
+ai_msg = llm.invoke(messages)
+ai_msg
+```
+
+# 工具调用 / 函数调用 (Tool Calls / Function Calling)
+
+此示例展示了如何将工具调用与 AI21 模型一起使用：
+
+```python
+import os
+from getpass import getpass
+
+from langchain_ai21.chat_models import ChatAI21
+from langchain.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain.tools import tool
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+if "AI21_API_KEY" not in os.environ:
+    os.environ["AI21_API_KEY"] = getpass()
+
+
+@tool
+def get_weather(location: str, date: str) -> str:
+    """“Provide the weather for the specified location on the given date.”"""
+    if location == "New York" and date == "2024-12-05":
+        return "25 celsius"
+    elif location == "New York" and date == "2024-12-06":
+        return "27 celsius"
+    elif location == "London" and date == "2024-12-05":
+        return "22 celsius"
+    return "32 celsius"
+
+
+llm = ChatAI21(model="jamba-1.5-mini")
+
+llm_with_tools = llm.bind_tools([convert_to_openai_tool(get_weather)])
+
+chat_messages = [
+    SystemMessage(
+        content="You are a helpful assistant. You can use the provided tools "
+        "to assist with various tasks and provide accurate information"
+    )
+]
+
+human_messages = [
+    HumanMessage(
+        content="What is the forecast for the weather in New York on December 5, 2024?"
+    ),
+    HumanMessage(content="And what about the 2024-12-06?"),
+    HumanMessage(content="OK, thank you."),
+    HumanMessage(content="What is the expected weather in London on December 5, 2024?"),
+]
+
+
+for human_message in human_messages:
+    print(f"User: {human_message.content}")
+    chat_messages.append(human_message)
+    response = llm_with_tools.invoke(chat_messages)
+    chat_messages.append(response)
+    if response.tool_calls:
+        tool_call = response.tool_calls[0]
+        if tool_call["name"] == "get_weather":
+            weather = get_weather.invoke(
+                {
+                    "location": tool_call["args"]["location"],
+                    "date": tool_call["args"]["date"],
+                }
+            )
+            chat_messages.append(
+                ToolMessage(content=weather, tool_call_id=tool_call["id"])
+            )
+            llm_answer = llm_with_tools.invoke(chat_messages)
+            print(f"Assistant: {llm_answer.content}")
+    else:
+        print(f"Assistant: {response.content}")
+```
+
+---
+
+## API 参考 (API reference)
+
+要了解 ChatAI21 所有功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/ai21/chat_models/langchain_ai21.chat_models.ChatAI21.html](https://python.langchain.com/api_reference/ai21/chat_models/langchain_ai21.chat_models.ChatAI21.html)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\ai21.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

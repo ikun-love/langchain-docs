@@ -1,0 +1,76 @@
+---
+title: Arcee
+---
+
+> [Arcee](https://www.arcee.ai/about/about-us) 致力于帮助开发 SLM（即小型化、专业化、安全且可扩展的语言模型）。
+
+本示例 Notebook 将演示如何使用 `ArceeRetriever` 类来检索与 Arcee 的“领域自适应语言模型”（`DALM`s）相关的文档。
+
+### 设置 (Setup)
+
+在使用 `ArceeRetriever` 之前，请确保 Arcee API 密钥已设置为 `ARCEE_API_KEY` 环境变量。您也可以将其作为命名参数传递。
+
+```python
+from langchain_community.retrievers import ArceeRetriever
+
+retriever = ArceeRetriever(
+    model="DALM-PubMed",
+    # arcee_api_key="ARCEE-API-KEY" # 如果尚未在环境中设置，则取消注释
+)
+```
+
+### 附加配置 (Additional Configuration)
+
+您可以根据需要配置 `ArceeRetriever` 的其他参数，例如 `arcee_api_url`、`arcee_app_url` 和 `model_kwargs`。在对象初始化时设置 `model_kwargs` 会将指定的过滤条件（filters）和结果数量（size）作为所有后续检索操作的默认值。
+
+```python
+retriever = ArceeRetriever(
+    model="DALM-PubMed",
+    # arcee_api_key="ARCEE-API-KEY", # 如果尚未在环境中设置，则取消注释
+    arcee_api_url="https://custom-api.arcee.ai",  # 默认值为 https://api.arcee.ai
+    arcee_app_url="https://custom-app.arcee.ai",  # 默认值为 https://app.arcee.ai
+    model_kwargs={
+        "size": 5,
+        "filters": [
+            {
+                "field_name": "document",
+                "filter_type": "fuzzy_search",
+                "value": "Einstein",
+            }
+        ],
+    },
+)
+```
+
+### 检索文档 (Retrieving documents)
+
+您可以通过提供查询（query）来从已上传的上下文中检索相关文档。示例如下：
+
+```python
+query = "Can AI-driven music therapy contribute to the rehabilitation of patients with disorders of consciousness?"
+documents = retriever.invoke(query)
+```
+
+### 附加参数 (Additional parameters)
+
+Arcee 允许您应用 `filters`（过滤条件）并设置检索到的文档的数量（`size`）。过滤条件有助于缩小搜索结果范围。下面是如何使用这些参数的示例：
+
+```python
+# 定义过滤条件
+filters = [
+    {"field_name": "document", "filter_type": "fuzzy_search", "value": "Music"},
+    {"field_name": "year", "filter_type": "strict_search", "value": "1905"},
+]
+
+# 使用过滤条件和 size 参数检索文档
+documents = retriever.invoke(query, size=5, filters=filters)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\arcee.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

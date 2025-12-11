@@ -1,0 +1,120 @@
+---
+title: Office365 工具包
+---
+
+> [Microsoft 365](https://www.office.com/) 是由 `Microsoft` 拥有的一系列基于云的生产力软件、协作和服务的品牌。
+>
+> 注意：`Office 365` 已更名为 `Microsoft 365`。
+
+本指南文档将介绍如何将 LangChain 连接到 `Office365` 电子邮件和日历。
+
+要使用此工具包，您需要按照 [Microsoft Graph 身份验证和授权概述](https://learn.microsoft.com/en-us/graph/auth/) 中说明的步骤设置您的凭据。获取 `CLIENT_ID` 和 `CLIENT_SECRET` 后，您可以将它们作为环境变量在下面输入。
+
+您也可以参考 [此处的身份验证说明](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite) 进行设置。
+
+```python
+pip install -qU  O365
+pip install -qU  beautifulsoup4  # 这是可选的，但对解析 HTML 消息很有用
+pip install -qU langchain-community
+```
+
+## 分配环境变量
+
+工具包将读取 `CLIENT_ID` 和 `CLIENT_SECRET` 环境变量来进行用户身份验证，因此您需要在此处设置它们。稍后使用智能体时，您还需要设置 `OPENAI_API_KEY`。
+
+```python
+# 在此处设置环境变量
+```
+
+## 创建工具包并获取工具
+
+首先，您需要创建工具包，以便稍后可以访问其包含的工具。
+
+```python
+from langchain_community.agent_toolkits import O365Toolkit
+
+toolkit = O365Toolkit()
+tools = toolkit.get_tools()
+tools
+```
+
+```output
+[O365SearchEvents(name='events_search', description=" 使用此工具搜索用户的日历事件。输入内容必须是搜索查询的开始和结束日期时间。输出是用户日历中开始和结束时间之间的所有事件的 JSON 列表。您可以假设用户不能安排任何与现有会议冲突的会议，并且用户在会议期间是忙碌的。任何没有事件的时间段对用户来说都是空闲的。 ", args_schema=<class 'langchain_community.tools.office365.events_search.SearchEventsInput'>, return_direct=False, verbose=False, callbacks=None, callback_manager=None, handle_tool_error=False, account=Account Client Id: f32a022c-3c4c-4d10-a9d8-f6a9a9055302),
+ O365CreateDraftMessage(name='create_email_draft', description='使用此工具根据提供的消息字段创建一个草稿电子邮件。', args_schema=<class 'langchain_community.tools.office365.create_draft_message.CreateDraftMessageSchema'>, return_direct=False, verbose=False, callbacks=None, callback_manager=None, handle_tool_error=False, account=Account Client Id: f32a022c-3c4c-4d10-a9d8-f6a9a9055302),
+ O365SearchEmails(name='messages_search', description='使用此工具搜索电子邮件消息。输入内容必须是有效的 Microsoft Graph v1.0 $search 查询。输出是请求资源的 JSON 列表。', args_schema=<class 'langchain_community.tools.office365.messages_search.SearchEmailsInput'>, return_direct=False, verbose=False, callbacks=None, callback_manager=None, handle_tool_error=False, account=Account Client Id: f32a022c-3c4c-4d10-a9d8-f6a9a9055302),
+ O365SendEvent(name='send_event', description='使用此工具创建并发送包含所提供事件字段的会议邀请。', args_schema=<class 'langchain_community.tools.office365.send_event.SendEventSchema'>, return_direct=False, verbose=False, callbacks=None, callback_manager=None, handle_tool_error=False, account=Account Client Id: f32a022c-3c4c-4d10-a9d8-f6a9a9055302),
+ O365SendMessage(name='send_email', description='使用此工具发送包含所提供消息字段的电子邮件。', args_schema=<class 'langchain_community.tools.office365.send_message.SendMessageSchema'>, return_direct=False, verbose=False, callbacks=None, callback_manager=None, handle_tool_error=False, account=Account Client Id: f32a022c-3c4c-4d10-a9d8-f6a9a9055302)]
+```
+
+## 在 Agent 中使用
+
+```python
+from langchain.agents import AgentType, initialize_agent
+from langchain_openai import OpenAI
+```
+
+```python
+llm = OpenAI(temperature=0)
+agent = initialize_agent(
+    tools=toolkit.get_tools(),
+    llm=llm,
+    verbose=False,
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+)
+```
+
+```python
+agent.run(
+    "为我创建一个草稿邮件，以一个有感知能力的鹦鹉的身份写给一位疏远的猫朋友，希望与她合作进行一些研究。在任何情况下都不能发送这封邮件，只能创建草稿。"
+)
+```
+
+```output
+'草稿电子邮件已成功创建。'
+```
+
+```python
+agent.run(
+    "你能搜索我的草稿文件夹，告诉我其中是否有关于协作的邮件吗？"
+)
+```
+
+```output
+"我在您的草稿文件夹中找到了一个关于协作的草稿。它发送于 2023-06-16T18:22:17+0000，主题是 'Collaboration Request'（协作请求）。"
+```
+
+```python
+agent.run(
+    "你能安排一个 30 分钟的会议，在 2023 年 10 月 3 日下午 2 点（东部时间）与一只会说话的鹦鹉讨论研究合作事宜吗？"
+)
+```
+
+```output
+/home/vscode/langchain-py-env/lib/python3.11/site-packages/O365/utils/windows_tz.py:639: PytzUsageWarning: The zone attribute is specific to pytz's interface; please migrate to a new time zone provider. For more details on how to do so, see https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html
+  iana_tz.zone if isinstance(iana_tz, tzinfo) else iana_tz)
+/home/vscode/langchain-py-env/lib/python3.11/site-packages/O365/utils/utils.py:463: PytzUsageWarning: The zone attribute is specific to pytz's interface; please migrate to a new time zone provider. For more details on how to do so, see https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html
+  timezone = date_time.tzinfo.zone if date_time.tzinfo is not None else None
+```
+
+```output
+'我已安排会议：2023 年 10 月 3 日下午 2 点（东部时间）与一只会说话的鹦鹉讨论研究合作事宜。如果您需要进行任何更改，请告诉我。'
+```
+
+```python
+agent.run(
+    "你能告诉我 2023 年 10 月 3 日东部时间我是否有任何日程安排，如果有，告诉我其中是否有与会说话的鹦鹉的安排？"
+)
+```
+
+```output
+"是的，您在 2023 年 10 月 3 日有一个与会说话的鹦鹉的活动。该活动标题为 'Meeting with sentient parrot'（与会说话的鹦鹉开会），安排在下午 6:00 到下午 6:30。"
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\office365.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

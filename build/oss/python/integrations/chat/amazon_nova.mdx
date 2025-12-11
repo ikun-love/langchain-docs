@@ -1,0 +1,367 @@
+---
+title: ChatAmazonNova
+description: 在 LangChain 中开始使用 Amazon Nova [聊天模型](/oss/python/langchain/models)。
+---
+
+本指南为您提供了使用 Amazon Nova 聊天模型的快速入门概述。Amazon Nova 模型与 OpenAI 兼容，用户可以通过指向 Nova 端点的 OpenAI SDK 进行访问，从而与 LangChain 的标准接口实现无缝集成。
+
+您可以在 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation) 中找到有关 Amazon Nova 模型、其特性和 API 详细信息的信息。
+
+<Tip>
+    **API 参考**
+
+    有关 [`ChatAmazonNova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) 的所有特性和配置选项的详细文档，请前往 [`ChatAmazonNova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) API 参考。
+
+    有关 Amazon Nova 模型的详细信息和功能，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+</Tip>
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | <Tooltip tip="可以在本地硬件上运行" cta="了解更多" href="/oss/python/langchain/models#local-models">本地</Tooltip> | 可序列化 (Serializable) | JS/TS 支持 | 下载量 (Downloads) | 最新版本 (Latest Version) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| [`ChatAmazonNova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) | [`langchain-amazon-nova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova) | ❌ | beta | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-amazon-nova?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-amazon-nova?style=flat-square&label=%20) |
+
+### 模型特性
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/python/langchain/streaming/) | 原生异步 (Native async) | [Token 用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ❌ | ❌ | Model-dependent | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+
+## 设置
+
+要访问 Amazon Nova 模型，您需要获取 API 凭证并安装 [`langchain-amazon-nova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova) 集成包。
+
+### 安装
+
+<CodeGroup>
+    ```bash pip
+    pip install -U langchain-amazon-nova
+    ```
+    ```bash uv
+    uv add langchain-amazon-nova
+    ```
+</CodeGroup>
+
+### 凭证
+
+将您的 Nova API 凭证设置为环境变量：
+
+```python
+import getpass
+import os
+
+if "NOVA_API_KEY" not in os.environ:
+    os.environ["NOVA_API_KEY"] = getpass.getpass("Enter your Nova API key: ")
+
+if "NOVA_BASE_URL" not in os.environ:
+    os.environ["NOVA_BASE_URL"] = getpass.getpass("Enter your Nova base URL: ")
+```
+
+要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_TRACING"] = "true"
+```
+
+## 实例化
+
+现在我们可以实例化模型对象并生成聊天补全：
+
+```python
+from langchain_amazon_nova import ChatAmazonNova
+
+model = ChatAmazonNova(
+    model="nova-2-lite-v1",
+    temperature=0.7,
+    max_tokens=2048,
+    timeout=None,
+    max_retries=2,
+    # other params...
+)
+```
+
+<Info>
+    有关支持的参数及其描述的完整列表，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+</Info>
+
+## 调用 (Invocation)
+
+```python
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    ),
+    ("human", "I love programming."),
+]
+ai_msg = model.invoke(messages)
+ai_msg
+```
+
+```output
+AIMessage(content="J'adore la programmation.", response_metadata={'model': 'nova-2-lite-v1', 'finish_reason': 'stop'}, id='run-12345678-1234-1234-1234-123456789abc', usage_metadata={'input_tokens': 29, 'output_tokens': 8, 'total_tokens': 37})
+```
+
+```python
+print(ai_msg.content)
+```
+
+```output
+J'adore la programmation.
+```
+
+## 内容块 (Content blocks)
+
+Amazon Nova 消息可以包含单个字符串或一个内容块列表。您可以使用 `content_blocks` 属性访问标准化的内容块：
+
+```python
+ai_msg.content_blocks
+```
+
+使用 `content_blocks` 将以标准格式渲染内容，该格式与其他模型提供商保持一致。阅读更多关于 [内容块](/oss/python/langchain/messages#standard-content-blocks) 的信息。
+
+## 流式传输 (Streaming)
+
+Amazon Nova 支持 Token 级别的流式传输，用于实时响应生成：
+
+```python
+for chunk in model.stream(messages):
+    print(chunk.content, end="", flush=True)
+```
+
+```output
+J'adore la programmation.
+```
+
+### 异步流式传输
+
+对于异步应用程序，请使用 `astream`：
+
+```python
+import asyncio
+
+async def main():
+    async for chunk in model.astream(messages):
+        print(chunk.content, end="", flush=True)
+
+asyncio.run(main())
+```
+
+## 工具调用 (Tool calling)
+
+Amazon Nova 支持在兼容的模型上进行工具调用（函数调用）。您可以使用 LangChain 模型配置文件检查模型是否支持工具调用。
+
+<Info>
+    有关 Nova 工具调用实现和可用参数的详细信息，请参阅 [工具调用文档](https://nova.amazon.com/dev/documentation)。
+</Info>
+
+### 基本工具使用
+
+使用 Pydantic 模型或 LangChain [`@tool`](https://reference.langchain.com/python/langchain/tools/#langchain.tools.tool) 将工具绑定到模型：
+
+```python
+from pydantic import BaseModel, Field
+
+class GetWeather(BaseModel):
+    """Get the weather for a location."""
+
+    location: str = Field(..., description="City name")
+
+model_with_tools = model.bind_tools([GetWeather])
+response = model_with_tools.invoke("What's the weather in Paris?")
+print(response.tool_calls)
+```
+
+```output
+[{'name': 'GetWeather', 'args': {'location': 'Paris'}, 'id': 'call_abc123', 'type': 'tool_call'}]
+```
+
+您也可以使用 `tool_calls` 属性以标准格式专门访问工具调用：
+
+```python
+response.tool_calls
+```
+
+```output
+[{'name': 'GetWeather',
+  'args': {'location': 'Paris'},
+  'id': 'call_abc123',
+  'type': 'tool_call'}]
+```
+
+### 使用 LangChain 工具
+
+您也可以使用标准的 LangChain 工具：
+
+```python
+from langchain.tools import tool
+
+@tool
+def get_weather(location: str) -> str:
+    """Get the weather for a location."""
+    return f"Weather in {location}: Sunny, 72°F"
+
+model_with_tools = model.bind_tools([get_weather])
+response = model_with_tools.invoke("What's the weather in San Francisco?")
+```
+
+### 严格工具绑定 (Strict tool binding)
+
+默认情况下，[`BaseChatModel.bind_tools`](https://reference.langchain.com/python/langchain_core/language_models/#langchain_core.language_models.chat_models.BaseChatModel.bind_tools) 会验证模型是否支持工具调用。要禁用此验证：
+
+```python
+model_with_tools = model.bind_tools([GetWeather], strict=False)
+```
+
+## 系统工具 (System tools)
+
+Amazon Nova 通过在模型初始化时传入它们来提供内置系统工具。有关可用的系统工具及其功能的详细信息，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+
+```python
+from langchain_amazon_nova import ChatAmazonNova
+
+model = ChatAmazonNova(
+    model="nova-2-lite-v1",
+    system_tools=["nova_grounding", "nova_code_interpreter"],
+)
+```
+
+<Info>
+    **系统工具**
+
+    像 `nova_grounding` 和 `nova_code_interpreter` 这样的系统工具提供了内置能力。有关可用系统工具及其用法的详细信息，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+</Info>
+
+## 模型档案 (Model Profile)
+
+Amazon Nova 提供具有不同能力的不同模型。它支持 LangChain 的 [模型档案](/oss/python/langchain/models#model-profiles)。
+
+<Info>
+    **模型能力因模型而异**
+
+    一些 Amazon Nova 模型支持视觉输入，而另一些则不支持。在使用多模态功能之前，请务必检查模型能力。
+
+    有关可用模型及其能力的完整列表，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+</Info>
+
+## 异步操作 (Async operations)
+
+对于需要高吞吐量的生产应用程序，请使用原生异步操作：
+
+```python
+import asyncio
+
+async def main():
+    messages = [
+        ("system", "You are a helpful assistant."),
+        ("human", "What is the capital of France?"),
+    ]
+    response = await model.ainvoke(messages)
+    print(response.content)
+
+asyncio.run(main())
+```
+
+```output
+The capital of France is Paris.
+```
+
+## 链式 (Chaining)
+
+Amazon Nova 模型与 LangChain 的 LCEL（LangChain 表达式语言）无缝协作，用于构建链：
+
+```python
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant that translates {input_language} to {output_language}."),
+    ("human", "{text}"),
+])
+
+chain = prompt | model | StrOutputParser()
+
+result = chain.invoke({
+    "input_language": "English",
+    "output_language": "Spanish",
+    "text": "Hello, how are you?"
+})
+print(result)
+```
+
+```output
+Hola, ¿cómo estás?
+```
+
+## 错误处理 (Error handling)
+
+该模型包含内置的重试逻辑，并具有可配置的参数：
+
+```python
+model = ChatAmazonNova(
+    model="nova-2-lite-v1",
+    max_retries=3,  # 失败时的重试次数
+    timeout=60.0,   # 请求超时时间（秒）
+)
+```
+
+要对重试进行额外控制，请使用 `with_retry` 方法：
+
+```python
+model_with_custom_retry = model.with_retry(
+    stop_after_attempt=5,
+    wait_exponential_jitter=True,
+)
+```
+
+## 故障排除 (Troubleshooting)
+
+### 连接问题
+
+如果您遇到连接错误，请验证您的环境变量是否正确设置：
+
+```python
+import os
+print(f"API Key set: {'NOVA_API_KEY' in os.environ}")
+print(f"Base URL: {os.environ.get('NOVA_BASE_URL', 'Not set')}")
+```
+
+有关身份验证和连接问题，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+
+### 压缩错误
+
+<Note>
+    [ChatAmazonNova](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) 客户端会自动禁用压缩，以避免潜在的解压缩问题。
+</Note>
+
+如果您需要自定义 HTTP 客户端行为，可以访问底层的 OpenAI 客户端：
+
+```python
+# 客户端已自动配置为无压缩
+model = ChatAmazonNova(model="nova-2-lite-v1")
+# model.client 是已配置的 OpenAI 客户端
+```
+
+### 工具调用验证错误
+
+如果在绑定工具时收到验证错误，请确保模型支持工具调用。
+
+---
+
+## API 参考
+
+有关 [`ChatAmazonNova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) 的所有特性和配置的详细文档，请前往 [`ChatAmazonNova`](https://reference.langchain.com/python/integrations/langchain_amazon_nova/#langchain_amazon_nova.ChatAmazonNova) API 参考。
+
+有关 Amazon Nova 特有的功能、模型详细信息和 API 规范，请参阅 [Amazon Nova 文档](https://nova.amazon.com/dev/documentation)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\amazon_nova.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

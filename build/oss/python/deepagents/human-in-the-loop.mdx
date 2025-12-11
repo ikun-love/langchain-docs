@@ -1,0 +1,322 @@
+---
+title: 人在回路（Human-in-the-loop）
+description: 学习如何为敏感的工具操作配置人工审批
+---
+
+某些工具操作可能很敏感，需要在执行前进行人工审批。Deep Agents 通过 LangGraph 的中断（interrupt）功能支持“人在回路”（Human-in-the-loop, HITL）工作流。您可以使用 `interrupt_on` 参数来配置哪些工具需要审批。
+
+```mermaid
+graph LR
+    Agent[智能体] --> Check{中断?}
+    Check --> |否| Execute[执行]
+    Check --> |是| Human{人工}
+
+    Human --> |批准| Execute
+    Human --> |编辑| Execute
+    Human --> |拒绝| Cancel[取消]
+
+    Execute --> Agent
+    Cancel --> Agent
+```
+
+## 基本配置
+
+`interrupt_on` 参数接收一个字典，将工具名称映射到其中断配置。每个工具的配置可以是：
+
+- **`True`**: 启用中断，使用默认行为（允许批准、编辑、拒绝）
+- **`False`**: 为该工具禁用中断
+- **`{"allowed_decisions": [...]}`**: 带有特定允许决策的自定义配置
+
+```python
+from langchain.tools import tool
+from deepagents import create_deep_agent
+from langgraph.checkpoint.memory import MemorySaver
+
+@tool
+def delete_file(path: str) -> str:
+    """从文件系统中删除一个文件。"""
+    return f"Deleted {path}"
+
+@tool
+def read_file(path: str) -> str:
+    """从文件系统中读取一个文件。"""
+    return f"Contents of {path}"
+
+@tool
+def send_email(to: str, subject: str, body: str) -> str:
+    """发送一封电子邮件。"""
+    return f"Sent email to {to}"
+
+# 人在回路功能 REQUIRED 使用 Checkpointer（检查点保存器）
+checkpointer = MemorySaver()
+
+agent = create_deep_agent(
+    model="claude-sonnet-4-5-20250929",
+    tools=[delete_file, read_file, send_email],
+    interrupt_on={
+        "delete_file": True,  # 默认：允许批准、编辑、拒绝
+        "read_file": False,   # 不需要中断
+        "send_email": {"allowed_decisions": ["approve", "reject"]},  # 不允许编辑
+    },
+    checkpointer=checkpointer  # 必需！
+)
+```
+
+
+
+
+## 决策类型
+
+`allowed_decisions` 列表控制人工在审查工具调用时可以采取的操作：
+
+- **`"approve"`**: 使用智能体提出的原始参数执行工具。
+- **`"edit"`**: 在执行前修改工具参数。
+- **`"reject"`**: 完全跳过执行此工具调用。
+
+您可以为每个工具自定义可用的决策：
+
+```python
+interrupt_on = {
+    # 敏感操作：允许所有选项
+    "delete_file": {"allowed_decisions": ["approve", "edit", "reject"]},
+
+    # 中等风险：仅允许批准或拒绝
+    "write_file": {"allowed_decisions": ["approve", "reject"]},
+
+    # 必须批准（不允许拒绝）
+    "critical_operation": {"allowed_decisions": ["approve"]},
+}
+```
+
+
+
+
+## 处理中断
+
+当触发中断时，智能体会暂停执行并返回控制权。请在结果中检查中断，并相应地进行处理。
+
+```python
+import uuid
+from langgraph.types import Command
+
+# 创建包含 thread_id 的配置，用于状态持久化
+config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
+# 调用智能体
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Delete the file temp.txt"}]
+}, config=config)
+
+# 检查执行是否被中断
+if result.get("__interrupt__"):
+    # 提取中断信息
+    interrupts = result["__interrupt__"][0].value
+    action_requests = interrupts["action_requests"]
+    review_configs = interrupts["review_configs"]
+
+    # 创建一个从工具名到审查配置的查找映射
+    config_map = {cfg["action_name"]: cfg for cfg in review_configs}
+
+    # 向用户显示待处理的操作
+    for action in action_requests:
+        review_config = config_map[action["name"]]
+        print(f"Tool: {action['name']}")
+        print(f"Arguments: {action['args']}")
+        print(f"Allowed decisions: {review_config['allowed_decisions']}")
+
+    # 获取用户决策（每个 action_request 一个，按顺序）
+    decisions = [
+        {"type": "approve"}  # 用户批准了删除操作
+    ]
+
+    # 使用决策恢复执行
+    result = agent.invoke(
+        Command(resume={"decisions": decisions}),
+        config=config  # 必须使用相同的配置！
+    )
+
+# 处理最终结果
+print(result["messages"][-1].content)
+```
+
+
+
+
+## 多个工具调用
+
+当智能体调用多个需要审批的工具时，所有中断会被合并到一个中断中。您必须按顺序为每一个中断提供决策。
+
+```python
+config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
+result = agent.invoke({
+    "messages": [{
+        "role": "user",
+        "content": "Delete temp.txt and send an email to admin@example.com"
+    }]
+}, config=config)
+
+if result.get("__interrupt__"):
+    interrupts = result["__interrupt__"][0].value
+    action_requests = interrupts["action_requests"]
+
+    # 需要两个工具的批准
+    assert len(action_requests) == 2
+
+    # 按照 action_requests 的顺序提供决策
+    decisions = [
+        {"type": "approve"},  # 第一个工具：delete_file
+        {"type": "reject"}    # 第二个工具：send_email
+    ]
+
+    result = agent.invoke(
+        Command(resume={"decisions": decisions}),
+        config=config
+    )
+```
+
+
+
+
+## 编辑工具参数
+
+当 `allowed_decisions` 列表中包含 `"edit"` 时，您可以在执行前修改工具参数：
+
+```python
+if result.get("__interrupt__"):
+    interrupts = result["__interrupt__"][0].value
+    action_request = interrupts["action_requests"][0]
+
+    # 智能体原始参数
+    print(action_request["args"])  # {"to": "everyone@company.com", ...}
+
+    # 用户决定编辑收件人
+    decisions = [{
+        "type": "edit",
+        "edited_action": {
+            "name": action_request["name"],  # 必须包含工具名称
+            "args": {"to": "team@company.com", "subject": "...", "body": "..."}
+        }
+    }]
+
+    result = agent.invoke(
+        Command(resume={"decisions": decisions}),
+        config=config
+    )
+```
+
+
+
+
+## 子智能体中断
+
+每个子智能体都可以有自己的 `interrupt_on` 配置，它会覆盖主智能体的设置：
+
+```python
+agent = create_deep_agent(
+    tools=[delete_file, read_file],
+    interrupt_on={
+        "delete_file": True,
+        "read_file": False,
+    },
+    subagents=[{
+        "name": "file-manager",
+        "description": "文件管理助手",
+        "system_prompt": "You are a file management assistant.",
+        "tools": [delete_file, read_file],
+        "interrupt_on": {
+            # 覆盖：要求此子智能体对读取操作进行审批
+            "delete_file": True,
+            "read_file": True,  # 与主智能体不同！
+        }
+    }],
+    checkpointer=checkpointer
+)
+```
+
+
+
+
+当中断由子智能体触发时，处理方式是相同的——检查 `__interrupt__` 并使用 `Command` 恢复执行。
+
+## 最佳实践
+
+### 始终使用 Checkpointer
+
+人在回路功能需要一个 Checkpointer 来在中断和恢复之间持久化智能体的状态：
+
+```python
+from langgraph.checkpoint.memory import MemorySaver
+
+checkpointer = MemorySaver()
+agent = create_deep_agent(
+    tools=[...],
+    interrupt_on={...},
+    checkpointer=checkpointer  # HITL 必需！
+)
+```
+
+
+### 恢复时使用相同的 Thread ID
+
+恢复时，您必须使用具有相同 `thread_id` 的相同配置：
+
+```python
+# 第一次调用
+config = {"configurable": {"thread_id": "my-thread"}}
+result = agent.invoke(input, config=config)
+
+# 恢复（使用相同的配置）
+result = agent.invoke(Command(resume={...}), config=config)
+```
+
+
+### 决策顺序与操作顺序匹配
+
+`decisions` 列表的顺序必须与 `action_requests` 的顺序匹配：
+
+```python
+if result.get("__interrupt__"):
+    interrupts = result["__interrupt__"][0].value
+    action_requests = interrupts["action_requests"]
+
+    # 为每个操作创建一个决策，按顺序
+    decisions = []
+    for action in action_requests:
+        decision = get_user_decision(action)  # 您的逻辑
+        decisions.append(decision)
+
+    result = agent.invoke(
+        Command(resume={"decisions": decisions}),
+        config=config
+    )
+```
+
+
+### 根据风险定制配置
+
+根据风险级别配置不同的工具：
+
+```python
+interrupt_on = {
+    # 高风险：完全控制（批准、编辑、拒绝）
+    "delete_file": {"allowed_decisions": ["approve", "edit", "reject"]},
+    "send_email": {"allowed_decisions": ["approve", "edit", "reject"]},
+
+    # 中等风险：不允许编辑
+    "write_file": {"allowed_decisions": ["approve", "reject"]},
+
+    # 低风险：无中断
+    "read_file": False,
+    "list_files": False,
+}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\deepagents\human-in-the-loop.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

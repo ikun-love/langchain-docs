@@ -1,0 +1,784 @@
+---
+title: 查询追踪记录（SDK）
+sidebarTitle: 查询追踪记录（SDK）
+---
+
+<Tip>
+**推荐阅读**
+
+在深入了解本内容之前，您可能希望先阅读以下内容：
+
+- [运行（Span）数据格式](/langsmith/run-data-format)
+- <RegionalUrl type="api" suffix="/redoc" text="LangSmith API 参考" />
+- [LangSmith 追踪记录查询语法](/langsmith/trace-query-syntax)
+
+</Tip>
+
+<Note>
+**如果您要导出的追踪记录数量庞大，我们建议您使用 [批量数据导出](./data-export) 功能，因为它能更好地处理大量数据，并支持跨分区的自动重试和并行化。**
+</Note>
+
+查询运行（即 LangSmith 追踪记录中的 Span 数据）的推荐方法是使用 SDK 中的 `list_runs` 方法或 API 中的 `/runs/query` 端点。
+
+LangSmith 以一种简单格式存储追踪记录，该格式在 [运行（Span）数据格式](/langsmith/run-data-format) 中指定。
+
+## 使用过滤器参数
+
+对于简单的查询，您不必依赖我们的查询语法。您可以使用 [过滤器参数参考](/langsmith/trace-query-syntax#filter-arguments) 中指定的过滤器参数。
+
+<Warning>
+**先决条件**
+
+在运行以下代码片段之前，请先初始化客户端。
+</Warning>
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+
+client = Client()
+```
+
+```typescript TypeScript
+import { Client, Run } from "langsmith";
+
+const client = new Client();
+```
+
+</CodeGroup>
+
+以下是使用关键字参数列出运行的一些示例：
+
+### 列出项目中的所有运行
+
+<CodeGroup>
+
+```python Python
+project_runs = client.list_runs(project_name="<your_project>")
+```
+
+```typescript TypeScript
+// 下载项目中的运行记录
+const projectRuns: Run[] = [];
+for await (const run of client.listRuns({
+  projectName: "<your_project>",
+})) {
+  projectRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+### 列出过去 24 小时内的 LLM 和聊天运行记录
+
+<CodeGroup>
+
+```python Python
+todays_llm_runs = client.list_runs(
+    project_name="<your_project>",
+    start_time=datetime.now() - timedelta(days=1),
+    run_type="llm",
+)
+```
+
+```typescript TypeScript
+const todaysLlmRuns: Run[] = [];
+for await (const run of client.listRuns({
+  projectName: "<your_project>",
+  startTime: new Date(Date.now() - 1000 * 60 * 60 * 24),
+  runType: "llm",
+})) {
+  todaysLlmRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+### 列出项目中的根运行记录
+
+根运行（Root runs）是指没有父级的运行记录。这些运行的 `is_root` 属性被赋值为 `True`。您可以使用此属性来过滤根运行记录。
+
+<CodeGroup>
+
+```python Python
+root_runs = client.list_runs(
+    project_name="<your_project>",
+    is_root=True
+)
+```
+
+```typescript TypeScript
+const rootRuns: Run[] = [];
+for await (const run of client.listRuns({
+  projectName: "<your_project>",
+  isRoot: 1,
+})) {
+  rootRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+### 列出没有错误的运行记录
+
+<CodeGroup>
+
+```python Python
+correct_runs = client.list_runs(project_name="<your_project>", error=False)
+```
+
+```typescript TypeScript
+const correctRuns: Run[] = [];
+for await (const run of client.listRuns({
+  projectName: "<your_project>",
+  error: false,
+})) {
+  correctRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+### 按运行 ID 列出运行记录
+
+<Warning>
+**忽略其他参数**
+
+如果您以上述方式提供运行 ID 列表，它将忽略所有其他过滤参数（如 `project_name`, `run_type` 等），直接返回匹配给定 ID 的运行记录。
+</Warning>
+
+如果您有一系列运行 ID，您可以直接列出它们：
+
+<CodeGroup>
+
+```python Python
+run_ids = ['a36092d2-4ad5-4fb4-9c0d-0dba9a2ed836','9398e6be-964f-4aa4-8ae9-ad78cd4b7074']
+selected_runs = client.list_runs(id=run_ids)
+```
+
+```typescript TypeScript
+const runIds = [
+  "a36092d2-4ad5-4fb4-9c0d-0dba9a2ed836",
+  "9398e6be-964f-4aa4-8ae9-ad78cd4b7074",
+];
+const selectedRuns: Run[] = [];
+for await (const run of client.listRuns({
+  id: runIds,
+})) {
+  selectedRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+## 使用过滤器查询语言
+
+对于更复杂的查询，您可以使用 [过滤器查询语言参考](/langsmith/trace-query-syntax#filter-query-language) 中描述的查询语言。
+
+### 列出对话线程中的所有根运行记录
+
+这是获取对话线程中运行记录的方法。有关设置线程的更多信息，请参阅我们的 [设置线程的操作指南](./threads)。线程通过设置共享的线程 ID 来分组。LangSmith UI 允许您使用以下三个元数据键中的任何一个：`session_id`、`conversation_id` 或 `thread_id`。会话 ID 也称为追踪项目 ID。以下查询会匹配所有这些 ID。
+
+<CodeGroup>
+
+```python Python
+group_key = "<your_thread_id>"
+filter_string = f'and(in(metadata_key, ["session_id","conversation_id","thread_id"]), eq(metadata_value, "{group_key}"))'
+thread_runs = client.list_runs(
+    project_name="<your_project>",
+    filter=filter_string,
+    is_root=True
+)
+```
+
+```typescript TypeScript
+const groupKey = "<your_thread_id>";
+const filterString = `and(in(metadata_key, ["session_id","conversation_id","thread_id"]), eq(metadata_value, "${groupKey}"))`;
+const threadRuns: Run[] = [];
+for await (const run of client.listRuns({
+  projectName: "<your_project>",
+  filter: filterString,
+  isRoot: true
+})) {
+  threadRuns.push(run);
+};
+```
+
+</CodeGroup>
+
+### 列出所有调用名为 "extractor" 且其追踪记录的根运行被分配了 "user_score" 评分为 1 的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+    project_name="<your_project>",
+    filter='eq(name, "extractor")',
+    trace_filter='and(eq(feedback_key, "user_score"), eq(feedback_score, 1))'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'eq(name, "extractor")',
+  traceFilter: 'and(eq(feedback_key, "user_score"), eq(feedback_score, 1))'
+})
+```
+
+</CodeGroup>
+
+### 列出具有 "star_rating" 键且分数为大于 4 的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+    project_name="<your_project>",
+    filter='and(eq(feedback_key, "star_rating"), gt(feedback_score, 4))'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'and(eq(feedback_key, "star_rating"), gt(feedback_score, 4))'
+})
+```
+
+</CodeGroup>
+
+### 列出完成耗时超过 5 秒的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(project_name="<your_project>", filter='gt(latency, "5s")')
+```
+
+```typescript TypeScript
+client.listRuns({projectName: "<your_project>", filter: 'gt(latency, "5s")'})
+```
+</CodeGroup>
+
+### 列出所有 "error" 不等于 null 的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(project_name="<your_project>", filter='neq(error, null)')
+```
+
+```typescript TypeScript
+client.listRuns({projectName: "<your_project>", filter: 'neq(error, null)'})
+```
+
+</CodeGroup>
+
+### 列出所有 start_time 大于特定时间戳的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(project_name="<your_project>", filter='gt(start_time, "2023-07-15T12:34:56Z")')
+```
+
+```typescript TypeScript
+client.listRuns({projectName: "<your_project>", filter: 'gt(start_time, "2023-07-15T12:34:56Z")'})
+```
+
+</CodeGroup>
+
+### 列出包含字符串 "substring" 的所有运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(project_name="<your_project>", filter='search("substring")')
+```
+
+```typescript TypeScript
+client.listRuns({projectName: "<your_project>", filter: 'search("substring")'})
+```
+
+</CodeGroup>
+
+### 列出所有带有 git hash "2aa1cf4" 标签的所有运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(project_name="<your_project>", filter='has(tags, "2aa1cf4")')
+```
+
+```typescript TypeScript
+client.listRuns({projectName: "<your_project>", filter: 'has(tags, "2aa1cf4")'})
+```
+
+</CodeGroup>
+
+### 列出所有开始时间晚于特定时间戳，并且 "error" 不为 null 或具有 "Correctness" 评分为 0 的反馈的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="<your_project>",
+  filter='and(gt(start_time, "2023-07-15T12:34:56Z"), or(neq(error, null), and(eq(feedback_key, "Correctness"), eq(feedback_score, 0.0))))'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'and(gt(start_time, "2023-07-15T12:34:56Z"), or(neq(error, null), and(eq(feedback_key, "Correctness"), eq(feedback_score, 0.0))))'
+})
+```
+
+</CodeGroup>
+
+### 复杂查询：列出所有标签包含 "experimental" 或 "beta"，且延迟大于 2 秒的运行记录
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="<your_project>",
+  filter='and(or(has(tags, "experimental"), has(tags, "beta")), gt(latency, 2))'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'and(or(has(tags, "experimental"), has(tags, "beta")), gt(latency, 2))'
+})
+```
+
+</CodeGroup>
+
+### 按全文搜索追踪树
+
+您可以在不指定特定字段的情况下使用 `search()` 函数，对运行记录中所有字符串字段进行全文搜索。这使您可以快速找到与搜索词匹配的追踪记录。
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="<your_project>",
+  filter='search("image classification")'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'search("image classification")'
+})
+```
+
+</CodeGroup>
+
+### 检查元数据是否存在
+
+如果您想检查元数据是否存在，可以使用 `eq` 运算符，并根据需要使用 `and` 语句来匹配值。这在您希望记录有关运行记录的更结构化信息时非常有用。
+
+<CodeGroup>
+
+```python Python
+to_search = {
+    "user_id": ""
+}
+
+# 检查是否存在任何带有 "user_id" 元数据键的运行记录
+client.list_runs(
+  project_name="default",
+  filter="eq(metadata_key, 'user_id')"
+)
+# 检查是否存在 user_id=4070f233-f61e-44eb-bff1-da3c163895a3 的运行记录
+client.list_runs(
+  project_name="default",
+  filter="and(eq(metadata_key, 'user_id'), eq(metadata_value, '4070f233-f61e-44eb-bff1-da3c163895a3'))"
+)
+```
+
+```typescript TypeScript
+// 检查是否存在任何带有 "user_id" 元数据键的运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `eq(metadata_key, 'user_id')`
+});
+// 检查是否存在 user_id=4070f233-f61e-44eb-bff1-da3c163895a3 的运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `and(eq(metadata_key, 'user_id'), eq(metadata_value, '4070f233-f61e-44eb-bff1-da3c163895a3'))`
+});
+```
+
+</CodeGroup>
+
+### 检查元数据中的环境详情
+
+一种常见的模式是通过元数据向追踪记录添加环境信息。如果您想过滤包含环境元数据的运行记录，可以使用与上面相同的模式：
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="default",
+  filter="and(eq(metadata_key, 'environment'), eq(metadata_value, 'production'))"
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: 'default',
+  filter: `and(eq(metadata_key, 'environment'), eq(metadata_value, 'production'))`
+});
+```
+
+</CodeGroup>
+
+### 检查元数据中的对话 ID
+
+另一种将运行记录关联到同一对话的常见方法是使用共享的对话 ID。如果您想以此方式根据对话 ID 过滤运行记录，可以搜索元数据中的该 ID。
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="default",
+  filter="and(eq(metadata_key, 'conversation_id'), eq(metadata_value, 'a1b2c3d4-e5f6-7890'))"
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: 'default',
+  filter: `and(eq(metadata_key, 'conversation_id'), eq(metadata_value, 'a1b2c3d4-e5f6-7890'))`
+});
+```
+
+</CodeGroup>
+
+### 对键值对进行否定过滤
+
+您可以在元数据、输入和输出的键值对上使用否定过滤，以从结果中排除特定运行记录。以下是有关元数据键值对的一些示例，但相同的逻辑也适用于输入和输出的键值对。
+
+<CodeGroup>
+
+```python Python
+# 查找元数据中不包含 "conversation_id" 键的所有运行记录
+client.list_runs(
+  project_name="default",
+  filter="and(neq(metadata_key, 'conversation_id'))"
+)
+
+# 查找元数据中 conversation_id 不等于 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.list_runs(
+  project_name="default",
+  filter="and(eq(metadata_key, 'conversation_id'), neq(metadata_value, 'a1b2c3d4-e5f6-7890'))"
+)
+
+# 查找元数据中既没有 "conversation_id" 键，数据值中也不存在 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.list_runs(
+  project_name="default",
+  filter="and(neq(metadata_key, 'conversation_id'), neq(metadata_value, 'a1b2c3d4-e5f6-7890'))"
+)
+
+# 查找元数据中不存在 "conversation_id" 键，但数据值中存在 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.list_runs(
+  project_name="default",
+  filter="and(neq(metadata_key, 'conversation_id'), eq(metadata_value, 'a1b2c3d4-e5f6-7890'))"
+)
+```
+
+```typescript TypeScript
+// 查找元数据中不包含 "conversation_id" 键的所有运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `and(neq(metadata_key, 'conversation_id'))`
+});
+
+// 查找元数据中 conversation_id 不等于 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `and(eq(metadata_key, 'conversation_id'), neq(metadata_value, 'a1b2c3d4-e5f6-7890'))`
+});
+
+// 查找元数据中既没有 "conversation_id" 键，数据值中也不存在 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `and(neq(metadata_key, 'conversation_id'), neq(metadata_value, 'a1b2c3d4-e5f6-7890'))`
+});
+
+// 查找元数据中不存在 "conversation_id" 键，但数据值中存在 "a1b2c3d4-e5f6-7890" 的所有运行记录
+client.listRuns({
+  projectName: 'default',
+  filter: `and(neq(metadata_key, 'conversation_id'), eq(metadata_value, 'a1b2c3d4-e5f6-7890'))`
+});
+```
+
+</CodeGroup>
+
+### 合并多个过滤器
+
+如果您想结合多个条件来精细化搜索，可以使用 `and` 运算符以及其他过滤函数。以下是如何搜索名称为 "ChatOpenAI" 且元数据中具有特定 `conversation_id` 的运行记录：
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+  project_name="default",
+  filter="and(eq(name, 'ChatOpenAI'), eq(metadata_key, 'conversation_id'), eq(metadata_value, '69b12c91-b1e2-46ce-91de-794c077e8151'))"
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: 'default',
+  filter: `and(eq(name, 'ChatOpenAI'), eq(metadata_key, 'conversation_id'), eq(metadata_value, '69b12c91-b1e2-46ce-91de-794c077e8151'))`
+});
+```
+
+</CodeGroup>
+
+### 树过滤器（Tree Filter）
+
+列出所有名称为 "RetrieveDocs" 的运行记录，其根运行具有 "user_score" 反馈评分为 1，并且追踪中的任何运行名称为 "ExpandQuery"。
+
+这种查询在您希望根据追踪中是否达到各种状态或步骤来提取特定运行记录时非常有用。
+
+<CodeGroup>
+
+```python Python
+client.list_runs(
+    project_name="<your_project>",
+    filter='eq(name, "RetrieveDocs")',
+    trace_filter='and(eq(feedback_key, "user_score"), eq(feedback_score, 1))',
+    tree_filter='eq(name, "ExpandQuery")'
+)
+```
+
+```typescript TypeScript
+client.listRuns({
+  projectName: "<your_project>",
+  filter: 'eq(name, "RetrieveDocs")',
+  traceFilter: 'and(eq(feedback_key, "user_score"), eq(feedback_score, 1))',
+  treeFilter: 'eq(name, "ExpandQuery")'
+})
+```
+
+</CodeGroup>
+
+### 高级：导出包含子项工具用法的扁平化追踪视图
+
+以下 Python 示例演示了如何导出追踪记录的扁平化视图，其中包含代理（agent）在每个追踪记录中使用的工具（来自嵌套运行）的信息。
+这可用于分析代理在多个追踪记录中的行为。
+
+该示例查询指定天数内的所有工具运行记录，并按其父（根）运行 ID 分组。然后，它获取每个根运行的相关信息，例如运行名称、输入、输出，并将这些信息与子运行信息合并。
+
+为了优化查询，该示例：
+
+1. 在查询工具运行时仅选择必要的字段。
+2. 在处理工具运行的同时，分批获取根运行记录。
+
+<CodeGroup>
+
+```python Python
+from collections import defaultdict
+from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import datetime, timedelta
+
+from langsmith import Client
+from tqdm.auto import tqdm
+
+client = Client()
+project_name = "my-project"
+num_days = 30
+
+# 列出所有工具运行记录
+tool_runs = client.list_runs(
+    project_name=project_name,
+    start_time=datetime.now() - timedelta(days=num_days),
+    run_type="tool",
+    # 我们不需要获取输入、输出和其他可能增加查询时间的值
+    select=["trace_id", "name", "run_type"],
+)
+
+data = []
+futures: list[Future] = []
+trace_cursor = 0
+trace_batch_size = 50
+
+tool_runs_by_parent = defaultdict(lambda: defaultdict(set))
+# 不要超过速率限制
+with ThreadPoolExecutor(max_workers=2) as executor:
+    # 按父运行 ID 分组工具运行记录
+    for run in tqdm(tool_runs):
+        # 收集给定追踪中调用的所有工具
+        tool_runs_by_parent[run.trace_id]["tools_involved"].add(run.name)
+        # 也许向服务器发送一批父运行 ID
+        # 这允许我们在处理工具运行记录的同时分批查询根运行记录
+        if len(tool_runs_by_parent) % trace_batch_size == 0:
+            if this_batch := list(tool_runs_by_parent.keys())[
+                trace_cursor : trace_cursor + trace_batch_size
+            ]:
+                trace_cursor += trace_batch_size
+                futures.append(
+                    executor.submit(
+                        client.list_runs,
+                        project_name=project_name,
+                        run_ids=this_batch,
+                        select=["name", "inputs", "outputs", "run_type"],
+                    )
+                )
+    if this_batch := list(tool_runs_by_parent.keys())[trace_cursor:]:
+        futures.append(
+            executor.submit(
+                client.list_runs,
+                project_name=project_name,
+                run_ids=this_batch,
+                select=["name", "inputs", "outputs", "run_type"],
+            )
+        )
+
+for future in tqdm(futures):
+    root_runs = future.result()
+    for root_run in root_runs:
+        root_data = tool_runs_by_parent[root_run.id]
+        data.append(
+            {
+                "run_id": root_run.id,
+                "run_name": root_run.name,
+                "run_type": root_run.run_type,
+                "inputs": root_run.inputs,
+                "outputs": root_run.outputs,
+                "tools_involved": list(root_data["tools_involved"]),
+            }
+        )
+
+# (可选): 转换为 pandas DataFrame
+import pandas as pd
+
+df = pd.DataFrame(data)
+df.head()
+```
+
+</CodeGroup>
+
+### 高级：导出带有反馈的追踪记录的检索器 IO
+
+如果您想根据检索器的行为来微调嵌入或诊断端到端系统性能问题，此查询非常有用。
+以下 Python 示例演示了如何导出具有特定反馈分数的追踪记录中的检索器输入和输出。
+
+<CodeGroup>
+
+```python Python
+from collections import defaultdict
+from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import datetime, timedelta
+
+import pandas as pd
+from langsmith import Client
+from tqdm.auto import tqdm
+
+client = Client()
+project_name = "your-project-name"
+num_days = 1
+
+# 列出所有工具运行记录
+retriever_runs = client.list_runs(
+    project_name=project_name,
+    start_time=datetime.now() - timedelta(days=num_days),
+    run_type="retriever",
+    # 这次我们确实想获取输入和输出，因为它们可能被查询扩展步骤调整。
+    select=["trace_id", "name", "run_type", "inputs", "outputs"],
+    trace_filter='eq(feedback_key, "user_score")',
+)
+
+data = []
+futures: list[Future] = []
+trace_cursor = 0
+trace_batch_size = 50
+
+retriever_runs_by_parent = defaultdict(lambda: defaultdict(list))
+# 不要超过速率限制
+with ThreadPoolExecutor(max_workers=2) as executor:
+    # 按父运行 ID 分组检索器运行记录
+    for run in tqdm(retriever_runs):
+        # 收集给定追踪中调用的所有检索器调用
+        for k, v in run.inputs.items():
+            retriever_runs_by_parent[run.trace_id][f"retriever.inputs.{k}"].append(v)
+        for k, v in (run.outputs or {}).items():
+            # 扩展文档
+            retriever_runs_by_parent[run.trace_id][f"retriever.outputs.{k}"].extend(v)
+        # 也许向服务器发送一批父运行 ID
+        # 这允许我们在处理检索器运行记录的同时分批查询根运行记录
+        if len(retriever_runs_by_parent) % trace_batch_size == 0:
+            if this_batch := list(retriever_runs_by_parent.keys())[
+                trace_cursor : trace_cursor + trace_batch_size
+            ]:
+                trace_cursor += trace_batch_size
+                futures.append(
+                    executor.submit(
+                        client.list_runs,
+                        project_name=project_name,
+                        run_ids=this_batch,
+                        select=[
+                            "name",
+                            "inputs",
+                            "outputs",
+                            "run_type",
+                            "feedback_stats",
+                        ],
+                    )
+                )
+    if this_batch := list(retriever_runs_by_parent.keys())[trace_cursor:]:
+        futures.append(
+            executor.submit(
+                client.list_runs,
+                project_name=project_name,
+                run_ids=this_batch,
+                select=["name", "inputs", "outputs", "run_type"],
+            )
+        )
+
+for future in tqdm(futures):
+    root_runs = future.result()
+    for root_run in root_runs:
+        root_data = retriever_runs_by_parent[root_run.id]
+        feedback = {
+            f"feedback.{k}": v.get("avg")
+            for k, v in (root_run.feedback_stats or {}).items()
+        }
+        inputs = {f"inputs.{k}": v for k, v in root_run.inputs.items()}
+        outputs = {f"outputs.{k}": v for k, v in (root_run.outputs or {}).items()}
+        data.append(
+            {
+                "run_id": root_run.id,
+                "run_name": root_run.name,
+                **inputs,
+                **outputs,
+                **feedback,
+                **root_data,
+            }
+        )
+
+# (可选): 转换为 pandas DataFrame
+import pandas as pd
+df = pd.DataFrame(data)
+df.head()
+```
+
+</CodeGroup>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\export-traces.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

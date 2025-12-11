@@ -1,0 +1,42 @@
+---
+title: Roam
+---
+
+>[ROAM](https://roamresearch.com/) 是一款专为构建个人知识库（Personal Knowledge Base）而设计的、用于网络化思维（Networked Thought）的笔记工具。
+
+本指南涵盖了如何从 Roam 数据库加载文档。其灵感大量来源于[此处](https://github.com/JimmyLv/roam-qa)的示例仓库。
+
+## 🧑 摄取（Ingest）您自己数据集的说明
+
+请从 Roam Research 导出您的数据集。您可以通过点击右上角三个点（...），然后点击 `Export` 来完成此操作。
+
+导出时，请务必选择 `Markdown & CSV` 格式选项。
+
+这将会在您的“下载”文件夹中生成一个 `.zip` 文件。请将该 `.zip` 文件移动到本仓库（Repository）中。
+
+运行以下命令解压 zip 文件（如果需要，请将 `Export...` 替换为您自己的文件名）。
+
+```shell
+unzip Roam-Export-1675782732639.zip -d Roam_DB
+```
+
+```python
+from langchain_community.document_loaders import RoamLoader
+```
+
+```python
+loader = RoamLoader("Roam_DB")
+```
+
+```python
+docs = loader.load()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\roam.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

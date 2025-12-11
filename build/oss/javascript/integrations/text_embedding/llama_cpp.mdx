@@ -1,0 +1,94 @@
+```yaml
+title: Llama CPP
+```
+
+<Tip>
+**兼容性**
+
+仅在 Node.js 上可用。
+</Tip>
+
+此模块基于 [llama.cpp](https://github.com/ggerganov/llama.cpp) 的 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js 绑定，允许您使用本地运行的大语言模型（LLM）。这使得您可以在笔记本电脑环境等资源受限的环境中运行一个更小的量化模型，非常适合在不产生高额费用的情况下进行测试和快速构思！
+
+## 设置
+
+您需要安装 `node-llama-cpp` 模块的**major version 3** 版本才能与您的本地模型通信。
+
+```bash npm
+npm install -S node-llama-cpp@3
+```
+<Tip>
+有关安装 LangChain 软件包的通用说明，请参阅[本节](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/community @langchain/core
+```
+
+您还需要一个本地的 Llama 3 模型（或 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) 支持的模型）。您需要将此模型的路径作为参数的一部分传递给 `LlamaCpp` 模块（参见示例）。
+
+开箱即用时，`node-llama-cpp` 针对在 MacOS 平台上运行进行了调整，支持 Apple M 系列处理器的 Metal GPU。如果您需要禁用此功能或需要支持 CUDA 架构，请参阅 [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/) 上的文档。
+
+有关获取和准备 `llama3` 的建议，请参阅此模块 LLM 版本的文档。
+
+致 LangChain.js 贡献者：如果您想运行与此模块相关的测试，则需要在环境变量 `LLAMA_PATH` 中指定本地模型的路径。
+
+## 用法
+
+### 基本用法
+
+我们需要提供本地 Llama3 模型的路径，并且在此模块中，`embeddings` 属性始终设置为 `true`。
+
+```typescript
+import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const embeddings = await LlamaCppEmbeddings.initialize({
+  modelPath: llamaPath,
+});
+
+const res = embeddings.embedQuery("Hello Llama!");
+
+console.log(res);
+
+/*
+	[ 15043, 365, 29880, 3304, 29991 ]
+*/
+```
+
+### 文档嵌入
+
+```typescript
+import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const documents = ["Hello World!", "Bye Bye!"];
+
+const embeddings = await LlamaCppEmbeddings.initialize({
+  modelPath: llamaPath,
+});
+
+const res = await embeddings.embedDocuments(documents);
+
+console.log(res);
+
+/*
+	[ [ 15043, 2787, 29991 ], [ 2648, 29872, 2648, 29872, 29991 ] ]
+*/
+```
+
+## 相关
+
+- 嵌入模型[概念指南](/oss/javascript/integrations/text_embedding)
+- 嵌入模型[操作指南](/oss/javascript/integrations/text_embedding)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\text_embedding\llama_cpp.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,90 @@
+---
+title: WebLLM
+---
+
+<Tip>
+**兼容性**
+
+仅在 Web 环境中可用。
+</Tip>
+
+您可以使用 LangChain 的 [WebLLM](https://webllm.mlc.ai) 集成，直接在您的 Web 浏览器中运行 LLM（大型语言模型）。
+
+## 设置 (Setup)
+
+您需要安装 [WebLLM SDK](https://www.npmjs.com/package/@mlc-ai/web-llm) 模块，以便与本地模型进行通信。
+
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install -S @mlc-ai/web-llm @langchain/community @langchain/core
+```
+
+## 用法 (Usage)
+
+请注意，首次调用模型时，WebLLM 将下载该模型的完整权重。这可能高达数 GB，具体取决于最终用户的网络连接和计算机规格，因此并非所有用户都能成功运行。
+尽管浏览器会缓存对该模型的未来调用，但我们建议您使用**尽可能小的模型**。
+
+我们还建议在调用和加载模型时使用[单独的 Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)，以避免阻塞执行。
+
+```typescript
+// 必须在 Web 环境中运行，例如 Web Worker
+
+import { ChatWebLLM } from "@langchain/community/chat_models/webllm";
+import { HumanMessage } from "@langchain/core/messages";
+
+// 使用模型记录和聊天选项初始化 ChatWebLLM 模型。
+// 请注意，如果设置了 appConfig 字段，模型记录列表
+// 必须包含所选模型记录以供引擎使用。
+
+// 您可以从这里导入默认可用的模型列表：
+// https://github.com/mlc-ai/web-llm/blob/main/src/config.ts
+//
+// 或者通过以下方式导入：
+// import { prebuiltAppConfig } from "@mlc-ai/web-llm";
+const model = new ChatWebLLM({
+  model: "Phi-3-mini-4k-instruct-q4f16_1-MLC",
+  chatOptions: {
+    temperature: 0.5,
+  },
+});
+
+await model.initialize((progress: Record<string, unknown>) => {
+  console.log(progress);
+});
+
+// 调用模型并传入消息，然后等待响应。
+const response = await model.invoke([
+  new HumanMessage({ content: "What is 1 + 1?" }),
+]);
+
+console.log(response);
+
+/*
+AIMessage {
+  content: ' 2\n',
+}
+*/
+```
+
+流式传输 (Streaming) 也受支持。
+
+## 示例 (Example)
+
+有关完整的端到端示例，请查看[此项目](https://github.com/jacoblee93/fully-local-pdf-chatbot)。
+
+## 相关资源 (Related)
+
+- Chat 模型[概念指南](/oss/javascript/langchain/models)
+- Chat 模型[操作指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\chat\web_llm.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

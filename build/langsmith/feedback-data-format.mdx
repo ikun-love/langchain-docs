@@ -1,0 +1,54 @@
+---
+title: 反馈数据格式
+sidebarTitle: 反馈数据格式
+---
+
+import FeedbackDataFields from '/snippets/langsmith/feedback-data-fields.mdx';
+
+<Check>
+在深入了解此内容之前，建议您先阅读以下内容：
+
+* [关于追踪（Tracing）和反馈（Feedback）的概念指南](/langsmith/observability-concepts)
+</Check>
+
+**反馈 (Feedback)** 是 LangSmith 存储针对特定追踪 (trace) 或中间步骤 (span) 的评估标准和得分的一种方式。反馈可以通过多种方式生成，例如：
+
+1. 从 LLM 应用中随追踪一起上传 [在此处](/langsmith/attach-user-feedback)。
+2. 用户在应用中 [内联式地](/langsmith/annotate-traces-inline) 或在 [标注队列 (annotation queue)](/langsmith/annotation-queues) 中生成。
+3. 由自动评估器在 [离线评估 (offline evaluation)](/langsmith/evaluate-llm-application) 期间生成。
+4. 由 [在线评估器 (online evaluator)](/langsmith/online-evaluations) 生成。
+
+反馈以包含以下字段的简单格式存储：
+
+<FeedbackDataFields/>
+
+以下是上面格式中反馈记录的 JSON 表示示例：
+
+```json
+{
+  "created_at": "2024-05-05T23:23:11.077838",
+  "modified_at": "2024-05-05T23:23:11.232962",
+  "session_id": "c919298b-0af2-4517-97a2-0f98ed4a48f8",
+  "run_id": "e26174e5-2190-4566-b970-7c3d9a621baa",
+  "key": "correctness",
+  "score": 1.0,
+  "value": null,
+  "comment": "I gave this score because the answer was correct.",
+  "correction": null,
+  "id": "62104630-c7f5-41dc-8ee2-0acee5c14224",
+  "feedback_source": {
+    "type": "app",
+    "metadata": null,
+    "user_id": "ad52b092-1346-42f4-a934-6e5521562fab"
+  }
+}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\feedback-data-format.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

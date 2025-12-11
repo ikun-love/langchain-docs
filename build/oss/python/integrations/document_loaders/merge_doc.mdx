@@ -1,0 +1,49 @@
+---
+title: 合并文档加载器
+---
+
+将一组指定的文档加载器返回的文档合并起来。
+
+```python
+from langchain_community.document_loaders import WebBaseLoader
+
+loader_web = WebBaseLoader(
+    "https://github.com/basecamp/handbook/blob/master/37signals-is-you.md"
+)
+```
+
+```python
+from langchain_community.document_loaders import PyPDFLoader
+
+loader_pdf = PyPDFLoader("../MachineLearning-Lecture01.pdf")
+```
+
+```python
+from langchain_community.document_loaders.merge import MergedDataLoader
+
+# 创建 MergedDataLoader 实例，传入之前定义的加载器列表
+loader_all = MergedDataLoader(loaders=[loader_web, loader_pdf])
+```
+
+```python
+# 调用 load() 方法加载并合并所有文档
+docs_all = loader_all.load()
+```
+
+```python
+# 查看合并后的文档总数
+len(docs_all)
+```
+
+```output
+23
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\merge_doc.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

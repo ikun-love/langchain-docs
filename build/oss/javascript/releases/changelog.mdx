@@ -1,0 +1,39 @@
+---
+title: 更新日志
+sidebarTitle: 更新日志
+description: 我们 JavaScript/TypeScript 包的更新和改进日志
+rss: true
+---
+
+<Update label="2025年11月25日" tags={["langchain"]}>
+    ## v1.1.0
+
+    * [模型配置项 (Model profiles)](/oss/javascript/langchain/models#model-profiles)：聊天模型现在通过 `.profile` getter 暴露其支持的功能和能力。这些数据来源于 [models.dev](https://models.dev)，这是一个提供模型能力数据的开源项目。
+    * [模型重试中间件 (Model retry middleware)](/oss/javascript/langchain/middleware/built-in#model-retry)：新的中间件，用于自动重试失败的模型调用，并带有可配置的指数退避（exponential backoff）机制，从而提高了智能体的可靠性。
+    * [内容审核中间件 (Content moderation middleware)](/oss/javascript/langchain/middleware/built-in#content-moderation)：OpenAI 内容审核中间件，用于在智能体交互中检测和处理不安全的内容。支持检查用户输入、模型输出和工具结果。
+    * [摘要中间件 (Summarization middleware)](/oss/javascript/langchain/middleware/built-in#summarization)：已更新，支持使用模型配置项触发点，实现上下文感知的摘要生成。
+    * [结构化输出 (Structured output)](/oss/javascript/langchain/structured-output)：`ProviderStrategy` 支持（即原生结构化输出）现在可以从模型配置项中自动推断出来。
+    * [`createAgent` 的 SystemMessage](/oss/javascript/langchain/middleware/custom#working-with-system-messages)：现在可以直接将 `SystemMessage` 实例传递给 `createAgent` 的 `systemPrompt` 参数，并且新增了 `concat` 方法用于扩展系统消息。这使得实现如缓存控制和结构化内容块等高级功能成为可能。
+    * [动态系统提示中间件 (Dynamic system prompt middleware)](/oss/javascript/langchain/agents#dynamic-system-prompt)：`dynamicSystemPromptMiddleware` 的返回值现在是纯粹的累加（additive）。当返回一个 [`SystemMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.SystemMessage.html) 或 `string` 时，它会与现有的系统消息合并而不是替换它们，这使得组合多个修改提示的中间件变得更加容易。
+    * **兼容性改进**：修复了结构化输出和工具 Schema 中 Zod v4 验证错误的处理逻辑，确保详细的错误信息能够被正确显示。
+</Update>
+<Update label="2025年10月20日" tags={["langchain", "langgraph"]}>
+    ## v1.0.0
+
+    ### `langchain`
+    * [发布说明](/oss/javascript/releases/langchain-v1)
+    * [迁移指南](/oss/javascript/migrate/langchain-v1)
+
+    ### `langgraph`
+    * [发布说明](/oss/javascript/releases/langgraph-v1)
+    * [迁移指南](/oss/javascript/migrate/langgraph-v1)
+</Update>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\releases\changelog.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

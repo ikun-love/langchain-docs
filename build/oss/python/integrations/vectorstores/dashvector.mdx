@@ -1,0 +1,111 @@
+---
+title: DashVector
+---
+
+> [DashVector](https://help.aliyun.com/document_detail/2510225.html) 是一个全托管（fully-managed）的向量数据库服务，它支持高维度的密集向量（dense vectors）和稀疏向量（sparse vectors），并具备实时插入和带过滤条件的搜索能力。它的设计目标是实现自动扩展，以适应不同的应用需求。
+
+本 Notebook 展示了如何使用与 `DashVector` 向量数据库相关的各项功能。
+
+要使用 DashVector，您必须拥有一个 API 密钥。
+以下是[安装说明](https://help.aliyun.com/document_detail/2510223.html)。
+
+## 安装 (Install)
+
+```python
+pip install -qU  langchain-community dashvector dashscope
+```
+
+我们希望使用 `DashScopeEmbeddings`，因此还需要获取 Dashscope API 密钥。
+
+```python
+import getpass
+import os
+
+if "DASHVECTOR_API_KEY" not in os.environ:
+    os.environ["DASHVECTOR_API_KEY"] = getpass.getpass("DashVector API Key:")
+if "DASHSCOPE_API_KEY" not in os.environ:
+    os.environ["DASHSCOPE_API_KEY"] = getpass.getpass("DashScope API Key:")
+```
+
+## 示例 (Example)
+
+```python
+from langchain_community.embeddings.dashscope import DashScopeEmbeddings
+from langchain_community.vectorstores import DashVector
+from langchain_text_splitters import CharacterTextSplitter
+```
+
+```python
+from langchain_community.document_loaders import TextLoader
+
+# 加载文档
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+
+# 初始化文本分割器，设置块大小为 1000
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+
+# 初始化嵌入模型
+embeddings = DashScopeEmbeddings()
+```
+
+我们可以从文档创建 DashVector 实例。
+
+```python
+dashvector = DashVector.from_documents(docs, embeddings)
+
+query = "What did the president say about Ketanji Brown Jackson"
+# 进行相似性搜索
+docs = dashvector.similarity_search(query)
+print(docs)
+```
+
+我们可以添加带有元数据和 ID 的文本，并使用元数据过滤器进行搜索。
+
+```python
+texts = ["foo", "bar", "baz"]
+# 创建与文本数量相匹配的元数据列表
+metadatas = [{"key": i} for i in range(len(texts))]
+ids = ["0", "1", "2"]
+
+dashvector.add_texts(texts, metadatas=metadatas, ids=ids)
+
+# 使用过滤器搜索，仅搜索 key 值为 2 的文档
+docs = dashvector.similarity_search("foo", filter="key = 2")
+print(docs)
+```
+
+```output
+[Document(page_content='baz', metadata={'key': 2})]
+```
+
+### 操作分区 (partition) 参数
+
+`partition` 参数默认为 `default`，如果传入一个不存在的 `partition` 参数，该分区将被自动创建。
+
+```python
+texts = ["foo", "bar", "baz"]
+metadatas = [{"key": i} for i in range(len(texts))]
+ids = ["0", "1", "2"]
+partition = "langchain"
+
+# 添加文本，指定分区
+dashvector.add_texts(texts, metadatas=metadatas, ids=ids, partition=partition)
+
+# 相似性搜索，指定分区
+query = "What did the president say about Ketanji Brown Jackson"
+docs = dashvector.similarity_search(query, partition=partition)
+
+# 删除操作，指定分区
+dashvector.delete(ids=ids, partition=partition)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\dashvector.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

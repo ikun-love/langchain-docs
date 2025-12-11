@@ -1,0 +1,118 @@
+---
+title: Fireworks
+---
+
+
+<Warning>
+**您当前正在查看记录 Fireworks 模型作为文本补全模型使用方式的页面。Fireworks 上许多流行的模型是[聊天补全模型](/oss/javascript/langchain/models)。**
+
+您可能想查看[这个页面](/oss/javascript/integrations/chat/fireworks/)。
+</Warning>
+
+[Fireworks AI](https://fireworks.ai/) 是一个用于运行和定制模型的 AI 推理平台。有关 Fireworks 提供的所有模型列表，请参阅[Fireworks 文档](https://fireworks.ai/models)。
+
+本指南将帮助您使用 LangChain 入门 Fireworks 补全模型（LLM）。有关 `Fireworks` 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_fireworks.Fireworks.html)。
+
+## 概览
+
+### 集成详情
+
+| 类 | 包 | 本地 | 可序列化 | [PY 支持](https://python.langchain.com/docs/integrations/llms/fireworks) | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [Fireworks](https://api.js.langchain.com/classes/langchain_community_llms_fireworks.Fireworks.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_llms_fireworks.html) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+
+## 设置
+
+要访问 Fireworks 模型，您需要创建一个 Fireworks 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成包。
+
+### 凭证
+
+访问 [fireworks.ai](https://fireworks.ai/) 注册 Fireworks 账户并生成 API 密钥。完成此操作后，设置 `FIREWORKS_API_KEY` 环境变量：
+
+```bash
+export FIREWORKS_API_KEY="your-api-key"
+```
+
+如果您希望对模型调用进行自动跟踪，您也可以通过取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="your-api-key"
+```
+
+### 安装
+
+LangChain Fireworks 集成位于 `@langchain/community` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+## 实例化
+
+现在我们可以实例化模型对象并生成聊天补全内容：
+
+```typescript
+import { Fireworks } from "@langchain/community/llms/fireworks"
+
+const llm = new Fireworks({
+  model: "accounts/fireworks/models/llama-v3-70b-instruct",
+  temperature: 0,
+  maxTokens: undefined,
+  timeout: undefined,
+  maxRetries: 2,
+  // other params...
+})
+```
+
+## 调用
+
+```typescript
+const inputText = "Fireworks 是一家人工智能公司，它 "
+
+const completion = await llm.invoke(inputText)
+completion
+```
+
+```output
+ 帮助企业使用人工智能驱动的聊天机器人来实现客户支持的自动化。我们相信人工智能可以帮助企业以更低的成本提供更好的客户支持。我们的聊天机器人设计为高度可定制，并且可以与各种平台集成，例如 Facebook Messenger、Slack 等。
+
+我们正在寻找一位有才华、积极主动的**机器学习工程师**加入我们的团队。作为 Fireworks 的机器学习工程师，您将负责开发和改进为我们的聊天机器人提供支持的人工智能模型。您将与我们的数据科学家、软件工程师和产品经理密切合作，设计、开发和部署能够理解和响应客户查询的人工智能模型。
+
+**职责：**
+
+* 开发和改进能够理解和响应客户查询的人工智能模型
+* 与数据科学家合作，设计和开发新的人工智能模型
+* 与软件工程师协作，将人工智能模型集成到我们的聊天机器人平台中
+* 与产品经理合作，了解客户需求并开发满足这些需求的人工智能模型
+* 开发和维护数据管道，以支持人工智能模型的开发和部署
+* 开发和维护工具来监控和评估人工智能模型的性能
+* 紧跟人工智能和机器学习的最新发展，并将这些知识应用于改进我们的人工智能模型
+
+**要求：**
+
+* 学士学位
+```
+
+---
+
+## API 参考
+
+有关 Fireworks 所有功能和配置的详细文档，请前往[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_fireworks.Fireworks.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\fireworks.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

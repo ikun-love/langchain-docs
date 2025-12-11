@@ -1,0 +1,170 @@
+---
+title: Couchbase
+---
+
+>[Couchbase](http://couchbase.com/) 是一款屡获殊荣的分布式 NoSQL 云数据库，它为您的所有云、移动、AI 和边缘计算应用程序提供无与伦比的多功能性、性能、可扩展性和财务价值。
+
+## 安装和设置
+
+我们需要安装 `langchain-couchbase` 包。
+
+<CodeGroup>
+```bash pip
+pip install langchain-couchbase
+```
+
+```bash uv
+uv add langchain-couchbase
+```
+</CodeGroup>
+
+## 向量存储 (Vector Store)
+
+请参阅 [使用示例](/oss/python/integrations/vectorstores/couchbase)。
+
+```python
+from langchain_couchbase import CouchbaseSearchVectorStore
+
+import getpass
+
+# 连接的常量
+COUCHBASE_CONNECTION_STRING = getpass.getpass(
+    "输入 Couchbase 集群的连接字符串: "
+)
+DB_USERNAME = getpass.getpass("输入 Couchbase 集群的用户名: ")
+DB_PASSWORD = getpass.getpass("输入 Couchbase 集群的密码: ")
+
+# 创建 Couchbase 连接对象
+from datetime import timedelta
+
+from couchbase.auth import PasswordAuthenticator
+from couchbase.cluster import Cluster
+from couchbase.options import ClusterOptions
+
+auth = PasswordAuthenticator(DB_USERNAME, DB_PASSWORD)
+options = ClusterOptions(auth)
+cluster = Cluster(COUCHBASE_CONNECTION_STRING, options)
+
+# 等待集群准备就绪（最多等待 5 秒）。
+cluster.wait_until_ready(timedelta(seconds=5))
+
+vector_store = CouchbaseSearchVectorStore(
+    cluster=cluster,
+    bucket_name=BUCKET_NAME,
+    scope_name=SCOPE_NAME,
+    collection_name=COLLECTION_NAME,
+    embedding=my_embeddings,
+    index_name=SEARCH_INDEX_NAME,
+)
+
+# 添加文档
+texts = ["Couchbase 是一个 NoSQL 数据库", "LangChain 是一个用于 LLM 应用的框架"]
+vectorstore.add_texts(texts)
+
+# 搜索
+query = "Couchbase 是什么?"
+docs = vectorstore.similarity_search(query)
+```
+
+API 参考: [CouchbaseSearchVectorStore](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#module-langchain_couchbase.vectorstores.search_vector_store)
+
+## 文档加载器 (Document loader)
+
+请参阅 [使用示例](/oss/python/integrations/document_loaders/couchbase)。
+
+```python
+from langchain_community.document_loaders.couchbase import CouchbaseLoader
+
+connection_string = "couchbase://localhost"  # 有效的 Couchbase 连接字符串
+db_username = (
+    "Administrator"  # 对正在查询的存储桶具有读取访问权限的有效数据库用户
+)
+db_password = "Password"  # 数据库用户的密码
+
+# query 是一个有效的 SQL++ 查询
+query = """
+    SELECT h.* FROM `travel-sample`.inventory.hotel h
+        WHERE h.country = 'United States'
+        LIMIT 1
+        """
+
+loader = CouchbaseLoader(
+    connection_string,
+    db_username,
+    db_password,
+    query,
+)
+
+docs = loader.load()
+
+```
+
+## LLM 缓存 (LLM Caches)
+
+### CouchbaseCache
+使用 Couchbase 作为提示 (prompt) 和响应的缓存。
+
+导入此缓存：
+```python
+from langchain_couchbase.cache import CouchbaseCache
+```
+
+将此缓存与您的 LLM 一起使用：
+```python
+from langchain_core.globals import set_llm_cache
+
+cluster = couchbase_cluster_connection_object
+
+set_llm_cache(
+    CouchbaseCache(
+        cluster=cluster,
+        bucket_name=BUCKET_NAME,
+        scope_name=SCOPE_NAME,
+        collection_name=COLLECTION_NAME,
+    )
+)
+```
+
+API 参考: [CouchbaseCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseCache)
+
+### CouchbaseSemanticCache
+语义缓存允许用户根据用户输入与先前缓存的输入之间的**语义相似性**来检索缓存的提示。在底层，它使用 Couchbase 作为缓存和向量存储。
+`CouchbaseSemanticCache` 需要定义一个搜索索引 (Search Index) 才能工作。请查看 [使用示例](/oss/python/integrations/vectorstores/couchbase) 如何设置索引。
+
+导入此缓存：
+```python
+from langchain_couchbase.cache import CouchbaseSemanticCache
+```
+
+将此缓存与您的 LLM 一起使用：
+```python
+from langchain_core.globals import set_llm_cache
+
+# 使用任何嵌入提供程序...
+from langchain_openai.Embeddings import OpenAIEmbeddings
+
+embeddings = OpenAIEmbeddings()
+cluster = couchbase_cluster_connection_object
+
+set_llm_cache(
+    CouchbaseSemanticCache(
+        cluster=cluster,
+        embedding = embeddings,
+        bucket_name=BUCKET_NAME,
+        scope_name=SCOPE_NAME,
+        collection_name=COLLECTION_NAME,
+        index_name=INDEX_NAME,
+    )
+)
+```
+
+API 参考: [CouchbaseSemanticCache](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#langchain_couchbase.cache.CouchbaseSemanticCache)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\couchbase.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

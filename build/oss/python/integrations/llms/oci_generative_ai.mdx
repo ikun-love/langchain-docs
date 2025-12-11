@@ -1,0 +1,109 @@
+---
+title: Oracle Cloud Infrastructure 生成式 AI
+---
+
+Oracle Cloud Infrastructure (OCI) 生成式 AI 是一项完全托管的服务，它提供了一套先进的、可定制的大型语言模型 (LLM)，涵盖了广泛的使用场景，并且可以通过一个统一的 API 访问。
+使用 OCI 生成式 AI 服务，您可以访问即用型预训练模型，或者基于您自己的数据在专用的 AI 集群上创建并托管您自己微调的自定义模型。有关该服务和 API 的详细文档，请点击 __[此处](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)__ 和 __[此处](https://docs.oracle.com/en-us/iaas/api/#/en/generative-ai/20231130/)__。
+
+本 Notebook 解释了如何结合使用 OCI 的完整生成式 AI 模型与 LangChain。
+
+## 设置 (Setup)
+
+确保已安装 oci SDK 和 langchain-community 包。
+
+```python
+!pip install -U oci langchain-community
+```
+
+## 用法 (Usage)
+
+```python
+from langchain_community.llms.oci_generative_ai import OCIGenAI
+
+llm = OCIGenAI(
+    model_id="cohere.command",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="MY_OCID",
+    model_kwargs={"temperature": 0, "max_tokens": 500},
+)
+
+response = llm.invoke("Tell me one fact about earth", temperature=0.7)
+print(response)
+```
+
+#### 使用 Prompt 模板进行链式调用 (Chaining with prompt templates)
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+llm = OCIGenAI(
+    model_id="cohere.command",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="MY_OCID",
+    model_kwargs={"temperature": 0, "max_tokens": 500},
+)
+
+prompt = PromptTemplate(input_variables=["query"], template="{query}")
+llm_chain = prompt | llm
+
+response = llm_chain.invoke("what is the capital of france?")
+print(response)
+```
+
+#### 流式传输 (Streaming)
+
+```python
+llm = OCIGenAI(
+    model_id="cohere.command",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="MY_OCID",
+    model_kwargs={"temperature": 0, "max_tokens": 500},
+)
+
+for chunk in llm.stream("Write me a song about sparkling water."):
+    print(chunk, end="", flush=True)
+```
+
+## 认证 (Authentication)
+
+LlamaIndex 支持的认证方法等同于用于其他 OCI 服务的认证方法，遵循 __[标准的 SDK 认证方法](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)__，具体包括 API 密钥、会话令牌 (session token)、实例主体 (instance principal) 和资源主体 (resource principal)。
+
+API 密钥是上述示例中默认使用的认证方法。以下示例展示了如何使用不同的认证方法（会话令牌）。
+
+```python
+llm = OCIGenAI(
+    model_id="cohere.command",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="MY_OCID",
+    auth_type="SECURITY_TOKEN",
+    auth_profile="MY_PROFILE",  # 替换为您的配置文件名称
+    auth_file_location="MY_CONFIG_FILE_LOCATION",  # 替换为配置文件所在的路径
+)
+```
+
+## 专用 AI 集群 (Dedicated AI Cluster)
+
+要访问托管在专用 AI 集群中的模型，请 __[创建一个端点](https://docs.oracle.com/en-us/iaas/api/#/en/generative-ai-inference/20231130/)__，并使用分配给该端点的 OCID（当前可能以 `ocid1.generativeaiendpoint.oc1.us-chicago-1` 开头）作为您的模型 ID。
+
+当访问托管在专用 AI 集群中的模型时，您需要在初始化 `OCIGenAI` 接口时提供两个额外的必需参数（"provider" 和 "context_size"）。
+
+```python
+llm = OCIGenAI(
+    model_id="ocid1.generativeaiendpoint.oc1.us-chicago-1....",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="DEDICATED_COMPARTMENT_OCID",
+    auth_profile="MY_PROFILE",  # 替换为您的配置文件名称
+    auth_file_location="MY_CONFIG_FILE_LOCATION",  # 替换为配置文件所在的路径
+    provider="MODEL_PROVIDER",  # 例如："cohere" 或 "meta"
+    context_size="MODEL_CONTEXT_SIZE",  # 例如：128000
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\oci_generative_ai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,171 @@
+---
+title: 测试
+---
+
+在原型设计完 LangGraph Agent 后，自然而然的下一步就是添加测试。本指南介绍了一些在编写单元测试时可以使用的有用模式。
+
+请注意，本指南特定于 LangGraph，涵盖了涉及自定义结构的图（graphs）的场景——如果您才刚刚开始，请查看使用 LangChain 内置的 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 的[本节](/oss/python/langchain/test/)。
+
+
+
+
+
+## 先决条件
+
+首先，请确保您已安装 [`pytest`](https://docs.pytest.org/)：
+
+```bash
+$ pip install -U pytest
+```
+
+
+
+
+## 入门
+
+由于许多 LangGraph Agent 依赖于状态（state），一个实用的模式是在每次使用图之前创建它，然后在测试中用一个新的检查点（checkpointer）实例来编译它。
+
+下面的示例展示了如何在简单的线性图中实现这一点，该图经过 `node1` 和 `node2`。每个节点都会更新单一的状态键 `my_key`：
+
+```python
+import pytest
+
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+
+def create_graph() -> StateGraph:
+    class MyState(TypedDict):
+        my_key: str
+
+    graph = StateGraph(MyState)
+    graph.add_node("node1", lambda state: {"my_key": "hello from node1"})
+    graph.add_node("node2", lambda state: {"my_key": "hello from node2"})
+    graph.add_edge(START, "node1")
+    graph.add_edge("node1", "node2")
+    graph.add_edge("node2", END)
+    return graph
+
+def test_basic_agent_execution() -> None:
+    checkpointer = MemorySaver()
+    graph = create_graph()
+    compiled_graph = graph.compile(checkpointer=checkpointer)
+    result = compiled_graph.invoke(
+        {"my_key": "initial_value"},
+        config={"configurable": {"thread_id": "1"}}
+    )
+    assert result["my_key"] == "hello from node2"
+```
+
+
+
+
+## 测试单个节点和边
+
+编译后的 LangGraph Agent 会暴露每个独立节点，即 `graph.nodes`。您可以利用这一点来测试 Agent 中的单个节点。请注意，这将绕过编译图时传入的任何检查点：
+
+```python
+import pytest
+
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+
+def create_graph() -> StateGraph:
+    class MyState(TypedDict):
+        my_key: str
+
+    graph = StateGraph(MyState)
+    graph.add_node("node1", lambda state: {"my_key": "hello from node1"})
+    graph.add_node("node2", lambda state: {"my_key": "hello from node2"})
+    graph.add_edge(START, "node1")
+    graph.add_edge("node1", "node2")
+    graph.add_edge("node2", END)
+    return graph
+
+def test_individual_node_execution() -> None:
+    # 在本示例中将被忽略
+    checkpointer = MemorySaver()
+    graph = create_graph()
+    compiled_graph = graph.compile(checkpointer=checkpointer)
+    # 只调用 node 1
+    result = compiled_graph.nodes["node1"].invoke(
+        {"my_key": "initial_value"},
+    )
+    assert result["my_key"] == "hello from node1"
+```
+
+
+
+
+## 局部执行
+
+对于由大型图组成的 Agent，您可能希望测试 Agent 中局部的执行路径，而不是端到端的整个流程。在某些情况下，将这些部分重构为子图（subgraphs）在语义上可能是合理的，可以像通常那样单独调用它们，请参阅[此处的子图文档](/oss/python/langgraph/use-subgraphs)。
+
+但是，如果您不想更改 Agent 的整体结构，可以使用 LangGraph 的持久化机制来模拟 Agent 在所需部分开始前暂停，并在所需部分结束后再次暂停的状态。步骤如下：
+
+1. 使用检查点（checkpointer）编译您的 Agent（内存检查点 [`InMemorySaver`](https://reference.langchain.com/python/langgraph/checkpoints/#langgraph.checkpoint.memory.InMemorySaver) 就足够进行测试）。
+2. 使用 [`as_node`](/oss/python/langgraph/persistence#as-node) 参数调用 Agent 的 [`update_state`](/oss/python/langgraph/use-time-travel) 方法，该参数设置为您希望开始测试的节点名称*之前*的节点的名称。
+3. 使用与步骤 2 中相同的 `thread_id` 调用 Agent，并将 `interrupt_after` 参数设置为您希望停止的节点名称。
+
+
+
+下面是一个示例，演示了仅执行线性图中的第二个和第三个节点：
+
+```python
+import pytest
+
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+
+def create_graph() -> StateGraph:
+    class MyState(TypedDict):
+        my_key: str
+
+    graph = StateGraph(MyState)
+    graph.add_node("node1", lambda state: {"my_key": "hello from node1"})
+    graph.add_node("node2", lambda state: {"my_key": "hello from node2"})
+    graph.add_node("node3", lambda state: {"my_key": "hello from node3"})
+    graph.add_node("node4", lambda state: {"my_key": "hello from node4"})
+    graph.add_edge(START, "node1")
+    graph.add_edge("node1", "node2")
+    graph.add_edge("node2", "node3")
+    graph.add_edge("node3", "node4")
+    graph.add_edge("node4", END)
+    return graph
+
+def test_partial_execution_from_node2_to_node3() -> None:
+    checkpointer = MemorySaver()
+    graph = create_graph()
+    compiled_graph = graph.compile(checkpointer=checkpointer)
+    compiled_graph.update_state(
+        config={
+          "configurable": {
+            "thread_id": "1"
+          }
+        },
+        # 传入 node 2 的状态 - 模拟 node 1 结束时的状态
+        values={"my_key": "initial_value"},
+        # 将已保存状态更新为好像它来自 node 1
+        # 执行将在 node 2 处恢复
+        as_node="node1",
+    )
+    result = compiled_graph.invoke(
+        # 通过传递 None 恢复执行
+        None,
+        config={"configurable": {"thread_id": "1"}},
+        # 在 node 3 之后停止，这样 node 4 就不会运行
+        interrupt_after="node3",
+    )
+    assert result["my_key"] == "hello from node3"
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\test.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

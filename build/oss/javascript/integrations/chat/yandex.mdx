@@ -1,0 +1,66 @@
+---
+title: ChatYandexGPT
+---
+
+LangChain.js 支持调用 [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) 聊天模型。
+
+## 设置
+
+首先，您应该创建一个服务账户（service account），并为其分配 `ai.languageModels.user` 角色。
+
+接下来，您有两种身份验证选项：
+
+- **IAM 令牌 (IAM token)** [https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa](https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa) 。
+  您可以在构造函数参数中将其指定为 `iam_token`，或在环境变量 `YC_IAM_TOKEN` 中设置。
+- **API 密钥 (API key)** [https://cloud.yandex.com/en/docs/iam/operations/api-key/create](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
+  您可以在构造函数参数中将其指定为 `api_key`，或在环境变量 `YC_API_KEY` 中设置。
+
+## 用法
+
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/yandex @langchain/core
+```
+
+```typescript
+import { ChatYandexGPT } from "@langchain/yandex/chat_models";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+const chat = new ChatYandexGPT();
+
+const res = await chat.invoke([
+  new SystemMessage(
+    "You are a helpful assistant that translates English to French."
+  ),
+  new HumanMessage("I love programming."),
+]);
+console.log(res);
+
+/*
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: { content: "Je t'aime programmer.", additional_kwargs: {} },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: "Je t'aime programmer.",
+  name: undefined,
+  additional_kwargs: {}
+}
+ */
+```
+
+## 相关
+
+- 聊天模型[概念指南](/oss/javascript/langchain/models)
+- 聊天模型[操作指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\chat\yandex.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

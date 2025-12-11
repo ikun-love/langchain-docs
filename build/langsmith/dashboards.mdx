@@ -1,0 +1,148 @@
+---
+title: 使用仪表板监控项目
+sidebarTitle: 使用仪表板监控项目
+---
+
+仪表板（Dashboards）为您提供有关追踪数据的高级洞察，帮助您发现趋势并监控应用程序的健康状况。仪表板位于左侧边栏的 **Monitoring**（监控）标签下。
+
+LangSmith 提供了两种类型的仪表板：
+
+- **预构建仪表板 (Prebuilt dashboards)**：为每个追踪项目自动生成。
+- **自定义仪表板 (Custom dashboards)**：完全可配置的图表集合，可根据您的需求量身定制。
+
+## 预构建仪表板 (Prebuilt dashboards)
+
+预构建仪表板是为每个项目自动创建的，涵盖了关键指标，如追踪数量、错误率、Token 使用量等。默认情况下，您可以通过追踪项目页面右上角的 **Dashboard** 按钮访问预构建仪表板。
+
+![prebuilt](/langsmith/images/prebuilt.gif)
+
+<Note>您**无法修改**预构建仪表板。未来，我们计划允许您克隆一个默认仪表板，以便将其作为定制化的起点。</Note>
+
+### 仪表板部分 (Dashboard sections)
+
+预构建仪表板分为以下几个部分：
+
+| 部分 | 显示内容 |
+| :------ | :------------ |
+| Traces | 追踪数量 (Trace count)、延迟 (latency) 和错误率 (error rates)。[追踪 (trace](/langsmith/observability-concepts#traces)）是与单个操作相关的[运行 (runs](/langsmith/observability-concepts#runs)）的集合。例如，如果一个用户请求触发了一个 Agent，该 Agent 调用的所有运行都将属于同一个追踪。 |
+| LLM Calls | LLM 调用次数和延迟。包括所有运行类型为 "llm" 的运行。 |
+| Cost & Tokens | 总 Token 数和每个追踪的 Token 数及成本，按 Token 类型细分。成本是使用[LangSmith 的成本跟踪](/langsmith/log-llm-trace#manually-provide-token-counts)来衡量的。 |
+| Tools | 按工具名称细分的工具运行的运行次数、错误率和延迟统计。包括运行类型为 "tool" 的运行。限制显示出现频率最高的 5 个工具。 |
+| Run Types | 根运行 (root run) 的直接子代的运行次数、错误率和延迟统计。这有助于理解 Agent 的高级执行路径。限制显示出现频率最高的 5 个运行名称。请参阅此表后的图片。 |
+| Feedback Scores | 出现频率最高的 5 种反馈类型的聚合统计数据。图表显示数值反馈的平均得分和分类反馈的类别计数。 |
+
+例如，对于以下追踪，具有深度 1 的运行如下：
+
+![](/langsmith/images/run-depth-explained.png)
+
+### 分组依据 (Group by)
+
+可以使用按[运行标签或元数据分组 (Group by run tag or metadata](/langsmith/add-metadata-tags)）的功能，根据应用程序重要的属性来拆分数据。全局“分组依据”设置位于仪表板的右上角。请注意，Tool 和 Run Type 图表已经应用了分组依据，因此全局“分组依据”设置不会生效；全局“分组依据”将应用于所有其他图表。
+
+<Note>在向运行添加元数据时，我们建议在追踪以及特定的运行（例如 LLM 调用）上设置相同的元数据。元数据和标签不会从父运行传播到子运行，反之亦然。因此，如果您希望例如同时根据某个元数据键对追踪图表和 LLM 调用图表进行分组，则需要将该元数据附加到您的追踪（根运行）和 LLM 运行上。</Note>
+
+## 自定义仪表板 (Custom Dashboards)
+
+创建量身定制的图表集合，用于跟踪对您的应用程序最重要的指标。
+
+### 创建新仪表板
+
+1. 导航到左侧边栏中的 **Monitor**（监控）标签。
+2. 点击 **+ New Dashboard**（+ 新建仪表板）按钮。
+3. 为您的仪表板命名并添加描述。
+4. 点击 **Create**（创建）。
+
+### 向仪表板添加图表
+
+1. 在仪表板内，点击 **+ New Chart**（+ 新建图表）按钮以打开图表创建窗格。
+2. 为您的图表命名并添加描述。
+3. 配置图表。
+
+### 图表配置 (Chart configuration)
+
+#### 选择追踪项目和过滤运行
+
+- 选择一个或多个追踪项目以跟踪其指标。
+- 使用 **Chart filters**（图表过滤器）部分来精炼匹配的运行。此过滤器适用于图表中的所有数据系列。有关过滤追踪的更多信息，请参阅我们关于[在应用程序中过滤追踪的指南](./filter-traces-in-application)。
+
+#### 选择一个指标
+
+- 从下拉菜单中选择一个指标来设置图表的 y 轴。选择项目和指标后，您将看到图表示例和匹配的运行。
+- 对于某些指标（如延迟、Token 使用量、成本），我们支持比较具有相同单位的多个指标。例如，您可能希望在一个图表中查看提示 Token (prompt tokens) 和完成 Token (completion tokens)。每个指标显示为单独的一条线。
+
+![Multiple metrics](/langsmith/images/compare-metrics.png)
+
+#### 拆分数据
+
+有两种方法可以在图表中创建多个系列（即创建多条线）：
+
+1. **分组依据 (Group by)**：按[运行标签或元数据](/langsmith/add-metadata-tags)、运行名称或运行类型对运行进行分组。分组依据会自动根据所选字段将数据拆分成多个系列。请注意，分组依据限制为出现频率最高的前 5 个元素。
+
+2. **数据系列 (Data series)**：使用单独的过滤器手动定义多个系列。这对于在单个指标内比较粒度数据非常有用。
+
+![Multiple data series](/langsmith/images/multiple-data-series.png)
+
+#### 选择图表类型
+
+- 在折线图 (line chart) 和条形图 (bar chart) 之间进行选择以进行可视化。
+
+### 保存和管理图表
+
+- 点击 `Save`（保存）将图表保存到仪表板。
+- 点击图表右上角的三点按钮 (triple dot button) 可以编辑或删除图表。
+- 点击图表右上角的三行按钮 (triple line button) 并选择 **+ Clone**（+ 克隆）可以克隆图表。这将打开一个新的图表创建窗格，其中包含与原始图表相同的配置。
+
+![More actions bar](/langsmith/images/more-actions-bar.png)
+
+![Expanded chart](/langsmith/images/expanded-chart.png)
+
+## 从追踪项目链接到仪表板
+
+您可以直接从任何追踪项目链接到任何仪表板。默认情况下，会选择您追踪项目的预构建仪表板。如果您希望链接到自定义仪表板：
+
+1. 在您的追踪项目中，点击 **Dashboard**（仪表板）按钮旁边的三个点 (three dots)。
+2. 选择一个仪表板设置为新的默认值。
+
+![Tracing project to dashboard](/langsmith/images/tracing-project-to-dashboard.png)
+
+## 示例：用户旅程监控
+
+使用监控图表来映射 Agent 在特定节点所做的决策。
+
+考虑一个电子邮件助理 Agent。在特定节点，它会做出关于电子邮件的决定，是：
+
+- 发送回复邮件
+- 通知用户
+- 无需响应
+
+我们可以创建一个图表来跟踪和可视化这些决策的细分情况。
+
+**创建图表**
+
+1. **指标选择 (Metric Selection)**：选择指标 `Run count`（运行次数）。
+2. **图表过滤器 (Chart Filters)**：添加一个树形过滤器 (tree filter) 以包含名称为 `triage_input` 的所有追踪。这意味着我们只包括命中 `triage_input` 节点的追踪。另外添加一个图表过滤器，确保 `Is Root`（是根节点）为 `true`，这样计数就不会被追踪中的节点数量夸大。
+   ![Decision at node](/langsmith/images/chart-filters-for-node-decision.png)
+
+3. **数据系列 (Data Series)**：为 `triage_input` 节点上做出的每项决策创建一个数据系列。决策的输出存储在输出对象的 `triage.response` 字段中，决策的值可以是 `no`、`email` 或 `notify`。每个决策都会在图表中生成一个单独的数据系列。
+   ![Decision at node](/langsmith/images/decision-at-node.png)
+
+现在，我们可以随着时间的推移可视化在 `triage_input` 节点上所做的决策。
+
+## 视频指南
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/VxsIvf9NdxI?si=7ksp9qyw-i0lcwxg"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\dashboards.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

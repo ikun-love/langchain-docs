@@ -1,0 +1,413 @@
+---
+title: Activeloop 深度内存
+---
+
+>[Activeloop Deep Memory（Activeloop 深度内存）](https://docs.activeloop.ai/performance-features/deep-memory) 是一套工具集，它能帮助你根据特定用例优化 Vector Store（向量存储），从而提高 LLM 应用的准确性。
+
+`Retrieval-Augmented Generation`（检索增强生成，简称 `RAG`）最近受到了广泛关注。随着先进 RAG 技术和 Agent（智能体）的出现，RAGs 所能实现的功能潜力正在扩大。然而，在将 RAGs 应用于生产环境时，有几个挑战可能会限制其集成。在生产环境中实施 RAG 时需要考虑的首要因素是准确性（召回率）、成本和延迟。对于基本用例，OpenAI 的 Ada 模型配合朴素的相似性搜索就能产生令人满意的结果。然而，如果需要更高的搜索准确性或召回率，可能需要采用高级检索技术。这些方法可能涉及改变数据块（chunk）大小、多次重写查询等，这可能会增加延迟和成本。Activeloop 的 [Deep Memory（深度内存）](https://www.activeloop.ai/resources/use-deep-memory-to-boost-rag-apps-accuracy-by-up-to-22/) 是 `Activeloop Deep Lake` 用户可用的一个特性，它通过引入一个微小的神经网络层来解决这些问题。这个网络层经过训练，可以将用户查询与语料库中相关数据进行匹配。虽然这种添加在搜索过程中仅会带来极小的延迟增加，但它可以将检索准确性提高多达 27%，并且在不要求任何额外的先进 RAG 技术的情况下，仍然保持成本效益和易用性。
+
+对于本教程，我们将解析 `DeepLake` 文档，并创建一个 RAG 系统，该系统能够回答文档中的问题。
+
+## 1. 数据集创建
+
+本教程中，我们将使用 `BeautifulSoup` 库和 LangChain 的文档解析器（如 `Html2TextTransformer`、`AsyncHtmlLoader`）来解析 activeloop 的文档。因此，我们需要安装以下库：
+
+```python
+pip install -qU  tiktoken langchain-openai python-dotenv datasets langchain deeplake beautifulsoup4 html2text ragas
+```
+
+此外，您还需要创建一个 [Activeloop](https://activeloop.ai) 账户。
+
+```python
+ORG_ID = "..."
+```
+
+```python
+from langchain.chains import RetrievalQA
+from langchain_community.vectorstores import DeepLake
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+```
+
+```python
+import getpass
+import os
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("输入您的 OpenAI API 密钥: ")
+# # 如果没有使用 CLI 登录（`activeloop login -u <USERNAME> -p <PASSWORD>`），则需要 activeloop token
+if "ACTIVELOOP_TOKEN" not in os.environ:
+    os.environ["ACTIVELOOP_TOKEN"] = getpass.getpass(
+        "输入您的 ActiveLoop API 密钥: "
+    )  # 从 https://app.activeloop.ai 获取您的 API 密钥，点击右上角的个人资料图片，然后选择 "API Tokens"
+
+token = os.getenv("ACTIVELOOP_TOKEN")
+openai_embeddings = OpenAIEmbeddings()
+```
+
+```python
+db = DeepLake(
+    dataset_path=f"hub://{ORG_ID}/deeplake-docs-deepmemory",  # org_id 代表您的 activeloop 用户名或组织
+    embedding=openai_embeddings,
+    runtime={"tensor_db": True},
+    token=token,
+    # overwrite=True, # 如果想覆盖整个数据集，请设置用户覆盖标志
+    read_only=False,
+)
+```
+
+使用 `BeautifulSoup` 解析网页中的所有链接
+
+```python
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+
+
+def get_all_links(url):
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"未能检索页面: {url}")
+        return []
+
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    # 查找所有通常包含链接 href 属性的 'a' 标签
+    links = [
+        urljoin(url, a["href"]) for a in soup.find_all("a", href=True) if a["href"]
+    ]
+
+    return links
+
+
+base_url = "https://docs.deeplake.ai/en/latest/"
+all_links = get_all_links(base_url)
+```
+
+加载数据：
+
+```python
+from langchain_community.document_loaders.async_html import AsyncHtmlLoader
+
+loader = AsyncHtmlLoader(all_links)
+docs = loader.load()
+```
+
+```python
+```
+
+将数据转换为用户可读的格式：
+
+```python
+from langchain_community.document_transformers import Html2TextTransformer
+
+html2text = Html2TextTransformer()
+docs_transformed = html2text.transform_documents(docs)
+```
+
+现在，我们进一步对文档进行分块处理，因为有些文档包含的文本量太大：
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+chunk_size = 4096
+docs_new = []
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=chunk_size,
+)
+
+for doc in docs_transformed:
+    if len(doc.page_content) < chunk_size:
+        docs_new.append(doc)
+    else:
+        docs = text_splitter.create_documents([doc.page_content])
+        docs_new.extend(docs)
+```
+
+填充 VectorStore：
+
+```python
+docs = db.add_documents(docs_new)
+```
+
+## 2. 生成合成查询并训练 Deep Memory
+
+下一步是训练一个 `deep_memory` 模型，该模型将把您的用户查询与您已有的数据集对齐。如果您还没有任何用户查询，不用担心，我们将使用 LLM 来生成它们！
+
+#### TODO: 添加图片
+
+我们在上面展示了 `deep_memory` 的整体工作原理图。因此，要训练它，您需要相关性（relevance）、查询以及语料库数据（我们希望查询的数据）。语料库数据已在上一节中填充，这里我们将生成问题和相关性信息。
+
+1. `questions` - 是一个字符串文本列表，其中每个字符串代表一个查询。
+2. `relevance` - 包含每个问题真实答案（ground truth）的链接。可能有多篇文档包含给定问题的答案。因此，relevance 是一个 `List[List[tuple[str, float]]]`，其中外层列表代表查询，内层列表代表相关文档。元组包含 `(str, float)` 对，其中字符串代表源文档的 ID（对应于数据集中的 `id` 张量），而 float 表示当前文档与该问题的相关程度。
+
+现在，让我们生成合成问题和相关性信息：
+
+```python
+from typing import List
+
+from langchain.chains.openai_functions import (
+    create_structured_output_chain,
+)
+from langchain.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
+```
+
+```python
+# 获取数据集文档和 ID（如果存在）（可选，您也可以摄取数据）
+docs = db.vectorstore.dataset.text.data(fetch_chunks=True, aslist=True)["value"]
+ids = db.vectorstore.dataset.id.data(fetch_chunks=True, aslist=True)["value"]
+```
+
+```python
+# 如果明确传入模型，我们需要确保它支持 OpenAI 函数调用 API。
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+
+
+class Questions(BaseModel):
+    """识别有关一个人的信息。"""
+
+    question: str = Field(..., description="关于文本的问题")
+
+
+prompt_msgs = [
+    SystemMessage(
+        content="你是一位世界级的专家，擅长根据提供的上下文生成问题。请确保这个问题可以通过文本回答。"
+    ),
+    HumanMessagePromptTemplate.from_template(
+        "使用给定的文本为以下输入生成一个问题: {input}"
+    ),
+    HumanMessage(content="提示：请确保以正确的格式回答"),
+]
+prompt = ChatPromptTemplate(messages=prompt_msgs)
+chain = create_structured_output_chain(Questions, llm, prompt, verbose=True)
+
+text = "# 理解幻觉和偏差 ## **引言** 在本课程中，我们将介绍 LLM 中**幻觉**的概念，强调它们对 AI 应用的影响，并演示如何使用检索器架构等技术来缓解它们。我们还将探讨 LLM 中存在的**偏差**并提供示例。"
+questions = chain.run(input=text)
+print(questions)
+```
+
+```python
+import random
+
+from langchain_openai import OpenAIEmbeddings
+from tqdm import tqdm
+
+
+def generate_queries(docs: List[str], ids: List[str], n: int = 100):
+    questions = []
+    relevances = []
+    pbar = tqdm(total=n)
+    while len(questions) < n:
+        # 1. 随机抽取一小段文本和相关 ID
+        r = random.randint(0, len(docs) - 1)
+        text, label = docs[r], ids[r]
+
+        # 2. 生成查询并分配相关 ID
+        generated_qs = [chain.run(input=text).question]
+        questions.extend(generated_qs)
+        relevances.extend([[(label, 1)] for _ in generated_qs])
+        pbar.update(len(generated_qs))
+        if len(questions) % 10 == 0:
+            print(f"q: {len(questions)}")
+    return questions[:n], relevances[:n]
+
+
+chain = create_structured_output_chain(Questions, llm, prompt, verbose=False)
+questions, relevances = generate_queries(docs, ids, n=200)
+
+train_questions, train_relevances = questions[:100], relevances[:100]
+test_questions, test_relevances = questions[100:], relevances[100:]
+```
+
+现在我们创建了 100 个训练查询和 100 个用于测试的查询。现在我们来训练 `deep_memory`：
+
+```python
+job_id = db.vectorstore.deep_memory.train(
+    queries=train_questions,
+    relevance=train_relevances,
+)
+```
+
+让我们跟踪训练进度：
+
+```python
+db.vectorstore.deep_memory.status("6538939ca0b69a9ca45c528c")
+```
+
+```output
+--------------------------------------------------------------
+|                  6538e02ecda4691033a51c5b                  |
+--------------------------------------------------------------
+| status                     | completed                     |
+--------------------------------------------------------------
+| progress                   | eta: 1.4 seconds              |
+|                            | recall@10: 79.00% (+34.00%)   |
+--------------------------------------------------------------
+| results                    | recall@10: 79.00% (+34.00%)   |
+--------------------------------------------------------------
+```
+
+## 3. 评估 Deep Memory 的性能
+
+太棒了，模型已经训练好了！它在召回率方面显示出实质性的提高，但我们现在如何使用它，并评估它在未见的新数据上的表现呢？在这一部分，我们将深入研究模型评估和推理部分，看看如何将其与 LangChain 结合使用以提高检索准确性。
+
+### 3.1 Deep Memory 评估
+
+首先，我们可以使用 `deep_memory` 内置的评估方法。它会计算多个 `recall`（召回率）指标。这只需几行代码即可轻松完成。
+
+```python
+recall = db.vectorstore.deep_memory.evaluate(
+    queries=test_questions,
+    relevance=test_relevances,
+)
+```
+
+```output
+Embedding queries took 0.81 seconds
+---- Evaluating without model ----
+Recall@1:   9.0%
+Recall@3:   19.0%
+Recall@5:   24.0%
+Recall@10:   42.0%
+Recall@50:   93.0%
+Recall@100:   98.0%
+---- Evaluating with model ----
+Recall@1:   19.0%
+Recall@3:   42.0%
+Recall@5:   49.0%
+Recall@10:   69.0%
+Recall@50:   97.0%
+Recall@100:   97.0%
+```
+
+它在未见过的测试数据集上也显示出相当大的改进！！！
+
+### 3.2 Deep Memory + RAGas
+
+```python
+from ragas.langchain import RagasEvaluatorChain
+from ragas.metrics import (
+    context_recall,
+)
+```
+
+让我们将召回率转换为真实答案（ground truths）：
+
+```python
+def convert_relevance_to_ground_truth(docs, relevance):
+    ground_truths = []
+
+    for rel in relevance:
+        ground_truth = []
+        for doc_id, _ in rel:
+            # 注意：这里的 doc_id 对应于 docs 列表的索引
+            # 原始代码中 id/doc_id 的对应关系需要根据实际 ID 映射来确认，此处按索引对齐处理
+            ground_truth.append(docs[doc_id])
+        ground_truths.append(ground_truth)
+    return ground_truths
+```
+
+```python
+ground_truths = convert_relevance_to_ground_truth(docs, test_relevances)
+
+for deep_memory in [False, True]:
+    print("\nEvaluating with deep_memory =", deep_memory)
+    print("===================================")
+
+    retriever = db.as_retriever()
+    retriever.search_kwargs["deep_memory"] = deep_memory
+
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=ChatOpenAI(model="gpt-3.5-turbo"),
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True,
+    )
+
+    metrics = {
+        "context_recall_score": 0,
+    }
+
+    eval_chains = {m.name: RagasEvaluatorChain(metric=m) for m in [context_recall]}
+
+    for question, ground_truth in zip(test_questions, ground_truths):
+        result = qa_chain({"query": question})
+        result["ground_truths"] = ground_truth
+        for name, eval_chain in eval_chains.items():
+            score_name = f"{name}_score"
+            metrics[score_name] += eval_chain(result)[score_name]
+
+    for metric in metrics:
+        metrics[metric] /= len(test_questions)
+        print(f"{metric}: {metrics[metric]}")
+    print("===================================")
+```
+
+```output
+Evaluating with deep_memory = False
+===================================
+context_recall_score = 0.3763423145
+===================================
+
+Evaluating with deep_memory = True
+===================================
+context_recall_score = 0.5634545323
+===================================
+```
+
+### 3.3 Deep Memory 推理
+
+#### TODO: 添加图片
+
+使用 deep\_memory 的情况：
+
+```python
+retriever = db.as_retriever()
+retriever.search_kwargs["deep_memory"] = True
+retriever.search_kwargs["k"] = 10
+
+query = "Deamination of cytidine to uridine on the minus strand of viral DNA results in catastrophic G-to-A mutations in the viral genome."
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-4"), chain_type="stuff", retriever=retriever
+)
+print(qa.run(query))
+```
+
+```output
+The base htype of the 'video_seq' tensor is 'video'.
+```
+
+不使用 deep\_memory 的情况：
+
+```python
+retriever = db.as_retriever()
+retriever.search_kwargs["deep_memory"] = False
+retriever.search_kwargs["k"] = 10
+
+query = "Deamination of cytidine to uridine on the minus strand of viral DNA results in catastrophic G-to-A mutations in the viral genome."
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-4"), chain_type="stuff", retriever=retriever
+)
+qa.run(query)
+```
+
+```output
+The text does not provide information on the base htype of the 'video_seq' tensor.
+```
+
+### 3.4 Deep Memory 节省成本
+
+Deep Memory 在不改变现有工作流程的情况下提高了检索准确性。此外，通过减小输入到 LLM 的 `top_k` 值，您可以通过减少 Token 使用量来显著削减推理成本。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\activeloop.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

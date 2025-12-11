@@ -1,0 +1,54 @@
+---
+title: Connery 工具包
+---
+
+```typescript
+import { ConneryService } from "@langchain/community/tools/connery";
+import { ConneryToolkit } from "@langchain/community/agents/toolkits/connery";
+import { ChatOpenAI } from "@langchain/openai";
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
+
+// 指定您的 Connery Runner 凭据。
+process.env.CONNERY_RUNNER_URL = "";
+process.env.CONNERY_RUNNER_API_KEY = "";
+
+// 指定 OpenAI API 密钥。
+process.env.OPENAI_API_KEY = "";
+
+// 指定您的电子邮件地址，以便接收下面示例中发送的邮件。
+const recepientEmail = "test@example.com";
+
+// 使用 Connery Runner 中所有可用操作创建一个 Connery 工具包（Toolkit）。
+const conneryService = new ConneryService();
+const conneryToolkit = await ConneryToolkit.createInstance(conneryService);
+
+// 使用 OpenAI Functions 代理来执行提示，使用 Connery 工具包中的操作。
+const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
+const agent = await initializeAgentExecutorWithOptions(
+  conneryToolkit.tools,
+  llm,
+  {
+    agentType: "openai-functions",
+    verbose: true,
+  }
+);
+const result = await agent.invoke({
+  input:
+    `用三句话总结网页 http://www.paulgraham.com/vb.html 的内容，` +
+    `并将摘要发送到 ${recepientEmail}。请在邮件正文中包含该网页的链接。`,
+});
+console.log(result.output);
+```
+
+<Info>
+Connery Action 是一种结构化工具，因此您只能在支持结构化工具的智能体（Agent）中使用它。
+</Info>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\connery_toolkit.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

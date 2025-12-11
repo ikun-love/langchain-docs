@@ -1,0 +1,114 @@
+---
+title: TrueFoundry
+---
+
+TrueFoundry 提供了一个企业级的 [AI 网关](https://www.truefoundry.com/ai-gateway)，用于为 LangChain 等模型驱动的代理框架提供治理和可观测性。TrueFoundry AI 网关作为一个统一的 LLM 访问接口，提供以下能力：
+
+- **统一的 API 访问**: 通过一个 API 连接到 250 多个 LLM（包括 OpenAI、Claude、Gemini、Groq、Mistral）。
+- **低延迟**: 借助智能路由和负载均衡，内部延迟低于 3 毫秒。
+- **企业级安全**: 符合 SOC 2、HIPAA、GDPR 标准，并提供基于角色的访问控制（RBAC）和审计日志。
+- **配额与成本管理**: 基于 Token 的配额限制、速率限制以及全面的使用情况跟踪。
+- **可观测性**: 提供完整的请求/响应日志记录、指标和追踪，并支持自定义数据保留策略。
+
+## 先决条件
+
+在将 LangChain 与 TrueFoundry 集成之前，请确保您已完成以下准备工作：
+
+1. **TrueFoundry 账户**: 拥有一个 [TrueFoundry 账户](https://www.truefoundry.com/register)，并且已配置至少一个模型供应商。请遵循 [此处](https://docs.truefoundry.com/gateway/quick-start) 的快速入门指南。
+2. **个人访问令牌 (PAT)**: 按照 [TrueFoundry 令牌生成指南](https://docs.truefoundry.com/gateway/authentication) 生成一个令牌。
+
+## 快速开始
+
+您可以通过 [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) 接口连接到 TrueFoundry 的统一 LLM 网关。
+
+- 将 `base_url` 设置为您的 TrueFoundry 端点（见下文说明）。
+- 将 `api_key` 设置为您的 TrueFoundry [PAT（个人访问令牌）](https://docs.truefoundry.com/gateway/authentication#personal-access-token-pat)。
+- 使用统一代码片段中显示的相同 `model-name`。
+
+
+### 安装
+
+<CodeGroup>
+```bash pip
+pip install langchain-openai
+```
+
+```bash uv
+uv add langchain-openai
+```
+</CodeGroup>
+
+### 基本设置
+
+通过更新 LangChain 中的 [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) 模型来连接到 TrueFoundry：
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    api_key=TRUEFOUNDRY_API_KEY,
+    base_url=TRUEFOUNDRY_GATEWAY_BASE_URL,
+    model="openai-main/gpt-4o"  # 您可以类似地调用任何模型供应商的任何模型
+)
+
+llm.invoke("What is the meaning of life, universe and everything?")
+```
+
+请求将通过您的 TrueFoundry 网关路由到指定的模型供应商。TrueFoundry 会自动处理速率限制、负载均衡和可观测性。
+
+### LangGraph 集成
+
+
+```python
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, MessagesState
+from langchain.messages import HumanMessage
+
+# 定义您的 LangGraph 工作流
+def call_model(state: MessagesState):
+    model = ChatOpenAI(
+        api_key=TRUEFOUNDRY_API_KEY,
+        base_url=TRUEFOUNDRY_GATEWAY_BASE_URL,
+        # 复制网关上显示的精确模型名称
+        model="openai-main/gpt-4o"
+    )
+    response = model.invoke(state["messages"])
+    return {"messages": [response]}
+
+# 构建工作流
+workflow = StateGraph(MessagesState)
+workflow.add_node("agent", call_model)
+workflow.set_entry_point("agent")
+workflow.set_finish_point("agent")
+
+app = workflow.compile()
+
+# 通过 TrueFoundry 运行代理
+result = app.invoke({"messages": [HumanMessage(content="Hello!")]})
+```
+
+
+## 可观测性与治理
+
+通过指标仪表板（Metrics Dashboard），您可以监控和分析以下内容：
+
+- **性能指标**: 跟踪关键延迟指标，如请求延迟（Request Latency）、首次令牌时间（TTFS）和令牌间延迟（ITL），包含 P99、P90 和 P50 百分位统计。
+- **成本与 Token 使用量**: 深入了解应用程序的成本，详细列出输入/输出 Token 以及相应模型的花费。
+- **使用模式**: 通过对用户活动、模型分布和基于团队的使用情况的详细分析，了解应用程序的使用方式。
+- **速率限制与负载均衡**: 配置限制规则、在模型之间分配流量，并设置故障转移（fallback）机制。
+
+## 支持
+
+如需咨询、报告问题或寻求支持：
+
+- **邮件**: [support@truefoundry.com](mailto:support@truefoundry.com)
+- **文档**: [https://docs.truefoundry.com/](https://docs.truefoundry.com/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\truefoundry.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

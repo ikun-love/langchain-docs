@@ -1,0 +1,1471 @@
+---
+title: 内置中间件
+description: 针对常见 Agent 用例的预构建中间件
+---
+
+LangChain 提供针对常见用例的预构建中间件。每个中间件都已准备好投入生产环境，并且可以根据您的具体需求进行配置。
+
+## 提供商无关的中间件
+
+以下中间件可与任何 LLM 提供商配合使用：
+
+| 中间件 | 描述 |
+|------------|-------------|
+| [摘要生成](#summarization) | 在接近 Token 限制时自动总结对话历史。 |
+| [人工干预](#human-in-the-loop) | 暂停执行，等待人工批准工具调用。 |
+| [模型调用限制](#model-call-limit) | 限制模型调用次数，以防止产生过多费用。 |
+| [工具调用限制](#tool-call-limit) | 通过限制调用次数来控制工具执行。 |
+| [模型回退](#model-fallback) | 当主模型失败时，自动回退到备用模型。 |
+| [PII 检测](#pii-detection) | 检测并处理个人身份信息 (PII)。 |
+| [待办事项列表](#to-do-list) | 为 Agent 配备任务规划和跟踪能力。 |
+| [LLM 工具选择器](#llm-tool-selector) | 在调用主模型之前，使用 LLM 选择相关的工具。 |
+| [工具重试](#tool-retry) | 使用指数退避（exponential backoff）自动重试失败的工具调用。 |
+| [模型重试](#model-retry) | 使用指数退避自动重试失败的模型调用。 |
+| [LLM 工具模拟器](#llm-tool-emulator) | 使用 LLM 模拟工具执行，用于测试目的。 |
+| [上下文编辑](#context-editing) | 通过修剪或清除工具使用来管理对话上下文。 |
+| [Shell 工具](#shell-tool) | 向 Agent 暴露一个持久的 shell 会话，用于命令执行。 |
+| [文件搜索](#file-search) | 对文件系统文件提供 Glob 和 Grep 搜索工具。 |
+
+
+
+
+
+### 摘要生成 (Summarization)
+
+当接近 Token 限制时，自动总结对话历史，保留最近的消息同时压缩较早的上下文。摘要生成在以下场景中很有用：
+- 超过上下文窗口的长期对话。
+- 包含大量历史的多轮对话。
+- 应用程序中上下文保留很重要的情况。
+
+**API 参考:** [`SummarizationMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.SummarizationMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[your_weather_tool, your_calculator_tool],
+    middleware=[
+        SummarizationMiddleware(
+            model="gpt-4o-mini",
+            trigger=("tokens", 4000),
+            keep=("messages", 20),
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<Tip>
+    如果使用 `langchain>=1.1`，`trigger` 和 `keep` 的 `fraction` 条件依赖于聊天模型的 [模型配置文件](/oss/python/langchain/models#model-profiles)。如果数据不可用，请使用其他条件或手动指定：
+
+    ```python
+    from langchain.chat_models import init_chat_model
+
+    custom_profile = {
+        "max_input_tokens": 100_000,
+        # ...
+    }
+    model = init_chat_model("gpt-4o", profile=custom_profile)
+    ```
+</Tip>
+
+<ParamField body="model" type="string | BaseChatModel" required>
+    用于生成摘要的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。有关更多信息，请参阅 [`init_chat_model`](https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model))。
+</ParamField>
+
+<ParamField body="trigger" type="ContextSize | list[ContextSize] | None">
+    触发摘要的条件。可以是：
+
+    - 单个 [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) 字典（所有属性必须满足 - AND 逻辑）
+    - [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) 字典列表（任何条件满足即可 - OR 逻辑）
+
+    每个条件可以包括：
+
+    - `fraction` (float): 模型上下文大小的比例 (0-1)
+    - `tokens` (int): 绝对 Token 计数
+    - `messages` (int): 消息计数
+
+    每个条件必须指定至少一个属性。如果未提供，摘要将不会自动触发。
+
+    有关更多信息，请参阅 [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) 的 API 参考。
+</ParamField>
+
+<ParamField body="keep" type="ContextSize" default="{messages: 20}">
+    摘要后要保留的上下文量。必须恰好指定以下之一：
+
+    - `fraction` (float): 要保留的模型上下文大小的比例 (0-1)
+    - `tokens` (int): 要保留的绝对 Token 计数
+    - `messages` (int): 要保留的最近消息数量
+
+    有关更多信息，请参阅 [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) 的 API 参考。
+</ParamField>
+
+<ParamField body="token_counter" type="function">
+    自定义 Token 计数函数。默认为基于字符的计数。
+</ParamField>
+
+<ParamField body="summary_prompt" type="string">
+    用于摘要的自定义提示模板。如果未指定，则使用内置模板。该模板应包含 `{messages}` 占位符，对话历史将插入到此处。
+</ParamField>
+
+<ParamField body="trim_tokens_to_summarize" type="number" default="4000">
+    生成摘要时包含的最大 Token 数。消息将在摘要前被修剪以适应此限制。
+</ParamField>
+
+<ParamField body="summary_prefix" type="string">
+    添加到摘要消息的前缀。如果未提供，则使用默认前缀。
+</ParamField>
+
+<ParamField body="max_tokens_before_summary" type="number" deprecated>
+    **已弃用:** 请使用 `trigger: {"tokens": value}` 代替。触发摘要的 Token 阈值。
+</ParamField>
+
+<ParamField body="messages_to_keep" type="number" deprecated>
+    **已弃用:** 请使用 `keep: {"messages": value}` 代替。要保留的最近消息数量。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+摘要中间件会监控消息 Token 计数，并在达到阈值时自动总结较早的消息。
+
+**触发条件 (Trigger conditions)** 控制摘要运行的时机：
+- 单个条件对象（所有属性必须满足 - AND 逻辑）
+- 条件对象数组（任何条件满足即可 - OR 逻辑）
+- 每个条件都可以使用 `fraction`（占模型上下文大小的比例）、`tokens`（绝对计数）或 `messages`（消息计数）
+
+**保留条件 (Keep conditions)** 控制保留多少上下文（恰好指定一个）：
+- `fraction` - 要保留的模型上下文大小的比例
+- `tokens` - 要保留的绝对 Token 计数
+- `messages` - 要保留的最近消息数量
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
+
+
+# 单个条件：当 tokens >= 4000 且 messages >= 10 时触发
+agent = create_agent(
+    model="gpt-4o",
+    tools=[your_weather_tool, your_calculator_tool],
+    middleware=[
+        SummarizationMiddleware(
+            model="gpt-4o-mini",
+            trigger=[("tokens", 4000), ("messages", 10)],
+            keep=("messages", 20),
+        ),
+    ],
+)
+
+# 多个条件
+agent2 = create_agent(
+    model="gpt-4o",
+    tools=[your_weather_tool, your_calculator_tool],
+    middleware=[
+        SummarizationMiddleware(
+            model="gpt-4o-mini",
+            trigger=[
+                ("tokens", 3000),
+                ("messages", 6),
+            ],
+            keep=("messages", 20),
+        ),
+    ],
+)
+
+# 使用分数限制
+agent3 = create_agent(
+    model="gpt-4o",
+    tools=[your_weather_tool, your_calculator_tool],
+    middleware=[
+        SummarizationMiddleware(
+            model="gpt-4o-mini",
+            trigger=("fraction", 0.8),
+            keep=("fraction", 0.3),
+        ),
+    ],
+)
+```
+
+
+
+
+</Accordion>
+
+### 人工干预 (Human-in-the-loop)
+
+在工具调用执行之前，暂停 Agent 执行以供人工批准、编辑或拒绝工具调用。[人工干预](/oss/python/langchain/human-in-the-loop) 在以下场景中很有用：
+
+- 需要人工批准的高风险操作（例如数据库写入、金融交易）。
+- 必须有人工监督的合规工作流程。
+- 在较长的对话中，人工反馈指导 Agent 的继续方向。
+
+**API 参考:** [`HumanInTheLoopMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.HumanInTheLoopMiddleware)
+
+
+<Warning>
+    人工干预中间件需要一个 [检查点 (checkpointer)](/oss/python/langgraph/persistence#checkpoints) 来在中断期间维护状态。
+</Warning>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
+
+
+def read_email_tool(email_id: str) -> str:
+    """模拟函数：通过 ID 读取电子邮件。"""
+    return f"Email content for ID: {email_id}"
+
+def send_email_tool(recipient: str, subject: str, body: str) -> str:
+    """模拟函数：发送一封电子邮件。"""
+    return f"Email sent to {recipient} with subject '{subject}'"
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[your_read_email_tool, your_send_email_tool],
+    checkpointer=InMemorySaver(),
+    middleware=[
+        HumanInTheLoopMiddleware(
+            interrupt_on={
+                "your_send_email_tool": {
+                    "allowed_decisions": ["approve", "edit", "reject"],
+                },
+                "your_read_email_tool": False,
+            }
+        ),
+    ],
+)
+```
+
+
+
+
+<Tip>
+    有关完整的示例、配置选项和集成模式，请参阅 [人工干预文档](/oss/python/langchain/human-in-the-loop)。
+</Tip>
+
+<Callout icon="circle-play" iconType="solid">
+    观看此 [视频指南](https://www.youtube.com/watch?v=SpfT6-YAVPk)，了解人工干预中间件的行为。
+</Callout>
+
+
+
+
+### 模型调用限制 (Model call limit)
+
+限制模型调用次数，以防止无限循环或产生过多费用。模型调用限制在以下场景中很有用：
+
+- 防止失控的 Agent 进行过多 API 调用。
+- 在生产部署中实施成本控制。
+- 在特定调用预算内测试 Agent 行为。
+
+**API 参考:** [`ModelCallLimitMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ModelCallLimitMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelCallLimitMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        ModelCallLimitMiddleware(
+            thread_limit=10,
+            run_limit=5,
+            exit_behavior="end",
+        ),
+    ],
+)
+```
+
+
+
+
+<Callout icon="circle-play" iconType="solid">
+    观看此 [视频指南](https://www.youtube.com/watch?v=nJEER0uaNkE)，了解模型调用限制中间件的行为。
+</Callout>
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="thread_limit" type="number">
+    线程中所有运行的总模型调用次数限制。默认无限制。
+</ParamField>
+
+<ParamField body="run_limit" type="number">
+    单次调用（一次用户消息 → 响应周期）的最大模型调用次数。默认无限制。
+</ParamField>
+
+<ParamField body="exit_behavior" type="string" default="end">
+    达到限制时的行为。选项：`'end'`（优雅终止）或 `'error'`（引发异常）
+</ParamField>
+
+
+
+
+</Accordion>
+
+
+### 工具调用限制 (Tool call limit)
+
+通过限制工具调用的次数来控制 Agent 的执行，可以全局限制所有工具，也可以针对特定工具进行限制。工具调用限制在以下场景中很有用：
+
+- 防止对昂贵的外部 API 进行过多调用。
+- 限制网络搜索或数据库查询。
+- 对特定工具的使用强制执行速率限制。
+- 防止 Agent 陷入无限循环。
+
+**API 参考:** [`ToolCallLimitMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ToolCallLimitMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolCallLimitMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, database_tool],
+    middleware=[
+        # 全局限制
+        ToolCallLimitMiddleware(thread_limit=20, run_limit=10),
+        # 工具特定限制
+        ToolCallLimitMiddleware(
+            tool_name="search",
+            thread_limit=5,
+            run_limit=3,
+        ),
+    ],
+)
+```
+
+
+
+
+<Callout icon="circle-play" iconType="solid">
+    观看此 [视频指南](https://www.youtube.com/watch?v=6gYlaJJ8t0w)，了解工具调用限制中间件的行为。
+</Callout>
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="tool_name" type="string">
+    要限制的特定工具的名称。如果未提供，限制将应用于**所有工具**。
+</ParamField>
+
+<ParamField body="thread_limit" type="number">
+    线程中所有运行的总工具调用次数限制（即对话）。在具有相同线程 ID 的多次调用中保持不变。需要检查点 (checkpointer) 来维护状态。`None` 表示无线程限制。
+</ParamField>
+
+<ParamField body="run_limit" type="number">
+    单次调用（一个用户消息 → 响应周期）的最大工具调用次数。每次新用户消息都会重置。`None` 表示无运行限制。
+
+    **注意:** 必须指定 `thread_limit` 或 `run_limit` 中的至少一个。
+</ParamField>
+
+<ParamField body="exit_behavior" type="string" default="continue">
+    达到限制时的行为：
+
+    - `'continue'` (默认) - 使用错误消息阻止超出的工具调用，让其他工具和模型继续执行。模型根据错误消息决定何时结束。
+    - `'error'` - 抛出 `ToolCallLimitExceededError` 异常，立即停止执行
+    - `'end'` - 使用一个 `ToolMessage` 和 AI 消息立即停止执行，仅在限制单个工具时有效；如果其他工具仍有待处理的调用，则会引发 `NotImplementedError`。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+使用以下配置指定限制：
+- **线程限制 (Thread limit)** - 对话中所有运行的最大调用次数（需要检查点）
+- **运行限制 (Run limit)** - 单次调用中的最大调用次数（每次轮次重置）
+
+退出行为：
+- `'continue'` (默认) - 用错误消息阻止超出的调用，Agent 继续执行
+- `'error'` - 立即抛出异常
+- `'end'` - 使用 ToolMessage + AI 消息停止（仅限单工具场景）
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolCallLimitMiddleware
+
+
+global_limiter = ToolCallLimitMiddleware(thread_limit=20, run_limit=10)
+search_limiter = ToolCallLimitMiddleware(tool_name="search", thread_limit=5, run_limit=3)
+database_limiter = ToolCallLimitMiddleware(tool_name="query_database", thread_limit=10)
+strict_limiter = ToolCallLimitMiddleware(tool_name="scrape_webpage", run_limit=2, exit_behavior="error")
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, database_tool, scraper_tool],
+    middleware=[global_limiter, search_limiter, database_limiter, strict_limiter],
+)
+```
+
+
+
+
+</Accordion>
+
+
+### 模型回退 (Model fallback)
+
+当主模型失败时，自动回退到备用模型。模型回退在以下场景中很有用：
+
+- 构建可从模型中断中恢复的弹性 Agent。
+- 通过回退到更便宜的模型来实现成本优化。
+- 跨 OpenAI、Anthropic 等提供商实现提供商冗余。
+
+**API 参考:** [`ModelFallbackMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ModelFallbackMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelFallbackMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        ModelFallbackMiddleware(
+            "gpt-4o-mini",
+            "claude-3-5-sonnet-20241022",
+        ),
+    ],
+)
+```
+
+
+
+
+<Callout icon="circle-play" iconType="solid">
+    观看此 [视频指南](https://www.youtube.com/watch?v=8rCRO0DUeIM)，了解模型回退中间件的行为。
+</Callout>
+
+
+<Accordion title="配置选项">
+
+<ParamField body="first_model" type="string | BaseChatModel" required>
+    当主模型失败时首先尝试的回退模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。
+</ParamField>
+
+<ParamField body="*additional_models" type="string | BaseChatModel">
+    如果前面的模型失败，按顺序尝试的其他回退模型
+</ParamField>
+
+
+
+
+</Accordion>
+
+### PII 检测 (PII detection)
+
+使用可配置的策略来检测和处理对话中的个人身份信息 (PII)。PII 检测在以下场景中很有用：
+
+- 具有合规性要求的医疗保健和金融应用程序。
+- 需要清理日志的客户服务 Agent。
+- 任何处理敏感用户数据的应用程序。
+
+**API 参考:** [`PIIMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.PIIMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import PIIMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        PIIMiddleware("email", strategy="redact", apply_to_input=True),
+        PIIMiddleware("credit_card", strategy="mask", apply_to_input=True),
+    ],
+)
+```
+
+
+
+
+#### 自定义 PII 类型 (Custom PII types)
+
+您可以提供一个 `detector` 参数来创建自定义 PII 类型。这允许您检测除内置类型之外，特定于用例的模式。
+
+**创建自定义检测器的三种方法：**
+
+1. **正则表达式模式字符串** - 简单的模式匹配
+
+1. **自定义函数** - 带有验证的复杂检测逻辑
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import PIIMiddleware
+import re
+
+
+# 方法 1：正则表达式模式字符串
+agent1 = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        PIIMiddleware(
+            "api_key",
+            detector=r"sk-[a-zA-Z0-9]{32}",
+            strategy="block",
+        ),
+    ],
+)
+
+# 方法 2：编译后的正则表达式模式
+agent2 = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        PIIMiddleware(
+            "phone_number",
+            detector=re.compile(r"\+?\d{1,3}[\s.-]?\d{3,4}[\s.-]?\d{4}"),
+            strategy="mask",
+        ),
+    ],
+)
+
+# 方法 3：自定义检测函数
+def detect_ssn(content: str) -> list[dict[str, str | int]]:
+    """检测带有验证的 SSN（社会安全号码）。
+
+    返回一个包含 'text'、'start' 和 'end' 键的字典列表。
+    """
+    import re
+    matches = []
+    pattern = r"\d{3}-\d{2}-\d{4}"
+    for match in re.finditer(pattern, content):
+        ssn = match.group(0)
+        # 验证：前三位数字不应是 000、666 或 900-999
+        first_three = int(ssn[:3])
+        if first_three not in [0, 666] and not (900 <= first_three <= 999):
+            matches.append({
+                "text": ssn,
+                "start": match.start(),
+                "end": match.end(),
+            })
+    return matches
+
+agent3 = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        PIIMiddleware(
+            "ssn",
+            detector=detect_ssn,
+            strategy="hash",
+        ),
+    ],
+)
+```
+
+
+
+
+**自定义检测函数签名：**
+
+检测函数必须接受一个字符串（内容）并返回匹配项：
+
+返回一个包含 `text`、`start` 和 `end` 键的字典列表：
+```python
+def detector(content: str) -> list[dict[str, str | int]]:
+    return [
+        {"text": "matched_text", "start": 0, "end": 12},
+        # ... 更多匹配项
+    ]
+```
+
+
+
+<Tip>
+    对于自定义检测器：
+
+    - 使用正则表达式字符串进行简单模式匹配
+    - 当您需要标志（例如，不区分大小写的匹配）时，使用 RegExp 对象
+    - 当您需要超出模式匹配的验证逻辑时，使用自定义函数
+    - 自定义函数让您可以完全控制检测逻辑，并可以实现复杂的验证规则
+</Tip>
+
+<Accordion title="配置选项">
+
+<ParamField body="pii_type" type="string" required>
+    要检测的 PII 类型。可以是内置类型（`email`、`credit_card`、`ip`、`mac_address`、`url`）或自定义类型名称。
+</ParamField>
+
+<ParamField body="strategy" type="string" default="redact">
+    如何处理检测到的 PII。选项：
+
+    - `'block'` - 检测到时引发异常
+    - `'redact'` - 替换为 `[REDACTED_TYPE]`
+    - `'mask'` - 部分屏蔽（例如，`****-****-****-1234`）
+    - `'hash'` - 替换为确定性哈希值
+</ParamField>
+
+<ParamField body="detector" type="function | regex">
+    自定义检测函数或正则表达式。如果未提供，则使用内置的 PII 类型检测器。
+</ParamField>
+
+<ParamField body="apply_to_input" type="boolean" default="True">
+    在模型调用前检查用户消息
+</ParamField>
+
+<ParamField body="apply_to_output" type="boolean" default="False">
+    在模型调用后检查 AI 消息
+</ParamField>
+
+<ParamField body="apply_to_tool_results" type="boolean" default="False">
+    在工具执行后检查工具结果消息
+</ParamField>
+
+
+
+
+</Accordion>
+
+### 待办事项列表 (To-do list)
+
+为 Agent 配备任务规划和跟踪能力，以处理复杂的多步骤任务。待办事项列表在以下场景中很有用：
+
+- 需要跨多个工具协调的复杂多步骤任务。
+- 进度可见性很重要的长期操作。
+
+<Note>
+    此中间件会自动为 Agent 提供一个 `write_todos` 工具和系统提示，以指导有效的任务规划。
+</Note>
+
+**API 参考:** [`TodoListMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.TodoListMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import TodoListMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[read_file, write_file, run_tests],
+    middleware=[TodoListMiddleware()],
+)
+```
+
+
+
+
+<Callout icon="circle-play" iconType="solid">
+    观看此 [视频指南](https://www.youtube.com/watch?v=yTWocbVKQxw)，了解待办事项列表中间件的行为。
+</Callout>
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="system_prompt" type="string">
+    用于指导待办事项用法的自定义系统提示。如果未指定，则使用内置提示。
+</ParamField>
+
+<ParamField body="tool_description" type="string">
+    `write_todos` 工具的自定义描述。如果未指定，则使用内置描述。
+</ParamField>
+
+
+
+
+</Accordion>
+
+
+### LLM 工具选择器 (LLM tool selector)
+
+在调用主模型之前，使用 LLM 智能地选择相关工具。LLM 工具选择器在以下场景中很有用：
+
+- 工具很多（10+）但大多数与查询不相关的 Agent。
+- 通过过滤不相关的工具来减少 Token 使用量。
+- 提高模型的注意力和准确性。
+
+此中间件使用结构化输出来要求 LLM 选择当前查询最相关的工具。结构化输出模式定义了可用的工具名称和描述。模型提供商通常在后台将此结构化输出信息添加到系统提示中。
+
+**API 参考:** [`LLMToolSelectorMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.LLMToolSelectorMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import LLMToolSelectorMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[tool1, tool2, tool3, tool4, tool5, ...],
+    middleware=[
+        LLMToolSelectorMiddleware(
+            model="gpt-4o-mini",
+            max_tools=3,
+            always_include=["search"],
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="model" type="string | BaseChatModel">
+    用于工具选择的模型。可以是模型标识符字符串（例如，`'openai:gpt-4o-mini'`）或 `BaseChatModel` 实例。有关更多信息，请参阅 [`init_chat_model`](https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model))。
+
+    默认为 Agent 的主模型。
+</ParamField>
+
+<ParamField body="system_prompt" type="string">
+    选择模型的指令。如果未指定，则使用内置提示。
+</ParamField>
+
+<ParamField body="max_tools" type="number">
+    要选择的最大工具数量。如果模型选择的工具超过此数量，将只使用前 `max_tools` 个。如果未指定，则无限制。
+</ParamField>
+
+<ParamField body="always_include" type="list[string]">
+    无论选择如何都应包含的工具名称。这些不计入 `max_tools` 限制。
+</ParamField>
+
+
+
+
+</Accordion>
+
+
+### 工具重试 (Tool retry)
+
+使用可配置的指数退避（exponential backoff）自动重试失败的工具调用。工具重试在以下场景中很有用：
+
+- 处理外部 API 调用中的瞬态（暂时性）故障。
+- 提高网络依赖型工具的可靠性。
+- 构建在出现临时错误时能优雅处理故障的弹性 Agent。
+
+**API 参考:** [`ToolRetryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ToolRetryMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolRetryMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, database_tool],
+    middleware=[
+        ToolRetryMiddleware(
+            max_retries=3,
+            backoff_factor=2.0,
+            initial_delay=1.0,
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="max_retries" type="number" default="2">
+    初始调用后最大重试次数（默认总共 3 次尝试）
+</ParamField>
+
+<ParamField body="tools" type="list[BaseTool | str]">
+    可选的工具列表或工具名称，用于应用重试逻辑。如果为 `None`，则应用于所有工具。
+</ParamField>
+
+<ParamField body="retry_on" type="tuple[type[Exception], ...] | callable" default="(Exception,)">
+    是应重试的异常类型元组，还是一个接受异常并返回 `True` 表示应重试的可调用对象。
+</ParamField>
+
+<ParamField body="on_failure" type="string | callable" default="return_message">
+    所有重试用尽后的行为。选项：
+    - `'return_message'` - 返回包含错误详情的 `ToolMessage`（允许 LLM 处理失败）
+    - `'raise'` - 重新引发异常（停止 Agent 执行）
+    - 自定义可调用对象 - 接受异常并返回 `ToolMessage` 内容字符串的函数
+</ParamField>
+
+<ParamField body="backoff_factor" type="number" default="2.0">
+    指数退避的乘数。每次重试等待时间为 `initial_delay * (backoff_factor ** retry_number)` 秒。设为 `0.0` 表示恒定延迟。
+</ParamField>
+
+<ParamField body="initial_delay" type="number" default="1.0">
+    首次重试前的初始延迟（秒）。
+</ParamField>
+
+<ParamField body="max_delay" type="number" default="60.0">
+    重试之间的最大延迟（秒）（限制指数退避的增长）。
+</ParamField>
+
+<ParamField body="jitter" type="boolean" default="true">
+    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应（thundering herd）。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+中间件自动使用指数退避重试失败的工具调用。
+
+**关键配置:**
+- `max_retries` - 重试次数（默认：2）
+- `backoff_factor` - 指数退避的乘数（默认：2.0）
+- `initial_delay` - 起始延迟（秒）（默认：1.0）
+- `max_delay` - 延迟增长的上限（默认：60.0）
+- `jitter` - 是否添加随机变动（默认：True）
+
+**失败处理:**
+- `on_failure='return_message'` - 返回错误消息
+- `on_failure='raise'` - 重新抛出异常
+- 自定义函数 - 返回错误消息的函数
+
+
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolRetryMiddleware
+
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, database_tool, api_tool],
+    middleware=[
+        ToolRetryMiddleware(
+            max_retries=3,
+            backoff_factor=2.0,
+            initial_delay=1.0,
+            max_delay=60.0,
+            jitter=True,
+            tools=["api_tool"],
+            retry_on=(ConnectionError, TimeoutError),
+            on_failure="continue",
+        ),
+    ],
+)
+```
+
+
+
+
+</Accordion>
+
+### 模型重试 (Model retry)
+
+使用可配置的指数退避自动重试失败的模型调用。模型重试在以下场景中很有用：
+
+- 处理模型 API 调用中的瞬态（暂时性）故障。
+- 提高网络依赖型模型请求的可靠性。
+- 构建能在出现临时模型错误时优雅处理故障的弹性 Agent。
+
+**API 参考:** [`ModelRetryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ModelRetryMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelRetryMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, database_tool],
+    middleware=[
+        ModelRetryMiddleware(
+            max_retries=3,
+            backoff_factor=2.0,
+            initial_delay=1.0,
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="max_retries" type="number" default="2">
+    初始调用后最大重试次数（默认总共 3 次尝试）
+</ParamField>
+
+<ParamField body="retry_on" type="tuple[type[Exception], ...] | callable" default="(Exception,)">
+    是应重试的异常类型元组，还是一个接受异常并返回 `True` 表示应重试的可调用对象。
+</ParamField>
+
+<ParamField body="on_failure" type="string | callable" default="continue">
+    所有重试用尽后的行为。选项：
+    - `'continue'` (默认) - 返回包含错误详情的 `AIMessage`（允许 Agent 潜在地处理失败）
+    - `'error'` - 重新抛出异常（停止 Agent 执行）
+    - 自定义可调用对象 - 接受异常并返回 `AIMessage` 内容字符串的函数
+</ParamField>
+
+<ParamField body="backoff_factor" type="number" default="2.0">
+    指数退避的乘数。每次重试等待时间为 `initial_delay * (backoff_factor ** retry_number)` 秒。设为 `0.0` 表示恒定延迟。
+</ParamField>
+
+<ParamField body="initial_delay" type="number" default="1.0">
+    首次重试前的初始延迟（秒）。
+</ParamField>
+
+<ParamField body="max_delay" type="number" default="60.0">
+    重试之间的最大延迟（秒）（限制指数退避的增长）。
+</ParamField>
+
+<ParamField body="jitter" type="boolean" default="true">
+    是否在延迟中添加随机抖动（`±25%`）以避免“雷电聚集”效应（thundering herd）。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+中间件自动使用指数退避重试失败的模型调用。
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelRetryMiddleware
+
+
+# 使用默认设置的基本用法（2 次重试，指数退避）
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool],
+    middleware=[ModelRetryMiddleware()],
+)
+
+# 自定义异常过滤
+class TimeoutError(Exception):
+    """模型超时错误。"""
+    pass
+
+class ConnectionError(Exception):
+    """连接错误。"""
+    pass
+
+# 仅重试特定异常
+retry = ModelRetryMiddleware(
+    max_retries=4,
+    retry_on=(TimeoutError, ConnectionError),
+    backoff_factor=1.5,
+)
+
+
+def should_retry(error: Exception) -> bool:
+    # 仅在超时错误时重试
+    if isinstance(error, TimeoutError):
+        return True
+    # 或检查特定的 HTTP 状态码
+    if hasattr(error, "status_code"):
+        return error.status_code in (429, 503)
+    return False
+
+retry_with_filter = ModelRetryMiddleware(
+    max_retries=3,
+    retry_on=should_retry,
+)
+
+# 失败时返回错误消息而不是引发异常
+retry_continue = ModelRetryMiddleware(
+    max_retries=4,
+    on_failure="continue",  # 返回 AIMessage 包含错误，而不是引发异常
+)
+
+# 自定义错误消息格式化
+def format_error(error: Exception) -> str:
+    return f"模型调用失败: {error}。请稍后再试。"
+
+retry_with_formatter = ModelRetryMiddleware(
+    max_retries=4,
+    on_failure=format_error,
+)
+
+# 恒定退避（无指数增长）
+constant_backoff = ModelRetryMiddleware(
+    max_retries=5,
+    backoff_factor=0.0,  # 无指数增长
+    initial_delay=2.0,  # 始终等待 2 秒
+)
+
+# 失败时引发异常
+strict_retry = ModelRetryMiddleware(
+    max_retries=2,
+    on_failure="error",  # 重新抛出异常而不是返回消息
+)
+```
+
+
+
+
+</Accordion>
+
+### LLM 工具模拟器 (LLM tool emulator)
+
+使用 LLM 模拟工具执行，替换实际的工具调用，生成 AI 生成的响应。LLM 工具模拟器在以下场景中很有用：
+
+- 在不执行真实工具的情况下测试 Agent 行为。
+- 在外部工具不可用或成本高昂时开发 Agent。
+- 在实现实际工具之前，对 Agent 工作流程进行原型设计。
+
+**API 参考:** [`LLMToolEmulator`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.LLMToolEmulator)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import LLMToolEmulator
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[get_weather, search_database, send_email],
+    middleware=[
+        LLMToolEmulator(),  # 模拟所有工具
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="tools" type="list[str | BaseTool]">
+    要模拟的工具名称（str）或 BaseTool 实例列表。如果为 `None`（默认），则**所有**工具都将被模拟。如果为空列表 `[]`，则不模拟任何工具。如果包含工具名称/实例的数组，则仅模拟这些工具。
+</ParamField>
+
+<ParamField body="model" type="string | BaseChatModel">
+    用于生成模拟工具响应的模型。可以是模型标识符字符串（例如，`'anthropic:claude-sonnet-4-5-20250929'`）或 `BaseChatModel` 实例。如果未指定，则默认为 Agent 的模型。有关更多信息，请参阅 [`init_chat_model`](https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model))。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+该中间件使用 LLM 为工具调用生成合理的响应，而不是执行实际工具。
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import LLMToolEmulator
+from langchain.tools import tool
+
+
+@tool
+def get_weather(location: str) -> str:
+    """获取某地的当前天气。"""
+    return f"Weather in {location}"
+
+@tool
+def send_email(to: str, subject: str, body: str) -> str:
+    """发送电子邮件。"""
+    return "Email sent"
+
+
+# 模拟所有工具（默认行为）
+agent = create_agent(
+    model="gpt-4o",
+    tools=[get_weather, send_email],
+    middleware=[LLMToolEmulator()],
+)
+
+# 仅模拟特定工具
+agent2 = create_agent(
+    model="gpt-4o",
+    tools=[get_weather, send_email],
+    middleware=[LLMToolEmulator(tools=["get_weather"])],
+)
+
+# 使用自定义模型进行模拟
+agent4 = create_agent(
+    model="gpt-4o",
+    tools=[get_weather, send_email],
+    middleware=[LLMToolEmulator(model="claude-sonnet-4-5-20250929")],
+)
+```
+
+
+
+
+</Accordion>
+
+### 上下文编辑 (Context editing)
+
+当达到 Token 限制时，通过清除较旧的工具调用输出来管理对话上下文，同时保留最近的结果。这有助于在具有大量工具调用的长期对话中保持上下文窗口的可管理性。上下文编辑在以下场景中很有用：
+
+- 具有大量工具调用并超出 Token 限制的长期对话
+- 通过删除不再相关的旧工具输出来降低 Token 成本
+- 仅在上下文中保留最近 N 个工具结果
+
+**API 参考:** [`ContextEditingMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ContextEditingMiddleware), [`ClearToolUsesEdit`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ClearToolUsesEdit)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesEdit
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        ContextEditingMiddleware(
+            edits=[
+                ClearToolUsesEdit(
+                    trigger=100000,
+                    keep=3,
+                ),
+            ],
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="配置选项">
+
+<ParamField body="edits" type="list[ContextEdit]" default="[ClearToolUsesEdit()]">
+    要应用的 [`ContextEdit`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ContextEdit) 策略列表
+</ParamField>
+
+<ParamField body="token_count_method" type="string" default="approximate">
+    Token 计数方法。选项：`'approximate'` 或 `'model'`
+</ParamField>
+
+**[`ClearToolUsesEdit`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ClearToolUsesEdit) 选项:**
+
+<ParamField body="trigger" type="number" default="100000">
+    触发编辑的 Token 计数。当对话超过此 Token 计数时，将清除较旧的工具输出。
+</ParamField>
+
+<ParamField body="clear_at_least" type="number" default="0">
+    编辑运行时要回收的最小 Token 数。如果设置为 0，则清除所需的所有内容。
+</ParamField>
+
+<ParamField body="keep" type="number" default="3">
+    必须保留的最近工具结果的数量。这些永远不会被清除。
+</ParamField>
+
+<ParamField body="clear_tool_inputs" type="boolean" default="False">
+    在 AI 消息中是否清除原始工具调用参数。如果为 `True`，工具调用参数将替换为空对象。
+</ParamField>
+
+<ParamField body="exclude_tools" type="list[string]" default="()">
+    要从清除中排除的工具名称列表。这些工具的输出永远不会被清除。
+</ParamField>
+
+<ParamField body="placeholder" type="string" default="[cleared]">
+    插入到被清除的工具输出中的占位符文本。这会替换原始工具消息内容。
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+中间件在达到 Token 限制时应用上下文编辑策略。最常见的策略是 `ClearToolUsesEdit`，它在保留最新结果的同时清除较旧的工具结果。
+
+**工作原理:**
+1. 监控对话中的 Token 计数
+2. 达到阈值时，清除旧的工具输出
+3. 保留最近的 N 个工具结果
+4. 可选：为上下文保留工具调用参数
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesEdit
+
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool, your_calculator_tool, database_tool],
+    middleware=[
+        ContextEditingMiddleware(
+            edits=[
+                ClearToolUsesEdit(
+                    trigger=2000,
+                    keep=3,
+                    clear_tool_inputs=False,
+                    exclude_tools=[],
+                    placeholder="[cleared]",
+                ),
+            ],
+        ),
+    ],
+)
+```
+
+
+
+
+</Accordion>
+
+### Shell 工具 (Shell tool)
+
+向 Agent 暴露一个持久的 shell 会话，用于命令执行。Shell 工具中间件在以下场景中很有用：
+
+- 需要执行系统命令的 Agent。
+- 开发和部署自动化任务。
+- 测试和验证工作流程。
+- 需要文件发现的文件系统操作和脚本执行。
+
+<Warning>
+    **安全注意事项**: 使用适当的执行策略（`HostExecutionPolicy`、`DockerExecutionPolicy` 或 `CodexSandboxExecutionPolicy`）以匹配部署的安全要求。
+</Warning>
+
+<Note>
+    **限制**: 持久 shell 会话目前与中断（人工干预）不兼容。我们预计未来会增加对此的支持。
+</Note>
+
+**API 参考:** [`ShellToolMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ShellToolMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    ShellToolMiddleware,
+    HostExecutionPolicy,
+)
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool],
+    middleware=[
+        ShellToolMiddleware(
+            workspace_root="/workspace",
+            execution_policy=HostExecutionPolicy(),
+        ),
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+<ParamField body="workspace_root" type="str | Path | None">
+    Shell 会话的基础目录。如果省略，Agent 启动时会创建一个临时目录，Agent 结束时会被移除。
+</ParamField>
+
+<ParamField body="startup_commands" type="tuple[str, ...] | list[str] | str | None">
+    会话启动后按顺序执行的可选命令
+</ParamField>
+
+<ParamField body="shutdown_commands" type="tuple[str, ...] | list[str] | str | None">
+    在会话关闭前执行的可选命令
+</ParamField>
+
+<ParamField body="execution_policy" type="BaseExecutionPolicy | None">
+    控制超时、输出限制和资源配置的执行策略。选项：
+
+    - `HostExecutionPolicy` - 完全主机访问（默认）；最适合 Agent 已经在容器或 VM 中运行的可信环境
+    - `DockerExecutionPolicy` - 为每次 Agent 运行启动一个单独的 Docker 容器，提供更硬的隔离
+    - `CodexSandboxExecutionPolicy` - 通过 Codex CLI 沙箱进行重用，以提供额外的系统调用/文件系统限制
+</ParamField>
+
+<ParamField body="redaction_rules" type="tuple[RedactionRule, ...] | list[RedactionRule] | None">
+    可选的混淆规则，用于清理命令输出后再返回给模型
+</ParamField>
+
+<ParamField body="tool_description" type="str | None">
+    可选的覆盖项，用于覆盖已注册的 shell 工具描述
+</ParamField>
+
+<ParamField body="shell_command" type="Sequence[str] | str | None">
+    用于启动持久会话的可选 shell 可执行文件（字符串）或参数序列。默认为 `/bin/bash`。
+</ParamField>
+
+<ParamField body="env" type="Mapping[str, Any] | None">
+    可选的环境变量，提供给 shell 会话。值在命令执行前被强制转换为字符串。
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+中间件提供了一个持久的 shell 会话，Agent 可以用它来顺序执行命令。
+
+**执行策略:**
+- `HostExecutionPolicy` (默认) - 具有完全主机访问权限的原生执行
+- `DockerExecutionPolicy` - 隔离的 Docker 容器执行
+- `CodexSandboxExecutionPolicy` - 通过 Codex CLI 进行沙箱执行
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    ShellToolMiddleware,
+    HostExecutionPolicy,
+    DockerExecutionPolicy,
+    RedactionRule,
+)
+
+
+# 带主机执行的基本 shell 工具
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search_tool],
+    middleware=[
+        ShellToolMiddleware(
+            workspace_root="/workspace",
+            execution_policy=HostExecutionPolicy(),
+        ),
+    ],
+)
+
+# Docker 隔离与启动命令
+agent_docker = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        ShellToolMiddleware(
+            workspace_root="/workspace",
+            startup_commands=["pip install requests", "export PYTHONPATH=/workspace"],
+            execution_policy=DockerExecutionPolicy(
+                image="python:3.11-slim",
+                command_timeout=60.0,
+            ),
+        ),
+    ],
+)
+
+# 带有输出混淆
+agent_redacted = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        ShellToolMiddleware(
+            workspace_root="/workspace",
+            redaction_rules=[
+                RedactionRule(pii_type="api_key", detector=r"sk-[a-zA-Z0-9]{32}"),
+            ],
+        ),
+    ],
+)
+```
+
+</Accordion>
+
+### 文件搜索 (File search)
+
+对文件系统文件提供 Glob 和 Grep 搜索工具。文件搜索中间件在以下场景中很有用：
+
+- 代码探索和分析
+- 按名称模式查找文件
+- 使用正则表达式搜索代码内容
+- 需要文件发现的大型代码库
+
+**API 参考:** [`FilesystemFileSearchMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.FilesystemFileSearchMiddleware)
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import FilesystemFileSearchMiddleware
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        FilesystemFileSearchMiddleware(
+            root_path="/workspace",
+            use_ripgrep=True,
+        ),
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+<ParamField body="root_path" type="str" required>
+    要搜索的根目录。所有文件操作都相对于此路径。
+</ParamField>
+
+<ParamField body="use_ripgrep" type="bool" default="True">
+    是否使用 ripgrep 进行搜索。如果 ripgrep 不可用，则回退到 Python 正则表达式。
+</ParamField>
+
+<ParamField body="max_file_size_mb" type="int" default="10">
+    要搜索的最大文件大小（MB）。大于此大小的文件将被跳过。
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+该中间件向 Agent 添加了两个搜索工具：
+
+**Glob 工具** - 快速文件模式匹配：
+- 支持如 `**/*.py`、`src/**/*.ts` 这样的模式
+- 返回按修改时间排序的匹配文件路径
+
+**Grep 工具** - 带正则表达式的内容搜索：
+- 完全支持正则表达式语法
+- 可使用 `include` 参数按文件模式过滤
+- 三种输出模式：`files_with_matches`（带匹配项的文件）、`content`（内容）、`count`（计数）
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import FilesystemFileSearchMiddleware
+from langchain.messages import HumanMessage
+
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[],
+    middleware=[
+        FilesystemFileSearchMiddleware(
+            root_path="/workspace",
+            use_ripgrep=True,
+            max_file_size_mb=10,
+        ),
+    ],
+)
+
+# Agent 现在可以使用 glob_search 和 grep_search 工具
+result = agent.invoke({
+    "messages": [HumanMessage("查找包含 'async def' 的所有 Python 文件")]
+})
+
+# Agent 将使用：
+# 1. glob_search(pattern="**/*.py") 来查找 Python 文件
+# 2. grep_search(pattern="async def", include="*.py") 来查找异步函数
+```
+</Accordion>
+
+
+
+## 针对特定提供商的中间件 (Provider-specific middleware)
+
+这些中间件针对特定的 LLM 提供商进行了优化。请参阅每个提供商的文档以获取完整的详细信息和示例。
+
+<Columns cols={2}>
+
+    <Card title="Anthropic" href="/oss/python/integrations/middleware/anthropic" icon="anthropic" arrow>
+        Claude 模型的提示缓存、bash 工具、文本编辑器、内存和文件搜索中间件。
+    </Card>
+    <Card title="OpenAI" href="/oss/python/integrations/middleware/openai" icon="openai" arrow>
+        OpenAI 模型的**内容审核**中间件。
+    </Card>
+
+
+
+</Columns>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\middleware\built-in.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

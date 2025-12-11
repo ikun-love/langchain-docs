@@ -1,0 +1,225 @@
+---
+title: IBM watsonx.ai
+---
+
+> [`WatsonxLLM`](https://ibm.github.io/watsonx-ai-python-sdk/fm_extensions.html#langchain) 是 IBM [watsonx.ai](https://www.ibm.com/products/watsonx-ai) 基础模型的封装器。
+
+此示例展示了如何使用 `LangChain` 与 `watsonx.ai` 模型进行通信。
+
+## 概览 (Overview)
+
+### 集成详情 (Integration details)
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/llms/ibm/) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [`WatsonxLLM`](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxLLM/) | [`langchain-ibm`](https://reference.langchain.com/python/integrations/langchain_ibm/) | ❌ | ❌ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-ibm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-ibm?style=flat-square&label=%20) |
+
+## 设置 (Setup)
+
+要访问 IBM watsonx.ai 模型，您需要创建一个 IBM watsonx.ai 账户、获取 API 密钥，并安装 `langchain-ibm` 集成包。
+
+### 凭证 (Credentials)
+
+下面的代码单元格定义了使用 watsonx 基础模型进行推理所需的凭证。
+
+**操作 (Action):** 提供 IBM Cloud 用户 API 密钥。有关详细信息，请参阅
+[管理用户 API 密钥](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)。
+
+```python
+import os
+from getpass import getpass
+
+watsonx_api_key = getpass()
+os.environ["WATSONX_APIKEY"] = watsonx_api_key
+```
+
+此外，您还可以将其他密钥作为环境变量传递。
+
+```python
+import os
+
+os.environ["WATSONX_URL"] = "your service instance url"
+os.environ["WATSONX_TOKEN"] = "your token for accessing the CLOUD or CPD cluster"
+os.environ["WATSONX_PASSWORD"] = "your password for accessing the CPD cluster"
+os.environ["WATSONX_USERNAME"] = "your username for accessing the CPD cluster"
+os.environ["WATSONX_INSTANCE_ID"] = "your instance_id for accessing the CPD cluster"
+```
+
+### 安装 (Installation)
+
+LangChain IBM 集成位于 `langchain-ibm` 包中：
+
+```python
+!pip install -qU langchain-ibm
+```
+
+## 实例化 (Instantiation)
+
+您可能需要针对不同的模型或任务调整模型的 `parameters`（参数）。有关详细信息，请参阅[文档](https://ibm.github.io/watsonx-ai-python-sdk/fm_model.html#metanames.GenTextParamsMetaNames)。
+
+```python
+parameters = {
+    "decoding_method": "sample",
+    "max_new_tokens": 100,
+    "min_new_tokens": 1,
+    "temperature": 0.5,
+    "top_k": 50,
+    "top_p": 1,
+}
+```
+
+使用先前设置的参数初始化 `WatsonxLLM` 类。
+
+**注意 (Note):**
+
+- 要为 API 调用提供上下文，您必须添加 `project_id` 或 `space_id`。有关更多信息，请参阅[文档](https://www.ibm.com/docs/en/watsonx-as-a-service?topic=projects)。
+- 根据您预配的服务实例的区域，使用[此处](https://ibm.github.io/watsonx-ai-python-sdk/setup_cloud.html#authentication)描述的 URL 之一。
+
+在此示例中，我们将使用 `project_id` 和达拉斯 (Dallas) URL。
+
+您需要指定用于推理的 `model_id`。所有可用模型都可以在[文档](https://ibm.github.io/watsonx-ai-python-sdk/fm_model.html#TextModels)中找到。
+
+```python
+from langchain_ibm import WatsonxLLM
+
+watsonx_llm = WatsonxLLM(
+    model_id="ibm/granite-13b-instruct-v2",
+    url="https://us-south.ml.cloud.ibm.com",
+    project_id="PASTE YOUR PROJECT_ID HERE",
+    params=parameters,
+)
+```
+
+或者，您可以使用 Cloud Pak for Data 凭证。有关详细信息，请参阅[文档](https://ibm.github.io/watsonx-ai-python-sdk/setup_cpd.html)。
+
+```python
+watsonx_llm = WatsonxLLM(
+    model_id="ibm/granite-13b-instruct-v2",
+    url="PASTE YOUR URL HERE",
+    username="PASTE YOUR USERNAME HERE",
+    password="PASTE YOUR PASSWORD HERE",
+    instance_id="openshift",
+    version="4.8",
+    project_id="PASTE YOUR PROJECT_ID HERE",
+    params=parameters,
+)
+```
+
+您可以将 `model_id` 替换为先前微调模型的 `deployment_id`。整个模型微调工作流程在[使用 TuneExperiment 和 PromptTuner](https://ibm.github.io/watsonx-ai-python-sdk/pt_tune_experiment_run.html) 中有所描述。
+
+```python
+watsonx_llm = WatsonxLLM(
+    deployment_id="PASTE YOUR DEPLOYMENT_ID HERE",
+    url="https://us-south.ml.cloud.ibm.com",
+    project_id="PASTE YOUR PROJECT_ID HERE",
+    params=parameters,
+)
+```
+
+对于某些特定需求，可以选择将 IBM 的 [`APIClient`](https://ibm.github.io/watsonx-ai-python-sdk/base.html#apiclient) 对象传递给 `WatsonxLLM` 类。
+
+```python
+from ibm_watsonx_ai import APIClient
+
+api_client = APIClient(...)
+
+watsonx_llm = WatsonxLLM(
+    model_id="ibm/granite-13b-instruct-v2",
+    watsonx_client=api_client,
+)
+```
+
+您也可以将 IBM 的 [`ModelInference`](https://ibm.github.io/watsonx-ai-python-sdk/fm_model_inference.html) 对象传递给 `WatsonxLLM` 类。
+
+```python
+from ibm_watsonx_ai.foundation_models import ModelInference
+
+model = ModelInference(...)
+
+watsonx_llm = WatsonxLLM(watsonx_model=model)
+```
+
+## 调用 (Invocation)
+
+要获取补全结果，可以直接使用字符串提示词调用模型。
+
+```python
+# 调用单个提示词
+
+watsonx_llm.invoke("Who is man's best friend?")
+```
+
+```output
+"Man's best friend is his dog. Dogs are man's best friend because they are always there for you, they never judge you, and they love you unconditionally. Dogs are also great companions and can help reduce stress levels. "
+```
+
+```python
+# 调用多个提示词
+
+watsonx_llm.generate(
+    [
+        "The fastest dog in the world?",
+        "Describe your chosen dog breed",
+    ]
+)
+```
+
+```output
+LLMResult(generations=[[Generation(text='The fastest dog in the world is the greyhound. Greyhounds can run up to 45 mph, which is about the same speed as a Usain Bolt.', generation_info={'finish_reason': 'eos_token'})], [Generation(text='The Labrador Retriever is a breed of retriever that was bred for hunting. They are a very smart breed and are very easy to train. They are also very loyal and will make great companions. ', generation_info={'finish_reason': 'eos_token'})]], llm_output={'token_usage': {'generated_token_count': 82, 'input_token_count': 13}, 'model_id': 'ibm/granite-13b-instruct-v2', 'deployment_id': None}, run=[RunInfo(run_id=UUID('750b8a0f-8846-456d-93d0-e039e95b1276')), RunInfo(run_id=UUID('aa4c2a1c-5b08-4fcf-87aa-50228de46db5'))], type='LLMResult')
+```
+
+## 流式输出模型 (Streaming the Model output)
+
+您可以对模型输出进行流式处理。
+
+```python
+for chunk in watsonx_llm.stream(
+    "Describe your favorite breed of dog and why it is your favorite."
+):
+    print(chunk, end="")
+```
+
+```output
+My favorite breed of dog is a Labrador Retriever. They are my favorite breed because they are my favorite color, yellow. They are also very smart and easy to train.
+```
+
+## 链式调用 (Chaining)
+
+创建 `PromptTemplate` 对象，这些对象负责生成随机问题。
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+template = "Generate a random question about {topic}: Question: "
+
+prompt = PromptTemplate.from_template(template)
+```
+
+提供一个主题并运行链式调用。
+
+```python
+llm_chain = prompt | watsonx_llm
+
+topic = "dog"
+
+llm_chain.invoke(topic)
+```
+
+```output
+'What is the origin of the name "Pomeranian"?'
+```
+
+---
+
+## API 参考 (API reference)
+
+有关所有 `WatsonxLLM` 功能和配置的详细文档，请前往[API 参考](https://reference.langchain.com/python/integrations/langchain_ibm/WatsonxLLM/)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\ibm_watsonx.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

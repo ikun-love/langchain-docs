@@ -1,0 +1,58 @@
+---
+title: MosaicML
+---
+
+[MosaicML](https://docs.mosaicml.com/en/latest/inference.html) 提供托管的推理服务。您可以选择使用各种开源模型，或者部署您自己的模型。
+
+本示例将介绍如何使用 LangChain 与 MosaicML 推理服务进行交互，以实现文本补全功能。
+
+```python
+# 注册一个账户：https://forms.mosaicml.com/demo?utm_source=langchain
+
+from getpass import getpass
+
+MOSAICML_API_TOKEN = getpass()
+```
+
+```python
+import os
+
+os.environ["MOSAICML_API_TOKEN"] = MOSAICML_API_TOKEN
+```
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms import MosaicML
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+template = """问题：{question}"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+# inject_instruction_format=True 确保输入格式符合模型要求的指令格式
+# model_kwargs={"max_new_tokens": 128} 设置生成文本的最大新 token 数量
+llm = MosaicML(inject_instruction_format=True, model_kwargs={"max_new_tokens": 128})
+```
+
+```python
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+```python
+question = "训练大型语言模型（LLM）使用领域特定数据的一个好理由是什么？"
+
+llm_chain.run(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\mosaicml.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

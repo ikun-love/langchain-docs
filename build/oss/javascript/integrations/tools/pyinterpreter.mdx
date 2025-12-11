@@ -1,0 +1,73 @@
+---
+title: Python 解释器工具
+---
+
+<Warning>
+此工具会执行代码，并可能执行破坏性操作。请确保你信任所有传递给它的代码！
+</Warning>
+
+LangChain 提供了一个实验性的工具，用于执行任意的 Python 代码。
+当与能够生成代码的大型语言模型（LLM）结合使用时，这对于执行更强大的计算非常有用。
+
+## 用法
+
+```typescript
+import { OpenAI } from "@langchain/openai";
+import { PythonInterpreterTool } from "@langchain/community/experimental/tools/pyinterpreter";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const prompt = ChatPromptTemplate.fromTemplate(
+  `生成执行 {input} 的 python 代码。不要生成任何其他内容。`
+);
+
+const model = new OpenAI({});
+
+const interpreter = await PythonInterpreterTool.initialize({
+  indexURL: "../node_modules/pyodide",
+});
+
+// 注意：在 Deno 中，您可能更容易自己初始化解释器：
+// import pyodideModule from "npm:pyodide/pyodide.js";
+// import { PythonInterpreterTool } from "npm:@langchain/community/experimental/tools/pyinterpreter";
+
+// const pyodide = await pyodideModule.loadPyodide();
+// const pythonTool = new PythonInterpreterTool({instance: pyodide})
+
+const chain = prompt
+  .pipe(model)
+  .pipe(new StringOutputParser())
+  .pipe(interpreter);
+
+const result = await chain.invoke({
+  input: `打印 "Hello LangChain"`,
+});
+
+console.log(JSON.parse(result).stdout);
+
+// 安装 python 包：
+// 这使用了 loadPackages 命令。
+// 这适用于使用 pyodide 构建的包。
+await interpreter.addPackage("numpy");
+// 但对于其他包，您可能希望使用 micropip。
+// 有关更多信息，请参阅：https://pyodide.org/en/stable/usage/loading-packages.html
+await interpreter.addPackage("micropip");
+// 以下大致等同于：
+// pyodide.runPython(`import ${pkgname}; ${pkgname}`);
+const micropip = interpreter.pyodideInstance.pyimport("micropip");
+await micropip.install("numpy");
+```
+
+## 相关
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\pyinterpreter.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,106 @@
+```mdx
+---
+title: 追踪生成器函数
+sidebarTitle: Trace generator functions
+---
+
+在大多数大型语言模型（LLM）应用中，您通常希望**流式传输**输出，以最小化用户看到第一个 token 所需的时间。
+
+LangSmith 的追踪功能原生支持通过 `generator` 函数进行流式输出。示例如下。
+
+<CodeGroup>
+
+```python Python
+from langsmith import traceable
+@traceable
+def my_generator():
+  for chunk in ["Hello", "World", "!"]:
+      yield chunk
+# 流式传输给用户
+for output in my_generator():
+  print(output)
+# 也适用于异步函数
+import asyncio
+@traceable
+async def my_async_generator():
+  for chunk in ["Hello", "World", "!"]:
+      yield chunk
+# 流式传输给用户
+async def main():
+  async for output in my_async_generator():
+      print(output)
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { traceable } from "langsmith/traceable";
+const myGenerator = traceable(function* () {
+  for (const chunk of ["Hello", "World", "!"]) {
+      yield chunk;
+  }
+});
+for (const output of myGenerator()) {
+  console.log(output);
+}
+```
+
+</CodeGroup>
+
+## 聚合结果[ ](#aggregate-results "Direct link to Aggregate Results")
+
+默认情况下，被追踪函数的 `outputs` 会在 LangSmith 中被聚合为一个单独的数组。如果您想自定义输出的存储方式（例如，将输出连接成一个单独的字符串），您可以使用 `aggregate` 选项（在 Python 中是 `reduce_fn`）。这在聚合流式 LLM 输出时尤其有用。
+
+<Note>
+聚合输出**仅**影响输出的追踪表示形式。它不会改变您的函数返回的实际值。
+</Note>
+
+<CodeGroup>
+
+```python Python
+from langsmith import traceable
+def concatenate_strings(outputs: list):
+  return "".join(outputs)
+@traceable(reduce_fn=concatenate_strings)
+def my_generator():
+  for chunk in ["Hello", "World", "!"]:
+      yield chunk
+# 流式传输给用户
+for output in my_generator():
+  print(output)
+# 也适用于异步函数
+import asyncio
+@traceable(reduce_fn=concatenate_strings)
+async def my_async_generator():
+  for chunk in ["Hello", "World", "!"]:
+      yield chunk
+# 流式传输给用户
+async def main():
+  async for output in my_async_generator():
+      print(output)
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { traceable } from "langsmith/traceable";
+const concatenateStrings = (outputs: string[]) => outputs.join("");
+const myGenerator = traceable(function* () {
+  for (const chunk of ["Hello", "World", "!"]) {
+      yield chunk;
+  }
+}, { aggregator: concatenateStrings });
+for (const output of await myGenerator()) {
+  console.log(output);
+}
+```
+
+</CodeGroup>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\trace-generator-functions.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

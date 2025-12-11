@@ -1,0 +1,54 @@
+---
+title: Agent Builder 设置
+description: 为 Agent Builder 使用的模型和工具添加必要的 Workspace 密钥。
+sidebarTitle: 设置
+---
+
+此页面列出了在使用 Agent Builder 之前需要添加的 Workspace 密钥。请在 LangSmith Workspace 设置的“密钥 (Secrets)”部分添加这些密钥。请确保密钥的范围限定在您的 Workspace 级别，并避免将凭据放置在提示或代码中。
+
+## 如何添加 Workspace 密钥
+
+在 [LangSmith UI](https://smith.langchain.com) 中，请确保您已将 LLM API 密钥设置为 [Workspace 密钥](/langsmith/administration-overview#workspace-secrets)（可以是 Anthropic 或 OpenAI 的 API 密钥）。
+
+1. 导航到 <Icon icon="gear" /> **设置 (Settings)**，然后转到 **密钥 (Secrets)** 选项卡。
+1. 选择 **添加密钥 (Add secret)**，输入 `OPENAI_API_KEY` 或 `ANTHROPIC_API_KEY` 作为**名称 (name)**，并输入您的 API 密钥作为**值 (value)**。
+1. 选择 **保存密钥 (Save secret)**。
+
+<Note> 在 LangSmith UI 中添加 Workspace 密钥时，请确保密钥的名称与您的模型提供商预期的环境变量名称相匹配。</Note>
+
+## 所需的模型密钥
+
+为了让 Agent Builder 能够向 LLM 发出 API 调用，您需要将 OpenAI 或 Anthropic API 密钥设置为 Workspace 密钥。Agent 图 (Agent graphs) 会从 Workspace 密钥中加载此密钥以进行推理 (inference)。
+
+<Note icon="wand-magic-sparkles" iconType="regular">
+  Agent Builder 支持为每个 Agent 配置自定义模型。有关更多信息，请参阅 [自定义模型](/langsmith/agent-builder-essentials#custom-models) 。
+</Note>
+
+## Agent Builder 特定的密钥
+
+以 `AGENT_BUILDER_` 为前缀的密钥在 Agent Builder 内部会优先于 Workspace 密钥。这样，您可以更好地跟踪 Agent Builder 与 LangSmith 中使用相同密钥的其他部分的使用情况。
+
+如果您同时设置了 `OPENAI_API_KEY` 和 `AGENT_BUILDER_OPENAI_API_KEY`，系统将使用 `AGENT_BUILDER_OPENAI_API_KEY` 这个密钥。
+
+## 可选工具密钥
+
+为您启用的任何工具添加密钥。这些密钥在运行时从 Workspace 密钥中读取。
+
+- `EXA_API_KEY`: Exa 搜索工具（通用网络和 LinkedIn 个人资料搜索）必需。
+- `TAVILY_API_KEY`: Tavily 网络搜索必需。
+- `TWITTER_API_KEY` 和 `TWITTER_API_KEY_SECRET`: Twitter/X 读取操作必需（仅限应用提供的 bearer token）。发布/媒体上传功能未启用。
+
+## MCP 服务器配置
+
+Agent Builder 可以从一个或多个远程 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器拉取工具。在您的 [Workspace](/langsmith/administration-overview#workspaces) 设置中配置 MCP 服务器和标头 (headers)。Agent Builder 会自动发现工具并在调用它们时应用配置的标头。
+
+有关使用远程 MCP 服务器的更多详细信息，请参阅 [MCP 框架](/langsmith/agent-builder-mcp-framework#using-remote-mcp-servers) 页面。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-builder-setup.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

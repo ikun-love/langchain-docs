@@ -1,0 +1,52 @@
+---
+title: Quip
+---
+
+>[Quip](https://quip.com) 是一款适用于移动设备和 Web 的协作式生产力软件套件。它允许多人协作创建和编辑文档和电子表格，通常用于商业目的。
+
+`Quip` 文档的加载器。
+
+请参考[此处](https://quip.com/dev/automation/documentation/current#section/Authentication/Get-Access-to-Quip's-APIs)了解如何获取个人访问令牌（Personal Access Token）。
+
+指定一个 `folder_ids` 列表和/或 `thread_ids` 列表，以便将相应的文档加载到 `Document` 对象中。如果两者都指定了，加载器将根据 `folder_ids` 获取该文件夹下的所有 `thread_ids`，并将它们与传入的 `thread_ids` 合并。最终将返回这两个集合的并集。
+
+* 如何获取 `folder_id`？
+  前往 Quip 文件夹，右键单击文件夹并复制链接，从链接中提取后缀作为 `folder_id`。提示：`https://example.quip.com/<folder_id>`
+* 如何获取 `thread_id`？
+  `thread_id` 即文档 ID。前往 Quip 文档，右键单击文档并复制链接，从链接中提取后缀作为 `thread_id`。提示：`https://exmaple.quip.com/<thread_id>`
+
+您还可以设置布尔值 `include_all_folders` 为 `True`，这将获取 `group_folder_ids`。
+您还可以指定布尔值 `include_attachments` 来包含附件，此项默认设置为 `False`；如果设置为 `True`，则所有附件都将被下载，`QuipLoader` 将从附件中提取文本并将其添加到 `Document` 对象中。当前支持的附件类型包括：`PDF`、`PNG`、`JPEG/JPG`、`SVG`、`Word` 和 `Excel`。此外，您还可以指定布尔值 `include_comments` 来包含文档中的评论，此项默认设置为 `False`；如果设置为 `True`，则将获取文档中的所有评论并将其添加到 `Document` 对象中。
+
+在使用 `QuipLoader` 之前，请确保您已安装最新版本的 `quip-api` 包：
+
+```python
+pip install -qU  quip-api
+```
+
+## 示例
+
+### 个人访问令牌
+
+```python
+from langchain_community.document_loaders.quip import QuipLoader
+
+loader = QuipLoader(
+    api_url="https://platform.quip.com", access_token="change_me", request_timeout=60
+)
+documents = loader.load(
+    folder_ids={"123", "456"},
+    thread_ids={"abc", "efg"},
+    include_attachments=False,
+    include_comments=False,
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\quip.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,29 @@
+---
+title: PROMPT_INPUT_INVALID
+---
+
+{/* TODO: fix link when porting page */}
+当一个 [提示模板](https://github.com/langchain-ai/langchain/blob/v0.3/docs/docs/concepts/prompt_templates.mdx) 接收到缺失或无效的输入变量时，会触发此错误。
+
+
+
+
+## 故障排除
+
+要解决此错误，您可以：
+
+1. 检查您的提示模板是否正确。在使用 f-string 格式时，请确保正确转义花括号：
+   * 在 f-string 中，使用 `{{` 来表示单个花括号。
+   * 在 f-string 中，使用 `{{{{` 来表示双花括号。
+2. 在使用 `MessagesPlaceholder` 组件时，请确认您传入的是消息数组或类似消息的对象。如果使用简写元组，请将变量名用花括号括起来，例如 `["placeholder", "{messages}"]`
+3. 通过使用 [LangSmith](/langsmith/home) 或日志记录来检查传递给提示模板的实际输入，以调试问题并验证它们是否符合预期。
+4. 如果提示是从 LangChain [Prompt Hub](https://smith.langchain.com/prompts) 中获取的，请隔离该提示并使用示例输入进行测试，以确保其按预期工作。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\errors\INVALID_PROMPT_INPUT.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

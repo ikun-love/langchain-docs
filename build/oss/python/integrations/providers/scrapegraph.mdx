@@ -1,0 +1,58 @@
+---
+title: ScrapeGraph AI
+---
+
+> ScrapeGraph AI (ScrapeGraph AI)，是一个提供由 AI 驱动的网页抓取功能的平台。它提供了多种工具，能够根据自然语言提示（Natural Language Prompts）来提取结构化数据、将网页内容转换为 Markdown 格式，以及处理本地 HTML 文件。
+
+## 安装与设置
+
+安装所需的包：
+
+<CodeGroup>
+```bash pip
+pip install langchain-scrapegraph
+```
+
+```bash uv
+uv add langchain-scrapegraph
+```
+</CodeGroup>
+
+设置您的 API 密钥：
+
+```bash
+export SGAI_API_KEY="your-scrapegraph-api-key"
+```
+
+## 工具 (Tools)
+
+请参阅[使用示例](/oss/python/integrations/tools/scrapegraph)。
+
+总共有四种工具可用：
+
+```python
+from langchain_scrapegraph.tools import (
+    SmartScraperTool,    # 根据提示从网站提取结构化数据
+    SmartCrawlerTool,    # 具有爬取功能的工具，用于从多个页面提取数据
+    MarkdownifyTool,     # 将网页转换为 Markdown 格式
+    AgenticScraperTool,  # 指定步骤进行数据提取
+    GetCreditsTool,      # 检查剩余的 API 积分
+)
+```
+
+每种工具都有其特定的用途：
+
+- `SmartScraperTool`: 根据提供的 URL、提示（prompt）和可选的输出模式（output schema），从网站提取结构化数据。
+- `SmartCrawlerTool`: 具备深度控制、页面限制和域名限制等高级爬取选项，用于从多个页面提取数据。
+- `MarkdownifyTool`: 将任何网页转换为干净的 Markdown 格式。
+- `AgenticScraperTool`: 用于指定执行步骤来进行数据提取。
+- `GetCreditsTool`: 用于检查您剩余的 ScrapeGraph AI 积分。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\scrapegraph.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

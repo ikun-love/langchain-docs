@@ -1,0 +1,69 @@
+---
+title: Cloudflare Workers AI
+---
+
+> [Cloudflare, Inc. (Wikipedia)](https://en.wikipedia.org/wiki/Cloudflare) 是一家美国公司，提供内容分发网络 (CDN) 服务、云网络安全、DDoS 缓解以及 ICANN（互联网名称与数字地址分配机构）认可的域名注册服务。
+
+> [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) 允许您通过 REST API，在 `Cloudflare` 网络上，从您的代码中运行机器学习模型。
+
+> [Workers AI 开发者文档](https://developers.cloudflare.com/workers-ai/models/text-embeddings/) 列出了所有可用的文本嵌入模型。
+
+## 设置 (Setting up)
+
+需要 Cloudflare 账户 ID (Account ID) 和 Workers AI API 令牌 (API token)。您可以在 [此文档](https://developers.cloudflare.com/workers-ai/get-started/rest-api/) 中找到获取这些信息的方法。
+
+您可以显式地传递这些参数，或者将它们定义为环境变量。
+
+```python
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
+cf_acct_id = os.getenv("CF_ACCOUNT_ID")
+
+cf_ai_token = os.getenv("CF_AI_API_TOKEN")
+```
+
+## 示例 (Example)
+
+```python
+from langchain_cloudflare.embeddings import (
+    CloudflareWorkersAIEmbeddings,
+)
+```
+
+```python
+embeddings = CloudflareWorkersAIEmbeddings(
+    account_id=cf_acct_id,
+    api_token=cf_ai_token,
+    model_name="@cf/baai/bge-small-en-v1.5",
+)
+# 单个字符串嵌入
+query_result = embeddings.embed_query("test")
+len(query_result), query_result[:3]
+```
+
+```output
+(384, [-0.033660888671875, 0.039764404296875, 0.03558349609375])
+```
+
+```python
+# 批量字符串嵌入
+batch_query_result = embeddings.embed_documents(["test1", "test2", "test3"])
+len(batch_query_result), len(batch_query_result[0])
+```
+
+```output
+(3, 384)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\cloudflare_workersai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

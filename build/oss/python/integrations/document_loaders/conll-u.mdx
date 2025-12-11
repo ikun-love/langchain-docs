@@ -1,0 +1,40 @@
+---
+title: CoNLL-U
+---
+
+>[CoNLL-U](https://universaldependencies.org/format.html) 是 CoNLL-X 格式的修订版本。注释以纯文本文件（UTF-8 编码，规范化为 NFC，仅使用 LF 作为换行符，文件末尾包含一个 LF 字符）的形式进行编码，其中包含三种类型的行：
+>
+>- **词语行（Word lines）**：包含一个词/标记的注释，共 10 个字段，字段之间用单个制表符（tab）分隔；详见下文。
+>- **空行（Blank lines）**：用于标记句子边界。
+>- **注释行（Comment lines）**：以井号（#）开头。
+
+以下是一个如何加载 [CoNLL-U](https://universaldependencies.org/format.html) 格式文件的示例。整个文件被视为一个文档。示例数据 (`conllu.conllu`) 基于一个标准的 UD/CoNLL-U 示例。
+
+```python
+from langchain_community.document_loaders import CoNLLULoader
+```
+
+```python
+loader = CoNLLULoader("example_data/conllu.conllu")
+```
+
+```python
+document = loader.load()
+```
+
+```python
+document
+```
+
+```output
+[Document(page_content='They buy and sell books.', metadata={'source': 'example_data/conllu.conllu'})]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\conll-u.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

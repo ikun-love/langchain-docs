@@ -1,0 +1,312 @@
+```markdown
+---
+---
+
+# 在应用中过滤追踪（Trace）
+
+<Tip>
+**推荐阅读**
+
+
+在深入了解本内容之前，阅读以下内容可能会对您有所帮助，以便熟悉这里提到的概念：
+
+- [追踪的概念指南](/langsmith/observability-concepts)
+
+</Tip>
+
+追踪项目可能包含大量数据。过滤器用于有效地导航和分析这些数据，使您能够：
+
+- **进行有针对性的调查**：快速缩小范围到特定的运行（runs）以便进行临时分析
+- **调试和分析**：识别和检查错误、失败的运行以及性能瓶颈
+
+本页面包含一系列关于如何在追踪项目中过滤运行的指南。如果您正在通过 [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) 或 [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs) 以编程方式导出运行以供分析，请参阅 [导出追踪指南](./export-traces) 获取更多信息。
+
+## 创建和应用过滤器
+
+### 按运行属性过滤
+
+在追踪项目中，有两种方法可以过滤运行：
+
+1. **过滤器 (Filters)**：位于追踪项目页面左上方。您可以在此处构建和管理详细的过滤条件。
+
+![Filtering](/langsmith/images/filter.png)
+
+2. **过滤器快捷方式 (Filter Shortcuts)**：位于追踪项目页面的右侧边栏。过滤器快捷方式栏提供对基于项目中运行中最常出现的属性的过滤器的快速访问。
+
+![Filter Shortcuts](/langsmith/images/filter-shortcuts.png)
+
+<Info>
+**默认过滤器**
+
+默认情况下，会应用 `IsTrace` 为 `true` 的过滤器。这只会显示顶级追踪（top-level traces）。移除此过滤器将显示项目中所有的运行，包括中间的跨度（spans）。
+</Info>
+
+### 按时间范围过滤
+
+除了按运行属性过滤外，您还可以按特定时间范围过滤运行。此选项位于追踪项目页面的左上方。
+
+![Filtering on time](/langsmith/images/filter-time.png)
+
+### 过滤器运算符
+
+可用的过滤器运算符取决于您正在过滤的属性的数据类型。以下是常见运算符的概述：
+
+- **is**：与过滤值完全匹配
+- **is not**：与过滤值不匹配 (是否定匹配)
+- **contains**：部分匹配过滤值
+- **does not contain**：否定部分匹配过滤值
+- **is one of**：与列表中的任一值匹配
+- `>` / `<`：适用于数字字段
+
+## 具体的过滤技术
+
+### 过滤中间运行（Spans）
+
+为了过滤中间运行（spans），您首先需要移除默认的 `IsTrace` 为 `true` 的过滤器。例如，如果您想根据 `run name` 过滤子运行或根据 `run type` 过滤时，就需要这样做。
+
+运行元数据（metadata）和标签（tags）也是强大的过滤依据。这依赖于在管道的所有部分都进行良好的标记。要了解更多信息，您可以查看 [本指南](./add-metadata-tags)。
+
+### 根据输入和输出过滤
+
+您可以根据运行的输入和输出内容来过滤运行。
+
+要过滤输入或输出，您可以使用 `全文搜索 (Full-Text Search)` 过滤器，它将匹配这两个字段中的关键词。对于更具针对性的搜索，您可以使用 `Input` 或 `Output` 过滤器，它们将仅根据各自的字段内容进行匹配。
+
+您还可以指定多个匹配项，方法是包含多个用空格分隔的词语，或者添加多个过滤器——这将尝试匹配所有提供的词语。
+
+请注意，关键词搜索是通过分割文本并查找搜索关键词的任何部分匹配来完成的，因此它不按特定顺序进行。我们排除了常见的停用词（来自 nltk 停用词列表以及其他一些常见的 JSON 关键词）。
+
+![Filtering](/langsmith/images/filter-full-text.png)
+
+根据上述过滤器，系统将在输入或输出中搜索 `python` 和 `tensorflow`，在输入中搜索 `embedding`，并在输出中搜索 `fine` 和 `tune`。
+
+### 基于输入/输出键值对进行过滤
+
+除了全文搜索，您还可以根据输入和输出中的特定键值对过滤运行。这在处理结构化数据时，可以实现更精确的过滤。
+
+要根据键值对进行过滤，请从过滤器下拉菜单中选择 `Input Key` 或 `Output Key` 过滤器。
+
+例如，要匹配以下输入：
+
+```json
+{
+  "input": "What is the capital of France?"
+}
+```
+
+选择 `Filters`，然后选择 `Add Filter` 以显示过滤选项。然后选择 `Input Key`，将 `input` 作为键输入，并将 `What is the capital of France?` 作为值输入。
+
+![Filtering](/langsmith/images/search-kv-input.png)
+
+您还可以通过使用点表示法来匹配嵌套键，以选择嵌套的键名。例如，要匹配输出中的嵌套键：
+
+```json
+{
+  "documents": [
+    {
+      "page_content": "The capital of France is Paris",
+      "metadata": {},
+      "type": "Document"
+    }
+  ]
+}
+```
+
+选择 `Output Key`，将 `documents.page_content` 作为键输入，并将 `The capital of France is Paris` 作为值输入。这将使用指定的值来匹配嵌套键 `documents.page_content`。
+
+![Filtering](/langsmith/images/search-kv-output.png)
+
+您可以添加多个键值对过滤器来创建更复杂的查询。您也可以使用右侧的 `Filter Shortcuts` 来根据常见的键值对快速过滤，如下所示：
+
+![Filtering](/langsmith/images/search-kv-filter-shortcut.png)
+
+### 示例：过滤工具调用（Tool Calls）
+
+通常需要搜索包含特定工具调用的追踪。工具调用通常在 LLM 运行的输出中指示。要过滤工具调用，您应该使用 `Output Key` 过滤器。
+
+虽然此示例将向您展示如何过滤工具调用，但相同的逻辑可以应用于过滤输出中的任何键值对。
+
+在这种情况下，我们假设这是您想要过滤的输出：
+
+```json
+{
+  "generations": [
+    [
+      {
+        "text": "",
+        "type": "ChatGeneration",
+        "message": {
+          "lc": 1,
+          "type": "constructor",
+          "id": [],
+          "kwargs": {
+            "type": "ai",
+            "id": "run-ca7f7531-f4de-4790-9c3e-960be7f8b109",
+            "tool_calls": [
+              {
+                "name": "Plan",
+                "args": {
+                  "steps": [
+                    "Research LangGraph's node configuration capabilities",
+                    "Investigate how to add a Python code execution node",
+                    "Find an example or create a sample implementation of a code execution node"
+                  ]
+                },
+                "id": "toolu_01XexPzAVknT3gRmUB5PK5BP",
+                "type": "tool_call"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  ],
+  "llm_output": null,
+  "run": null,
+  "type": "LLMResult"
+}
+```
+
+对于上述示例，KV 搜索会将每个嵌套的 JSON 路径映射为一组键值对，您可以使用它们进行搜索和过滤。
+
+LangSmith 会将其分解为以下可搜索的键值对集合：
+
+| 键 | 值 |
+| :--- | :--- |
+| `generations.type` | `ChatGeneration` |
+| `generations.message.type` | `constructor` |
+| `generations.message.kwargs.type` | `ai` |
+| `generations.message.kwargs.id` | `run-ca7f7531-f4de-4790-9c3e-960be7f8b109` |
+| `generations.message.kwargs.tool_calls.name` | `Plan` |
+| `generations.message.kwargs.tool_calls.args.steps` | `Research LangGraph's node configuration capabilities` |
+| `generations.message.kwargs.tool_calls.args.steps` | `Investigate how to add a Python code execution node` |
+| `generations.message.kwargs.tool_calls.args.steps` | `Find an example or create a sample implementation of a code execution node` |
+| `generations.message.kwargs.tool_calls.id` | `toolu_01XexPzAVknT3gRmUB5PK5BP` |
+| `generations.message.kwargs.tool_calls.type` | `tool_call` |
+| `type` | `LLMResult` |
+
+要搜索特定的工具调用，您可以使用以下 Output Key 搜索，同时移除根运行过滤器：
+
+`generations.message.kwargs.tool_calls.name` = `Plan`
+
+这将匹配根运行和非根运行，其中 `tool_calls` 的名称是 `Plan`。
+
+![Filtering](/langsmith/images/search-kv-tool.png)
+
+### 对键值对进行否定过滤
+
+可以对 `Metadata`、`Input Key` 和 `Output Key` 字段应用不同类型的否定过滤，以将特定运行从结果中排除。
+
+例如，要查找所有元数据键 `phone` 不等于 `1234567890` 的运行，请将 `Metadata` 的 `Key` 运算符设置为 `is`，将 `Key` 字段设置为 `phone`，然后将 `Value` 运算符设置为 `is not`，将 `Value` 字段设置为 `1234567890`。这将匹配所有具有元数据键 `phone` 但值不为 `1234567890` 的运行。
+
+![Filtering](/langsmith/images/negative-filtering-1.png)
+
+要查找不具有特定元数据键的运行，请将 `Key` 运算符设置为 `is not`。例如，将 `Key` 运算符设置为 `is not` 并将 `phone` 作为键，将匹配所有元数据中不包含 `phone` 字段的运行。
+
+![Filtering](/langsmith/images/negative-filtering-2.png)
+
+您还可以过滤掉既不具有特定键也不具有特定值的运行。要查找元数据中既没有键 `phone` 也没有任何值为 `1234567890` 的运行，请将 `Key` 运算符设置为 `is not` 并使用键 `phone`，同时将 `Value` 运算符设置为 `is not` 并使用值 `1234567890`。
+
+![Filtering](/langsmith/images/negative-filtering-3.png)
+
+最后，您还可以过滤掉没有特定键但具有特定值的运行。要查找没有 `phone` 键但存在某个其他键的值为 `1234567890` 的运行，请将 `Key` 运算符设置为 `is not` 并使用键 `phone`，同时将 `Value` 运算符设置为 `is` 并使用值 `1234567890`。
+
+![Filtering](/langsmith/images/negative-filtering-4.png)
+
+请注意，您可以使用 `does not contain` 运算符代替 `is not` 来执行子字符串匹配。
+
+## 保存过滤器
+
+保存过滤器允许您存储和重用常用配置。保存的过滤器特定于追踪项目。
+
+#### 保存过滤器
+
+在过滤器框中，构建完过滤器后，点击 **Save filter** 按钮。这将弹出一个对话框，用于指定过滤器的名称和描述。
+
+![Filtering](/langsmith/images/save-a-filter.png)
+
+#### 使用已保存的过滤器
+
+保存过滤器后，它将作为快速过滤器在过滤器栏中可用。如果您有三个以上的已保存过滤器，将只直接显示两个，其余的可以通过“更多”菜单访问。您可以使用已保存过滤器栏中的设置图标来选择性地隐藏默认保存的过滤器。
+
+![Filtering](/langsmith/images/selecting-a-filter.png)
+
+#### 更新已保存的过滤器
+
+选中过滤器后，对过滤参数进行任何更改。然后点击 **Update filter** > **Update** 来更新该过滤器。
+
+在同一个菜单中，您也可以通过点击 **Update filter** > **Create new** 来创建新的已保存过滤器。
+
+#### 删除已保存的过滤器
+
+点击已保存过滤器栏中的设置图标，然后使用垃圾桶图标删除一个过滤器。
+
+## 复制过滤器
+
+您可以复制构建好的过滤器，以便与同事共享、将来重用，或在 [API](https://api.smith.langchain.com/redoc#tag/run/operation/query_runs_api_v1_runs_query_post) 或 [SDK](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.list_runs) 中以编程方式查询运行。
+
+要复制过滤器，您可以先在 UI 中创建它。然后，您可以点击右上角的复制按钮。如果您构建了树形或追踪过滤器，您也可以复制它们。
+
+这将为您提供一个用 LangSmith 查询语言表示的字符串。例如：`and(eq(is_root, true), and(eq(feedback_key, "user_score"), eq(feedback_score, 1)))`。有关查询语言语法的更多信息，请参阅 [本参考资料](/langsmith/trace-query-syntax#filter-query-language)。
+
+![Copy Filter](/langsmith/images/copy-filter.png)
+
+## 在追踪视图中过滤运行
+
+您也可以直接在追踪视图（trace view）中应用过滤器，这对于筛选包含大量运行的追踪非常有用。与主运行表视图中可用的过滤器相同，也可以应用于此处。
+
+默认情况下，只显示匹配过滤器的运行。要在追踪树的更广阔的上下文中查看匹配的运行，请将视图选项从“仅过滤 (Filtered Only)”切换到“显示全部 (Show All)”或“最相关 (Most relevant)”。
+
+![Filtering within trace view](/langsmith/images/filter-runs-in-trace-view.png)
+
+## 在 LangSmith 查询语言中手动指定原始查询
+
+如果您已经 [复制了先前构建的过滤器](/langsmith/filter-traces-in-application#copy-the-filter)，您可能希望在将来的会话中手动应用此原始查询。
+
+要做到这一点，可以点击过滤器弹出窗口底部的 **Advanced filters**。然后您可以将原始查询粘贴到文本框中。
+
+请注意，这将把该查询添加到现有查询中，而不是覆盖它们。
+
+![Raw Query](/langsmith/images/raw-query.png)
+
+## 使用 AI 查询来自动生成查询（实验性）
+
+有时很难弄清楚要指定的确切查询！为了简化此过程，我们添加了 `AI Query` 功能。使用此功能，您可以用自然语言输入您想要构建的过滤器，它将将其转换为有效的查询。
+
+例如：“所有运行时间超过 10 秒的运行”
+
+![AI Query](/langsmith/images/ai-query.png)
+
+## 高级过滤器
+
+### 根据根的属性过滤中间运行（Spans）
+
+一个常见的概念是过滤掉那些其根运行具有某些属性的中间运行。一个例子是过滤出特定类型的中间运行，这些中间运行的根运行关联了正面（或负面）反馈。
+
+要实现这一点，首先按照上述部分设置中间运行的过滤器。然后，您可以添加另一个过滤器规则。您可以点击过滤器最底部的 `Advanced Filters` 链接。这将打开一个新模态框，您可以在其中添加 `Trace filters`。这些过滤器将应用于您已经过滤的各个运行的所有父级的追踪。
+
+![Filtering](/langsmith/images/trace-filter.png)
+
+### 过滤那些其子运行具有某些属性的运行（Spans）
+
+这与上述情况相反。您可能希望搜索具有特定类型子运行的运行。一个例子可能是搜索所有包含名为 `Foo` 的子运行的追踪。当 `Foo` 不总是被调用时，这非常有用，但您想分析它被调用的情况。
+
+要实现这一点，可以点击过滤器最底部的 `Advanced Filters` 链接。这将打开一个新模态框，您可以在其中添加 `Tree filters`。这将使您指定的规则应用于您已经过滤的各个运行的所有子运行。
+
+![Filtering](/langsmith/images/child-runs.png)
+
+### 示例：过滤树中包含工具调用过滤器的所有运行
+
+扩展上面 [工具调用过滤示例](/langsmith/filter-traces-in-application#example-filtering-for-tool-calls)，如果您想过滤出所有树中包含该工具调用过滤器的运行，您可以在 [高级过滤器](/langsmith/filter-traces-in-application#advanced-filters) 设置中使用树过滤器：
+
+![Filtering](/langsmith/images/search-kv-tool-tree.png)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\observability-filter-traces.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

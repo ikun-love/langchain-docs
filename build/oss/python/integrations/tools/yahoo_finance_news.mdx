@@ -1,0 +1,150 @@
+---
+title: Yahoo Finance 新闻
+---
+
+本 Notebook 将介绍如何将 `yahoo_finance_news` 工具与智能体（Agent）配合使用。
+
+## 设置
+
+首先，您需要安装 `yfinance` Python 包。
+
+```python
+pip install -qU  yfinance
+```
+
+## 结合 Chain 的示例
+
+```python
+import os
+
+os.environ["OPENAI_API_KEY"] = ".."
+```
+
+```python
+from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
+from langchain.agents import create_agent
+
+
+tools = [YahooFinanceNewsTool()]
+agent = create_agent("gpt-4.1-mini", tools)
+```
+
+```output
+USER_AGENT environment variable not set, consider setting it to identify your requests.
+```
+
+```python
+input_message = {
+    "role": "user",
+    "content": "今天微软的股票有什么动态？",
+}
+
+for step in agent.stream(
+    {"messages": [input_message]},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+今天微软的股票有什么动态？
+================================== Ai Message ==================================
+Tool Calls:
+  yahoo_finance_news (call_s1Waj1rAoJ89CfxWX1RWDiWL)
+ Call ID: call_s1Waj1rAoJ89CfxWX1RWDiWL
+  Args:
+    query: MSFT
+================================= Tool Message =================================
+Name: yahoo_finance_news
+
+Microsoft (MSFT), Meta Platforms (META) Reported “Home Run” Results: Dan Ives’ Recent Comments
+Microsoft (MSFT) and Meta Platforms (META) delivered “home run” results yesterday, as the AI Revolution has not been slowed by the Trump administration’s tariffs, Dan Ives, the Managing Director and Senior Equity Research Analyst at Wedbush Securities said on CNBC recently. Ives covers tech stocks. Tech Is Poised for a Comeback, Ives Indicates “The tech […]
+================================== Ai Message ==================================
+
+今天，微软 (MSFT) 报告了强劲的财务业绩，被 Wedbush Securities 的董事总经理兼高级股票研究分析师 Dan Ives 描述为“全垒打” (home run) 业绩。尽管受到特朗普政府关税的影响，推动微软等科技股的人工智能革命并未放缓，这表明该公司和整体科技行业前景乐观。
+```
+
+```python
+input_message = {
+    "role": "user",
+    "content": "今天微软的表现和英伟达相比如何？",
+}
+
+for step in agent.stream(
+    {"messages": [input_message]},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+今天微软的表现和英伟达相比如何？
+================================== Ai Message ==================================
+Tool Calls:
+  yahoo_finance_news (call_r9m4YxdEqWeXotkNgK8jGzeJ)
+ Call ID: call_r9m4YxdEqWeXotkNgK8jGzeJ
+  Args:
+    query: MSFT
+  yahoo_finance_news (call_fxj3AIKPB4MYuquvFFWrBD8B)
+ Call ID: call_fxj3AIKPB4MYuquvFFWrBD8B
+  Args:
+    query: NVDA
+================================= Tool Message =================================
+Name: yahoo_finance_news
+
+NVIDIA Corporation (NVDA): Among Ken Fisher’s Technology Stock Picks with Huge Upside Potential
+We recently published an article titled Billionaire Ken Fisher’s 10 Technology Stock Picks with Huge Upside Potential. In this article, we are going to take a look at where NVIDIA Corporation (NASDAQ:NVDA) stands against the other technology stocks. Technology stocks have faced heightened volatility in 2025, with market sentiment swinging sharply in response to President Donald […]
+
+Nvidia (NVDA) Redesigns Chips to Sidestep U.S. Export Ban, Eyes June China Rollout
+Nvidia plans China-specific AI chip revamp after new U.S. export limits
+
+Is NVIDIA (NVDA) the Best NASDAQ Stock to Buy According to Billionaires?
+We recently published a list of 10 Best NASDAQ Stocks to Buy According to Billionaires. In this article, we are going to take a look at where NVIDIA Corporation (NASDAQ:NVDA) stands against other best NASDAQ stocks to buy according to billionaires. The latest market data shows that the US economy contracted at an annualized rate […]
+================================== Ai Message ==================================
+
+今天，微软 (MSFT) 的前景被视为积极的，最近公布了强劲的财报，被描述为“全垒打”业绩，表明在持续的 AI 革命中对其业绩充满信心。
+
+英伟达 (NVDA) 也受到关注，它正在采取战略举措，例如重新设计 AI 芯片以规避美国出口禁令，并瞄准中国市场推出。它被认为是具有巨大上行潜力的科技股之一，吸引了知名投资者的目光。
+
+总之，今天微软和英伟达的情绪都是积极的，微软展示了强劲的财务业绩，而英伟达在 AI 技术和市场定位方面取得了战略性进展。
+```
+
+# YahooFinanceNewsTool 的工作原理
+
+```python
+tool = YahooFinanceNewsTool()
+```
+
+```python
+tool.invoke("NVDA")
+```
+
+```output
+'NVIDIA Corporation (NVDA): Among Ken Fisher’s Technology Stock Picks with Huge Upside Potential\nWe recently published an article titled Billionaire Ken Fisher’s 10 Technology Stock Picks with Huge Upside Potential. In this article, we are going to take a look at where NVIDIA Corporation (NASDAQ:NVDA) stands against the other technology stocks. Technology stocks have faced heightened volatility in 2025, with market sentiment swinging sharply in response to President Donald […]\n\nNvidia (NVDA) Redesigns Chips to Sidestep U.S. Export Ban, Eyes June China Rollout\nNvidia plans China-specific AI chip revamp after new U.S. export limits\n\nIs NVIDIA (NVDA) the Best NASDAQ Stock to Buy According to Billionaires?\nWe recently published a list of 10 Best NASDAQ Stocks to Buy According to Billionaires. In this article, we are going to take a look at where NVIDIA Corporation (NASDAQ:NVDA) stands against other best NASDAQ stocks to buy according to billionaires. The latest market data shows that the US economy contracted at an annualized rate […]'
+```
+
+```python
+res = tool.invoke("AAPL")
+print(res)
+```
+
+```output
+No news found for company that searched with AAPL ticker.
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\yahoo_finance_news.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

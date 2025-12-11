@@ -1,0 +1,43 @@
+---
+title: 实验配置
+sidebarTitle: 实验配置
+---
+
+LangSmith 支持实验的多种配置选项：
+
+- [重复运行](#repetitions)
+- [并发性](#concurrency)
+- [缓存](#caching)
+
+### Repetitions (重复运行)
+
+_Repetitions_（重复运行）会多次执行实验，以应对大型语言模型（LLM）输出的随机性。由于 LLM 的输出通常是非确定性的，多次重复运行可以提供更准确的性能评估。
+
+通过向 `evaluate` 或 `aevaluate` 函数传递 `num_repetitions` 参数来配置重复运行次数（[Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)）。每次重复运行都会重新执行目标函数和所有的评估器。
+
+在 [重复运行操作指南](/langsmith/repetition) 中了解更多信息。
+
+### Concurrency (并发性)
+
+_Concurrency_（并发性）控制实验期间同时运行的示例（examples）数量。通过向 `evaluate` 或 `aevaluate` 传递 `max_concurrency` 参数来配置它。这两个函数的语义有所不同：
+
+#### `evaluate`
+
+`max_concurrency` 参数指定用于运行目标函数和评估器的最大并发线程数。
+
+#### `aevaluate`
+
+`max_concurrency` 参数使用信号量（semaphore）来限制并发任务。`aevaluate` 会为每个示例创建一个任务，每个任务都会运行该示例的目标函数和所有评估器。`max_concurrency` 参数指定要处理的最大并发示例数量。
+
+### Caching (缓存)
+
+_Caching_（缓存）将 API 调用结果存储到磁盘，以加速未来的实验。将 `LANGSMITH_TEST_CACHE` 环境变量设置为具有写入权限的有效文件夹路径。未来执行相同 API 调用的实验将重用缓存的结果，而不是发起新的请求。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\experiment-configuration.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

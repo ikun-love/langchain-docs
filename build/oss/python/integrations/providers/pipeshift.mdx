@@ -1,0 +1,61 @@
+---
+title: Pipeshift
+---
+
+> [Pipeshift](https://pipeshift.com) 是一个针对开源大语言模型（LLMs）的微调和推理平台
+
+- 您可以带来自己的数据集，微调多个 LLM。通过一次点击即可开始推理，并观察它们扩展到数百万级别的调用量。
+
+## 安装与设置
+
+- 安装 Pipeshift 集成包。
+
+  ```bash
+  pip install langchain-pipeshift
+  ```
+
+- 通过在 [Pipeshift](https://pipeshift.com) 注册来获取您的 Pipeshift API 密钥。
+
+### 认证
+
+您可以通过以下任何一种方式使用您的 Pipeshift API 密钥进行认证：
+
+1. 将 API 密钥添加为环境变量 `PIPESHIFT_API_KEY`。
+
+    ```python
+    os.environ["PIPESHIFT_API_KEY"] = "<your_api_key>"
+    ```
+
+2. 通过向 pipeshift LLM 模块或聊天（Chat）模块传递 `api_key` 参数。
+
+    ```python
+    llm = Pipeshift(api_key="<your_api_key>", model="meta-llama/Meta-Llama-3.1-8B-Instruct", max_tokens=512)
+
+                        OR
+
+    chat = ChatPipeshift(api_key="<your_api_key>", model="meta-llama/Meta-Llama-3.1-8B-Instruct", max_tokens=512)
+    ```
+
+## 聊天模型 (Chat models)
+
+请参阅 [示例](/oss/python/integrations/chat/pipeshift)。
+
+```python
+from langchain_pipeshift import ChatPipeshift
+```
+## LLM 模型
+
+请参阅 [示例](/oss/python/integrations/llms/pipeshift)。
+
+```python
+from langchain_pipeshift import Pipeshift
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\pipeshift.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,127 @@
+---
+title: OpenAI
+---
+
+<Warning>
+**您当前正在查看记录 OpenAI 文本补全模型（text completion models）的页面。最新且最流行的 OpenAI 模型是[聊天补全模型](/oss/javascript/langchain/models)。**
+
+除非您明确使用的是 `gpt-3.5-turbo-instruct`，否则您很可能正在寻找[此页面](/oss/javascript/integrations/chat/openai/)。
+</Warning>
+
+[OpenAI](https://en.wikipedia.org/wiki/OpenAI) 是一家人工智能（AI）研究实验室。
+
+本指南将帮助您使用 LangChain 入门 OpenAI 补全模型（LLMs）。有关 OpenAI 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [PY 支持](https://python.langchain.com/docs/integrations/llms/openai) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [OpenAI](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html) | [@langchain/openai](https://www.npmjs.com/package/@langchain/openai) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/openai?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/openai?style=flat-square&label=%20&) |
+
+## 设置 (Setup)
+
+要访问 OpenAI 模型，您需要创建一个 OpenAI 账户，获取一个 API 密钥，并安装 `@langchain/openai` 集成包。
+
+### 凭证 (Credentials)
+
+前往 [platform.openai.com](https://platform.openai.com/) 注册 OpenAI 账户并生成 API 密钥。完成此操作后，设置 `OPENAI_API_KEY` 环境变量：
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+```
+
+如果您希望对模型调用进行自动追踪，您还可以取消注释以下代码行，设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="your-api-key"
+```
+
+### 安装 (Installation)
+
+LangChain 的 OpenAI 集成位于 `@langchain/openai` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/openai @langchain/core
+```
+```bash yarn
+yarn add @langchain/openai @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/openai @langchain/core
+```
+</CodeGroup>
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化模型对象并生成聊天补全：
+
+```typescript
+import { OpenAI } from "@langchain/openai"
+
+const llm = new OpenAI({
+  model: "gpt-3.5-turbo-instruct",
+  temperature: 0,
+  maxTokens: undefined,
+  timeout: undefined,
+  maxRetries: 2,
+  apiKey: process.env.OPENAI_API_KEY,
+  // other params...
+})
+```
+
+## 调用 (Invocation)
+
+```typescript
+const inputText = "OpenAI 是一家人工智能公司，它 "
+
+const completion = await llm.invoke(inputText)
+completion
+```
+
+```output
+开发并推广友好的人工智能，以造福人类。它由 Elon Musk、Sam Altman、Greg Brockman、Ilya Sutskever、Wojciech Zaremba、John Schulman 和 Chris Olah 于 2015 年创立。该公司的使命是创建和推广安全且对人类有益的人工通用智能（AGI）。
+
+OpenAI 在人工智能的各个领域进行研究，包括深度学习、强化学习、机器人技术和自然语言处理。该公司还开发并发布了用于人工智能研究的开源工具和平台，例如 GPT-3 语言模型和用于强化学习的 Gym 工具包。
+
+OpenAI 的主要目标之一是确保人工智能的发展与人类价值观保持一致，并且不对人类构成威胁。为此，该公司制定了一套安全和合乎伦理的人工智能开发原则，并积极与其他组织和研究人员在该领域进行合作。
+
+OpenAI 从各种来源获得了资助，包括微软和亚马逊等科技巨头，以及个人投资者。它还与谷歌、IBM 和联合国等公司和组织建立了合作伙伴关系，以推进其研究并促进负责任的人工智能发展。
+
+除了其研究和开发之外
+```
+
+## 自定义 URL (Custom URLs)
+
+您可以通过传递 `configuration` 参数来定制 SDK 发出请求的基础 URL，如下所示：
+
+```typescript
+const llmCustomURL = new OpenAI({
+  temperature: 0.9,
+  configuration: {
+    baseURL: "https://your_custom_url.com",
+  },
+});
+```
+
+您还可以传递官方 SDK 接受的其他 `ClientOptions` 参数。
+
+如果您部署在 Azure OpenAI 上，请参阅[专用页面](/oss/javascript/integrations/llms/azure)。
+
+---
+
+## API 参考 (API reference)
+
+有关所有 OpenAI 功能和配置的详细文档，请访问[API 参考](https://api.js.langchain.com/classes/langchain_openai.OpenAI.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\openai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

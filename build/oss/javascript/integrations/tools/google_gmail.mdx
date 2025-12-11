@@ -1,0 +1,104 @@
+---
+title: Gmail 工具
+---
+
+Gmail 工具允许您的智能体（Agent）从关联的电子邮件账户创建和查看邮件。
+
+## 设置
+
+您可以通过两种方法进行身份验证：
+
+1.  将通过 OAuth2 令牌交换获得的访问令牌（Access Token）提供给 `credentials` 对象。
+    它可以是一个字符串或一个函数，以便处理令牌过期和验证。
+    这可以使用支持从联合连接（federated connections）获取访问令牌的身份提供商（Identity Provider）来实现。
+    这是最安全的方法，因为访问权限和作用域将仅限于特定的最终用户。
+    当在旨在供具有自己 Gmail 账户的最终用户使用的应用程序中使用此工具时，此方法更为合适。
+2.  您需要从 [Google 此处](https://developers.google.com/gmail/api/guides) 获取 API 密钥，并[启用新的 Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com)。
+    然后，设置环境变量 `GMAIL_CLIENT_EMAIL` 以及 `GMAIL_PRIVATE_KEY` 或 `GMAIL_KEYFILE`。
+
+要使用 Gmail 工具，您需要安装以下官方对等依赖项：
+
+<Tip>
+有关安装 LangChain 包的一般说明，请参阅[此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/openai @langchain/community @langchain/core googleapis
+```
+
+## 用法
+
+```typescript
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
+import { OpenAI } from "@langchain/openai";
+import {
+  GmailCreateDraft,
+  GmailGetMessage,
+  GmailGetThread,
+  GmailSearch,
+  GmailSendMessage,
+} from "@langchain/community/tools/gmail";
+import { StructuredTool } from "@langchain/core/tools";
+
+export async function run() {
+  const model = new OpenAI({
+    temperature: 0,
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  // 这些是 Gmail 工具的默认参数
+  //   const gmailParams = {
+  //     credentials: {
+  //       clientEmail: process.env.GMAIL_CLIENT_EMAIL,
+  //       privateKey: process.env.GMAIL_PRIVATE_KEY,
+  //       // 需要 (privateKey + clientEmail) 或 accessToken
+  //       accessToken: "访问令牌或获取访问令牌的函数",
+  //     },
+  //     scopes: ["https://mail.google.com/"], // 如果使用访问令牌则不需要
+  //   };
+
+  // 对于自定义参数，请取消注释上述代码，将值替换为您自己的值，然后将其传递给下面的工具
+  const tools: StructuredTool[] = [
+    new GmailCreateDraft(),
+    new GmailGetMessage(),
+    new GmailGetThread(),
+    new GmailSearch(),
+    new GmailSendMessage(),
+  ];
+
+  const gmailAgent = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "structured-chat-zero-shot-react-description",
+    verbose: true,
+  });
+
+  const createInput = `请帮我创建一个 Gmail 草稿，内容是一封以有感知力的鹦鹉的视角写给它失和的朋友（一只猫）的信，目的是寻求科研合作。在任何情况下都不得发送这封邮件。`;
+
+  const createResult = await gmailAgent.invoke({ input: createInput });
+  //   Create Result {
+  //     output: '我已为您创建了一个电子邮件草稿供您编辑。草稿 ID 是 r5681294731961864018。'
+  //   }
+  console.log("Create Result", createResult);
+
+  const viewInput = `你能否在我的草稿中搜索最新的邮件？`;
+
+  const viewResult = await gmailAgent.invoke({ input: viewInput });
+  //   View Result {
+  //     output: "您草稿箱中的最新邮件来自 hopefulparrot@gmail.com，主题是 'Collaboration Opportunity'（合作机会）。邮件正文内容是：'亲爱的[朋友]，希望这封信能顺利送到你手中。我写信是希望重燃我们的友谊，并讨论一起合作进行一些研究的可能性。我知道过去我们有过分歧，但我相信我们可以把它们放在一边，为了更大的利益共同努力。我期待您的回复。此致，[鹦鹉]'"
+  //   }
+  console.log("View Result", viewResult);
+}
+```
+
+## 相关
+
+- 工具[概念指南](/oss/javascript/langchain/tools)
+- 工具[操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\google_gmail.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

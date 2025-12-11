@@ -1,0 +1,101 @@
+---
+title: Layerup 安全防护
+---
+
+[Layerup Security](https://uselayerup.com) 集成允许您保护对任何 LangChain LLM、LLM 链或 LLM Agent 的调用。`LLM` 对象会“包裹”任何现有的 LLM 对象，从而在用户和您的 LLM 之间建立一个安全的中间层。
+
+尽管 `Layerup Security` 对象被设计为一个 LLM，但它本身并不是一个 LLM，它只是对 LLM 进行了封装，使其能够适配底层 LLM 的相同功能。
+
+## 设置
+
+首先，您需要从 Layerup [官网](https://uselayerup.com) 获取一个 Layerup Security 账户。
+
+接下来，通过 [控制台](https://dashboard.uselayerup.com) 创建一个项目，并复制您的 API 密钥。我们建议将您的 API 密钥放在您项目的环境变量中。
+
+安装 Layerup Security SDK：
+
+```bash npm
+npm install @layerup/layerup-security
+```
+并安装 LangChain Community：
+
+```bash npm
+npm install @langchain/community @langchain/core
+```
+
+现在您就可以使用 Layerup Security 开始保护您的 LLM 调用了！
+
+```typescript
+import {
+  LayerupSecurity,
+  LayerupSecurityOptions,
+} from "@langchain/community/llms/layerup_security";
+import { GuardrailResponse } from "@layerup/layerup-security";
+import { OpenAI } from "@langchain/openai";
+
+// 创建一个您最喜欢的 LLM 实例
+const openai = new OpenAI({
+  modelName: "gpt-3.5-turbo",
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
+
+// 配置 Layerup Security
+const layerupSecurityOptions: LayerupSecurityOptions = {
+  // 指定 Layerup Security 将要包裹的 LLM
+  llm: openai,
+
+  // Layerup API 密钥，从 Layerup 控制台获取
+  layerupApiKey: process.env.LAYERUP_API_KEY,
+
+  // 自定义基础 URL，如果采用自托管模式
+  layerupApiBaseUrl: "https://api.uselayerup.com/v1",
+
+  // 在调用 LLM 之前，对提示词运行的一系列护栏（Guardrails）
+  promptGuardrails: [],
+
+  // 对 LLM 响应运行的一系列护栏
+  responseGuardrails: ["layerup.hallucination"],
+
+  // 在将提示词发送给 LLM 之前，是否对提示词进行 PII（个人身份信息）和敏感数据屏蔽
+  mask: false,
+
+  // 用于滥用跟踪、客户跟踪和范围跟踪的元数据
+  metadata: { customer: "example@uselayerup.com" },
+
+  // 响应护栏发生拦截时的处理函数
+  handlePromptGuardrailViolation: (violation: GuardrailResponse) => {
+    if (violation.offending_guardrail === "layerup.sensitive_data") {
+      // 在此处添加自定义逻辑
+    }
+
+    return {
+      role: "assistant",
+      content: `检测到敏感数据！我无法回应。这是动态的预设回复。当前时间: ${Date.now()}`,
+    };
+  },
+
+  // 响应护栏发生拦截时的处理函数
+  handleResponseGuardrailViolation: (violation: GuardrailResponse) => ({
+    role: "assistant",
+    content: `动态数据的自定义预设回复！拦截的规则是 ${violation.offending_guardrail}。`,
+  }),
+};
+
+const layerupSecurity = new LayerupSecurity(layerupSecurityOptions);
+const response = await layerupSecurity.invoke(
+  "总结这条信息：我的名字是 Bob Dylan。我的社会安全号码是 123-45-6789。"
+);
+```
+
+## 相关内容
+
+- [模型指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\layerup_security.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

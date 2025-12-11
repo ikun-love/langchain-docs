@@ -1,0 +1,83 @@
+---
+title: Outline 文档加载器
+---
+
+>[Outline](https://www.getoutline.com/) 是一个开源的协作知识库平台，专为团队信息共享而设计。
+
+本 Notebook 演示了如何从您的 Outline 集合中获取 LangChain `Document` 对象。
+
+## 概述
+
+`[Outline 文档加载器](https://github.com/10Pines/langchain-outline)` 可用于将 Outline 集合加载为 LangChain `Document` 对象，以便集成到检索增强生成（RAG）工作流中。
+
+本示例演示了：
+
+* 设置文档加载器以加载 Outline 实例中的所有文档。
+
+### 设置
+
+在开始之前，请确保设置了以下环境变量：
+
+* `OUTLINE_API_KEY`: 您用于验证并连接到 Outline 实例的 API 密钥（参考：[www.getoutline.com/developers#section/Authentication](https://www.getoutline.com/developers#section/Authentication)）。
+* `OUTLINE_INSTANCE_URL`: 您的 Outline 实例的完整 URL（包括协议，如 `http://` 或 `https://`）。
+
+```python
+import os
+
+os.environ["OUTLINE_API_KEY"] = "ol_api_xyz123"
+os.environ["OUTLINE_INSTANCE_URL"] = "https://app.getoutline.com"
+```
+
+## 初始化
+
+要初始化 `OutlineLoader`，您需要以下参数：
+
+* `outline_base_url`: 您的 Outline 实例的 URL（如果未提供，将从环境变量中获取）。
+* `outline_api_key`: 您用于验证并连接到 Outline 实例的 API 密钥（如果未提供，将从环境变量中获取）。
+* `outline_collection_id_list`: 需要检索的集合 ID 列表。如果设置为 `None`，则会检索所有集合。
+* `page_size`: 由于 Outline API 使用分页结果，您可以配置每次 API 请求检索多少个结果（文档）。如果未指定此项，将使用默认值。
+
+## 实例化
+
+```python
+# 选项 1: 使用环境变量（确保它们已设置）
+from langchain_outline.document_loaders.outline import OutlineLoader
+
+loader = OutlineLoader()
+
+# 选项 2: 直接传入参数
+loader = OutlineLoader(
+    outline_base_url="YOUR_OUTLINE_URL", outline_api_key="YOUR_API_KEY"
+)
+```
+
+## 加载 (Load)
+
+用于加载并返回 Outline 实例中所有可用文档的操作：
+
+```python
+loader.load()
+```
+
+## 惰性加载 (Lazy Load)
+
+`lazy_load` 方法允许您迭代地从 Outline 集合中加载文档，每获取一个文档就立即产生一个（yield）它：
+
+```python
+loader.lazy_load()
+```
+
+---
+
+## API 参考
+
+有关所有 `Outline` 功能和配置的详细文档，请参阅 API 参考：[www.getoutline.com/developers](https://www.getoutline.com/developers)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\outline.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

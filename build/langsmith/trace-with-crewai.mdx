@@ -1,0 +1,234 @@
+---
+title: 使用 CrewAI 进行追踪
+sidebarTitle: CrewAI
+---
+
+LangSmith 可以使用 OpenInference 的 CrewAI 仪器（instrumentation）来捕获 [CrewAI](https://github.com/crewAIInc/crewAI) 生成的追踪（traces）。本指南将向您展示如何自动捕获多智能体工作流（multi-agent workflows）中的追踪，并将它们发送到 LangSmith 进行监控和分析。
+
+## 安装
+
+使用您偏好的包管理器安装所需的软件包：
+
+<CodeGroup>
+
+```bash pip
+pip install langsmith crewai openinference-instrumentation-crewai openinference-instrumentation-openai
+```
+
+```bash uv
+uv add langsmith crewai openinference-instrumentation-crewai openinference-instrumentation-openai
+```
+
+</CodeGroup>
+
+## 设置
+
+### 1. 配置环境变量
+
+设置您的 API 密钥和项目名称：
+
+<CodeGroup>
+
+```bash Shell
+export LANGSMITH_API_KEY=<your_langsmith_api_key>
+export LANGSMITH_PROJECT=<your_project_name>
+export OPENAI_API_KEY=<your_openai_api_key>
+```
+
+</CodeGroup>
+
+### 2. 配置 OpenTelemetry 集成
+
+在您的 CrewAI 应用中，导入并配置 LangSmith OpenTelemetry 集成，以及 CrewAI 和 OpenAI 的仪器（instrumentors）：
+
+```python
+from langsmith.integrations.otel import OtelSpanProcessor
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from openinference.instrumentation.crewai import CrewAIInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+# 获取或创建追踪器提供程序
+tracer_provider = trace.get_tracer_provider()
+if not isinstance(tracer_provider, TracerProvider):
+    tracer_provider = TracerProvider()
+    trace.set_tracer_provider(tracer_provider)
+
+# 将 OtelSpanProcessor 添加到追踪器提供程序
+tracer_provider.add_span_processor(OtelSpanProcessor())
+
+# 仪器化 CrewAI 和 OpenAI
+CrewAIInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+```
+
+### 3. 创建并运行您的 CrewAI 应用
+
+配置完成后，您的 CrewAI 应用将自动向 LangSmith 发送追踪信息：
+
+此示例包含一个最小化的应用，用于定义智能体（agents）和任务（tasks），创建工作组（crew），并运行它以产生带有追踪活动。
+
+```python
+from crewai import Agent, Task, Crew
+from langsmith.integrations.otel import OtelSpanProcessor
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from openinference.instrumentation.crewai import CrewAIInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+import dotenv
+
+# 加载环境变量
+dotenv.load_dotenv(".env.local")
+
+# 配置 OpenTelemetry
+tracer_provider = trace.get_tracer_provider()
+if not isinstance(tracer_provider, TracerProvider):
+    tracer_provider = TracerProvider()
+    trace.set_tracer_provider(tracer_provider)
+
+# 将 OtelSpanProcessor 添加到追踪器提供程序
+tracer_provider.add_span_processor(OtelSpanProcessor())
+
+# 仪器化 CrewAI 和 OpenAI
+CrewAIInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+
+# 定义您的智能体 (Agents)
+market_researcher = Agent(
+    role="高级市场研究员",
+    goal="分析科技行业中的市场趋势和消费者行为",
+    backstory="""您是一位经验丰富的市场研究员，拥有 10 年以上分析技术市场的经验。
+    您擅长识别新兴趋势并理解消费者需求。""",
+    verbose=True,
+    allow_delegation=False,
+)
+
+content_strategist = Agent(
+    role="内容营销策略师",
+    goal="根据研究洞察创建引人入胜的营销内容",
+    backstory="""您是一位富有创造力的内容策略师，可以将复杂的技术市场研究转化为
+    引人入胜的营销材料。您知道如何向不同的受众传达技术概念。""",
+    verbose=True,
+    allow_delegation=False,
+)
+
+data_analyst = Agent(
+    role="数据分析师",
+    goal="提供统计分析和数据驱动的见解",
+    backstory="""您是一位熟练的数据分析师，可以解释复杂的数据集并提供可操作的见解。
+    您擅长从数据中发现他人可能遗漏的模式和趋势。""",
+    verbose=True,
+    allow_delegation=False,
+)
+
+# 定义您的任务 (Tasks)
+research_task = Task(
+    description="""对人工智能在中小企业（SMBs）中的当前采用情况进行全面研究。
+    重点关注：
+    1. 当前的采用率和趋势
+    2. 主要的采用障碍
+    3. 最流行的人工智能工具和用例
+    4. 投资回报率（ROI）和业务影响指标
+
+    请提供详细的分析，附带支持数据和统计信息。""",
+    agent=market_researcher,
+    expected_output="一份关于中小企业人工智能采用情况的全面市场研究报告，包含数据、趋势和见解。",
+)
+
+analysis_task = Task(
+    description="""分析研究结果并识别关键的统计模式。创建数据可视化，并提供关于以下内容的定量见解：
+    1. 随时间变化的采用率趋势
+    2. 特定行业的采用模式
+    3. 投资回报率（ROI）相关性分析
+    4. 障碍影响评估
+
+    以清晰、数据驱动的格式呈现发现。""",
+    agent=data_analyst,
+    expected_output="统计分析报告，包含关键指标、趋势和数据驱动的见解。",
+    context=[research_task],
+)
+
+content_task = Task(
+    description="""根据研究和分析，创建一份引人入胜的营销策略文档，内容包括：
+    1. 关键发现的执行摘要
+    2. 基于采用模式的目标受众角色画像
+    3. 解决主要障碍的关键信息框架
+    4. 针对不同业务部门的内容建议
+    5. 推动人工智能采用的活动策略
+
+    使内容具有可操作性和以业务为中心。""",
+    agent=content_strategist,
+    expected_output="完整的营销策略文档，包含角色画像、信息传递和活动建议。",
+    context=[research_task, analysis_task],
+)
+
+# 创建并运行工作组 (Crew)
+crew = Crew(
+    agents=[market_researcher, data_analyst, content_strategist],
+    tasks=[research_task, analysis_task, content_task],
+    verbose=True,
+    process="sequential"  # 任务将按顺序执行
+)
+
+def run_market_research_crew():
+    """运行市场研究工作组并返回结果。"""
+    result = crew.kickoff()
+    return result
+
+if __name__ == "__main__":
+    print("正在运行 CrewAI 市场研究流程...")
+    output = run_market_research_crew()
+    print("\n" + "="*50)
+    print("CrewAI 流程输出:")
+    print("="*50)
+    print(output)
+```
+
+## 高级用法
+
+### 自定义元数据和标签
+
+您可以通过在 CrewAI 应用中设置 Span 属性来向追踪信息添加自定义元数据：
+
+```python
+from opentelemetry import trace
+
+# 获取当前追踪器
+tracer = trace.get_tracer(__name__)
+
+def run_market_research_crew():
+    with tracer.start_as_current_span("crewai_market_research") as span:
+        # 添加自定义元数据
+        span.set_attribute("langsmith.metadata.crew_type", "market_research")
+        span.set_attribute("langsmith.metadata.agent_count", "3")
+        span.set_attribute("langsmith.metadata.task_complexity", "high")
+        span.set_attribute("langsmith.span.tags", "crewai,market-research,multi-agent")
+
+        # 运行您的工作组
+        result = crew.kickoff()
+        return result
+```
+
+### 与其他仪器结合使用
+
+您可以通过将其他仪器添加到设置中来结合 CrewAI 仪器：
+
+```python
+from openinference.instrumentation.crewai import CrewAIInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+from openinference.instrumentation.dspy import DSPyInstrumentor
+
+# 初始化多个仪器
+CrewAIInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+DSPyInstrumentor().instrument()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\trace-with-crewai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,45 @@
+---
+title: 错误_聊天历史无效
+---
+
+当 `call_model` 图节点接收到格式错误的 (malformed) 消息列表时，会抛出此错误。这通常发生在预构建的 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 中。具体来说，如果存在带有 `tool_calls`（LLM 请求调用工具）的 `AIMessages`，但缺少相应的 [`ToolMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.ToolMessage)（工具调用结果，用于返回给 LLM），消息列表就被视为格式错误。
+
+
+
+
+您看到此错误可能有以下几个原因：
+
+1. 当调用图时，您手动传入了格式错误的的消息列表，例如 `graph.invoke({'messages': [AIMessage(..., tool_calls=[...])]})`
+2. 在接收到来自 `tools` 节点的更新（即 [`ToolMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.ToolMessage) 列表）之前，图被中断了。
+    并且您传入的输入不是 `None` 或 `ToolMessage`，例如 `graph.invoke({'messages': [HumanMessage(...)]}, config)`。
+    这种中断可能是通过以下方式触发的：
+        * 您在 `create_agent` 中手动设置了 `interrupt_before = ['tools']`
+    * `tools` 节点（`"tools"`）未处理的某个工具抛出了错误。
+
+
+
+
+## 故障排除
+
+要解决此问题，您可以采取以下任一措施：
+
+1. 不要使用格式错误的的消息列表来调用图。
+2. 如果发生中断（无论是手动触发还是由于错误导致），您可以：
+
+* 提供与现有工具调用匹配的 [`ToolMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.ToolMessage) 对象，然后调用 `graph.invoke({'messages': [ToolMessage(...)]})`。
+  **注意**: 这会将消息附加到历史记录中，并从 START 节点重新运行图。
+  * 手动更新状态并从中断处恢复图：
+    1. 使用 `graph.get_state(config)` 从图状态中获取最近的消息列表。
+    2. 修改消息列表，要么从 AIMessages 中移除未回答的工具调用，
+       或者添加具有与未回答工具调用匹配的 `tool_call_ids` 的 [`ToolMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.ToolMessage) 对象。
+    3. 使用修改后的消息列表调用 `graph.update_state(config, {'messages': ...})`。
+    4. 恢复图，例如调用 `graph.invoke(None, config)`。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\errors\INVALID_CHAT_HISTORY.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

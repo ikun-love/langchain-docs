@@ -1,0 +1,65 @@
+---
+title: MLX 本地管道
+---
+
+MLX 模型可以通过 `MLXPipeline` 类在本地运行。
+
+[MLX 社区](https://huggingface.co/mlx-community) 在 Hugging Face Model Hub 上托管了超过 150 个模型，这些模型都是开源的，并且公开可用。Hugging Face Model Hub 是一个人们可以轻松协作和共同构建机器学习项目的在线平台。
+
+可以通过这个本地管道包装器（`MLXPipeline`）或者通过调用其托管的推理端点来从 LangChain 中调用这些模型。有关 MLX 的更多信息，请参阅 [examples 仓库](https://github.com/ml-explore/mlx-examples/tree/main/llms) 中的 Notebook。
+
+要使用它，您需要安装 `mlx-lm` Python [包](https://pypi.org/project/mlx-lm/)，以及 [transformers](https://pypi.org/project/transformers/)。您也可以安装 `huggingface_hub`。
+
+```python
+pip install -qU  mlx-lm transformers huggingface_hub
+```
+
+### 模型加载
+
+可以通过使用 `from_model_id` 方法并指定模型参数来加载模型。
+
+```python
+from langchain_community.llms.mlx_pipeline import MLXPipeline
+
+pipe = MLXPipeline.from_model_id(
+    "mlx-community/quantized-gemma-2b-it",
+    pipeline_kwargs={"max_tokens": 10, "temp": 0.1},
+)
+```
+
+也可以通过直接传入一个现有的 `transformers` 管道来加载：
+
+```python
+from mlx_lm import load
+
+model, tokenizer = load("mlx-community/quantized-gemma-2b-it")
+pipe = MLXPipeline(model=model, tokenizer=tokenizer)
+```
+
+### 创建链 (Chain)
+
+将模型加载到内存后，您可以将其与提示词（Prompt）组合，形成一个链（Chain）。
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+prompt = PromptTemplate.from_template(template)
+
+chain = prompt | pipe
+
+question = "What is electroencephalography?"
+
+print(chain.invoke({"question": question}))
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\mlx_pipelines.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

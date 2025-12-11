@@ -1,0 +1,75 @@
+---
+title: RWKV-4
+---
+
+本文档介绍了如何在 LangChain 中使用 `RWKV-4` 包装器。内容分为两部分：安装与设置，以及使用示例。
+
+## 安装与设置
+
+- 使用 `pip install rwkv` 安装 Python 包。
+- 使用 `pip install tokenizer` 安装分词器（tokenizer）Python 包。
+- 下载一个 [RWKV 模型](https://huggingface.co/BlinkDL/rwkv-4-raven/tree/main)，并将其放置在你希望的目录中。
+- 下载 [tokens 文件](https://raw.githubusercontent.com/BlinkDL/ChatRWKV/main/20B_tokenizer.json)。
+
+## 使用方法
+
+### RWKV
+
+要使用 RWKV 包装器，你需要提供预训练模型文件的路径和分词器的配置信息。
+```python
+from langchain_community.llms import RWKV
+
+# 测试模型
+
+```python
+
+def generate_prompt(instruction, input=None):
+    if input:
+        return f"""下面是一条描述任务的指令，并附带了提供更多上下文的输入。请编写一个适当完成请求的回复。
+
+# 指令:
+{instruction}
+
+# 输入:
+{input}
+
+# 回复:
+"""
+    else:
+        return f"""下面是一条描述任务的指令。请编写一个适当完成请求的回复。
+
+# 指令:
+{instruction}
+
+# 回复:
+"""
+
+
+model = RWKV(model="./models/RWKV-4-Raven-3B-v7-Eng-20230404-ctx4096.pth", strategy="cpu fp32", tokens_path="./rwkv/20B_tokenizer.json")
+response = model.invoke(generate_prompt("从前有这样一个故事， "))
+```
+## 模型文件
+
+你可以在 [RWKV-4-Raven](https://huggingface.co/BlinkDL/rwkv-4-raven/tree/main) 仓库中找到模型文件下载链接。
+
+### Rwkv-4 模型 -> 推荐的 VRAM
+
+```
+RWKV VRAM
+模型 | 8位 (8bit) | bf16/fp16 | fp32
+14B   | 16GB | 28GB      | >50GB
+7B    | 8GB  | 14GB      | 28GB
+3B    | 2.8GB| 6GB       | 12GB
+1b5   | 1.3GB| 3GB       | 6GB
+```
+
+有关策略（包括流式传输和 CUDA 支持）的更多信息，请参阅 [rwkv pip](https://pypi.org/project/rwkv/) 页面。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\rwkv.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

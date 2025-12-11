@@ -1,0 +1,74 @@
+---
+title: 记录多模态跟踪
+sidebarTitle: 记录多模态跟踪
+---
+
+LangSmith 支持将图像作为跟踪（traces）的一部分进行记录和渲染。这目前仅支持多模态大型语言模型（LLM）的运行。
+
+为了记录图像，请在 Python 中使用 `wrap_openai` 或在 TypeScript 中使用 `wrapOpenAI`，并将图像 URL 或 Base64 编码的图像作为输入的一部分传入。
+
+<CodeGroup>
+
+```python Python
+from openai import OpenAI
+from langsmith.wrappers import wrap_openai
+client = wrap_openai(OpenAI())
+response = client.chat.completions.create(
+    model="gpt-4-turbo",
+    messages=[
+      {
+        "role": "user",
+        "content": [
+          {"type": "text", "text": "What's in this image?"},
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+            },
+          },
+        ],
+      }
+    ],
+)
+print(response.choices[0])
+```
+
+```typescript TypeScript
+import OpenAI from "openai";
+import { wrapOpenAI } from "langsmith/wrappers";
+// Wrap the OpenAI client to automatically log traces
+const wrappedClient = wrapOpenAI(new OpenAI());
+const response = await wrappedClient.chat.completions.create({
+  model: "gpt-4-turbo",
+  messages: [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "What's in this image?" },
+        {
+          type: "image_url",
+          image_url: {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+          },
+        },
+      ],
+    },
+  ],
+});
+console.log(response.choices[0]);
+```
+
+</CodeGroup>
+
+该图像将作为跟踪的一部分在 LangSmith UI 中渲染出来。
+
+![](/langsmith/images/multimodal.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\log-multimodal-traces.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

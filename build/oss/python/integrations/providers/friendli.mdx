@@ -1,0 +1,55 @@
+---
+title: Friendli AI
+---
+
+> [FriendliAI](https://friendli.ai/) 提供了可扩展、高效的部署选项，专为高需求的 AI 工作负载量身定制，旨在提升 AI 应用的性能并优化成本节约。
+
+## 安装和设置
+
+安装 `friendli-client` Python 包。
+
+<CodeGroup>
+```bash pip
+pip install -U langchain_community friendli-client
+```
+
+```bash uv
+uv add langchain_community friendli-client
+```
+</CodeGroup>
+
+登录 [Friendli Suite](https://suite.friendli.ai/) 创建一个个人访问令牌（Personal Access Token），并将其设置为 `FRIENDLI_TOKEN` 环境变量。
+
+## 聊天模型（Chat Models）
+
+请参阅 [使用示例](/oss/python/integrations/chat/friendli)。
+
+```python
+from langchain_community.chat_models.friendli import ChatFriendli
+
+chat = ChatFriendli(model='meta-llama-3.1-8b-instruct')
+
+for m in chat.stream("Tell me fun things to do in NYC"):
+    print(m.content, end="", flush=True)
+```
+
+## 大语言模型（LLMs）
+
+请参阅 [使用示例](/oss/python/integrations/llms/friendli)。
+
+```python
+from langchain_community.llms.friendli import Friendli
+
+llm = Friendli(model='meta-llama-3.1-8b-instruct')
+
+print(llm.invoke("def bubble_sort(): "))
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\friendli.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

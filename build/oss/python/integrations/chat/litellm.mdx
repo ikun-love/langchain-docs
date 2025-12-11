@@ -1,0 +1,165 @@
+---
+title: ChatLiteLLM 和 ChatLiteLLMRouter
+---
+
+[LiteLLM](https://github.com/BerriAI/litellm) 是一个简化调用 Anthropic、Azure、Huggingface、Replicate 等服务的库。
+
+本教程涵盖了如何开始使用 LangChain + LiteLLM I/O 库。
+
+此集成包含两个主要类：
+
+- `ChatLiteLLM`: 用于 LiteLLM 基本用法的 LangChain 包装器（[文档](https://docs.litellm.ai/docs/)）。
+- `ChatLiteLLMRouter`: 一个 `ChatLiteLLM` 的包装器，它利用了 LiteLLM 的 Router 功能（[文档](https://docs.litellm.ai/docs/routing)）。
+
+## 目录 (Table of Contents)
+
+1. [概述 (Overview)](#overview)
+   - [集成详情 (Integration Details)](#integration-details)
+   - [模型特性 (Model Features)](#model-features)
+2. [设置 (Setup)](#setup)
+3. [凭证 (Credentials)](#credentials)
+4. [安装 (Installation)](#installation)
+5. [实例化 (Instantiation)](#instantiation)
+   - [ChatLiteLLM](#chatlitellm)
+   - [ChatLiteLLMRouter](#chatlitellmrouter)
+6. [调用 (Invocation)](#invocation)
+7. [异步和流式功能 (Async and Streaming Functionality)](#async-and-streaming-functionality)
+8. [API 参考 (API Reference)](#api-reference)
+
+## 概述 (Overview)
+
+### 集成详情 (Integration details)
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) | 下载量 (Downloads) | 版本 (Version) |
+| :---  | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [ChatLiteLLM](https://python.langchain.com/docs/integrations/chat/litellm/#chatlitellm) | [langchain-litellm](https://pypi.org/project/langchain-litellm/)| ❌ | ❌ | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-litellm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-litellm?style=flat-square&label=%20) |
+| [ChatLiteLLMRouter](https://python.langchain.com/docs/integrations/chat/litellm/#chatlitellmrouter) | [langchain-litellm](https://pypi.org/project/langchain-litellm/)| ❌ | ❌ | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-litellm?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-litellm?style=flat-square&label=%20) |
+
+### 模型特性 (Model features)
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output#structured-output) | JSON 模式 (JSON mode) | 图像输入 (Image input) | 音频输入 (Audio input) | 视频输入 (Video input) | [Token 级流式传输](/oss/python/integrations/chat/litellm#async-and-streaming-functionality) | [原生异步](/oss/python/integrations/chat/litellm#async-and-streaming-functionalityy) | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+
+### 设置 (Setup)
+
+要访问 `ChatLiteLLM` 和 `ChatLiteLLMRouter` 模型，您需要安装 `langchain-litellm` 包，并创建 OpenAI、Anthropic、Azure、Replicate、OpenRouter、Hugging Face、Together AI 或 Cohere 账户。然后，您必须获取 API 密钥并将其导出为环境变量。
+
+## 凭证 (Credentials)
+
+您需要选择要使用的 LLM 提供商，注册账户以获取其 API 密钥。
+
+### 示例 - Anthropic
+
+前往 [Claude 控制台](https://console.anthropic.com) 注册并生成 Claude API 密钥。执行此操作后，设置 `ANTHROPIC_API_KEY` 环境变量：
+
+### 示例 - OpenAI
+
+前往 [platform.openai.com/api-keys](https://platform.openai.com/api-keys) 注册 OpenAI 账户并生成 API 密钥。执行此操作后，设置 OPENAI_API_KEY 环境变量。
+
+```python
+## 设置环境变量 (Set ENV variables)
+import os
+
+os.environ["OPENAI_API_KEY"] = "your-openai-key"
+os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
+```
+
+### 安装 (Installation)
+
+LangChain LiteLLM 集成在 `langchain-litellm` 包中可用：
+
+```python
+pip install -qU langchain-litellm
+```
+
+## 实例化 (Instantiation)
+
+### ChatLiteLLM
+
+您可以通过提供一个 LiteLLM [支持的模型名称](https://docs.litellm.ai/docs/providers) 来实例化 `ChatLiteLLM` 模型。
+
+```python
+from langchain_litellm import ChatLiteLLM
+
+llm = ChatLiteLLM(model="gpt-4.1-nano", temperature=0.1)
+```
+
+### ChatLiteLLMRouter
+
+您还可以通过定义模型列表（如 [此处](https://docs.litellm.ai/docs/routing) 指定）来利用 LiteLLM 的路由功能。
+
+```python
+from langchain_litellm import ChatLiteLLMRouter
+from litellm import Router
+
+model_list = [
+    {
+        "model_name": "gpt-4.1",
+        "litellm_params": {
+            "model": "azure/gpt-4.1",
+            "api_key": "<your-api-key>",
+            "api_version": "2024-10-21",
+            "api_base": "https://<your-endpoint>.openai.azure.com/",
+        },
+    },
+    {
+        "model_name": "gpt-4o",
+        "litellm_params": {
+            "model": "azure/gpt-4o",
+            "api_key": "<your-api-key>",
+            "api_version": "2024-10-21",
+            "api_base": "https://<your-endpoint>.openai.azure.com/",
+        },
+    },
+]
+litellm_router = Router(model_list=model_list)
+llm = ChatLiteLLMRouter(router=litellm_router, model_name="gpt-4.1", temperature=0.1)
+```
+
+## 调用 (Invocation)
+
+无论您实例化的是 `ChatLiteLLM` 还是 `ChatLiteLLMRouter`，现在都可以通过 LangChain 的 API 使用聊天模型。
+
+```python
+response = await llm.ainvoke(
+    "将文本分类为中性、负面或正面。文本：我觉得食物还行。情感："
+)
+print(response)
+```
+
+```output
+content='Neutral' additional_kwargs={} response_metadata={'token_usage': Usage(completion_tokens=2, prompt_tokens=30, total_tokens=32, completion_tokens_details=CompletionTokensDetailsWrapper(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=0, text_tokens=None), prompt_tokens_details=PromptTokensDetailsWrapper(audio_tokens=0, cached_tokens=0, text_tokens=None, image_tokens=None)), 'model': 'gpt-3.5-turbo', 'finish_reason': 'stop', 'model_name': 'gpt-3.5-turbo'} id='run-ab6a3b21-eae8-4c27-acb2-add65a38221a-0' usage_metadata={'input_tokens': 30, 'output_tokens': 2, 'total_tokens': 32}
+```
+
+## 异步和流式功能 (Async and Streaming Functionality)
+
+`ChatLiteLLM` 和 `ChatLiteLLMRouter` 也支持异步和流式传输功能：
+
+```python
+async for token in llm.astream("你好，请解释一下抗生素是如何起作用的"):
+    print(token.text(), end="")
+```
+
+```output
+Antibiotics are medications that fight bacterial infections in the body. They work by targeting specific bacteria and either killing them or preventing their growth and reproduction.
+
+There are several different mechanisms by which antibiotics work. Some antibiotics work by disrupting the cell walls of bacteria, causing them to burst and die. Others interfere with the protein synthesis of bacteria, preventing them from growing and reproducing. Some antibiotics target the DNA or RNA of bacteria, disrupting their ability to replicate.
+
+It is important to note that antibiotics only work against bacterial infections and not viral infections. It is also crucial to take antibiotics as prescribed by a healthcare professional and to complete the full course of treatment, even if symptoms improve before the medication is finished. This helps to prevent antibiotic resistance, where bacteria become resistant to the effects of antibiotics.
+```
+
+---
+
+## API 参考 (API reference)
+
+有关 `ChatLiteLLM` 和 `ChatLiteLLMRouter` 所有功能和配置的详细文档，请访问 API 参考：[github.com/Akshay-Dongare/langchain-litellm](https://github.com/Akshay-Dongare/langchain-litellm)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\litellm.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

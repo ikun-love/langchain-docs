@@ -1,0 +1,615 @@
+---
+title: Couchbase
+---
+
+[Couchbase](http://couchbase.com/) 是一款屡获殊荣的分布式 NoSQL 云数据库，它为所有云、移动、AI 和边缘计算应用程序提供无与伦比的多功能性、性能、可扩展性和财务价值。Couchbase 通过为开发人员提供编码辅助和为应用程序提供向量搜索，拥抱 AI。
+
+向量搜索是 Couchbase 中 [全文搜索服务](https://docs.couchbase.com/server/current/learn/services-and-indexes/services/search-service.html)（搜索服务）的一部分。
+
+本教程将解释如何在 Couchbase 中使用向量搜索。您可以同时使用 [Couchbase Capella](https://www.couchbase.com/products/capella/) 和您自管理的 Couchbase Server。
+
+## 设置
+
+要访问 `CouchbaseSearchVectorStore`，您首先需要安装 `langchain-couchbase` 合作伙伴包：
+
+```python
+pip install -qU langchain-couchbase
+```
+
+### 凭证 (Credentials)
+
+请访问 Couchbase [网站](https://cloud.couchbase.com) 并创建一个新的连接，确保保存您的数据库用户名和密码：
+
+```python
+import getpass
+
+COUCHBASE_CONNECTION_STRING = getpass.getpass(
+    "输入 Couchbase 集群的连接字符串: "
+)
+DB_USERNAME = getpass.getpass("输入 Couchbase 集群的用户名: ")
+DB_PASSWORD = getpass.getpass("输入 Couchbase 集群的密码: ")
+```
+
+```output
+输入 Couchbase 集群的连接字符串:  ········
+输入 Couchbase 集群的用户名:  ········
+输入 Couchbase 集群的密码:  ········
+```
+
+如果您希望获得一流的自动化模型调用跟踪，您还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_TRACING"] = "true"
+# os.environ["LANGSMITH_API_KEY"] = getpass.getpass()
+```
+
+## 初始化 (Initialization)
+
+在实例化之前，我们需要建立一个连接。
+
+### 创建 Couchbase 连接对象
+
+我们首先创建一个到 Couchbase 集群的连接，然后将集群对象传递给向量存储（Vector Store）。
+
+在这里，我们使用上面提供的用户名和密码进行连接。您也可以使用任何其他支持的方式连接到您的集群。
+
+有关连接到 Couchbase 集群的更多信息，请查看 [文档](https://docs.couchbase.com/python-sdk/current/hello-world/start-using-sdk.html#connect)。
+
+```python
+from datetime import timedelta
+
+from couchbase.auth import PasswordAuthenticator
+from couchbase.cluster import Cluster
+from couchbase.options import ClusterOptions
+
+auth = PasswordAuthenticator(DB_USERNAME, DB_PASSWORD)
+options = ClusterOptions(auth)
+cluster = Cluster(COUCHBASE_CONNECTION_STRING, options)
+
+# 等待集群准备就绪
+cluster.wait_until_ready(timedelta(seconds=5))
+```
+
+我们现在将在 Couchbase 集群中设置我们想要用于向量搜索的 bucket、scope 和 collection 名称。
+
+在本示例中，我们使用的是默认的 scope 和 collection。
+
+```python
+BUCKET_NAME = "langchain_bucket"
+SCOPE_NAME = "_default"
+COLLECTION_NAME = "_default"
+SEARCH_INDEX_NAME = "langchain-test-index"
+```
+
+有关如何创建支持向量字段的搜索索引的详细信息，请参阅文档。
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/vector-search/create-vector-search-index-ui.html)
+
+- [Couchbase Server](https://docs.couchbase.com/server/current/vector-search/create-vector-search-index-ui.html)
+
+### 简单实例化 (Simple Instantiation)
+
+下面，我们使用集群信息和搜索索引名称创建向量存储对象。
+
+<EmbeddingTabs/>
+
+```python
+# | output: false
+# | echo: false
+from langchain_openai import OpenAIEmbeddings
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+```
+
+```python
+from langchain_couchbase.vectorstores import CouchbaseSearchVectorStore
+
+vector_store = CouchbaseSearchVectorStore(
+    cluster=cluster,
+    bucket_name=BUCKET_NAME,
+    scope_name=SCOPE_NAME,
+    collection_name=COLLECTION_NAME,
+    embedding=embeddings,
+    index_name=SEARCH_INDEX_NAME,
+)
+```
+
+### 指定文本和嵌入字段 (Specify the Text & Embeddings Field)
+
+您可以选择使用 `text_key` 和 `embedding_key` 字段来指定文档的文本和嵌入字段。
+
+```python
+vector_store_specific = CouchbaseSearchVectorStore(
+    cluster=cluster,
+    bucket_name=BUCKET_NAME,
+    scope_name=SCOPE_NAME,
+    collection_name=COLLECTION_NAME,
+    embedding=embeddings,
+    index_name=SEARCH_INDEX_NAME,
+    text_key="text",
+    embedding_key="embedding",
+)
+```
+
+## 管理向量存储 (Manage vector store)
+
+创建向量存储后，我们可以通过添加和删除不同的项目与其进行交互。
+
+### 向向量存储添加项目 (Add items to vector store)
+
+我们可以使用 `add_documents` 函数向向量存储添加项目。
+
+```python
+from uuid import uuid4
+
+from langchain_core.documents import Document
+
+document_1 = Document(
+    page_content="I had chocolate chip pancakes and scrambled eggs for breakfast this morning.",
+    metadata={"source": "tweet"},
+)
+
+document_2 = Document(
+    page_content="The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees.",
+    metadata={"source": "news"},
+)
+
+document_3 = Document(
+    page_content="Building an exciting new project with LangChain - come check it out!",
+    metadata={"source": "tweet"},
+)
+
+document_4 = Document(
+    page_content="Robbers broke into the city bank and stole $1 million in cash.",
+    metadata={"source": "news"},
+)
+
+document_5 = Document(
+    page_content="Wow! That was an amazing movie. I can't wait to see it again.",
+    metadata={"source": "tweet"},
+)
+
+document_6 = Document(
+    page_content="Is the new iPhone worth the price? Read this review to find out.",
+    metadata={"source": "website"},
+)
+
+document_7 = Document(
+    page_content="The top 10 soccer players in the world right now.",
+    metadata={"source": "website"},
+)
+
+document_8 = Document(
+    page_content="LangGraph is the best framework for building stateful, agentic applications!",
+    metadata={"source": "tweet"},
+)
+
+document_9 = Document(
+    page_content="The stock market is down 500 points today due to fears of a recession.",
+    metadata={"source": "news"},
+)
+
+document_10 = Document(
+    page_content="I have a bad feeling I am going to get deleted :(",
+    metadata={"source": "tweet"},
+)
+
+documents = [
+    document_1,
+    document_2,
+    document_3,
+    document_4,
+    document_5,
+    document_6,
+    document_7,
+    document_8,
+    document_9,
+    document_10,
+]
+uuids = [str(uuid4()) for _ in range(len(documents))]
+
+vector_store.add_documents(documents=documents, ids=uuids)
+```
+
+```output
+['f125b836-f555-4449-98dc-cbda4e77ae3f',
+ 'a28fccde-fd32-4775-9ca8-6cdb22ca7031',
+ 'b1037c4b-947f-497f-84db-63a4def5080b',
+ 'c7082b74-b385-4c4b-bbe5-0740909c01db',
+ 'a7e31f62-13a5-4109-b881-8631aff7d46c',
+ '9fcc2894-fdb1-41bd-9a93-8547747650f4',
+ 'a5b0632d-abaf-4802-99b3-df6b6c99be29',
+ '0475592e-4b7f-425d-91fd-ac2459d48a36',
+ '94c6db4e-ba07-43ff-aa96-3a5d577db43a',
+ 'd21c7feb-ad47-4e7d-84c5-785afb189160']
+```
+
+### 从向量存储中删除项目 (Delete items from vector store)
+
+```python
+vector_store.delete(ids=[uuids[-1]])
+```
+
+```output
+True
+```
+
+## 查询向量存储 (Query vector store)
+
+一旦您的向量存储被创建并且相关的文档已被添加，您很可能希望在链或代理运行时对其进行查询。
+
+### 直接查询 (Query directly)
+
+#### 相似度搜索 (Similarity search)
+
+执行简单的相似度搜索可以按如下方式完成：
+
+```python
+results = vector_store.similarity_search(
+    "LangChain provides abstractions to make working with LLMs easy",
+    k=2,
+)
+for res in results:
+    print(f"* {res.page_content} [{res.metadata}]")
+```
+
+```output
+* Building an exciting new project with LangChain - come check it out! [{'source': 'tweet'}]
+* LangGraph is the best framework for building stateful, agentic applications! [{'source': 'tweet'}]
+```
+
+#### 相似度搜索并显示分数 (Similarity search with Score)
+
+您也可以通过调用 `similarity_search_with_score` 方法来获取结果的分数。
+
+```python
+results = vector_store.similarity_search_with_score("Will it be hot tomorrow?", k=1)
+for res, score in results:
+    print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
+```
+
+```output
+* [SIM=0.553112] The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees. [{'source': 'news'}]
+```
+
+### 过滤结果 (Filtering Results)
+
+您可以向 Couchbase 搜索服务支持的文档中的文本或元数据指定任何过滤器来过滤搜索结果。
+
+`filter` 可以是 Couchbase Python SDK 支持的任何有效 [SearchQuery](https://docs.couchbase.com/python-sdk/current/howtos/full-text-searching-with-sdk.html#search-queries)。这些过滤器在执行向量搜索**之前**应用。
+
+如果您想基于元数据中的字段进行过滤，您需要使用 `.` 来指定它。
+
+例如，要获取元数据中的 `source` 字段，您需要指定 `metadata.source`。
+
+请注意，过滤器需要被搜索索引支持。
+
+```python
+from couchbase import search
+
+query = "Are there any concerning financial news?"
+filter_on_source = search.MatchQuery("news", field="metadata.source")
+results = vector_store.similarity_search_with_score(
+    query, fields=["metadata.source"], filter=filter_on_source, k=5
+)
+for res, score in results:
+    print(f"* {res.page_content} [{res.metadata}] {score}")
+```
+
+```output
+* The stock market is down 500 points today due to fears of a recession. [{'source': 'news'}] 0.3873019218444824
+* Robbers broke into the city bank and stole $1 million in cash. [{'source': 'news'}] 0.20637212693691254
+* The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees. [{'source': 'news'}] 0.10404900461435318
+```
+
+### 指定要返回的字段 (Specifying Fields to Return)
+
+您可以使用搜索中的 `fields` 参数指定要从文档中返回的字段。这些字段作为返回的 Document 中的 `metadata` 对象的一部分返回。您可以获取索引中存储的任何字段。文档的 `text_key` 会作为文档的 `page_content` 返回。
+
+如果您未指定要获取的任何字段，将返回索引中存储的所有字段。
+
+如果您想获取元数据中的某个字段，您需要使用 `.` 来指定它。
+
+例如，要获取元数据中的 `source` 字段，您需要指定 `metadata.source`。
+
+```python
+query = "What did I eat for breakfast today?"
+results = vector_store.similarity_search(query, fields=["metadata.source"])
+print(results[0])
+```
+
+```output
+page_content='I had chocolate chip pancakes and scrambled eggs for breakfast this morning.' metadata={'source': 'tweet'}
+```
+
+### 通过转换为检索器进行查询 (Query by turning into retriever)
+
+您还可以将向量存储转换为检索器（retriever），以便在链中使用时更方便。
+
+以下是如何将向量存储转换为检索器，然后使用简单的查询和过滤器调用该检索器：
+
+```python
+retriever = vector_store.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 1, "score_threshold": 0.5},
+)
+filter_on_source = search.MatchQuery("news", field="metadata.source")
+retriever.invoke("Stealing from the bank is a crime", filter=filter_on_source)
+```
+
+```output
+[Document(id='c7082b74-b385-4c4b-bbe5-0740909c01db', metadata={'source': 'news'}, page_content='Robbers broke into the city bank and stole $1 million in cash.')]
+```
+
+### 混合查询 (Hybrid Queries)
+
+Couchbase 允许您通过将向量搜索结果与对文档中非向量字段（如 `metadata` 对象）的搜索相结合来进行混合搜索。
+
+结果将基于向量搜索和搜索服务支持的搜索的结果组合。每个组件搜索的分数相加得到结果的总分。
+
+要执行混合搜索，有一个可选参数 `search_options` 可以传递给所有相似度搜索。
+`search_options` 的不同搜索/查询可能性可以在 [此处](https://docs.couchbase.com/server/current/search/search-request-params.html#query-object) 找到。
+
+#### 为混合搜索创建多样化的元数据 (Create Diverse Metadata for Hybrid Search)
+
+为了模拟混合搜索，让我们从现有文档中创建一些随机元数据。
+我们均匀地向元数据添加三个字段：`date`（介于 2010 年到 2020 年之间）、`rating`（介于 1 到 5 之间）和 `author`（设置为 John Doe 或 Jane Doe）。
+
+```python
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import CharacterTextSplitter
+
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+
+# 向文档添加元数据
+for i, doc in enumerate(docs):
+    doc.metadata["date"] = f"{range(2010, 2020)[i % 10]}-01-01"
+    doc.metadata["rating"] = range(1, 6)[i % 5]
+    doc.metadata["author"] = ["John Doe", "Jane Doe"][i % 2]
+
+vector_store.add_documents(docs)
+
+query = "What did the president say about Ketanji Brown Jackson"
+results = vector_store.similarity_search(query)
+print(results[0].metadata)
+```
+
+```output
+{'author': 'John Doe', 'date': '2016-01-01', 'rating': 2, 'source': '../../how_to/state_of_the_union.txt'}
+```
+
+### 按精确值查询 (Query by Exact Value)
+
+我们可以搜索 `metadata` 对象中像 `author` 这样的文本字段的精确匹配。
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+results = vector_store.similarity_search(
+    query,
+    search_options={"query": {"field": "metadata.author", "match": "John Doe"}},
+    fields=["metadata.author"],
+)
+print(results[0])
+```
+
+```output
+page_content='One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
+
+And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.' metadata={'author': 'John Doe'}
+```
+
+### 按部分匹配查询 (Query by Partial Match)
+
+我们可以通过指定搜索的模糊度（fuzziness）来搜索部分匹配。当您想搜索查询的细微变化或拼写错误时，这很有用。
+
+这里，"Jae" 与 "Jane" 很接近（模糊度为 1）。
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+results = vector_store.similarity_search(
+    query,
+    search_options={
+        "query": {"field": "metadata.author", "match": "Jae", "fuzziness": 1}
+    },
+    fields=["metadata.author"],
+)
+print(results[0])
+```
+
+```output
+page_content='A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
+
+And if we are to advance liberty and justice, we need to secure the Border and fix the immigration system.' metadata={'author': 'Jane Doe'}
+```
+
+### 按日期范围查询 (Query by Date Range Query)
+
+我们可以搜索在 `metadata.date` 这样的日期字段上位于日期范围内的文档。
+
+```python
+query = "Any mention about independence?"
+results = vector_store.similarity_search(
+    query,
+    search_options={
+        "query": {
+            "start": "2016-12-31",
+            "end": "2017-01-02",
+            "inclusive_start": True,
+            "inclusive_end": False,
+            "field": "metadata.date",
+        }
+    },
+)
+print(results[0])
+```
+
+```output
+page_content='And with 75% of adult Americans fully vaccinated and hospitalizations down by 77%, most Americans can remove their masks, return to work, stay in the classroom, and move forward safely.
+
+We achieved this because we provided free vaccines, treatments, tests, and masks.
+
+Of course, continuing this costs money.
+
+I will soon send Congress a request.
+
+The vast majority of Americans have used these tools and may want to again, so I expect Congress to pass it quickly.' metadata={'author': 'Jane Doe', 'date': '2017-01-01', 'rating': 3, 'source': '../../how_to/state_of_the_union.txt'}
+```
+
+### 按数字范围查询 (Query by Numeric Range Query)
+
+我们可以搜索在 `metadata.rating` 这样的数字字段上位于范围内的文档。
+
+```python
+query = "Any mention about independence?"
+results = vector_store.similarity_search_with_score(
+    query,
+    search_options={
+        "query": {
+            "min": 3,
+            "max": 5,
+            "inclusive_min": True,
+            "inclusive_max": True,
+            "field": "metadata.rating",
+        }
+    },
+)
+print(results[0])
+```
+
+```output
+(Document(id='3a90405c0f5b4c09a6646259678f1f61', metadata={'author': 'John Doe', 'date': '2014-01-01', 'rating': 5, 'source': '../../how_to/state_of_the_union.txt'}, page_content='In this Capitol, generation after generation, Americans have debated great questions amid great strife, and have done great things. \n\nWe have fought for freedom, expanded liberty, defeated totalitarianism and terror. \n\nAnd built the strongest, freest, and most prosperous nation the world has ever known. \n\nNow is the hour. \n\nOur moment of responsibility. \n\nOur test of resolve and conscience, of history itself.'), 0.3573387440020518)
+```
+
+### 组合多个搜索查询 (Combining Multiple Search Queries)
+
+不同的搜索查询可以使用 AND（conjuncts，合取）或 OR（disjuncts，析取）操作符组合在一起。
+
+在这个例子中，我们检查评级在 3 到 4 之间**且**日期在 2015 年到 2018 年之间的文档。
+
+```python
+query = "Any mention about independence?"
+results = vector_store.similarity_search_with_score(
+    query,
+    search_options={
+        "query": {
+            "conjuncts": [
+                {"min": 3, "max": 4, "inclusive_max": True, "field": "metadata.rating"},
+                {"start": "2016-12-31", "end": "2017-01-02", "field": "metadata.date"},
+            ]
+        }
+    },
+)
+print(results[0])
+```
+
+```output
+(Document(id='7115a704877a46ad94d661dd9c81cbc3', metadata={'author': 'Jane Doe', 'date': '2017-01-01', 'rating': 3, 'source': '../../how_to/state_of_the_union.txt'}, page_content='And with 75% of adult Americans fully vaccinated and hospitalizations down by 77%, most Americans can remove their masks, return to work, stay in the classroom, and move forward safely. \n\nWe achieved this because we provided free vaccines, treatments, tests, and masks. \n\nOf course, continuing this costs money. \n\nI will soon send Congress a request. \n\nThe vast majority of Americans have used these tools and may want to again, so I expect Congress to pass it quickly.'), 0.6898253780130769)
+```
+
+**注意**
+
+混合搜索结果可能包含不满足所有搜索参数的文档。这是由于 [评分的计算方式](https://docs.couchbase.com/server/current/search/run-searches.html#scoring) 所致。
+分数是向量搜索分数和混合搜索中查询分数的总和。如果向量搜索分数很高，则组合分数将高于匹配混合搜索中所有查询的结果。
+为避免出现此类结果，请使用 `filter` 参数而不是混合搜索。
+
+### 组合混合搜索查询和过滤器 (Combining Hybrid Search Query with Filters)
+
+混合搜索可以与过滤器（filters）结合使用，以获得混合搜索和过滤器（用于匹配所需结果）的最佳效果。
+
+在这个例子中，我们检查评级在 3 到 5 之间**且**在文本字段中匹配字符串 "independence" 的文档。
+
+```python
+filter_text = search.MatchQuery("independence", field="text")
+
+query = "Any mention about independence?"
+results = vector_store.similarity_search_with_score(
+    query,
+    search_options={
+        "query": {
+            "min": 3,
+            "max": 5,
+            "inclusive_min": True,
+            "inclusive_max": True,
+            "field": "metadata.rating",
+        }
+    },
+    filter=filter_text,
+)
+
+print(results[0])
+```
+
+```output
+(Document(id='23bb51b4e4d54a94ab0a95e72be8428c', metadata={'author': 'John Doe', 'date': '2012-01-01', 'rating': 3, 'source': '../../how_to/state_of_the_union.txt'}, page_content='And we remain clear-eyed. The Ukrainians are fighting back with pure courage. But the next few days weeks, months, will be hard on them.  \n\nPutin has unleashed violence and chaos.  But while he may make gains on the battlefield – he will pay a continuing high price over the long run. \n\nAnd a proud Ukrainian people, who have known 30 years  of independence, have repeatedly shown that they will not tolerate anyone who tries to take their country backwards.'), 0.30549919644400614)
+```
+
+### 其他查询 (Other Queries)
+
+类似地，您可以在 `search_options` 参数中使用任何支持的查询方法，如地理距离（Geo Distance）、多边形搜索（Polygon Search）、通配符（Wildcard）、正则表达式（Regular Expressions）等。有关可用查询方法及其语法的详细信息，请参阅文档。
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/search-request-params.html#query-object)
+- [Couchbase Server](https://docs.couchbase.com/server/current/search/search-request-params.html#query-object)
+
+## 用于检索增强生成 (RAG) 的使用
+
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
+
+- [教程](/oss/python/langchain/rag)
+- [How-to: 使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
+- [检索概念文档](https://python.langchain.com/docs/concepts/retrieval)
+
+## 常见问题 (Frequently Asked Questions)
+
+### 问题：在创建 CouchbaseSearchVectorStore 对象之前，我应该创建搜索索引吗？
+
+是的，目前您需要在创建 `CouchbaseSearchVectoreStore` 对象之前创建搜索索引。
+
+### 问题：我没有在搜索结果中看到我指定的所有字段
+
+在 Couchbase 中，我们只能返回存储在搜索索引中的字段。请确保您尝试在搜索结果中访问的字段是搜索索引的一部分。
+
+处理此问题的一种方法是在索引中动态索引和存储文档的字段。
+
+- 在 Capella 中，您需要进入“高级模式 (Advanced Mode)”，然后在“常规设置 (General Settings)”下方的下拉菜单中勾选 `[X] 存储动态字段 (Store Dynamic Fields)` 或 `[X] 索引动态字段 (Index Dynamic Fields)`
+- 在 Couchbase Server 中，“索引编辑器 (Index Editor)”中（非快速编辑器 Quick Editor），在“高级 (Advanced)”下方的下拉菜单中，勾选 `[X] 存储动态字段 (Store Dynamic Fields)` 或 `[X] 索引动态字段 (Index Dynamic Fields)`
+
+请注意，这些选项将增加索引的大小。
+
+有关动态映射的更多详细信息，请参阅 [文档](https://docs.couchbase.com/cloud/search/customize-index.html)。
+
+### 问题：我无法在搜索结果中看到 metadata 对象
+
+这很可能是由于文档中的 `metadata` 字段未被 Couchbase 搜索索引索引和/或存储。为了索引文档中的 `metadata` 字段，您需要将其添加为子映射 (child mapping) 到索引中。
+
+如果您选择映射索引中的所有字段，您将能够按所有元数据字段进行搜索。或者，为了优化索引，您可以选择要索引的 `metadata` 对象中的特定字段。您可以参考 [文档](https://docs.couchbase.com/cloud/search/customize-index.html) 了解有关索引子映射的更多信息。
+
+创建子映射
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-child-mapping.html)
+- [Couchbase Server](https://docs.couchbase.com/server/current/search/create-child-mapping.html)
+
+### 问题：filter 和 search_options / 混合查询有什么区别？
+
+过滤器是 [预过滤器 (pre-filters)](https://docs.couchbase.com/server/current/vector-search/pre-filtering-vector-search.html#about-pre-filtering)，用于限制在搜索索引中搜索的文档。它在 Couchbase Server 7.6.4 及更高版本中可用。
+
+混合查询是额外的搜索查询，可用于调整从搜索索引返回的结果。
+
+过滤器和混合搜索查询都具有相同的功能，只是语法略有不同。过滤器是 [SearchQuery](https://docs.couchbase.com/python-sdk/current/howtos/full-text-searching-with-sdk.html#search-queries) 对象，而混合搜索查询是 [字典 (dictionaries)](https://docs.couchbase.com/server/current/search/search-request-params.html)。
+
+---
+
+## API 参考 (API reference)
+
+有关 `CouchbaseSearchVectorStore` 所有功能和配置的详细文档，请访问 [API 参考](https://couchbase-ecosystem.github.io/langchain-couchbase/langchain_couchbase.html#module-langchain_couchbase.vectorstores.search_vector_store)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\couchbase.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

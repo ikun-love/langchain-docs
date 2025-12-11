@@ -1,0 +1,81 @@
+---
+title: 在实验上自动运行评估器
+sidebarTitle: 在实验上运行评估器
+---
+
+LangSmith 支持两种方式来评估通过 SDK 创建的实验：
+
+* **以编程方式**：在代码中指定评估器（有关详细信息，请参阅[本指南](/langsmith/evaluate-llm-application)）。
+* **在 UI 中将评估器绑定到数据集**。这将自动对所有新创建的实验运行评估器，此外还会运行您通过 SDK 设置的任何评估器。当您迭代应用程序（目标函数）并希望对所有实验运行一套标准的评估器时，此方法非常有用。
+
+## 在数据集上配置评估器
+
+1. 在侧边栏中，点击 **Datasets and Experiments**（数据集和实验）选项卡。
+2. 选择要配置评估器的目标数据集。
+3. 点击 **+ Evaluator**（+ 评估器）按钮将评估器添加到数据集中。这将打开一个面板，您可以在其中配置该评估器。
+
+<Note>
+当您为数据集配置评估器时，它**仅会影响**评估器配置后创建的实验运行。它**不会影响**在此评估器配置之前创建的实验运行的评估。
+</Note>
+
+## LLM-作为裁判（LLM-as-a-judge）评估器
+
+将评估器绑定到数据集的过程与在 Playground 中配置 LLM-作为裁判评估器的过程非常相似。请查看[在 Playground 中配置 LLM-作为裁判评估器](/langsmith/llm-as-judge?mode=ui)的说明。
+
+## 自定义代码评估器
+
+将代码评估器绑定到数据集的过程与在在线评估中配置代码评估器的过程非常相似。请查看[配置代码评估器](/langsmith/online-evaluations#configure-a-custom-code-evaluator)的说明。
+
+在在线评估中配置代码评估器与将代码评估器绑定到数据集之间的**唯一区别**在于，自定义代码评估器可以引用数据集的 `Example` 中的输出来进行比较。
+
+对于绑定到数据集的自定义代码评估器，评估器函数接收两个参数：
+
+* 一个 `Run` ([引用](/langsmith/run-data-format))。这代表实验中的新运行。例如，如果您通过 SDK 运行了实验，此对象将包含您正在测试的链或模型的输入/输出。
+* 一个 `Example` ([引用](/langsmith/example-data-format))。这代表数据集中被测试的链或模型使用的参考示例。`Run` 和 `Example` 的 `inputs` 应该是相同的。如果您的 `Example` 具有参考输出来源 `outputs`，那么您可以使用它与运行的输出来进行分数比较。
+
+下面的代码展示了一个简单的评估器函数示例，该函数检查输出是否与参考输出完全匹配：
+
+<CodeGroup>
+
+```python Python
+import numpy as np
+
+def perform_eval(run, example):
+    # run 是一个 Run 对象
+    # example 是一个 Example 对象
+    output = run['outputs']['output']
+    ref_output = example['outputs']['outputs']
+    output_match = np.array_equal(output, ref_output)
+
+    return { "exact_match": output_match }
+```
+
+```javascript JavaScript
+function perform_eval(run, example) {
+    // run 是一个 Run 对象
+    // example 是一个 Example 对象
+    const output = run.outputs.output;
+    const refOutput = example.outputs.outputs;
+
+    // 对数组/对象进行深度相等性检查
+    const outputMatch = JSON.stringify(output) === JSON.stringify(refOutput);
+
+    return { "exact_match": outputMatch };
+}
+```
+
+</CodeGroup>
+
+## 后续步骤
+
+* 在[实验选项卡](/langsmith/analyze-an-experiment)中分析您的实验结果
+* 在[比较视图](/langsmith/compare-experiment-results)中比较您的实验结果
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\bind-evaluator-to-dataset.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

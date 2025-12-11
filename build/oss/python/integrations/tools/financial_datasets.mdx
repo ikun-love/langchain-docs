@@ -1,0 +1,147 @@
+---
+title: FinancialDatasets 工具包
+---
+
+[financial datasets](https://financialdatasets.ai/) 股票市场 API 提供了 REST 端点，允许您获取 16,000 多个股票代码跨越 30 多年的金融数据。
+
+## 设置 (Setup)
+
+要使用此工具包，您需要两个 API 密钥：
+
+`FINANCIAL_DATASETS_API_KEY`: 从 [financialdatasets.ai](https://financialdatasets.ai/) 获取。
+`OPENAI_API_KEY`: 从 [OpenAI](https://platform.openai.com/) 获取。
+
+```python
+import getpass
+import os
+
+os.environ["FINANCIAL_DATASETS_API_KEY"] = getpass.getpass()
+```
+
+```python
+os.environ["OPENAI_API_KEY"] = getpass.getpass()
+```
+
+### 安装 (Installation)
+
+此工具包位于 `langchain-community` 包中。
+
+```python
+pip install -qU langchain-community
+```
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化工具包：
+
+```python
+from langchain_community.agent_toolkits.financial_datasets.toolkit import (
+    FinancialDatasetsToolkit,
+)
+from langchain_community.utilities.financial_datasets import FinancialDatasetsAPIWrapper
+
+api_wrapper = FinancialDatasetsAPIWrapper(
+    financial_datasets_api_key=os.environ["FINANCIAL_DATASETS_API_KEY"]
+)
+toolkit = FinancialDatasetsToolkit(api_wrapper=api_wrapper)
+```
+
+## 工具 (Tools)
+
+查看可用工具：
+
+```python
+tools = toolkit.get_tools()
+```
+
+## 在代理中使用 (Use within an agent)
+
+让我们用 FinancialDatasetsToolkit 装备我们的代理，并提出金融问题。
+
+```python
+system_prompt = """
+您是一位先进的财务分析 AI 助手，配备了用于访问和分析金融数据的专业工具。
+您的主要职能是通过检索和解释公开交易公司的**损益表**、**资产负债表**和**现金流量表**来帮助用户进行财务分析。
+
+您可以访问来自 FinancialDatasetsToolkit 的以下工具：
+
+1. 资产负债表 (Balance Sheets): 检索给定股票代码的资产负债表数据。
+2. 损益表 (Income Statements): 获取指定公司的损益表数据。
+3. 现金流量表 (Cash Flow Statements): 访问特定股票代码的现金流量表信息。
+
+您的能力包括：
+
+1. 使用股票代码检索任何公开交易公司的财务报表。
+2. 基于这些报表中的数据分析财务比率和指标。
+3. 比较不同时间段（例如，逐年或逐季）的财务业绩。
+4. 识别公司财务健康状况和业绩的趋势。
+5. 提供关于公司流动性、偿付能力、盈利能力和效率的见解。
+6. 用简单的术语解释复杂的财务概念。
+
+回复查询时：
+
+1. 始终指明您用于分析所参考的财务报表。
+2. 为您引用的数字提供背景信息（例如，财政年度、季度）。
+3. 清楚地解释您的推理和计算过程。
+4. 如果需要更多信息才能提供完整的答案，请要求澄清。
+5. 在适当的时候，建议可能有助于分析的其他分析。
+
+请记住，您的目标是提供**准确且富有洞察力的财务分析**，以帮助用户做出明智的决策。在回复中始终保持专业和客观的语气。
+"""
+```
+
+实例化 LLM。
+
+```python
+from langchain.tools import tool
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(model="gpt-4o")
+```
+
+定义用户查询。
+
+```python
+query = "AAPL 在 2023 年的收入是多少？2024 年第一季度的总债务是多少？"
+```
+
+创建代理。
+
+```python
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        ("human", "{input}"),
+        # 占位符会填充一个消息 **列表**
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)
+
+
+agent = create_tool_calling_agent(model, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools)
+```
+
+查询代理。
+
+```python
+agent_executor.invoke({"input": query})
+```
+
+---
+
+## API 参考 (API reference)
+
+有关所有 `FinancialDatasetsToolkit` 功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/community/agent_toolkits/langchain_community.agent_toolkits.financial_datasets.toolkit.FinancialDatasetsToolkit.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\financial_datasets.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

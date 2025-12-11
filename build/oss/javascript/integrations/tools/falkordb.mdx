@@ -1,0 +1,215 @@
+---
+title: FalkorDB
+description: 使用 FalkorDB 的超快图数据库与 LangChain 结合，通过 Cypher 实现知识图谱上的自然语言查询
+sidebar_label: FalkorDB
+---
+
+# FalkorDB LangChain JS/TS 集成
+
+`[@falkordb/langchain-ts](https://www.npmjs.com/package/@falkordb/langchain-ts)` 包使开发者能够将其 FalkorDB 超快图数据库与 LangChain 应用程序结合使用。在实践中，这意味着您的应用程序可以接收自然语言提问，自动生成相应的 Cypher 查询，从您的图数据库中提取相关上下文，并以自然语言返回答案。整个翻译层都为您处理好了。
+
+该包可以融入现有的 LangChain 工作流程中，因此如果您已经为其他 AI 功能在使用该框架，这就可以成为您技术栈中的又一个工具。FalkorDB 的低延迟特性与 LangChain 的语言模型集成相结合，提供了快速的响应速度。
+
+### 关于 FalkorDB
+
+FalkorDB 是一款超快速、多租户的**图数据库**，为生成式 AI、代理记忆（Agent Memory）、云安全和欺诈检测提供支持。[FalkorDB](https://falkordb.com) 是首个可查询的属性图数据库，它利用稀疏矩阵来表示图中的邻接矩阵，并利用线性代数进行查询。
+
+## 安装
+
+```bash npm2yarn
+npm install @falkordb/langchain-ts falkordb
+```
+
+您还需要 LangChain 和一个语言模型：
+
+```bash npm2yarn
+npm install langchain @langchain/openai
+```
+
+## 快速入门
+
+### 1. 启动 FalkorDB
+
+运行 FalkorDB 的最简单方法是使用 Docker：
+
+```bash
+docker run -p 6379:6379 -it --rm falkordb/falkordb:latest
+```
+
+### 2. 基本用法
+
+```typescript
+import { FalkorDBGraph } from "@falkordb/langchain-ts";
+import { ChatOpenAI } from "@langchain/openai";
+import { GraphCypherQAChain } from "@langchain/community/chains/graph_qa/cypher";
+
+// 初始化 FalkorDB 连接
+const graph = await FalkorDBGraph.initialize({
+  host: "localhost",
+  port: 6379,
+  graph: "movies" // 您的图谱名称
+});
+
+// 设置语言模型
+const model = new ChatOpenAI({ temperature: 0 });
+
+// 创建图谱并填充一些数据
+await graph.query(
+  "CREATE (a:Actor {name:'Bruce Willis'})" +
+  "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+);
+
+// 刷新图谱模式（Schema）
+await graph.refreshSchema();
+
+// 创建一个图谱 QA 链
+const chain = GraphCypherQAChain.fromLLM({
+  llm: model,
+  graph: graph as any, // 为兼容 LangChain 进行类型断言
+});
+
+// 提问关于您图谱的问题
+const response = await chain.run("Who played in Pulp Fiction?");
+console.log(response);
+// 输出: Bruce Willis played in Pulp Fiction.
+
+// 清理
+await graph.close();
+```
+
+## API 参考
+
+### FalkorDBGraph
+
+#### `initialize(config: FalkorDBGraphConfig): Promise<FalkorDBGraph>`
+
+创建并初始化一个新的 FalkorDB 连接。
+
+**配置选项：**
+
+- `host` (string, 可选): 数据库主机。默认值: `"localhost"`
+- `port` (number, 可选): 数据库端口。默认值: `6379`
+- `graph` (string, 可选): 要使用的图谱名称
+- `url` (string, 可选): 替代连接 URL 格式
+- `enhancedSchema` (boolean, 可选): 启用增强的 Schema 详细信息。默认值: `false`
+
+**示例：**
+```typescript
+const graph = await FalkorDBGraph.initialize({
+  host: "localhost",
+  port: 6379,
+  graph: "myGraph",
+  enhancedSchema: true
+});
+```
+
+#### `query(query: string): Promise<any>`
+
+在图谱上执行一个 Cypher 查询。
+
+```typescript
+const result = await graph.query(
+  "MATCH (n:Person) RETURN n.name LIMIT 10"
+);
+```
+
+#### `refreshSchema(): Promise<void>`
+
+更新图谱的 Schema（模式结构）信息。
+
+```typescript
+await graph.refreshSchema();
+console.log(graph.getSchema());
+```
+
+#### `getSchema(): string`
+
+以格式化字符串形式返回当前的图谱 Schema。
+
+#### `getStructuredSchema(): StructuredSchema`
+
+返回包含节点属性、关系属性和关系的结构化 Schema 对象。
+
+#### `close(): Promise<void>`
+
+关闭数据库连接。
+
+```typescript
+await graph.close();
+```
+
+## 高级用法
+
+### 自定义 Cypher 查询
+
+```typescript
+const graph = await FalkorDBGraph.initialize({
+  host: "localhost",
+  port: 6379,
+  graph: "movies"
+});
+
+// 复杂查询
+const result = await graph.query(`
+  MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+  WHERE m.year > 2000
+  RETURN a.name, m.title, m.year
+  ORDER BY m.year DESC
+  LIMIT 10
+`);
+
+console.log(result.data);
+```
+
+### 多重查询
+
+```typescript
+await graph.executeQueries([
+  "CREATE (p:Person {name: 'Alice'})",
+  "CREATE (p:Person {name: 'Bob'})",
+  "MATCH (a:Person {name: 'Alice'}), (b:Person {name: 'Bob'}) CREATE (a)-[:KNOWS]->(b)"
+]);
+```
+
+### 使用 Schema
+
+```typescript
+await graph.refreshSchema();
+
+// 获取格式化 Schema
+const schema = graph.getSchema();
+console.log(schema);
+
+// 获取结构化 Schema
+const structuredSchema = graph.getStructuredSchema();
+console.log(structuredSchema.nodeProps);
+console.log(structuredSchema.relationships);
+```
+
+## 要求
+
+- Node.js >= 18
+- FalkorDB 服务器正在运行（Redis 兼容）
+- LangChain >= 0.1.0
+
+## 示例
+
+更多示例，请参阅 GitHub 上的 [@falkordb/langchain-ts] 仓库（[https://github.com/FalkorDB/FalkorDB-Langchain-js](https://github.com/FalkorDB/FalkorDB-Langchain-js)）。
+
+## 许可证
+
+MIT
+
+## 支持
+
+- [GitHub Issues](https://github.com/FalkorDB/FalkorDB-Langchain-js/issues)
+- 网站: https://www.falkordb.com/
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\falkordb.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

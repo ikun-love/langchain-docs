@@ -1,0 +1,43 @@
+```markdown
+---
+title: 具备认证意识的工具响应
+description: 格式化工具响应，以触发 OAuth 流程并自动恢复执行。
+sidebarTitle: 认证响应
+mode: wide
+---
+
+某些 [工具](/langsmith/agent-builder-tools) 需要用户授权（例如 Google、Slack、GitHub）。Agent Builder 包含中间件，用于检测何时需要对工具进行授权，并以清晰的提示暂停运行，引导用户完成操作。用户完成授权后，系统会自动重试相同的工具调用。
+
+## 请求授权的返回结构
+
+如果工具检测到缺少授权，应返回一个包含以下字段的 JSON 字符串：
+
+```json
+{
+  "auth_required": true,
+  "auth_url": "https://auth.example.com/start",
+  "auth_id": "opaque-tracking-id"
+}
+```
+
+- `auth_required`: 设置为 `true` 以信号指示需要中断。
+- `auth_url`: 用户应被重定向到的授权地址。
+- `auth_id`: 用于跟踪授权会话的可选关联 ID。
+
+当 Agent Builder 检测到此响应时，它会中断运行，向用户显示身份验证 UI，并在授权完成后自动重试该工具调用。
+
+如果您希望自定义工具重用相同的“需要授权”的中断和 UI，请确保您的工具返回相同形状的 JSON。
+
+<Note>
+仅将此 JSON 作为工具的输出返回。避免包含任何额外的文本或内容。Agent Builder 会解析此响应以触发身份验证流程。
+</Note>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-builder-auth-format.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

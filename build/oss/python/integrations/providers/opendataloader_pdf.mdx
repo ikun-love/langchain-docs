@@ -1,0 +1,60 @@
+---
+title: OpenDataLoader PDF
+---
+
+> **安全、开放、高性能 — 面向 AI 的 PDF 处理方案**
+
+> [OpenDataLoader PDF](https://github.com/opendataloader-project/opendataloader-pdf) 能将 PDF 文件转换为 JSON、Markdown 或 HTML 格式，这些格式可以直接被现代 AI 栈（如 LLM、向量搜索和 RAG）使用。
+> 
+> 它能够重建文档的布局结构（如标题、列表、表格和阅读顺序），从而使内容更易于分块（chunking）、索引和查询。
+> 该工具由快速的、基于启发式规则的推理引擎驱动，完全在您的本地机器上运行，并能为大量文档集提供高吞吐量的处理能力。
+> 默认情况下启用了 AI 安全性功能，它会自动过滤掉嵌入在 PDF 中、可能导致提示注入（prompt-injection）的内容，以降低下游风险。
+
+## 要求
+- Python >= 3.9
+- 系统 `PATH` 中需要有 Java 11 或更新版本
+- opendataloader-pdf >= 1.1.1
+
+## 安装
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+## 快速开始
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+loader = OpenDataLoaderPDFLoader(
+    file_path=["path/to/document.pdf", "path/to/folder"], 
+    format="text"
+)
+documents = loader.load()
+
+for doc in documents:
+    print(doc.metadata, doc.page_content[:80])
+```
+
+## 参数
+
+| 参数 | 类型 | 是否必须 | 默认值 | 描述 |
+|---|---|---|---|---|
+| `file_path` | `List[str]` | ✅ 是 | — | 需要处理的一个或多个 PDF 文件路径或目录。 |
+| `format` | `str` | 否 | `None` | 输出格式（例如：`"json"`、`"html"`、`"markdown"`、`"text"`）。 |
+| `quiet` | `bool` | 否 | `False` | 如果设置为 `True`，则会抑制命令行界面 (CLI) 的日志输出。 |
+| `content_safety_off` | `Optional[List[str]]` | 否 | `None` | 要禁用的内容安全过滤器列表（例如：`"all"`（全部）、`"hidden-text"`（隐藏文本）、`"off-page"`（页外内容）、`"tiny"`（微小字符）、`"hidden-ocg"`（隐藏 OCG））。 |
+
+## 附加资源
+
+- [LangChain OpenDataLoader PDF 集成 GitHub](https://github.com/opendataloader-project/langchain-opendataloader-pdf)
+- [LangChain OpenDataLoader PDF 集成 PyPI 包](https://pypi.org/project/langchain-opendataloader-pdf/)
+- [OpenDataLoader PDF GitHub](https://github.com/opendataloader-project/opendataloader-pdf)
+- [OpenDataLoader PDF 官方主页](https://opendataloader.org/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\opendataloader_pdf.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,192 @@
+---
+title: Hyperbrowser
+---
+
+> [Hyperbrowser](https://hyperbrowser.ai) 是一个用于运行和扩展无头浏览器的平台。它允许您大规模启动和管理浏览器会话，并为任何网页抓取需求（例如抓取单个页面或爬取整个网站）提供易于使用的解决方案。
+>
+> 主要特性：
+>
+> - 即时可扩展性 - 在几秒钟内启动数百个浏览器会话，无需基础设施方面的烦恼
+> - 简单集成 - 与 Puppeteer 和 Playwright 等流行工具无缝协作
+> - 强大的 API - 易于使用的 API，用于抓取/爬取任何网站，以及更多功能
+> - 绕过反机器人措施 - 内置隐身模式、广告拦截、自动 CAPTCHA 解决和代理轮换
+
+有关 Hyperbrowser 的更多信息，请访问 [Hyperbrowser 网站](https://hyperbrowser.ai)，或者如果您想查看文档，可以访问 [Hyperbrowser 文档](https://docs.hyperbrowser.ai)。
+
+## 安装和设置
+
+要开始使用 `langchain-hyperbrowser`，您可以使用 pip 安装该软件包：
+
+<CodeGroup>
+```bash pip
+pip install langchain-hyperbrowser
+```
+
+```bash uv
+uv add langchain-hyperbrowser
+```
+</CodeGroup>
+
+您应该通过设置以下环境变量来配置凭据：
+
+`HYPERBROWSER_API_KEY=<your-api-key>`
+
+请确保从 https://app.hyperbrowser.ai/ 获取您的 API 密钥。
+
+## 可用工具
+
+Hyperbrowser 提供了两大类工具，这些工具在以下方面特别有用：
+- 从复杂网站进行 Web 抓取和数据提取
+- 自动化重复的 Web 任务
+- 与需要身份验证的 Web 应用程序进行交互
+- 在多个网站上执行研究
+- 测试 Web 应用程序
+
+### 浏览器代理工具 (Browser Agent Tools)
+
+Hyperbrowser 提供了一系列浏览器代理工具。目前我们支持：
+ - Claude Computer Use
+ - OpenAI CUA
+ - Browser Use
+
+您可以在 [此处](/oss/python/integrations/tools/hyperbrowser_browser_agent_tools) 查看更多详细信息。
+
+#### 浏览器使用工具 (Browser Use Tool)
+一种通用浏览器自动化工具，可以通过自然语言指令处理各种 Web 任务。
+
+```python
+from langchain_hyperbrowser import HyperbrowserBrowserUseTool
+
+tool = HyperbrowserBrowserUseTool()
+result = tool.run({
+    "task": "Go to npmjs.com, find the React package, and tell me when it was last updated"
+})
+print(result)
+```
+
+#### OpenAI CUA 工具 (OpenAI CUA Tool)
+利用 OpenAI 的计算机使用代理 (Computer Use Agent) 功能进行高级 Web 交互和信息收集。
+
+```python
+from langchain_hyperbrowser import HyperbrowserOpenAICUATool
+
+tool = HyperbrowserOpenAICUATool()
+result = tool.run({
+    "task": "Go to Hacker News and summarize the top 5 posts right now"
+})
+print(result)
+```
+
+#### Claude 计算机使用工具 (Claude Computer Use Tool)
+利用 Anthropic 的 Claude 处理复杂的 Web 浏览和信息处理任务。
+
+```python
+from langchain_hyperbrowser import HyperbrowserClaudeComputerUseTool
+
+tool = HyperbrowserClaudeComputerUseTool()
+result = tool.run({
+    "task": "Go to GitHub's trending repositories page, and list the top 3 posts there right now"
+})
+print(result)
+```
+
+### Web 抓取工具 (Web Scraping Tools)
+
+以下是 Hyperbrowser 提供的 Web 抓取工具的简要描述。您可以在 [此处](/oss/python/integrations/tools/hyperbrowser_web_scraping_tools) 查看更多详细信息。
+
+#### 抓取工具 (Scrape Tool)
+“抓取工具”允许您以 Markdown、HTML 或链接格式从单个网页中提取内容。
+
+```python
+from langchain_hyperbrowser import HyperbrowserScrapeTool
+
+tool = HyperbrowserScrapeTool()
+result = tool.run({
+    "url": "https://example.com",
+    "scrape_options": {"formats": ["markdown"]}
+})
+print(result)
+```
+
+#### 爬取工具 (Crawl Tool)
+“爬取工具”使您能够从给定的 URL 开始遍历整个网站，并可配置页面限制。
+
+```python
+from langchain_hyperbrowser import HyperbrowserCrawlTool
+
+tool = HyperbrowserCrawlTool()
+result = tool.run({
+    "url": "https://example.com",
+    "max_pages": 2,
+    "scrape_options": {"formats": ["markdown"]}
+})
+print(result)
+```
+
+#### 提取工具 (Extract Tool)
+“提取工具”使用 AI 根据预定义的模式从网页中提取结构化数据，使其非常适合数据提取任务。
+
+```python
+from langchain_hyperbrowser import HyperbrowserExtractTool
+from pydantic import BaseModel
+
+class SimpleExtractionModel(BaseModel):
+    title: str
+
+tool = HyperbrowserExtractTool()
+result = tool.run({
+    "url": "https://example.com",
+    "schema": SimpleExtractionModel
+})
+print(result)
+```
+
+## 文档加载器 (Document Loader)
+
+`langchain-hyperbrowser` 中的 `HyperbrowserLoader` 类可以轻松地加载单个页面或多个页面的内容，也可以爬取整个网站。
+内容可以加载为 Markdown 或 HTML 格式。
+
+```python
+from langchain_hyperbrowser import HyperbrowserLoader
+
+loader = HyperbrowserLoader(urls="https://example.com")
+docs = loader.load()
+
+print(docs[0])
+```
+
+### 高级用法
+
+您可以指定加载器要执行的操作。默认操作是 `scrape`（抓取）。对于 `scrape` 操作，您可以提供单个 URL 或 URL 列表。对于 `crawl`（爬取）操作，您只能提供单个 URL。`crawl` 操作将爬取提供的页面及其子页面，并为每个页面返回一个文档。
+
+```python
+loader = HyperbrowserLoader(
+  urls="https://hyperbrowser.ai", api_key="YOUR_API_KEY", operation="crawl"
+)
+```
+
+可选的加载器参数也可以在 `params` 参数中提供。有关支持的参数的更多信息，请访问 https://docs.hyperbrowser.ai/reference/sdks/python/scrape#start-scrape-job-and-wait 或 https://docs.hyperbrowser.ai/reference/sdks/python/crawl#start-crawl-job-and-wait。
+
+```python
+loader = HyperbrowserLoader(
+  urls="https://example.com",
+  api_key="YOUR_API_KEY",
+  operation="scrape",
+  params={"scrape_options": {"include_tags": ["h1", "h2", "p"]}}
+)
+```
+
+## 附加资源
+
+- [Hyperbrowser 文档](https://docs.hyperbrowser.ai/)
+- [GitHub](https://github.com/hyperbrowserai/langchain-hyperbrowser/)
+- [PyPi](https://pypi.org/project/langchain-hyperbrowser/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\hyperbrowser.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

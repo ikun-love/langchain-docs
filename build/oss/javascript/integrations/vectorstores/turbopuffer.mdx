@@ -1,0 +1,130 @@
+---
+title: Turbopuffer
+---
+
+## 设置
+
+首先，您必须在 [此处](https://turbopuffer.com/join) 注册一个 Turbopuffer 帐户。
+然后，拥有帐户后，您可以创建一个 API 密钥。
+
+将您的 API 密钥设置为环境变量：
+
+```bash
+export TURBOPUFFER_API_KEY=<YOUR_API_KEY>
+```
+
+## 用法
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { TurbopufferVectorStore } from "@langchain/community/vectorstores/turbopuffer";
+
+const embeddings = new OpenAIEmbeddings();
+
+const store = new TurbopufferVectorStore(embeddings, {
+  apiKey: process.env.TURBOPUFFER_API_KEY,
+  namespace: "my-namespace",
+});
+
+const createdAt = new Date().getTime();
+
+// 将一些文档添加到您的存储区中。
+// 当前只支持字符串类型的元数据值。
+const ids = await store.addDocuments([
+  {
+    pageContent: "some content",
+    metadata: { created_at: createdAt.toString() },
+  },
+  { pageContent: "hi", metadata: { created_at: (createdAt + 1).toString() } },
+  { pageContent: "bye", metadata: { created_at: (createdAt + 2).toString() } },
+  {
+    pageContent: "what's this",
+    metadata: { created_at: (createdAt + 3).toString() },
+  },
+]);
+
+// 从存储区检索文档
+const results = await store.similaritySearch("hello", 1);
+
+console.log(results);
+/*
+  [
+    Document {
+      pageContent: 'hi',
+      metadata: { created_at: '1705519164987' }
+    }
+  ]
+*/
+
+// 根据元数据进行过滤
+// 有关允许的过滤器，请参阅 https://turbopuffer.com/docs/reference/query#filter-parameters
+const results2 = await store.similaritySearch("hello", 1, {
+  created_at: [["Eq", (createdAt + 3).toString()]],
+});
+
+console.log(results2);
+
+/*
+  [
+    Document {
+      pageContent: "what's this",
+      metadata: { created_at: '1705519164989' }
+    }
+  ]
+*/
+
+// 通过传递 ids 进行更新或插入 (Upsert)
+await store.addDocuments(
+  [
+    { pageContent: "changed", metadata: { created_at: createdAt.toString() } },
+    {
+      pageContent: "hi changed",
+      metadata: { created_at: (createdAt + 1).toString() },
+    },
+    {
+      pageContent: "bye changed",
+      metadata: { created_at: (createdAt + 2).toString() },
+    },
+    {
+      pageContent: "what's this changed",
+      metadata: { created_at: (createdAt + 3).toString() },
+    },
+  ],
+  { ids }
+);
+
+// 根据元数据进行过滤
+const results3 = await store.similaritySearch("hello", 10, {
+  created_at: [["Eq", (createdAt + 3).toString()]],
+});
+
+console.log(results3);
+
+/*
+  [
+    Document {
+      pageContent: "what's this changed",
+      metadata: { created_at: '1705519164989' }
+    }
+  ]
+*/
+
+// 删除命名空间中的所有向量。
+await store.delete({
+  deleteIndex: true,
+});
+```
+
+## 相关内容
+
+- 向量存储概念指南 [conceptual guide](/oss/javascript/integrations/vectorstores)
+- 向量存储操作指南 [how-to guides](/oss/javascript/integrations/vectorstores)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\vectorstores\turbopuffer.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

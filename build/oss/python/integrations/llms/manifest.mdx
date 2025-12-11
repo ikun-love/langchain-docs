@@ -1,0 +1,118 @@
+---
+title: 清单（Manifest）使用指南
+---
+
+本笔记本将介绍如何使用 Manifest 和 LangChain。
+
+有关 `manifest` 的更详细信息，以及如何将其与本地 Hugging Face 模型配合使用（如本示例所示），请参阅 [github.com/HazyResearch/manifest](https://github.com/HazyResearch/manifest)。
+
+另一个关于[将 Manifest 与 LangChain 结合使用](https://github.com/HazyResearch/manifest/blob/main/examples/langchain_chatgpt.html)的示例。
+
+```python
+pip install -qU  manifest-ml
+```
+
+```python
+from langchain_community.llms.manifest import ManifestWrapper
+from manifest import Manifest
+```
+
+```python
+manifest = Manifest(
+    client_name="huggingface", client_connection="http://127.0.0.1:5000"
+)
+print(manifest.client_pool.get_current_client().get_model_params())
+```
+
+```python
+llm = ManifestWrapper(
+    client=manifest, llm_kwargs={"temperature": 0.001, "max_tokens": 256}
+)
+```
+
+```python
+# Map reduce 示例
+from langchain.chains.mapreduce import MapReduceChain
+from langchain_core.prompts import PromptTemplate
+from langchain_text_splitters import CharacterTextSplitter
+
+_prompt = """对以下内容进行简洁的总结：
+
+
+{text}
+
+
+简洁总结："""
+prompt = PromptTemplate.from_template(_prompt)
+
+text_splitter = CharacterTextSplitter()
+
+mp_chain = MapReduceChain.from_params(llm, prompt, text_splitter)
+```
+
+```python
+with open("../../how_to/state_of_the_union.txt") as f:
+    state_of_the_union = f.read()
+mp_chain.run(state_of_the_union)
+```
+
+```output
+'奥巴马总统周二晚发表了他每年的国情咨文，阐述了他来年的优先事项。奥巴马表示，政府将向所有美国人提供免费的流感疫苗，结束政府停摆，并允许企业重新开业。总统还表示，政府将继续向 112 个国家运送疫苗，数量超过任何其他国家。“我们在 COVID-19 中失去了太多，”特朗普说。“与彼此相处的时光。最糟糕的是，失去了如此多的生命。”他说，CDC 正在研发针对 5 岁以下儿童的疫苗，并且当疫苗可用时，政府将准备好充足的疫苗。奥巴马表示，新指南是“向前迈出的重要一步”，并且该病毒不再构成威胁。他说，政府正在启动一项“检测即治疗”（Test to Treat）计划，允许人们在药店接受检测并在现场免费获得抗病毒药丸。奥巴马表示，新指南是“向前迈出的重要一步”，并且该病毒不再构成威胁。他说，政府将继续向 112 个国家运送疫苗，数量超过任何其他国家。“我们来找你了’
+```
+
+## 比较 HF 模型（Compare HF Models）
+
+```python
+from langchain.model_laboratory import ModelLaboratory
+
+manifest1 = ManifestWrapper(
+    client=Manifest(
+        client_name="huggingface", client_connection="http://127.0.0.1:5000"
+    ),
+    llm_kwargs={"temperature": 0.01},
+)
+manifest2 = ManifestWrapper(
+    client=Manifest(
+        client_name="huggingface", client_connection="http://127.0.0.1:5001"
+    ),
+    llm_kwargs={"temperature": 0.01},
+)
+manifest3 = ManifestWrapper(
+    client=Manifest(
+        client_name="huggingface", client_connection="http://127.0.0.1:5002"
+    ),
+    llm_kwargs={"temperature": 0.01},
+)
+llms = [manifest1, manifest2, manifest3]
+model_lab = ModelLaboratory(llms)
+```
+
+```python
+model_lab.compare("火烈鸟是什么颜色的?")
+```
+
+```output
+输入:
+What color is a flamingo?
+
+ManifestWrapper
+参数: {'model_name': 'bigscience/T0_3B', 'model_path': 'bigscience/T0_3B', 'temperature': 0.01}
+pink
+
+ManifestWrapper
+参数: {'model_name': 'EleutherAI/gpt-neo-125M', 'model_path': 'EleutherAI/gpt-neo-125M', 'temperature': 0.01}
+A flamingo is a small, round
+
+ManifestWrapper
+参数: {'model_name': 'google/flan-t5-xl', 'model_path': 'google/flan-t5-xl', 'temperature': 0.01}
+pink
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\manifest.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

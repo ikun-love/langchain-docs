@@ -1,0 +1,222 @@
+---
+title: Studio 中的可观测性
+sidebarTitle: 追踪、数据集、提示词
+---
+
+LangSmith 的 [Studio](/langsmith/studio) 提供了超越执行的工具，用于检查、调试和改进您的应用程序。通过处理追踪（traces）、数据集（datasets）和提示词（prompts），您可以详细了解应用程序的行为、衡量其性能并优化其输出：
+
+- [迭代优化提示词](#iterate-on-prompts)：直接在图（graph）节点内或使用 LangSmith Playground 修改提示词。
+- [针对数据集运行实验](#run-experiments-over-a-dataset)：针对 LangSmith 数据集执行您的助手，以评分和比较结果。
+- [调试 LangSmith 追踪](#debug-langsmith-traces)：将追踪到的运行（runs）导入 Studio，并可选择将它们克隆到本地 Agent。
+- [向数据集中添加节点](#add-node-to-dataset)：将对话历史的一部分转化为数据集示例，用于评估或进一步分析。
+
+## 迭代优化提示词
+
+Studio 支持以下方法来修改图（graph）中的提示词：
+
+- [直接节点编辑](#direct-node-editing)
+- [Playground 界面](#playground)
+
+### 直接节点编辑
+
+Studio 允许您直接从图界面编辑图内单个节点所使用的提示词。
+
+### 图配置
+
+定义您的 [配置](/oss/python/langgraph/use-graph-api#add-runtime-configuration)，使用 `langgraph_nodes` 和 `langgraph_type` 键来指定提示词字段及其关联的节点。
+
+#### `langgraph_nodes`
+
+- **描述**: 指定配置字段与图中的哪些节点相关联。
+- **值类型**: 字符串数组，数组中的每个字符串是图中某个节点的名称。
+- **使用场景**: 包含在 Pydantic 模型的 `json_schema_extra` 字典或数据类（dataclasses）的 `metadata["json_schema_extra"]` 字典中。
+- **示例**:
+  ```python
+  system_prompt: str = Field(
+      default="You are a helpful AI assistant.",
+      json_schema_extra={"langgraph_nodes": ["call_model", "other_node"]},
+  )
+  ```
+
+#### `langgraph_type`
+
+- **描述**: 指定配置字段的类型，该类型决定了它在用户界面（UI）中如何被处理。
+- **值类型**: 字符串
+- **支持的值**:
+  * `"prompt"`: 表示该字段包含应在 UI 中特殊处理的提示词文本。
+- **使用场景**: 包含在 Pydantic 模型的 `json_schema_extra` 字典或数据类的 `metadata["json_schema_extra"]` 字典中。
+- **示例**:
+  ```python
+  system_prompt: str = Field(
+      default="You are a helpful AI assistant.",
+      json_schema_extra={
+          "langgraph_nodes": ["call_model"],
+          "langgraph_type": "prompt",
+      },
+  )
+  ```
+
+<Accordion title="完整示例配置">
+
+```python
+## 使用 Pydantic
+from pydantic import BaseModel, Field
+from typing import Annotated, Literal
+
+class Configuration(BaseModel):
+    """Agent 的配置。"""
+
+    system_prompt: str = Field(
+        default="You are a helpful AI assistant.",
+        description="用于 Agent 交互的系统提示词。"
+        "此提示词设置了 Agent 的上下文和行为。",
+        json_schema_extra={
+            "langgraph_nodes": ["call_model"],
+            "langgraph_type": "prompt",
+        },
+    )
+
+    model: Annotated[
+        Literal[
+            "anthropic/claude-sonnet-4-5-20250929",
+            "anthropic/claude-haiku-4-5-20251001",
+            "openai/o1",
+            "openai/gpt-4o-mini",
+            "openai/o1-mini",
+            "openai/o3-mini",
+        ],
+        {"__template_metadata__": {"kind": "llm"}},
+    ] = Field(
+        default="openai/gpt-4o-mini",
+        description="用于 Agent 主要交互的语言模型名称。"
+        "格式应为：provider/model-name。",
+        json_schema_extra={"langgraph_nodes": ["call_model"]},
+    )
+
+## 使用数据类 (Dataclasses)
+from dataclasses import dataclass, field
+
+@dataclass(kw_only=True)
+class Configuration:
+    """Agent 的配置。"""
+
+    system_prompt: str = field(
+        default="You are a helpful AI assistant.",
+        metadata={
+            "description": "用于 Agent 交互的系统提示词。"
+            "此提示词设置了 Agent 的上下文和行为。",
+            "json_schema_extra": {"langgraph_nodes": ["call_model"]},
+        },
+    )
+
+    model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
+        default="anthropic/claude-3-5-sonnet-20240620",
+        metadata={
+            "description": "用于 Agent 主要交互的语言模型名称。"
+            "格式应为：provider/model-name。",
+            "json_schema_extra": {"langgraph_nodes": ["call_model"]},
+        },
+    )
+
+```
+
+</Accordion>
+
+#### 在 UI 中编辑提示词
+
+1. 找到带有相关配置字段的节点上的齿轮图标。
+1. 点击它以打开配置模态框。
+1. 编辑值。
+1. 保存以更新当前的 Agent 版本或创建一个新版本。
+
+### Playground
+
+[Playground](/langsmith/create-a-prompt) 界面允许您测试单个 LLM 调用，而无需运行完整的图：
+
+1. 选择一个会话（thread）。
+1. 在节点上点击 **View LLM Runs**（查看 LLM 运行）。这将列出该节点内进行（如果有的话）的所有 LLM 调用。
+1. 选择一个 LLM 调用以在 Playground 中打开它。
+1. 修改提示词并测试不同的模型和工具设置。
+1. 将更新后的提示词复制回您的图配置中。
+
+## 针对数据集运行实验
+
+Studio 允许您通过针对预定义的 LangSmith [数据集](/langsmith/evaluation-concepts#datasets) 执行您的助手来运行 [评估](/langsmith/evaluation-concepts)。这使您能够跨各种输入测试性能，将输出与参考答案进行比较，并使用配置好的 [评估器](/langsmith/evaluation-concepts#evaluators) 对结果进行评分。
+
+本指南将展示如何直接从 Studio 运行端到端的完整实验。
+
+### 先决条件
+
+在运行实验之前，请确保您拥有以下内容：
+
+- **一个 LangSmith 数据集**: 您的数据集应包含您想要测试的输入，以及（可选的）用于比较的参考输出。输入模式（schema）必须与助手的所需输入模式匹配。有关模式的更多信息，请参阅 [此处](/oss/python/langgraph/use-graph-api#schema)。有关创建数据集的更多信息，请参阅 [如何管理应用程序中的数据集](/langsmith/manage-datasets-in-application#set-up-your-dataset)。
+- **（可选）评估器**: 您可以在 LangSmith 中将评估器（例如，LLM-as-a-Judge、启发式或自定义函数）附加到您的数据集。它们将在图处理完所有输入后自动运行。
+- **一个正在运行的应用程序**: 该实验可以针对以下项运行：
+  - 部署在 [LangSmith](/langsmith/deployments) 上的应用程序。
+  - 通过 [langgraph-cli](/langsmith/local-server) 在本地启动的应用程序。
+
+### 实验设置
+
+1. 启动实验。点击 Studio 页面右上角的 **Run experiment**（运行实验）按钮。
+1. 选择数据集。在出现的模态框中，选择要用于实验的数据集（或特定的数据集拆分），然后点击 **Start**（开始）。
+1. 监控进度。数据集中的所有输入现在都将针对活动的助手运行。通过右上角的徽章监控实验进度。
+1. 在实验运行时，您可以继续在 Studio 中工作。随时点击箭头图标按钮导航到 LangSmith 并查看详细的实验结果。
+
+## 调试 LangSmith 追踪
+
+本指南解释了如何在 Studio 中打开 LangSmith 追踪，以便进行交互式调查和调试。
+
+### 打开已部署的会话
+
+1. 打开 LangSmith 追踪，选择根运行（root run）。
+1. 点击 **Run in Studio**（在 Studio 中运行）。
+
+这将以 Studio 打开，连接到关联的部署，并选中该追踪的父会话。
+
+### 使用远程追踪测试本地 Agent
+
+本节解释了如何使用 LangSmith 中的远程追踪来测试本地 Agent。这使您能够使用生产追踪作为本地测试的输入，从而可以在开发环境中调试和验证 Agent 的修改。
+
+#### 先决条件
+
+- 一个 LangSmith 追踪的会话
+- 一个[本地运行的 Agent](/langsmith/local-server#local-development-server)。
+
+<Info>
+**本地 Agent 要求**
+* langgraph>=0.3.18
+* langgraph-api>=0.0.32
+* 包含与远程追踪中相同的节点集
+</Info>
+
+#### 克隆会话
+
+1. 打开 LangSmith 追踪，选择根运行。
+2. 点击 **Run in Studio** 旁边的下拉箭头。
+3. 输入您的本地 Agent 的 URL。
+1. 选择 **Clone thread locally**（本地克隆会话）。
+1. 如果存在多个图，请选择目标图。
+
+在您的本地 Agent 中将创建一个新的会话，其会话历史会从远程会话推断并复制过来，然后您将被导航到针对本地运行应用程序的 Studio 界面。
+
+## 向数据集中添加节点
+
+从会话日志中的节点添加 [示例](/langsmith/evaluation-concepts#examples) 到 [LangSmith 数据集](/langsmith/manage-datasets)。这有助于评估 Agent 的各个步骤。
+
+1. 选择一个会话。
+1. 点击 **Add to Dataset**（添加到数据集）。
+1. 选择您想要添加到数据集的输入/输出的节点。
+1. 对于每个选定的节点，选择目标数据集以创建示例。默认情况下，会选择特定 Agent 和节点的对应数据集。如果此数据集尚不存在，它将被创建。
+1. 在将其添加到数据集之前，根据需要编辑示例的输入/输出。
+1. 点击页面底部的 **Add to dataset**，将所有选定的节点添加到它们各自的数据集中。
+
+有关更多详细信息，请参阅 [如何评估应用程序的中间步骤](/langsmith/evaluate-on-intermediate-steps)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\observability-studio.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

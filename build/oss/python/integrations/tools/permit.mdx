@@ -1,0 +1,203 @@
+---
+title: 许可 (Permit)
+---
+
+Permit 是一个访问控制平台，它使用 RBAC（基于角色的访问控制）、ABAC（基于属性的访问控制）和 ReBAC（基于角色的关系访问控制）等各种模型，提供细粒度、实时的权限管理。它使组织能够在其应用程序中执行动态策略，确保只有经过授权的用户才能访问特定的资源。
+
+## 概述
+
+本软件包提供了两个 LangChain 工具，用于使用 Permit 进行 JWT 验证和权限检查：
+
+*   `LangchainJWTValidationTool`: 使用 JWKS 端点验证 JWT 令牌。
+
+*   `LangchainPermissionsCheckTool`: 使用 Permit 检查用户权限。
+
+## 设置
+
+设置以下环境变量：
+
+```bash
+PERMIT_API_KEY=your_permit_api_key
+JWKS_URL=your_jwks_endpoint_url
+PERMIT_PDP_URL=your_pdp_url  # 对于本地开发通常是 http://localhost:7766 或您真实的部署地址
+```
+
+确保您的 PDP（策略决策点 Policy Decision Point）正在 `PERMIT_PDP_URL` 运行。
+有关策略设置和如何启动 PDP 容器的详细信息，请参阅 [Permit 文档](https://docs.permit.io/concepts/pdp/overview/)。
+
+### 凭证
+
+```bash
+PERMIT_API_KEY=
+JWKS_URL=your_jwks_endpoint_url # 或您的部署地址
+PERMIT_PDP_URL=your_pdp_url # 或您的部署地址
+TEST_JWT_TOKEN= # 仅用于快速测试目的
+```
+
+为了获得最佳的、同类领先的可观察性，设置 [LangSmith](https://smith.langchain.com/) 也很有帮助（但并非必需）：
+
+## 实例化
+
+### JWT 验证工具
+
+JWT 验证工具使用 JWKS（JSON Web Key Set）端点来验证 JWT 令牌。
+
+```python
+from langchain_permit.tools import LangchainJWTValidationTool
+
+# 初始化工具
+jwt_validator = LangchainJWTValidationTool(
+    jwks_url=#your url endpoint
+)
+```
+
+### 配置选项
+
+您可以使用以下任一方式初始化工具：
+
+*   JWKS URL
+*   直接的 JWKS JSON 数据
+*   环境变量 (`JWKS_URL`)
+
+```python
+# 使用直接的 JWKS JSON
+jwt_validator = LangchainJWTValidationTool(
+    jwks_json={
+        "keys": [
+            {
+                "kid": "key-id",
+                "kty": "RSA",
+                ...
+            }
+        ]
+    }
+)
+```
+
+### 权限检查工具
+
+权限检查工具与 Permit.io 集成，以根据资源验证用户权限。
+
+```python
+from permit import Permit
+from langchain_permit.tools import LangchainPermissionsCheckTool
+
+# 初始化 Permit 客户端
+permit_client = Permit(
+    token="your_permit_api_key",
+    pdp=# Your PDP URL
+)
+
+# 初始化工具
+permissions_checker = LangchainPermissionsCheckTool(
+    permit=permit_client
+)
+```
+
+本篇文档演示了这两个工具的关键特性和使用模式。
+
+## 调用 (Invocation)
+
+### [直接使用参数调用](https://docs.permit.io/)
+
+### JWT 验证工具
+
+```python
+# 验证令牌
+async def validate_token():
+    claims = await jwt_validator._arun(
+        "..."  # 您的 JWT 令牌
+    )
+    print("Validated Claims:", claims)
+```
+
+### 权限检查工具
+
+```python
+# 检查权限
+async def check_user_permission():
+    result = await permissions_checker._arun(
+        user={
+            "key": "user-123",
+            "firstName": "John"
+        },
+        action="read",
+        resource={
+            "type": "Document",
+            "tenant": "default"
+        }
+    )
+    print("Permission granted:", result)
+```
+
+#### 输入格式
+
+权限检查器接受不同的输入格式：
+
+1.  用户使用简单字符串（转换为用户 Key）：
+
+```python
+result = await permissions_checker._arun(
+    user="user-123",
+    action="read",
+    resource="Document"
+)
+```
+
+2.  完整的用户对象：
+
+```python
+result = await permissions_checker._arun(
+    user={
+        "key": "user-123",
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john@example.com",
+        "attributes": {"department": "IT"}
+    },
+    action="read",
+    resource={
+        "type": "Document",
+        "key": "doc-123",
+        "tenant": "techcorp",
+        "attributes": {"confidentiality": "high"}
+    }
+)
+```
+
+### [使用 ToolCall 调用](https://docs.permit.io/)
+
+(待定 TODO)
+
+## 链式调用 (Chaining)
+
+* TODO: 添加用户问题并运行单元格
+
+我们可以通过首先将工具绑定到 [工具调用模型](https://docs.permit.io/)，然后调用它，在链中使用我们的工具：
+
+<ChatModelTabs customVarName="llm" />
+
+### 附加演示脚本
+
+有关可完全运行的演示，请查看此 [仓库](https://github.com/permitio/langchain-permit) 中的 `/langchain_permit/examples/demo_scripts` 文件夹。您会找到：
+
+*   `demo_jwt_validation.py` – 一个快速脚本，展示如何使用 `LangchainJWTValidationTool` 验证 JWT。
+
+*   `demo_permissions_check.py` – 一个执行 Permit.io 权限检查的脚本，使用了 `LangchainPermissionsCheckTool`。
+
+设置好环境变量后，只需运行 `python demo_jwt_validation.py` 或 `python demo_permissions_check.py` 即可查看这些工具的实际应用效果。
+
+---
+
+## API 参考
+
+有关 Permit 所有特性和配置的详细文档，请访问 API 参考：[docs.permit.io/](https://docs.permit.io/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\permit.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

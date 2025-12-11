@@ -1,0 +1,141 @@
+```markdown
+---
+title: ChatPerplexity
+---
+
+本指南将帮助您开始使用 Perplexity 的 [chat 模型](/oss/javascript/langchain/models)。有关 `ChatPerplexity` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [PY 支持](https://python.langchain.com/docs/integrations/chat/perplexity/) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [`ChatPerplexity`](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html) | [`@langchain/community`](https://npmjs.com/@langchain/community) | ❌ | beta | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+
+### 模型特性
+
+有关如何使用特定功能的指南，请参阅下方表格标题中的链接。
+
+| [工具调用](/oss/javascript/langchain/tools) | [结构化输出](/oss/javascript/langchain/structured-output) | JSON 模式 | [图像输入](/oss/javascript/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/javascript/langchain/streaming/) | [Token 使用量](/oss/javascript/langchain/models#token-usage) | [Logprobs](/oss/javascript/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
+| ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+
+请注意，在撰写本文时，Perplexity 仅在某些使用层级上支持结构化输出 (structured outputs)。
+
+## 设置 (Setup)
+
+要访问 Perplexity 模型，您需要创建一个 Perplexity 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成包。
+
+### 凭证 (Credentials)
+
+请访问 [https://perplexity.ai](https://perplexity.ai) 注册 Perplexity 并生成 API 密钥。完成此操作后，设置 `PERPLEXITY_API_KEY` 环境变量：
+
+```bash
+export PERPLEXITY_API_KEY="your-api-key"
+```
+
+如果您想为模型调用获取自动化的跟踪记录，也可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="your-api-key"
+```
+
+### 安装 (Installation)
+
+LangChain 的 Perplexity 集成位于 `@langchain/community` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+## 实例化 (Instantiation)
+
+现在，我们可以实例化模型对象并生成聊天补全 (chat completions)：
+
+```typescript
+import { ChatPerplexity } from "@langchain/community/chat_models/perplexity"
+
+const llm = new ChatPerplexity({
+  model: "sonar",
+  temperature: 0,
+  maxTokens: undefined,
+  timeout: undefined,
+  maxRetries: 2,
+  // other params... (其他参数...)
+})
+```
+
+## 调用 (Invocation)
+
+```typescript
+const aiMsg = await llm.invoke([
+  {
+    role: "system",
+    content: "你是一个乐于助人的助手，负责将英语翻译成法语。请翻译用户输入的句子。",
+  },
+  {
+    role: "user",
+    content: "I love programming.",
+  },
+])
+aiMsg
+```
+
+```output
+AIMessage {
+  "id": "run-71853938-aa30-4861-9019-f12323c09f9a",
+  "content": "J'adore la programmation.",
+  "additional_kwargs": {
+    "citations": [
+      "https://careersatagoda.com/blog/why-we-love-programming/",
+      "https://henrikwarne.com/2012/06/02/why-i-love-coding/",
+      "https://forum.freecodecamp.org/t/i-love-programming-but/497502",
+      "https://ilovecoding.org",
+      "https://thecodinglove.com"
+    ]
+  },
+  "response_metadata": {
+    "tokenUsage": {
+      "promptTokens": 20,
+      "completionTokens": 9,
+      "totalTokens": 29
+    }
+  },
+  "tool_calls": [],
+  "invalid_tool_calls": []
+}
+```
+
+```typescript
+console.log(aiMsg.content)
+```
+
+```output
+J'adore la programmation.
+```
+
+---
+
+## API 参考 (API reference)
+
+有关 ChatPerplexity 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.chat_models_perplexity.ChatPerplexity.html)。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\chat\perplexity.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

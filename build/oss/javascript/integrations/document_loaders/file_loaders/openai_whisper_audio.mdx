@@ -1,0 +1,44 @@
+---
+title: OpenAI Whisper 音频
+---
+
+<Tip>
+**兼容性**
+
+仅在 Node.js 环境中可用。
+</Tip>
+
+本文介绍如何使用 [OpenAI Whisper](https://platform.openai.com/docs/guides/speech-to-text) API 从音频文件中加载文档对象。
+
+## 设置 (Setup)
+
+要运行此加载器 (loader)，您需要在 OpenAI 注册一个账户，并从 https://platform.openai.com/account 页面获取一个授权密钥 (auth key)。
+
+## 用法 (Usage)
+
+一旦授权密钥配置完成，您就可以使用加载器来创建转录文本，然后将这些文本转换为一个 `Document` 对象。
+
+```typescript
+import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
+
+const filePath = "./src/document_loaders/example_data/test.mp3";
+
+const loader = new OpenAIWhisperAudio(filePath, {
+  transcriptionCreateParams: {
+    language: "en",
+  },
+});
+
+const docs = await loader.load();
+
+console.log(docs);
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_loaders\file_loaders\openai_whisper_audio.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,185 @@
+---
+title: Label Studio
+---
+
+>[Label Studio](https://labelstud.io/guide/get_started) 是一个开源的数据标注平台，它为 LangChain 在微调大型语言模型 (LLM) 方面提供了极大的灵活性。它还支持准备自定义训练数据，并通过人工反馈来收集和评估模型响应。
+
+在本指南中，您将学习如何将 LangChain 管道连接到 `Label Studio` 以实现以下目标：
+
+- 将所有输入提示、对话和响应聚合到一个 `Label Studio` 项目中。这会将所有数据集中在一个地方，以便于标注和分析。
+- 优化提示和响应，为监督式微调 (SFT) 和人类反馈强化学习 (RLHF) 场景创建数据集。标注后的数据可用于进一步训练 LLM，以提高其性能。
+- 通过人工反馈评估模型响应。`Label Studio` 提供了一个界面，供人工审核和提供关于模型响应的反馈，从而实现评估和迭代。
+
+## 安装与设置
+
+首先，安装最新版本的 Label Studio 和 Label Studio API 客户端：
+
+```python
+pip install -qU langchain label-studio label-studio-sdk langchain-openai langchain-community
+```
+
+接下来，在命令行中运行 `label-studio` 以启动本地 LabelStudio 实例，默认地址为 `http://localhost:8080`。有关更多选项，请参阅 [Label Studio 安装指南](https://labelstud.io/guide/install)。
+
+您需要一个令牌 (token) 来进行 API 调用。
+
+在浏览器中打开您的 LabelStudio 实例，导航到 `Account & Settings > Access Token` 并复制密钥。
+
+使用您的 LabelStudio URL、API 密钥和 OpenAI API 密钥设置环境变量：
+
+```python
+import os
+
+os.environ["LABEL_STUDIO_URL"] = "<YOUR-LABEL-STUDIO-URL>"  # 例如：http://localhost:8080
+os.environ["LABEL_STUDIO_API_KEY"] = "<YOUR-LABEL-STUDIO-API-KEY>"
+os.environ["OPENAI_API_KEY"] = "<YOUR-OPENAI-API-KEY>"
+```
+
+## 收集 LLM 提示和响应
+
+用于标注的数据存储在 Label Studio 的项目中。每个项目都由一个 XML 配置识别，该配置定义了输入和输出数据的规范。
+
+创建一个项目，它接受文本格式的人工输入，并输出一个可编辑的 LLM 响应（在文本区域中）：
+
+```xml
+<View>
+<Style>
+    .prompt-box {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+</Style>
+<View className="root">
+    <View className="prompt-box">
+        <Text name="prompt" value="$prompt"/>
+    </View>
+    <TextArea name="response" toName="prompt"
+              maxSubmissions="1" editable="true"
+              required="true"/>
+</View>
+<Header value="Rate the response:"/>
+<Rating name="rating" toName="prompt"/>
+</View>
+```
+
+1. 在 Label Studio 中创建项目，点击 "Create" 按钮。
+2. 在 "Project Name" 字段中输入项目名称，例如 `My Project`。
+3. 导航到 `Labeling Setup > Custom Template`，粘贴上面提供的 XML 配置。
+
+您可以通过 `LabelStudioCallbackHandler` 连接并收集 LLM 输入提示和输出响应：
+
+```python
+from langchain_community.callbacks.labelstudio_callback import (
+    LabelStudioCallbackHandler,
+)
+```
+
+```python
+from langchain_openai import OpenAI
+
+llm = OpenAI(
+    temperature=0, callbacks=[LabelStudioCallbackHandler(project_name="My Project")]
+)
+print(llm.invoke("Tell me a joke"))
+```
+
+在 Label Studio 中，打开 “My Project”。您将看到提示、响应和元数据（如模型名称）。
+
+## 收集聊天模型对话
+
+您还可以跟踪和显示完整的聊天对话到 LabelStudio 中，并可以对最后一条响应进行评分和修改：
+
+1. 打开 Label Studio 并点击 "Create" 按钮。
+2. 在 "Project Name" 字段中输入项目名称，例如 `New Project with Chat`。
+3. 导航到 Labeling Setup > Custom Template 并粘贴以下 XML 配置：
+
+```xml
+<View>
+<View className="root">
+     <Paragraphs name="dialogue"
+               value="$prompt"
+               layout="dialogue"
+               textKey="content"
+               nameKey="role"
+               granularity="sentence"/>
+  <Header value="Final response:"/>
+    <TextArea name="response" toName="dialogue"
+              maxSubmissions="1" editable="true"
+              required="true"/>
+</View>
+<Header value="Rate the response:"/>
+<Rating name="rating" toName="dialogue"/>
+</View>
+```
+
+```python
+from langchain.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+
+chat_llm = ChatOpenAI(
+    callbacks=[
+        LabelStudioCallbackHandler(
+            mode="chat",
+            project_name="New Project with Chat",
+        )
+    ]
+)
+llm_results = chat_llm.invoke(
+    [
+        SystemMessage(content="Always use a lot of emojis"),
+        HumanMessage(content="Tell me a joke"),
+    ]
+)
+```
+
+在 Label Studio 中，打开 "New Project with Chat"。点击已创建的任务以查看对话历史记录并编辑/标注响应。
+
+## 自定义标注配置
+
+您可以修改 LabelStudio 中的默认标注配置，以添加更多目标标签，例如响应的情感 (sentiment)、相关性 (relevance) 以及许多[其他类型的标注员反馈](https://labelstud.io/tags/)。
+
+可以从 UI 添加新的标注配置：导航到 `Settings > Labeling Interface`，并设置一个自定义配置，添加额外的标签，如用于情感的 `Choices` 或用于相关性的 `Rating`。请记住，在任何配置中都应包含 [`TextArea` 标签](https://labelstud.io/tags/textarea) 以显示 LLM 响应。
+
+或者，您可以在项目创建初始调用时指定标注配置：
+
+```python
+ls = LabelStudioCallbackHandler(
+    project_config="""
+<View>
+<Text name="prompt" value="$prompt"/>
+<TextArea name="response" toName="prompt"/>
+<TextArea name="user_feedback" toName="prompt"/>
+<Rating name="rating" toName="prompt"/>
+<Choices name="sentiment" toName="prompt">
+    <Choice value="Positive"/>
+    <Choice value="Negative"/>
+</Choices>
+</View>
+"""
+)
+```
+
+请注意，如果项目尚不存在，它将使用指定的标注配置被创建。
+
+## 其他参数
+
+`LabelStudioCallbackHandler` 接受几个可选参数：
+
+- **api_key** - Label Studio API 密钥。覆盖环境变量 `LABEL_STUDIO_API_KEY`。
+- **url** - Label Studio URL。覆盖 `LABEL_STUDIO_URL`，默认值为 `http://localhost:8080`。
+- **project_id** - 现有的 Label Studio 项目 ID。覆盖 `LABEL_STUDIO_PROJECT_ID`。数据将存储在此项目中。
+- **project_name** - 如果未指定项目 ID，则使用项目名称。创建一个新项目。默认值为使用当前日期格式化的 `"LangChain-%Y-%m-%d"` 字符串。
+- **project_config** - [自定义标注配置](#custom-labeling-configuration)
+- **mode**: 使用此快捷方式从头开始创建目标配置：
+  - `"prompt"` - 单个提示，单个响应。默认。
+  - `"chat"` - 多轮对话模式。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\callbacks\labelstudio.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

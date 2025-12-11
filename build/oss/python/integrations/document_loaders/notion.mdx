@@ -1,0 +1,139 @@
+---
+title: Notion 数据库 2/2
+---
+
+>[Notion](https://www.notion.so/) 是一个协作平台，它支持修改后的 Markdown 格式，并集成了看板（kanban boards）、任务、知识库（wikis）和数据库。它是用于笔记记录、知识和数据管理、项目和任务管理的**一体化工作空间**。
+
+`NotionDBLoader` 是一个用于从 `Notion` 数据库加载内容的 Python 类。它会检索数据库中的页面，读取它们的内​​容，并返回一个 `Document` 对象列表。`NotionDirectoryLoader` 用于从 Notion 数据库的导出文件中加载数据。
+
+## 要求
+
+- 一个 `Notion` 数据库
+- Notion 集成 Token
+
+## 设置
+
+### 1. 创建一个 Notion 表格数据库
+
+在 Notion 中创建一个新的表格数据库。你可以向数据库添加任何列，它们都将被视为**元数据（metadata）**。例如，你可以添加以下列：
+
+- 标题（Title）：将“标题”设置为默认属性。
+- 类别（Categories）：一个多选（Multi-select）属性，用于存储与页面关联的类别。
+- 关键词（Keywords）：一个多选（Multi-select）属性，用于存储与页面关联的关键词。
+
+将你的内容添加到数据库中每个页面的正文中。`NotionDBLoader` 将会从这些页面中提取内容和元数据。
+
+## 2. 创建一个 Notion 集成
+
+要创建一个 Notion 集成，请遵循以下步骤：
+
+1. 访问 [Notion 开发者](https://www.notion.com/my-integrations) 页面，并使用你的 Notion 账户登录。
+2. 点击 “+ New integration” （新建集成）按钮。
+3. 为你的集成命名，并选择你的数据库所在的**工作区（workspace）**。
+4. 选择所需的能力。此扩展仅需要 **读取内容（Read content）** 能力。
+5. 点击 "Submit" （提交）按钮创建集成。
+创建集成后，系统会提供一个 `Integration Token (API key)`（集成 Token / API 密钥）。复制此 Token 并妥善保管，因为在使用 `NotionDBLoader` 时需要用到它。
+
+### 3. 将集成连接到数据库
+
+要将你的集成连接到数据库，请遵循以下步骤：
+
+1. 在 Notion 中打开你的数据库。
+2. 点击数据库视图右上角的三点菜单图标。
+3. 在菜单中点击 "+ New integration" （新建集成）按钮（**注意：此处的描述与链接数据库时的步骤略有不同，请按原步骤为准**）。
+4. 找到你的集成，你可能需要在搜索框中开始输入它的名称。
+5. 点击 "Connect" （连接）按钮将此集成连接到数据库。
+
+### 4. 获取数据库 ID
+
+要获取数据库 ID，请遵循以下步骤：
+
+1. 在 Notion 中打开你的数据库。
+2. 点击数据库视图右上角的三点菜单图标。
+3. 从菜单中选择 "Copy link" （复制链接）以将数据库 URL 复制到剪贴板。
+4. 数据库 ID 是 URL 中一长串字母数字字符。它通常看起来像这样：[www.notion.so/username/8935f9d140a04f95a872520c4f123456?v=](https://www.notion.so/username/8935f9d140a04f95a872520c4f123456?v=).... 在此示例中，数据库 ID 是 `8935f9d140a04f95a872520c4f123456`。
+
+数据库设置妥当，并获取到集成 Token 和数据库 ID 后，你现在就可以使用 `NotionDBLoader` 代码来加载 Notion 数据库中的内容和元数据了。
+
+### 5. 安装
+
+安装 `langchain-community` 集成包。
+
+```python
+pip install -qU langchain-community
+```
+
+## Notion 数据库加载器
+
+`NotionDBLoader` 是 `langchain` 包中文档加载器的一部分。你可以按如下方式使用它：
+
+```python
+from getpass import getpass
+
+NOTION_TOKEN = getpass()
+DATABASE_ID = getpass()
+```
+
+```output
+········
+········
+```
+
+```python
+from langchain_community.document_loaders import NotionDBLoader
+```
+
+```python
+loader = NotionDBLoader(
+    integration_token=NOTION_TOKEN,
+    database_id=DATABASE_ID,
+    request_timeout_sec=30,  # 可选，默认为 10 秒
+)
+```
+
+```python
+docs = loader.load()
+```
+
+```python
+print(docs)
+```
+
+## Notion 目录加载器
+
+### 设置
+
+将你的数据集从 Notion 导出。你可以通过点击右上角的三点图标，然后点击 `Export`（导出）来实现。
+
+导出时，请确保选择 `Markdown & CSV` 格式选项。
+
+这将会在你的“下载”文件夹中生成一个 `.zip` 文件。将此 `.zip` 文件移动到当前代码仓库中。
+
+运行以下命令解压 zip 文件（请根据需要替换 `Export...` 为你的文件名）：
+
+```shell
+unzip Export-d3adfe0f-3131-4bf3-8987-a52017fc1bae.zip -d Notion_DB
+```
+
+### 用法
+
+运行以下命令来摄取（ingest）你刚刚下载的数据。
+
+```python
+from langchain_community.document_loaders import NotionDirectoryLoader
+
+loader = NotionDirectoryLoader("Notion_DB")
+```
+
+```python
+docs = loader.load()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\notion.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

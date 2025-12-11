@@ -1,0 +1,170 @@
+---
+title: Hippo
+---
+
+>[Transwarp Hippo](https://www.transwarp.cn/en/subproduct/hippo) 是一款企业级的云原生分布式向量数据库，支持海量向量化数据集的存储、检索和管理。它能高效解决向量相似性搜索、高密度向量聚类等问题。`Hippo` 的特点是高可用、高性能和易于扩展。它集成了多种功能，例如多种向量搜索索引、数据分区与分片、数据持久化、增量数据摄取、向量标量字段过滤以及混合查询。它能有效满足企业对海量向量数据的高实时搜索需求。
+
+## 入门指南 (Getting Started)
+
+此处唯一的先决条件是获取一个来自 OpenAI 网站的 API 密钥。请确保您已经启动了一个 Hippo 实例。
+
+## 安装依赖项 (Installing Dependencies)
+
+初始阶段，我们需要安装某些依赖项，例如 `OpenAI`、`LangChain` 和 `Hippo-API`。请注意，您应该安装适用于您当前环境的相应版本。
+
+```python
+pip install -qU  langchain langchain_community tiktoken langchain-openai
+pip install -qU  hippo-api==1.1.0.rc3
+```
+
+```output
+Requirement already satisfied: hippo-api==1.1.0.rc3 in /Users/daochengzhang/miniforge3/envs/py310/lib/python3.10/site-packages (1.1.0rc3)
+Requirement already satisfied: pyyaml>=6.0 in /Users/daochengzhang/miniforge3/envs/py310/lib/python3.10/site-packages (from hippo-api==1.1.0.rc3) (6.0.1)
+```
+
+注意：Python 版本要求 >=3.8。
+
+## 最佳实践 (Best Practices)
+
+### 导入依赖包 (Importing Dependency Packages)
+
+```python
+import os
+
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores.hippo import Hippo
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+```
+
+### 加载知识文档 (Loading Knowledge Documents)
+
+```python
+os.environ["OPENAI_API_KEY"] = "YOUR OPENAI KEY"
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+```
+
+### 分割知识文档 (Segmenting the Knowledge Document)
+
+在这里，我们使用 LangChain 的 `CharacterTextSplitter` 进行分段。分隔符是一个句点（`.`）。分段后，文本片段的长度不超过 1000 个字符，重复字符数为 0。
+
+```python
+text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+```
+
+### 声明嵌入模型 (Declaring the Embedding Model)
+
+下面，我们使用 LangChain 的 `[`OpenAIEmbeddings`](https://reference.langchain.com/python/integrations/langchain_openai/OpenAIEmbeddings) 方法来创建 OpenAI 或 Azure 的嵌入模型。
+
+```python
+# openai
+embeddings = OpenAIEmbeddings()
+# azure
+# embeddings = OpenAIEmbeddings(
+#     openai_api_type="azure",
+#     openai_api_base="x x x",
+#     openai_api_version="x x x",
+#     model="x x x",
+#     deployment="x x x",
+#     openai_api_key="x x x"
+# )
+```
+
+### 声明 Hippo 客户端 (Declaring Hippo Client)
+
+```python
+HIPPO_CONNECTION = {"host": "IP", "port": "PORT"}
+```
+
+### 存储文档 (Storing the Document)
+
+```python
+print("input...")
+# insert docs
+vector_store = Hippo.from_documents(
+    docs,
+    embedding=embeddings,
+    table_name="langchain_test",
+    connection_args=HIPPO_CONNECTION,
+)
+print("success")
+```
+
+```output
+input...
+success
+```
+
+### 进行知识库问答 (Conducting Knowledge-based Question and Answer)
+
+#### 创建大型语言问答模型 (Creating a Large Language Question-Answering Model)
+
+下面，我们分别使用 LangChain 的 `AzureChatOpenAI` 和 `ChatOpenAI` 方法创建 OpenAI 或 Azure 的大型语言问答模型。
+
+```python
+# llm = AzureChatOpenAI(
+#     openai_api_base="x x x",
+#     openai_api_version="xxx",
+#     deployment_name="xxx",
+#     openai_api_key="xxx",
+#     openai_api_type="azure"
+# )
+
+llm = ChatOpenAI(openai_api_key="YOUR OPENAI KEY", model_name="gpt-3.5-turbo-16k")
+```
+
+### 根据问题获取相关知识 (Acquiring Related Knowledge Based on the Question)
+
+```python
+query = "Please introduce COVID-19"
+# query = "Please introduce Hippo Core Architecture"
+# query = "What operations does the Hippo Vector Database support for vector data?"
+# query = "Does Hippo use hardware acceleration technology? Briefly introduce hardware acceleration technology."
+
+
+# 从知识库中检索相似内容，获取最相似的两个文本片段。
+res = vector_store.similarity_search(query, 2)
+content_list = [item.page_content for item in res]
+text = "".join(content_list)
+```
+
+### 构建 Prompt 模板 (Constructing a Prompt Template)
+
+```python
+prompt = f"""
+Please use the content of the following [Article] to answer my question. If you don't know, please say you don't know, and the answer should be concise."
+[Article]:{text}
+Please answer this question in conjunction with the above article:{query}
+"""
+```
+
+### 等待大型语言模型生成答案 (Waiting for the Large Language Model to Generate an Answer)
+
+```python
+response_with_hippo = llm.predict(prompt)
+print(f"response_with_hippo:{response_with_hippo}")
+response = llm.predict(query)
+print("==========================================")
+print(f"response_without_hippo:{response}")
+```
+
+```output
+response_with_hippo:COVID-19 is a virus that has impacted every aspect of our lives for over two years. It is a highly contagious and mutates easily, requiring us to remain vigilant in combating its spread. However, due to progress made and the resilience of individuals, we are now able to move forward safely and return to more normal routines.
+==========================================
+response_without_hippo:COVID-19 is a contagious respiratory illness caused by the novel coronavirus SARS-CoV-2. It was first identified in December 2019 in Wuhan, China and has since spread globally, leading to a pandemic. The virus primarily spreads through respiratory droplets when an infected person coughs, sneezes, talks, or breathes, and can also spread by touching contaminated surfaces and then touching the face. COVID-19 symptoms include fever, cough, shortness of breath, fatigue, muscle or body aches, sore throat, loss of taste or smell, headache, and in severe cases, pneumonia and organ failure. While most people experience mild to moderate symptoms, it can lead to severe illness and even death, particularly among older adults and those with underlying health conditions. To combat the spread of the virus, various preventive measures have been implemented globally, including social distancing, wearing face masks, practicing good hand hygiene, and vaccination efforts.
+```
+
+```
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\hippo.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

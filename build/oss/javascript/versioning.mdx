@@ -1,0 +1,170 @@
+```markdown
+---
+title: 版本控制
+---
+
+
+每个 LangChain 和 LangGraph 的版本号遵循以下格式：`MAJOR.MINOR.PATCH`
+
+- **主版本号 (Major)**: 包含破坏性的 API 更新，需要修改代码。
+- **次版本号 (Minor)**: 包含新的功能和改进，但保持向后兼容性。
+- **修订号 (Patch)**: 用于修复 Bug 和进行小的改进。
+
+## 版本号命名规范
+
+LangChain 和 LangGraph 遵循 [语义化版本控制 (Semantic Versioning)](https://semver.org/) 原则：
+
+- `1.0.0`: 首次稳定发布，包含可用于生产环境的 API。
+- `1.1.0`: 以向后兼容的方式添加了新功能。
+- `1.0.1`: 向后兼容的 Bug 修复。
+
+## API 稳定性
+
+我们通过以下方式传达 API 的稳定性状态：
+
+### 稳定 API (Stable APIs)
+
+所有没有特殊前缀的 API 均被视为稳定，可用于生产环境。我们对稳定功能保持向后兼容性，仅在主版本发布时引入破坏性更改。
+
+### Beta API
+
+标记为 `beta` 的 API 功能已完成，但可能会根据用户反馈进行微小更改。它们可安全用于生产环境，但可能需要在未来的版本中进行少量调整。
+
+### Alpha API
+
+标记为 `alpha` 的 API 仍处于实验阶段，可能会发生重大变化。在生产环境中使用时需谨慎。
+
+### 已弃用 API (Deprecated APIs)
+
+标记为 `deprecated` 的 API 将在未来的主版本中被移除。在可能的情况下，我们会明确指定计划移除的版本。要处理弃用情况，请执行以下操作：
+
+1. 切换到推荐的替代 API。
+2. 遵循（在主版本发布时一起发布的）迁移指南。
+3. 在可用时使用自动化迁移工具。
+
+### 内部 API (Internal APIs)
+
+某些 API 以多种方式明确标记为“内部”：
+
+- 部分文档会提及内部组件并明确指出其内部属性。如果文档说明某项是内部内容，则它可能会发生变化。
+- 由前导下划线（**`_`**）前缀的函数、方法和其他对象。这是 Python 中指示私有内容的标准约定；如果任何方法以单个 **`_`** 开头，则它是一个内部 API。
+    - **例外情况：** 有些方法以 `_` 开头，但本身不包含实现代码。这些方法*旨在*被提供实现代码的子类覆盖。这类方法通常是 LangChain **公共 API** 的一部分。
+
+## 发布周期
+
+<AccordionGroup>
+    <Accordion title="主版本发布 (Major releases)">
+        主版本发布（例如：从 `1.0.0` 变为 `2.0.0`）可能包括：
+
+        - 破坏性的 API 更改
+        - 移除已弃用的功能
+        - 重大的架构改进
+
+        我们提供：
+
+        - 详细的迁移指南
+        - 在可能的情况下提供自动化迁移工具
+        - 对前一个主版本的扩展支持周期
+    </Accordion>
+
+    <Accordion title="次版本发布 (Minor releases)">
+        次版本发布（例如：从 `1.0.0` 变为 `1.1.0`）包括：
+
+        - 新功能和能力
+        - 性能改进
+        - 新的可选参数
+        - 向后兼容的增强
+    </Accordion>
+
+    <Accordion title="修订版本发布 (Patch releases)">
+        修订版本发布（例如：从 `1.0.0` 变为 `1.0.1`）包括：
+
+        - Bug 修复
+        - 安全更新
+        - 文档改进
+        - 不涉及 API 更改的性能优化
+    </Accordion>
+</AccordionGroup>
+
+## 版本支持策略
+
+- **最新主版本**: 全面支持，处于活跃开发中（ACTIVE 状态）。
+- **上一个主版本**: 在下一个主版本发布后的 12 个月内，仅接收安全更新和关键 Bug 修复（MAINTENANCE 维护状态）。
+- **更旧的版本**: 仅社区支持。
+
+### 长期支持 (LTS) 版本
+
+LangChain 和 LangGraph 的 1.0 版本均被指定为 LTS 版本：
+- 版本 1.0 在发布 2.0 版本之前将保持 ACTIVE 状态。
+- 在版本 2.0 发布后，版本 1.0 将进入 MAINTENANCE 维护模式，至少持续 1 年。
+- LTS 版本遵循语义化版本控制（semver），允许在次版本之间安全升级。
+- 旧版本（LangChain 0.3 和 LangGraph 0.4）的维护状态将持续到 2026 年 12 月。
+
+有关发布状态和支持时间线的详细信息，请参阅 [Release policy](/oss/javascript/release-policy)。
+
+## 检查您的版本
+
+要检查已安装的版本：
+
+
+
+<CodeGroup>
+
+```javascript LangChain
+import { version } from "langchain/package.json";
+console.log(version);
+```
+
+```javascript LangGraph
+import { version } from "@langchain/langgraph/package.json";
+console.log(version);
+```
+</CodeGroup>
+
+
+## 升级
+
+
+
+<CodeGroup>
+
+```bash LangChain
+# 升级到最新版本
+npm update langchain @langchain/core
+
+# 安装特定版本
+npm install langchain@1.0.0 @langchain/core@1.0.0
+```
+
+```bash LangGraph
+# 升级到最新版本
+npm update @langchain/langgraph
+
+# 安装特定版本
+npm install @langchain/langgraph@1.0.0
+```
+</CodeGroup>
+
+
+## 预发布版本
+
+我们会偶尔发布 Alpha 和 Beta 版本以供早期测试：
+
+- **Alpha** (例如：`1.0.0a1`): 早期预览，预计会有重大更改。
+- **Beta** (例如：`1.0.0b1`): 功能已完成，可能存在微小更改。
+- **Release Candidate (RC)** (例如：`1.0.0rc1`): 在稳定发布前的最终测试版本。
+
+## 另请参阅
+
+- [Release policy](/oss/javascript/release-policy) - 详细的发布和弃用策略
+- [Releases](/oss/javascript/releases) - 特定版本的发布说明和迁移指南
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\versioning.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

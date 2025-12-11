@@ -1,0 +1,132 @@
+---
+title: 如何评估一个可运行对象 (Runnable)
+sidebarTitle: 评估 Runnable
+---
+
+<Info>
+* `langchain`: [Python](https://python.langchain.com) 和 [JS/TS](https://js.langchain.com)
+* Runnable: [Python](https://python.langchain.com/docs/concepts/runnables/) 和 [JS/TS](https://js.langchain.com/docs/concepts/runnables/)
+</Info>
+
+`langchain` 的 [Runnable](https://python.langchain.com/docs/concepts/runnables/) 对象（例如聊天模型、检索器、链等）可以直接传递给 `evaluate()` / `aevaluate()` 函数进行评估。
+
+## 设置 (Setup)
+
+让我们定义一个简单的链 (chain) 来进行评估。首先，安装所有必需的包：
+
+<CodeGroup>
+
+```bash Python
+pip install -U langsmith langchain[openai]
+```
+
+```bash TypeScript
+yarn add langsmith @langchain/openai
+```
+
+</CodeGroup>
+
+然后定义这个链：
+
+<CodeGroup>
+
+```python Python
+from langchain.chat_models import init_chat_model
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+instructions = (
+    "请审核以下用户查询，判断其中是否包含任何形式的有毒行为，例如侮辱、威胁或严重负面的评论。如果包含，请回复 'Toxic'；如果不包含，请回复 'Not toxic'。"
+)
+
+prompt = ChatPromptTemplate(
+    [("system", instructions), ("user", "{text}")],
+)
+
+model = init_chat_model("gpt-4o")
+chain = prompt | model | StrOutputParser()
+```
+
+```typescript TypeScript
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "Please review the user query below and determine if it contains any form of toxic behavior, such as insults, threats, or highly negative comments. Respond with 'Toxic' if it does, and 'Not toxic' if it doesn't."],
+  ["user", "{text}"]
+]);
+
+const chatModel = new ChatOpenAI();
+const outputParser = new StringOutputParser();
+const chain = prompt.pipe(chatModel).pipe(outputParser);
+```
+
+</CodeGroup>
+
+## 评估 (Evaluate)
+
+为了评估我们的链，我们可以直接将其传递给 `evaluate()` / `aevaluate()` 方法。请注意，链的输入变量名必须与示例输入数据的键 (keys) 相匹配。在这种情况下，示例输入数据应具有 `{"text": "..."}` 的形式。
+
+<CodeGroup>
+
+```python Python
+from langsmith import aevaluate, Client
+
+client = Client()
+
+# 克隆一个包含文本及其毒性标签的数据集。
+# 每个示例输入都有一个 "text" 键，每个输出（期望值）都有一个 "label" 键。
+dataset = client.clone_public_dataset(
+    "https://smith.langchain.com/public/3d6831e6-1680-4c88-94df-618c8e01fc55/d"
+)
+
+def correct(outputs: dict, reference_outputs: dict) -> bool:
+    # 由于我们的链输出的是一个字符串而不是字典，这个字符串会存储在 outputs 字典的默认 "output" 键下：
+    actual = outputs["output"]
+    expected = reference_outputs["label"]
+    return actual == expected
+
+results = await aevaluate(
+    chain,
+    data=dataset,
+    evaluators=[correct],
+    experiment_prefix="gpt-4o, baseline",
+)
+```
+
+```typescript TypeScript
+import { evaluate } from "langsmith/evaluation";
+import { Client } from "langsmith";
+
+const langsmith = new Client();
+
+const dataset = await client.clonePublicDataset(
+  "https://smith.langchain.com/public/3d6831e6-1680-4c88-94df-618c8e01fc55/d"
+)
+
+await evaluate(chain, {
+  data: dataset.name,
+  evaluators: [correct],
+  experimentPrefix: "gpt-4o, baseline",
+});
+```
+
+</CodeGroup>
+
+Runnable 会针对每个输出进行适当的跟踪 (trace)。
+
+![Runnable Evaluation](/langsmith/images/runnable-eval.png)
+
+## 相关 (Related)
+
+* [如何评估 `langgraph` 图](/langsmith/evaluate-on-intermediate-steps)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\langchain-runnable.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

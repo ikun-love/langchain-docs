@@ -1,0 +1,105 @@
+---
+title: Vercel KV
+---
+
+此示例演示了如何使用 `VercelKVStore` [`BaseStore`](https://reference.langchain.com/javascript/classes/_langchain_langgraph-checkpoint.BaseStore.html) 集成来设置聊天历史记录存储。
+
+## Setup
+
+```bash npm
+npm install @langchain/community @langchain/core @vercel/kv
+```
+
+## Usage
+
+```typescript
+import { createClient } from "@vercel/kv";
+import { VercelKVStore } from "@langchain/community/storage/vercel_kv";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+
+// 专家提示：定义一个帮助函数来获取您的客户端，
+// 同时处理环境变量未设置的情况。
+const getClient = () => {
+  if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
+    throw new Error(
+      "必须在环境中设置 VERCEL_KV_API_URL 和 VERCEL_KV_API_TOKEN"
+    );
+  }
+  const client = createClient({
+    url: process.env.VERCEL_KV_API_URL,
+    token: process.env.VERCEL_KV_API_TOKEN,
+  });
+  return client;
+};
+
+// 定义客户端和存储
+const client = getClient();
+const store = new VercelKVStore({
+  client,
+});
+// 定义我们的编码器/解码器，用于在字符串和 Uint8Array 之间进行转换
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+/**
+ * 在这里，您将定义您的 LLM 和聊天链，调用
+ * LLM，并最终获得消息列表。
+ * 在此示例中，我们假设我们已经有了一个列表。
+ */
+const messages = Array.from({ length: 5 }).map((_, index) => {
+  if (index % 2 === 0) {
+    return new AIMessage("ai stuff..."); // 假设这是 AI 的回复内容
+  }
+  return new HumanMessage("human stuff..."); // 假设这是用户输入的内容
+});
+// 将您的消息设置到存储中 (Set your messages in the store)
+// 键 (key) 将会以 `message:id:` 作为前缀，并以索引结尾。
+await store.mset(
+  messages.map((message, index) => [
+    `message:id:${index}`,
+    encoder.encode(JSON.stringify(message)),
+  ])
+);
+// 现在您可以从存储中获取您的消息了 (Now you can get your messages from the store)
+const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+// 确保解码这些值 (Make sure to decode the values)
+console.log(retrievedMessages.map((v) => decoder.decode(v)));
+/**
+[
+  '{"id":["langchain","AIMessage"],"kwargs":{"content":"ai stuff..."}}',
+  '{"id":["langchain","HumanMessage"],"kwargs":{"content":"human stuff..."}}'
+]
+ */
+// 或者，如果您想取回所有键 (Or, if you want to get back all the keys)，您可以调用
+// `yieldKeys` 方法。
+// 您可以选择传递一个键前缀，以仅获取匹配该前缀的键。
+const yieldedKeys = [];
+for await (const key of store.yieldKeys("message:id:")) {
+  yieldedKeys.push(key);
+}
+// 键是没有被编码的，所以不需要解码 (The keys are not encoded, so no decoding is necessary)
+console.log(yieldedKeys);
+/**
+[
+  'message:id:2',
+  'message:id:1',
+  'message:id:3',
+  'message:id:0',
+  'message:id:4'
+]
+ */
+// 最后，让我们从存储中删除这些键 (Finally, let's delete the keys from the store)
+await store.mdelete(yieldedKeys);
+```
+
+## Related
+
+- [键值存储概念指南](/oss/javascript/integrations/stores)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\stores\vercel_kv_storage.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

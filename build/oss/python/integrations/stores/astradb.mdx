@@ -1,0 +1,115 @@
+---
+title: AstraDBByteStore
+---
+
+这将帮助您开始使用 Astra DB [键值存储](/oss/python/integrations/stores)。有关 `AstraDBByteStore` 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/astradb/storage/langchain_astradb.storage.AstraDBByteStore.html)。
+
+## 概述
+
+> [DataStax Astra DB](https://docs.datastax.com/en/astra-db-serverless/index.html) 是一个无服务器（serverless）的、为 AI 设计的数据库，它构建于 `Apache Cassandra®` 之上，并通过易于使用的 JSON API 方便地提供服务。
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | JS 支持 | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: |
+| [AstraDBByteStore](https://python.langchain.com/api_reference/astradb/storage/langchain_astradb.storage.AstraDBByteStore.html) | [langchain-astradb](https://python.langchain.com/api_reference/astradb/index.html) | ❌ | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain_astradb?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain_astradb?style=flat-square&label=%20) |
+
+## 设置
+
+要创建 `AstraDBByteStore` 字节存储，您需要 [创建一个 DataStax 账户](https://www.datastax.com/products/datastax-astra)。
+
+### 凭证 (Credentials)
+
+注册后，设置以下凭证：
+
+```python
+from getpass import getpass
+
+ASTRA_DB_API_ENDPOINT = getpass("ASTRA_DB_API_ENDPOINT = ")
+ASTRA_DB_APPLICATION_TOKEN = getpass("ASTRA_DB_APPLICATION_TOKEN = ")
+```
+
+### 安装
+
+LangChain AstraDB 集成位于 `langchain-astradb` 包中：
+
+```python
+pip install -qU langchain-astradb
+```
+
+## 实例化
+
+现在我们可以实例化我们的字节存储：
+
+```python
+from langchain_astradb import AstraDBByteStore
+
+kv_store = AstraDBByteStore(
+    api_endpoint=ASTRA_DB_API_ENDPOINT,
+    token=ASTRA_DB_APPLICATION_TOKEN,
+    collection_name="my_store",
+)
+```
+
+## 用法
+
+您可以使用 `mset` 方法以如下方式设置键下的数据：
+
+```python
+kv_store.mset(
+    [
+        ["key1", b"value1"],
+        ["key2", b"value2"],
+    ]
+)
+
+kv_store.mget(
+    [
+        "key1",
+        "key2",
+    ]
+)
+```
+
+```output
+[b'value1', b'value2']
+```
+
+您可以使用 `mdelete` 方法删除数据：
+
+```python
+kv_store.mdelete(
+    [
+        "key1",
+        "key2",
+    ]
+)
+
+kv_store.mget(
+    [
+        "key1",
+        "key2",
+    ]
+)
+```
+
+```output
+[None, None]
+```
+
+您可以在任何需要使用其他 `ByteStore` 的地方使用 `AstraDBByteStore`。
+
+---
+
+## API 参考
+
+有关 `AstraDBByteStore` 所有功能和配置的详细文档，请参阅 API 参考：[python.langchain.com/api_reference/astradb/storage/langchain_astradb.storage.AstraDBByteStore.html](https://python.langchain.com/api_reference/astradb/storage/langchain_astradb.storage.AstraDBByteStore.html)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\stores\astradb.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

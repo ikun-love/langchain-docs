@@ -1,0 +1,381 @@
+---
+title: LangGraph 运行时
+sidebarTitle: 运行时
+---
+
+
+
+
+
+`[Pregel](https://reference.langchain.com/javascript/classes/_langchain_langgraph.pregel.Pregel.html)` 实现了 LangGraph 的运行时（runtime），它负责管理 LangGraph 应用程序的执行过程。
+
+编译一个 [StateGraph](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.StateGraph.html) 或创建一个 [entrypoint](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.entrypoint.html) 都会生成一个 `[Pregel](https://reference.langchain.com/javascript/classes/_langchain_langgraph.pregel.Pregel.html)` 实例，该实例可以被输入数据调用。
+
+
+本指南将从宏观层面解释运行时，并提供直接使用 Pregel 实现应用程序的说明。
+
+
+
+> **注意:** `[Pregel](https://reference.langchain.com/javascript/classes/_langchain_langgraph.pregel.Pregel.html)` 运行时得名于 [Google 的 Pregel 算法](https://research.google/pubs/pub37252/)，该算法描述了一种高效的大规模并行计算方法，其基础是图结构。
+
+
+## 概述
+
+在 LangGraph 中，Pregel 将 [**Actors** (执行器)](https://en.wikipedia.org/wiki/Actor_model) 与 **Channels (通道)** 结合到一个单一的应用程序中。**Actors** 从通道中读取数据并向通道写入数据。Pregel 按照 **Pregel 算法/批量同步并行 (Bulk Synchronous Parallel, BSP)** 模型，将应用程序的执行组织成多个步骤。
+
+每个步骤包含三个阶段：
+
+* **规划 (Plan)**: 确定本步骤中要执行哪些 **Actors**。例如，第一步选择订阅了特殊的 **input (输入)** 通道的 **Actors**；在后续步骤中，选择在前一步更新的通道上订阅的 **Actors**。
+* **执行 (Execution)**: 并行执行所有选定的 **Actors**，直到所有执行完毕、其中一个失败或达到超时限制。在此阶段，通道的更新对 Actors 来说是不可见的，直到进入下一个步骤。
+* **更新 (Update)**: 使用该步骤中 **Actors** 写入的值来更新通道。
+
+重复以上步骤，直到没有 **Actors** 被选中执行，或者达到了最大步数限制。
+
+## Actors (执行器)
+
+**Actor** 就是一个 `PregelNode`。它订阅（subscribe）通道，从通道读取数据，并向通道写入数据。可以将其视为 Pregel 算法中的一个 **Actor**。`PregelNodes` 实现了 LangChain 的 `Runnable` 接口。
+
+## Channels (通道)
+
+通道用于执行器（`PregelNodes`）之间的通信。每个通道具有一个值类型、一个更新类型以及一个更新函数——该函数接收一系列更新并将它们应用于存储的值。通道可用于将数据从一个链发送到另一个链，或在未来步骤中将数据从链发送回自身。LangGraph 提供了一些内置通道：
+
+
+
+* [`LastValue`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.channels.LastValue.html): 默认通道，存储发送到该通道的最后一个值，适用于输入、输出值，或用于在步骤间传输数据。
+* [`Topic`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.channels.Topic.html): 一个可配置的发布/订阅 (PubSub) 主题，适用于在 **Actors** 之间发送多个值，或用于累积输出。可以配置为去重或在多个步骤中累积值。
+* [`BinaryOperatorAggregate`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.BinaryOperatorAggregate.html): 存储一个持久化的值，通过将一个二元运算符应用于当前值和发送到该通道的每个更新来进行更新，适用于计算多步骤的聚合值；例如：`total = BinaryOperatorAggregate(int, operator.add)`
+
+
+## 示例 (Examples)
+
+
+
+虽然大多数用户会通过 [StateGraph](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.StateGraph.html) API 或 [entrypoint](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.entrypoint.html) 装饰器与 Pregel 交互，但也可以直接与 Pregel 交互。
+
+
+下面是一些不同的示例，以帮助您了解 Pregel API。
+
+<Tabs>
+    <Tab title="单个节点 (Single node)">
+
+
+    ```typescript
+    import { EphemeralValue } from "@langchain/langgraph/channels";
+    import { Pregel, NodeBuilder } from "@langchain/langgraph/pregel";
+
+    const node1 = new NodeBuilder()
+      .subscribeOnly("a")
+      .do((x: string) => x + x)
+      .writeTo("b");
+
+    const app = new Pregel({
+      nodes: { node1 },
+      channels: {
+        a: new EphemeralValue<string>(),
+        b: new EphemeralValue<string>(),
+      },
+      inputChannels: ["a"],
+      outputChannels: ["b"],
+    });
+
+    await app.invoke({ a: "foo" });
+    ```
+
+    ```console
+    { b: 'foofoo' }
+    ```
+
+    </Tab>
+    <Tab title="多个节点 (Multiple nodes)">
+
+
+    ```typescript
+    import { LastValue, EphemeralValue } from "@langchain/langgraph/channels";
+    import { Pregel, NodeBuilder } from "@langchain/langgraph/pregel";
+
+    const node1 = new NodeBuilder()
+      .subscribeOnly("a")
+      .do((x: string) => x + x)
+      .writeTo("b");
+
+    const node2 = new NodeBuilder()
+      .subscribeOnly("b")
+      .do((x: string) => x + x)
+      .writeTo("c");
+
+    const app = new Pregel({
+      nodes: { node1, node2 },
+      channels: {
+        a: new EphemeralValue<string>(),
+        b: new LastValue<string>(),
+        c: new EphemeralValue<string>(),
+      },
+      inputChannels: ["a"],
+      outputChannels: ["b", "c"],
+    });
+
+    await app.invoke({ a: "foo" });
+    ```
+
+    ```console
+    { b: 'foofoo', c: 'foofoofoofoo' }
+    ```
+
+    </Tab>
+    <Tab title="Topic">
+
+
+    ```typescript
+    import { EphemeralValue, Topic } from "@langchain/langgraph/channels";
+    import { Pregel, NodeBuilder } from "@langchain/langgraph/pregel";
+
+    const node1 = new NodeBuilder()
+      .subscribeOnly("a")
+      .do((x: string) => x + x)
+      .writeTo("b", "c");
+
+    const node2 = new NodeBuilder()
+      .subscribeTo("b")
+      .do((x: { b: string }) => x.b + x.b)
+      .writeTo("c");
+
+    const app = new Pregel({
+      nodes: { node1, node2 },
+      channels: {
+        a: new EphemeralValue<string>(),
+        b: new EphemeralValue<string>(),
+        c: new Topic<string>({ accumulate: true }),
+      },
+      inputChannels: ["a"],
+      outputChannels: ["c"],
+    });
+
+    await app.invoke({ a: "foo" });
+    ```
+
+    ```console
+    { c: ['foofoo', 'foofoofoofoo'] }
+    ```
+
+    </Tab>
+    <Tab title="BinaryOperatorAggregate">
+    此示例演示了如何使用 [`BinaryOperatorAggregate`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.BinaryOperatorAggregate.html) 通道来实现一个归约器（reducer）。
+
+
+
+    ```typescript
+    import { EphemeralValue, BinaryOperatorAggregate } from "@langchain/langgraph/channels";
+    import { Pregel, NodeBuilder } from "@langchain/langgraph/pregel";
+
+    const node1 = new NodeBuilder()
+      .subscribeOnly("a")
+      .do((x: string) => x + x)
+      .writeTo("b", "c");
+
+    const node2 = new NodeBuilder()
+      .subscribeOnly("b")
+      .do((x: string) => x + x)
+      .writeTo("c");
+
+    const reducer = (current: string, update: string) => {
+      if (current) {
+        return current + " | " + update;
+      } else {
+        return update;
+      }
+    };
+
+    const app = new Pregel({
+      nodes: { node1, node2 },
+      channels: {
+        a: new EphemeralValue<string>(),
+        b: new EphemeralValue<string>(),
+        c: new BinaryOperatorAggregate<string>({ operator: reducer }),
+      },
+      inputChannels: ["a"],
+      outputChannels: ["c"],
+    });
+
+    await app.invoke({ a: "foo" });
+    ```
+
+    </Tab>
+    <Tab title="循环 (Cycle)">
+
+
+    此示例演示了如何通过让一个链写入它所订阅的通道来引入图中的循环。执行将持续进行，直到向该通道写入一个 `null` 值。
+
+    ```typescript
+    import { EphemeralValue } from "@langchain/langgraph/channels";
+    import { Pregel, NodeBuilder, ChannelWriteEntry } from "@langchain/langgraph/pregel";
+
+    const exampleNode = new NodeBuilder()
+      .subscribeOnly("value")
+      .do((x: string) => x.length < 10 ? x + x : null)
+      .writeTo(new ChannelWriteEntry("value", { skipNone: true }));
+
+    const app = new Pregel({
+      nodes: { exampleNode },
+      channels: {
+        value: new EphemeralValue<string>(),
+      },
+      inputChannels: ["value"],
+      outputChannels: ["value"],
+    });
+
+    await app.invoke({ value: "a" });
+    ```
+
+    ```console
+    { value: 'aaaaaaaaaaaaaaaa' }
+    ```
+
+    </Tab>
+</Tabs>
+
+## 高级 API (High-level API)
+
+LangGraph 提供了两个高级 API 来创建 Pregel 应用程序：[StateGraph (图 API)](/oss/javascript/langgraph/graph-api) 和 [函数式 API (Functional API](/oss/javascript/langgraph/functional-api))。
+
+<Tabs>
+    <Tab title="StateGraph (图 API)">
+
+
+    [StateGraph (Graph API)](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.StateGraph.html) 是一个更高级的抽象，它简化了 Pregel 应用程序的创建。它允许您定义一个包含节点和边的图。当您编译该图时，StateGraph API 会自动为您创建相应的 Pregel 应用程序。
+
+    ```typescript
+    import { START, StateGraph } from "@langchain/langgraph";
+
+    interface Essay {
+      topic: string;
+      content?: string;
+      score?: number;
+    }
+
+    const writeEssay = (essay: Essay) => {
+      return {
+        content: `Essay about ${essay.topic}`,
+      };
+    };
+
+    const scoreEssay = (essay: Essay) => {
+      return {
+        score: 10
+      };
+    };
+
+    const builder = new StateGraph<Essay>({
+      channels: {
+        topic: null,
+        content: null,
+        score: null,
+      }
+    })
+      .addNode("writeEssay", writeEssay)
+      .addNode("scoreEssay", scoreEssay)
+      .addEdge(START, "writeEssay")
+      .addEdge("writeEssay", "scoreEssay");
+
+    // 编译图。
+    // 这将返回一个 Pregel 实例。
+    const graph = builder.compile();
+    ```
+
+
+    编译后的 Pregel 实例将关联一组节点和通道。您可以通过打印它们来检查这些节点和通道。
+
+
+
+    ```typescript
+    console.log(graph.nodes);
+    ```
+
+    您将看到类似以下内容：
+
+    ```console
+    {
+      __start__: PregelNode { ... },
+      writeEssay: PregelNode { ... },
+      scoreEssay: PregelNode { ... }
+    }
+    ```
+
+    ```typescript
+    console.log(graph.channels);
+    ```
+
+    您应该看到类似以下内容
+
+    ```console
+    {
+      topic: LastValue { ... },
+      content: LastValue { ... },
+      score: LastValue { ... },
+      __start__: EphemeralValue { ... },
+      writeEssay: EphemeralValue { ... },
+      scoreEssay: EphemeralValue { ... },
+      'branch:__start__:__self__:writeEssay': EphemeralValue { ... },
+      'branch:__start__:__self__:scoreEssay': EphemeralValue { ... },
+      'branch:writeEssay:__self__:writeEssay': EphemeralValue { ... },
+      'branch:writeEssay:__self__:scoreEssay': EphemeralValue { ... },
+      'branch:scoreEssay:__self__:writeEssay': EphemeralValue { ... },
+      'branch:scoreEssay:__self__:scoreEssay': EphemeralValue { ... },
+      'start:writeEssay': EphemeralValue { ... }
+    }
+    ```
+
+    </Tab>
+    <Tab title="函数式 API (Functional API)">
+
+
+    在 [函数式 API](/oss/javascript/langgraph/functional-api) 中，您可以使用 [`entrypoint`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.entrypoint.html) 来创建一个 Pregel 应用程序。`entrypoint` 装饰器允许您定义一个函数，该函数接收输入并返回输出。
+
+    ```typescript
+    import { MemorySaver } from "@langchain/langgraph";
+    import { entrypoint } from "@langchain/langgraph/func";
+
+    interface Essay {
+      topic: string;
+      content?: string;
+      score?: number;
+    }
+
+    const checkpointer = new MemorySaver();
+
+    const writeEssay = entrypoint(
+      { checkpointer, name: "writeEssay" },
+      async (essay: Essay) => {
+        return {
+          content: `Essay about ${essay.topic}`,
+        };
+      }
+    );
+
+    console.log("Nodes: ");
+    console.log(writeEssay.nodes);
+    console.log("Channels: ");
+    console.log(writeEssay.channels);
+    ```
+
+    ```console
+    Nodes:
+    { writeEssay: PregelNode { ... } }
+    Channels:
+    {
+      __start__: EphemeralValue { ... },
+      __end__: LastValue { ... },
+      __previous__: LastValue { ... }
+    }
+    ```
+
+    </Tab>
+</Tabs>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\pregel.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,116 @@
+---
+title: DeepInfra
+---
+
+[DeepInfra](https://deepinfra.com/?utm_source=langchain) 是一种**即开即用（serverless）的推理即服务**平台，它提供了对各种 [LLM 模型](https://deepinfra.com/models?utm_source=langchain) 和 [嵌入模型](https://deepinfra.com/models?type=embeddings&utm_source=langchain) 的访问权限。本示例 Notebook 将演示如何将 LangChain 与 DeepInfra 结合使用来实现语言模型的调用。
+
+## 设置 API 密钥环境变量
+
+请确保您已从 DeepInfra 获取 API 密钥。您需要先 [登录](https://deepinfra.com/login?from=%2Fdash) 才能获取新的令牌（Token）。
+
+平台会为您提供 1 小时的免费即开即用 GPU 计算能力，用于测试不同的模型（详情参见 [此处](https://github.com/deepinfra/deepctl#deepctl)）。
+您可以使用 `deepctl auth token` 命令打印出您的令牌。
+
+```python
+# 获取新令牌的链接：https://deepinfra.com/login?from=%2Fdash
+
+from getpass import getpass
+
+DEEPINFRA_API_TOKEN = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+import os
+
+os.environ["DEEPINFRA_API_TOKEN"] = DEEPINFRA_API_TOKEN
+```
+
+## 创建 DeepInfra 实例
+
+您也可以使用我们的开源 [deepctl 工具](https://github.com/deepinfra/deepctl#deepctl) 来管理模型的部署。您可以在 [此处](https://deepinfra.com/databricks/dolly-v2-12b#API) 查看可用参数的列表。
+
+```python
+from langchain_community.llms import DeepInfra
+
+llm = DeepInfra(model_id="meta-llama/Llama-2-70b-chat-hf")
+llm.model_kwargs = {
+    "temperature": 0.7,
+    "repetition_penalty": 1.2,
+    "max_new_tokens": 250,
+    "top_p": 0.9,
+}
+```
+
+```python
+# 通过包装器直接运行推理
+llm("Who let the dogs out?")
+```
+
+```output
+'This is a question that has puzzled many people'
+```
+
+```python
+# 运行流式推理
+for chunk in llm.stream("Who let the dogs out?"):
+    print(chunk)
+```
+
+```output
+ Will
+ Smith
+.
+```
+
+## 创建一个提示模板（Prompt Template）
+
+我们将为“问答”任务创建一个提示模板。
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+## 初始化 LLMChain
+
+```python
+from langchain.chains import LLMChain
+
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+## 运行 LLMChain
+
+提供一个问题并运行 LLMChain。
+
+```python
+question = "Can penguins reach the North pole?"
+
+llm_chain.run(question)
+```
+
+```output
+"Penguins are found in Antarctica and the surrounding islands, which are located at the southernmost tip of the planet. The North Pole is located at the northernmost tip of the planet, and it would be a long journey for penguins to get there. In fact, penguins don't have the ability to fly or migrate over such long distances. So, no, penguins cannot reach the North Pole. "
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\deepinfra.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,99 @@
+---
+title: PromptLayer OpenAI
+---
+
+`PromptLayer` 是第一个允许您跟踪、管理和共享 GPT 提示工程（Prompt Engineering）的平台。`PromptLayer` 在您的代码和 `OpenAI` 的 python 库之间充当一个中间件。
+
+`PromptLayer` 会记录您的所有 `OpenAI API` 请求，使您可以在 `PromptLayer` 仪表板中搜索和浏览请求历史记录。
+
+本示例演示了如何连接到 [PromptLayer](https://www.promptlayer.com) 以开始记录您的 OpenAI 请求。
+
+另一个示例在 [这里](/oss/python/integrations/providers/promptlayer)。
+
+## 安装 PromptLayer
+
+要将 PromptLayer 与 OpenAI 配合使用，需要安装 `promptlayer` 包。请使用 pip 安装 `promptlayer`。
+
+```python
+pip install -qU  promptlayer
+```
+
+## 导入
+
+```python
+import os
+
+import promptlayer
+from langchain_community.llms import PromptLayerOpenAI
+```
+
+## 设置环境变量 API 密钥
+
+您可以在 [www.promptlayer.com](https://www.promptlayer.com) 通过点击导航栏中的设置图标（cog）来创建 PromptLayer API 密钥。
+
+将其设置为名为 `PROMPTLAYER_API_KEY` 的环境变量。
+
+您还需要一个 OpenAI 密钥，名为 `OPENAI_API_KEY`。
+
+```python
+from getpass import getpass
+
+PROMPTLAYER_API_KEY = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+os.environ["PROMPTLAYER_API_KEY"] = PROMPTLAYER_API_KEY
+```
+
+```python
+from getpass import getpass
+
+OPENAI_API_KEY = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+```
+
+## 像往常一样使用 PromptLayerOpenAI LLM
+
+*您可以选择传入 `pl_tags`，以便使用 PromptLayer 的标签功能来跟踪您的请求。*
+
+```python
+llm = PromptLayerOpenAI(pl_tags=["langchain"])
+llm("I am a cat and I want")
+```
+
+**上述请求现在应该会出现在您的 [PromptLayer 仪表板](https://www.promptlayer.com) 上。**
+
+## 使用 PromptLayer 跟踪（Track）
+
+如果您想使用任何 [PromptLayer 跟踪功能](https://magniv.notion.site/Track-4deee1b1f7a34c1680d085f82567dab9)，您需要在实例化 PromptLayer LLM 时传入参数 `return_pl_id`，以便获取请求 ID。
+
+```python
+llm = PromptLayerOpenAI(return_pl_id=True)
+llm_results = llm.generate(["Tell me a joke"])
+
+for res in llm_results.generations:
+    pl_request_id = res[0].generation_info["pl_request_id"]
+    promptlayer.track.score(request_id=pl_request_id, score=100)
+```
+
+使用此方法可以实现在 PromptLayer 仪表板中跟踪模型的性能。如果您正在使用提示模板（prompt template），您也可以将该模板附加到请求中。总而言之，这为您提供了在 PromptLayer 仪表板中跟踪不同模板和模型性能的机会。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\promptlayer_openai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

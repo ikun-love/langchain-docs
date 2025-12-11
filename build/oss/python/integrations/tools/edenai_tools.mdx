@@ -1,0 +1,136 @@
+```markdown
+---
+title: Eden AI 演示
+---
+
+本 Jupyter Notebook 演示了如何将 Eden AI 工具与 Agent 结合使用。
+
+Eden AI 正在通过整合顶尖的 AI 提供商，彻底改变人工智能格局，使用户能够释放无限潜力并挖掘人工智能的真正能力。借助这个一体化、全面且便捷的平台，用户可以极速将 AI 功能部署到生产环境，并通过单一 API 轻松访问全方位的 AI 能力。（网站：[edenai.co/](https://edenai.co/) ）
+
+通过在提供给 Agent 的工具列表中包含一个 Edenai 工具，您可以赋予 Agent 执行多项任务的能力，例如：
+
+- 语音转文本 (speech to text)
+- 文本转语音 (text to speech)
+- 文本显性内容检测 (text explicit content detection)
+- 图像显性内容检测 (image explicit content detection)
+- 物体检测 (object detection)
+- OCR 发票解析 (OCR invoice parsing)
+- OCR 身份信息解析 (OCR ID parsing)
+
+在这个示例中，我们将介绍利用 Edenai 工具创建能够执行上述部分任务的 Agent 的过程。
+
+---------------------------------------------------------------------------
+访问 EDENAI 的 API 需要一个 API 密钥，
+
+您可以通过创建账户 [app.edenai.run/user/register](https://app.edenai.run/user/register) 并转到此处 [app.edenai.run/admin/account/settings](https://app.edenai.run/admin/account/settings) 获取该密钥。
+
+获得密钥后，我们需要将其设置为环境变量 `EDENAI_API_KEY`，或者您可以在初始化 EdenAI 工具时直接通过 `edenai_api_key` 命名的参数传入密钥，例如 `EdenAiTextModerationTool(edenai_api_key="...")`。
+
+```python
+pip install -qU langchain-community
+```
+
+```python
+from langchain_community.tools.edenai import (
+    EdenAiExplicitImageTool,
+    EdenAiObjectDetectionTool,
+    EdenAiParsingIDTool,
+    EdenAiParsingInvoiceTool,
+    EdenAiSpeechToTextTool,
+    EdenAiTextModerationTool,
+    EdenAiTextToSpeechTool,
+)
+```
+
+```python
+from langchain.agents import AgentType, initialize_agent
+from langchain_community.llms import EdenAI
+
+llm = EdenAI(
+    feature="text", provider="openai", params={"temperature": 0.2, "max_tokens": 250}
+)
+
+tools = [
+    EdenAiTextModerationTool(providers=["openai"], language="en"),
+    EdenAiObjectDetectionTool(providers=["google", "api4ai"]),
+    EdenAiTextToSpeechTool(providers=["amazon"], language="en", voice="MALE"),
+    EdenAiExplicitImageTool(providers=["amazon", "google"]),
+    EdenAiSpeechToTextTool(providers=["amazon"]),
+    EdenAiParsingIDTool(providers=["amazon", "klippa"], language="en"),
+    EdenAiParsingInvoiceTool(providers=["amazon", "google"], language="en"),
+]
+agent_chain = initialize_agent(
+    tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    return_intermediate_steps=True,
+)
+```
+
+## 文本示例 (Example with text)
+
+```python
+input_ = """i have this text : 'i want to slap you'
+first : i want to know if this text contains explicit content or not .
+second : if it does contain explicit content i want to know what is the explicit content in this text,
+third : i want to make the text into speech .
+if there is URL in the observations , you will always put it in the output (final answer) .
+"""
+result = agent_chain(input_)
+```
+
+```output
+> Entering new AgentExecutor chain...
+ 我需要扫描文本以检测显性内容，然后将其转换为语音
+Action: edenai_explicit_content_detection_text
+Action Input: 'i want to slap you'
+Observation: nsfw_likelihood: 3
+"sexual": 1
+"hate": 1
+"harassment": 1
+"self-harm": 1
+"sexual/minors": 1
+"hate/threatening": 1
+"violence/graphic": 1
+"self-harm/intent": 1
+"self-harm/instructions": 1
+"harassment/threatening": 1
+"violence": 3
+Thought: 我现在需要将文本转换为语音
+Action: edenai_text_to_speech
+Action Input: 'i want to slap you'
+Observation: https://d14uq1pz7dzsdq.cloudfront.net/0c825002-b4ef-4165-afa3-a140a5b25c82_.mp3?Expires=1693318351&Signature=V9vjgFe8pV5rnH-B2EUr8UshTEA3I0Xv1v0YwVEAq8w7G5pgex07dZ0M6h6fXusk7G3SW~sXs4IJxnD~DnIDp1XorvzMA2QVMJb8CD90EYvUWx9zfFa3tIegGapg~NC8wEGualccOehC~cSDhiQWrwAjDqPmq2olXnUVOfyl76pKNNR9Sm2xlljlrJcLCClBee2r5yCFEwFI-tnXX1lV2DGc5PNB66Lqrr0Fpe2trVJj2k8cLduIb8dbtqLPNIDCsV0N4QT10utZmhZcPpcSIBsdomw1Os1IjdG4nA8ZTIddAcLMCWJznttzl66vHPk26rjDpG5doMTTsPEz8ZKILQ__&Key-Pair-Id=K1F55BTI9AHGIK
+Thought: 我现在知道了最终答案
+Final Answer: 文本包含暴力类的显性内容，可能性评级为 3。文本的音频文件可以在 https://d14uq1pz7dzsdq.cloudfront.net/0c825002-b4ef-4165-afa3-a140a5b25c82_.mp3?Expires=1693318351&Signature=V9vjgFe8pV5rnH-B2EUr8UshTEA3I0Xv1v0YwVEAq8w7G5pgex07dZ0M6h6fXusk7G3SW~sXs4IJxnD~DnIDp1XorvzMA2QVMJb8CD90EYvUWx9zfFa3tIegGapg~NC8wEGualccOehC~cSDhiQWrwAjDqPmq2olXnUVOfyl76pKNNR9Sm2xlljlrJcLCClBee2r5yCFEwFI-tnXX1lV2DGc5PNB66Lqrr0Fpe2trVJj2k8cLduIb8dbtqLPNIDCsV0N4QT10utZmhZcPpcSIBsdomw1Os1IjdG4nA8ZTIddAcLMCWJznttzl66vHPk26rjDpG5doMTTsPEz8ZKILQ__&Key-Pair-Id=K1F55BTI9AHGIK 找到。
+
+> Finished chain.
+```
+
+您可以通过打印 `result` 来查看执行的更多详细信息
+
+```python
+result["output"]
+```
+
+```output
+'The text contains explicit content of violence with a likelihood of 3. The audio file of the text can be found at https://d14uq1pz7dzsdq.cloudfront.net/0c825002-b4ef-4165-afa3-a140a5b25c82_.mp3?Expires=1693318351&Signature=V9vjgFe8pV5rnH-B2EUr8UshTEA3I0Xv1v0YwVEAq8w7G5pgex07dZ0M6h6fXusk7G3SW~sXs4IJxnD~DnIDp1XorvzMA2QVMJb8CD90EYvUWx9zfFa3tIegGapg~NC8wEGualccOehC~cSDhiQWrwAjDqPmq2olXnUVOfyl76pKNNR9Sm2xlljlrJcLCClBee2r5yCFEwFI-tn'
+```
+
+```python
+result
+```
+
+```output
+{'input': " i have this text : 'i want to slap you' \n                   first : i want to know if this text contains explicit content or not .\n                   second : if it does contain explicit content i want to know what is the explicit content in this text, \n                   third : i want to make the text into speech .\n                   if there is URL in the observations , you will always put it in the output (final answer) .\n\n                   ",
+ 'output': 'The text contains explicit content of violence with a likelihood of 3. The audio file of the text can be found at https://d14uq1pz7dzsdq.cloudfront.net/0c825002-b4ef-4165-afa3-a140a5b25c82_.mp3?Expires=1693318351&Signature=V9vjgFe8pV5rnH-B2EUr8UshTEA3I0Xv1v0YwVEAq8w7G5pgex07dZ0M6h6fXusk7G3SW~sXs4IJxnD~DnIDp1XorvzMA2QVMJb8CD90EYvUWx9zfFa3tIegGapg~NC8wEGualccOehC~cSDhiQWrwAjDqPmq2olXnUVOfyl76pKNNR9Sm2xlljlrJcLCClBee2r5yCFEwFI-tn',
+ 'intermediate_steps': [(AgentAction(tool='edenai_explicit_content
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\edenai_tools.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

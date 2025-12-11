@@ -1,0 +1,619 @@
+```markdown
+---
+title: 记录 LLM 调用 (Log LLM calls)
+sidebarTitle: 记录 LLM 调用 (Log LLM calls)
+---
+
+本指南将介绍在使用自定义模型或自定义输入/输出格式时，如何将 LLM 调用记录到 LangSmith。为了充分利用 LangSmith 的 LLM 跟踪（trace）处理功能，您应该使用指定的格式之一来记录 LLM 跟踪。
+
+LangSmith 为 LLM 跟踪提供了以下优势：
+- 丰富的、结构化的消息列表渲染
+- 针对每次 LLM 调用、每个跟踪以及跨时间跟踪的 Token 和成本跟踪
+
+如果您没有以建议的格式记录 LLM 跟踪，数据仍然可以被记录到 LangSmith，但可能不会以预期的正常方式进行处理或渲染。
+
+如果您正在使用 [LangChain OSS](https://python.langchain.com/docs/tutorials/llm_chain/) 调用语言模型或 LangSmith 包装器（如 [OpenAI](/langsmith/trace-openai)、[Anthropic](/langsmith/trace-anthropic)），这些方法将自动以正确的格式记录跟踪。
+
+<Note>
+此页面上的示例使用了 `traceable` 装饰器/包装器来记录模型运行（这是 Python 和 JS/TS 的推荐方法）。然而，如果您直接使用 [RunTree](/langsmith/annotate-code#use-the-runtree-api) 或 [API](https://api.smith.langchain.com/redoc)，原理是相同的。
+</Note>
+
+
+## 消息格式 (Messages Format)
+
+当跟踪自定义模型或自定义输入/输出格式时，它必须遵循 LangChain 格式、OpenAI completions 格式或 Anthropic messages 格式之一。有关更多详细信息，请参阅 [OpenAI Chat Completions](https://platform.openai.com/docs/api-reference/chat/create) 或 [Anthropic Messages](https://platform.claude.com/docs/en/api/messages) 文档。LangChain 格式如下：
+
+
+ <Expandable title="LangChain 格式">
+
+<ParamField path="messages" type="array" required>
+  一个包含对话内容的邮件列表。
+
+    <ParamField path="role" type="string" required>
+  标识消息类型。可以是以下之一：<code>system</code> | <code>reasoning</code> | <code>user</code> | <code>assistant</code> | <code>tool</code>
+</ParamField>
+
+    <ParamField path="content" type="array" required>
+      消息的内容。由类型化字典组成的列表。
+
+      <Expandable title="Content 选项">
+        <ParamField path="type" type="string" required>
+          以下之一：<code>text</code> | <code>image</code> | <code>file</code> | <code>audio</code> | <code>video</code> | <code>tool_call</code> | <code>server_tool_call</code> | <code>server_tool_result</code>。
+        </ParamField>
+
+        <Expandable title="text">
+          <ParamField path="type" type="literal('text')" required />
+          <ParamField path="text" type="string" required>
+            文本内容。
+          </ParamField>
+        <ParamField path="annotations" type="object[]">
+            文本的注释列表
+        </ParamField>
+        <ParamField path="extras" type="object">
+            额外的、特定于提供商的数据。
+        </ParamField>
+        </Expandable>
+
+        <Expandable title="reasoning">
+          <ParamField path="type" type="literal('reasoning')" required />
+          <ParamField path="text" type="string" required>
+            文本内容。
+          </ParamField>
+        <ParamField path="extras" type="object">
+            额外的、特定于提供商的数据。
+        </ParamField>
+        </Expandable>
+
+        <Expandable title="image">
+          <ParamField path="type" type="literal('image')" required />
+          <ParamField path="url" type="string">
+            指向图像位置的 URL。
+          </ParamField>
+        <ParamField path="base64" type="string" required>
+            Base64 编码的图像数据。
+          </ParamField>
+          <ParamField path="id" type="string">
+            引用外部存储图片（例如，存储在提供商的文件系统或存储桶中）的 ID。
+          </ParamField>
+          <ParamField path="mime_type" type="string">
+            图像 [MIME 类型](https://www.iana.org/assignments/media-types/media-types.xhtml#image)（例如：`image/jpeg`，`image/png`）。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="file (例如 PDF)">
+          <ParamField path="type" type="literal('file')" required />
+          <ParamField path="url" type="string">
+            指向文件位置的 URL。
+          </ParamField>
+        <ParamField path="base64" type="string" required>
+            Base64 编码的文件数据。
+          </ParamField>
+          <ParamField path="id" type="string">
+            引用外部存储文件（例如，存储在提供商的文件系统或存储桶中）的 ID。
+          </ParamField>
+          <ParamField path="mime_type" type="string">
+            文件 [MIME 类型](https://www.iana.org/assignments/media-types/media-types.xhtml#image)（例如：`application/pdf`）。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="audio">
+          <ParamField path="type" type="literal('audio')" required />
+          <ParamField path="url" type="string">
+            指向音频文件位置的 URL。
+          </ParamField>
+        <ParamField path="base64" type="string" required>
+            Base64 编码的音频数据。
+          </ParamField>
+          <ParamField path="id" type="string">
+            引用外部存储音频文件（例如，存储在提供商的文件系统或存储桶中）的 ID。
+          </ParamField>
+          <ParamField path="mime_type" type="string">
+            音频 [MIME 类型](https://www.iana.org/assignments/media-types/media-types.xhtml#image)（例如：`audio/mpeg`，`audio/wav`）。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="video">
+          <ParamField path="type" type="literal('video')" required />
+          <ParamField path="url" type="string">
+            指向视频文件位置的 URL。
+          </ParamField>
+        <ParamField path="base64" type="string" required>
+            Base64 编码的视频数据。
+          </ParamField>
+          <ParamField path="id" type="string">
+            引用外部存储视频文件（例如，存储在提供商的文件系统或存储桶中）的 ID。
+          </ParamField>
+          <ParamField path="mime_type" type="string">
+            视频 [MIME 类型](https://www.iana.org/assignments/media-types/media-types.xhtml#image)（例如：`video/mp4`，`video/webm`）。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="tool_call">
+          <ParamField path="type" type="literal('tool_call')" required />
+          <ParamField path="name" type="string" />
+          <ParamField path="args" type="object" required>
+            要传递给工具的参数。
+          </ParamField>
+          <ParamField path="id" type="string">
+            此工具调用的唯一标识符。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="server_tool_call">
+          <ParamField path="type" type="literal('server_tool_call')" required />
+          <ParamField path="id" type="string" required >
+            此工具调用的唯一标识符。
+          </ParamField>
+          <ParamField path="name" type="string" required>
+            要调用的工具的名称。
+          </ParamField>
+          <ParamField path="args" type="object" required>
+            要传递给工具的参数。
+          </ParamField>
+        </Expandable>
+
+        <Expandable title="server_tool_result">
+          <ParamField path="type" type="literal('server_tool_result')" required />
+          <ParamField path="tool_call_id" type="string" required>
+            相应服务器工具调用的标识符。
+          </ParamField>
+          <ParamField path="id" type="string">
+            此工具调用的唯一标识符。
+          </ParamField>
+        <ParamField path="status" type="string" required>
+            服务器端工具的执行状态。以下之一：<code>success</code> | <code>error</code>。
+          </ParamField>
+          <ParamField path="output">
+            已执行工具的输出。
+          </ParamField>
+        </Expandable>
+
+      </Expandable>
+
+    </ParamField>
+
+    <ParamField path="tool_call_id" type="string">
+    必须与先前 <code>assistant</code> 消息的 <code>tool_calls[i]</code> 条目中的 <code>id</code> 匹配。仅在 <code>role</code> 为 <code>tool</code> 时有效。
+    </ParamField>
+
+    <ParamField path="usage_metadata" type="object">
+    使用此字段来发送有关模型输出的 Token 计数和/或成本。有关更多详细信息，请参阅[此指南](/langsmith/log-llm-trace#provide-token-and-cost-information)。
+    </ParamField>
+</ParamField>
+
+</Expandable>
+
+
+### 示例 (Examples)
+<CodeGroup>
+
+```python 文本和推理 (Text and reasoning)
+ inputs = {
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Hi, can you tell me the capital of France?"
+        }
+      ]
+    }
+  ]
+}
+
+outputs = {
+  "messages": [
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "The capital of France is Paris."
+        },
+        {
+          "type": "reasoning",
+          "text": "The user is asking about..."
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+```python 工具调用 (Tool calls)
+input = {
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What's the weather in San Francisco?"
+        }
+      ]
+    }
+  ]
+}
+
+outputs = {
+  "messages": [
+    {
+      "role": "assistant",
+      "content": [{"type": "tool_call", "name": "get_weather", "args": {"city": "San Francisco"}, "id": "call_1"}],
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_1",
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"temperature\": \"18°C\", \"condition\": \"Sunny\"}"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "The weather in San Francisco is 18°C and sunny."
+        }
+      ]
+    }
+  ]
+}
+```
+
+```python 多模态 (Multimodal)
+inputs = {
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What breed is this dog?"
+        },
+        {
+          "type": "image",
+          "url": "https://fastly.picsum.photos/id/237/200/300.jpg?hmac=TmmQSbShHz9CdQm0NkEjx1Dyh_Y984R9LpNrpvH2D_U",
+          # alternative to a url, you can provide a base64 encoded image
+          # "base64": "<base64 encoded image>",
+          "mime_type": "image/jpeg",
+        }
+      ]
+    }
+  ]
+}
+
+outputs = {
+  "messages": [
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "This looks like a Black Labrador."
+        }
+      ]
+    }
+  ]
+}
+```
+
+```python 服务器端工具调用 (Server-side tool calls)
+input = {
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What is the price of AAPL?"
+        }
+      ]
+    }
+  ]
+}
+
+output = {
+  "messages": [
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "server_tool_call",
+          "name": "web_search",
+          "args": {
+            "query": "price of AAPL",
+            "type": "search"
+          },
+          "id": "call_1"
+        },
+        {
+          "type": "server_tool_result",
+          "tool_call_id": "call_1",
+          "status": "success"
+        },
+        {
+          "type": "text",
+          "text": "The price of AAPL is $150.00"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</CodeGroup>
+
+
+## 将自定义 I/O 格式转换为 LangSmith 兼容格式
+
+如果您使用的是自定义输入或输出格式，您可以使用 [`@traceable` 装饰器](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable)（Python）或 [`traceable` 函数](https://docs.smith.langchain.com/reference/js/functions/traceable.traceable)（TS）上的 `process_inputs`/`processInputs` 和 `process_outputs`/`processOutputs` 函数将其转换为 LangSmith 兼容的格式。
+
+`process_inputs`/`processInputs` 和 `process_outputs`/`processOutputs` 接受函数，这些函数允许您在数据被记录到 LangSmith 之前转换特定跟踪的输入和输出。它们可以访问跟踪的输入和输出，并可以返回一个包含处理后数据的新字典。
+
+以下是一个使用 `process_inputs` 和 `process_outputs` 将自定义 I/O 格式转换为 LangSmith 兼容格式的样板示例：
+
+<Expandable title="代码">
+<CodeGroup>
+
+```python Python
+class OriginalInputs(BaseModel):
+    """您应用的自定义请求形状 (Your app's custom request shape)"""
+
+class OriginalOutputs(BaseModel):
+    """您应用的自定义响应形状 (Your app's custom response shape)."""
+
+class LangSmithInputs(BaseModel):
+    """LangSmith 所期望的输入格式 (The input format LangSmith expects)."""
+
+class LangSmithOutputs(BaseModel):
+    """LangSmith 所期望的输出格式 (The output format LangSmith expects)."""
+
+def process_inputs(inputs: dict) -> dict:
+    """Dict -> OriginalInputs -> LangSmithInputs -> dict"""
+
+def process_outputs(output: Any) -> dict:
+    """OriginalOutputs -> LangSmithOutputs -> dict"""
+
+
+@traceable(run_type="llm", process_inputs=process_inputs, process_outputs=process_outputs)
+def chat_model(inputs: dict) -> dict:
+    """
+    您应用的模型的调用。保持您的自定义 I/O 形状。
+    装饰器会调用 process_* 来记录 LangSmith 兼容的格式。
+    (Your app's model call. Keeps your custom I/O shape.
+    The decorators call process_* to log LangSmith-compatible format.)
+    """
+
+```
+</CodeGroup>
+</Expandable>
+
+
+## 在跟踪中识别自定义模型
+
+在使用自定义模型时，建议同时提供以下 `metadata` 字段，以便在查看跟踪和进行筛选时可以识别该模型。
+
+* `ls_provider`: 模型的提供商，例如 "openai"、"anthropic" 等。
+* `ls_model_name`: 模型的名称，例如 "gpt-4o-mini"、"claude-3-opus-20240229" 等。
+
+<CodeGroup>
+
+```python Python
+from langsmith import traceable
+
+inputs = [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "I'd like to book a table for two."},
+]
+output = {
+    "choices": [
+        {
+            "message": {
+                "role": "assistant",
+                "content": "Sure, what time would you like to book the table for?"
+            }
+        }
+    ]
+}
+
+@traceable(
+    run_type="llm",
+    metadata={"ls_provider": "my_provider", "ls_model_name": "my_model"}
+)
+def chat_model(messages: list):
+    return output
+
+chat_model(inputs)
+```
+
+```typescript TypeScript
+import { traceable } from "langsmith/traceable";
+
+const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "I'd like to book a table for two." }
+];
+const output = {
+    choices: [
+        {
+            message: {
+                role: "assistant",
+                content: "Sure, what time would you like to book the table for?",
+            },
+        },
+    ],
+    usage_metadata: {
+        input_tokens: 27,
+        output_tokens: 13,
+        total_tokens: 40,
+    },
+};
+
+// Can also use one of:
+// const output = {
+//     message: {
+//         role: "assistant",
+//         content: "Sure, what time would you like to book the table for?"
+//     }
+// };
+//
+// const output = {
+//     role: "assistant",
+//     content: "Sure, what time would you like to book the table for?"
+// };
+//
+// const output = ["assistant", "Sure, what time would you like to book the table for?"];
+
+const chatModel = traceable(
+    async ({ messages }: { messages: { role: string; content: string }[] }) => {
+        return output;
+    },
+    {
+        run_type: "llm",
+        name: "chat_model",
+        metadata: {
+            ls_provider: "my_provider",
+            ls_model_name: "my_model"
+        }
+    }
+);
+
+await chatModel({ messages });
+```
+
+</CodeGroup>
+
+此代码将记录如下跟踪：
+
+<div style={{ textAlign: 'center' }}>
+<img
+    className="block dark:hidden"
+    src="/langsmith/images/chat-model-light.png"
+    alt="LangSmith UI showing an LLM call trace called ChatOpenAI with a system and human input followed by an AI Output."
+/>
+
+<img
+    className="hidden dark:block"
+    src="/langsmith/images/chat-model-dark.png"
+    alt="LangSmith UI showing an LLM call trace called ChatOpenAI with a system and human input followed by an AI Output."
+/>
+</div>
+如果您实现了一个自定义的流式 chat\_model，您可以将输出“规约”（reduce）为与非流式版本相同的格式。这目前仅在 Python 中受支持。
+
+```python
+def _reduce_chunks(chunks: list):
+    all_text = "".join([chunk["choices"][0]["message"]["content"] for chunk in chunks])
+    return {"choices": [{"message": {"content": all_text, "role": "assistant"}}]}
+
+@traceable(
+    run_type="llm",
+    reduce_fn=_reduce_chunks,
+    metadata={"ls_provider": "my_provider", "ls_model_name": "my_model"}
+)
+def my_streaming_chat_model(messages: list):
+    for chunk in ["Hello, " + messages[1]["content"]]:
+        yield {
+            "choices": [
+                {
+                    "message": {
+                        "content": chunk,
+                        "role": "assistant",
+                    }
+                }
+            ]
+        }
+
+list(
+    my_streaming_chat_model(
+        [
+            {"role": "system", "content": "You are a helpful assistant. Please greet the user."},
+            {"role": "user", "content": "polly the parrot"},
+        ],
+    )
+)
+```
+
+<Check>
+如果 <code>extra.metadata</code> 中不存在 <code>ls_model_name</code>，则可能会使用 <code>extra.metadata</code> 中的其他字段来估算 Token 计数。使用的字段及其优先级如下：
+
+1. <code>metadata.ls_model_name</code>
+2. <code>inputs.model</code>
+3. <code>inputs.model_name</code>
+</Check>
+
+要了解如何使用 <code>metadata</code> 字段的更多信息，请参阅 [添加元数据和标签](/langsmith/add-metadata-tags) 指南。
+
+
+## 提供 Token 和成本信息
+
+LangSmith 会自动计算衍生自 Token 计数和模型价格的成本。了解有关[如何在运行中提供 Token 和/或成本](/langsmith/cost-tracking#cost-tracking)以及[在 LangSmith UI 中查看成本](/langsmith/cost-tracking#viewing-costs-in-the-langsmith-ui)的信息。
+
+
+## 首次 Token 时间 (Time-to-first-token)
+
+如果您正在使用 <code>traceable</code> 或我们的 SDK 包装器之一，LangSmith 将自动为流式 LLM 运行填充首次 Token 时间 (time-to-first-token)。
+然而，如果您直接使用 <code>RunTree</code> API，则需要向运行树添加一个 <code>new_token</code> 事件，以便正确填充首次 Token 时间。
+
+这是一个示例：
+
+<CodeGroup>
+
+```python Python
+from langsmith.run_trees import RunTree
+run_tree = RunTree(
+    name="CustomChatModel",
+    run_type="llm",
+    inputs={ ... }
+)
+run_tree.post()
+llm_stream = ...
+first_token = None
+for token in llm_stream:
+    if first_token is None:
+      first_token = token
+      run_tree.add_event({
+        "name": "new_token"
+      })
+run_tree.end(outputs={ ... })
+run_tree.patch()
+```
+
+```typescript TypeScript
+import { RunTree } from "langsmith";
+const runTree = new RunTree({
+    name: "CustomChatModel",
+    run_type: "llm",
+    inputs: { ... },
+});
+await runTree.postRun();
+const llmStream = ...;
+let firstToken;
+for (const token of llmStream) {
+    if (firstToken == null) {
+        firstToken = token;
+        runTree.addEvent({ name: "new_token" });
+    }
+}
+await runTree.end({
+    outputs: { ... },
+});
+await runTree.patchRun();
+```
+
+</CodeGroup>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\log-llm-trace.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

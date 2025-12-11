@@ -1,0 +1,135 @@
+---
+title: 2Markdown
+---
+
+# 2Markdown
+
+> [2markdown](https://2markdown.com/) 服务可以将网站内容转换为结构化的 Markdown 文件。
+
+```python
+# 您需要获取自己的 API 密钥。请参阅 https://2markdown.com/login
+
+api_key = ""
+```
+
+```python
+from langchain_community.document_loaders import ToMarkdownLoader
+```
+
+```python
+loader = ToMarkdownLoader(url="/docs/get_started/introduction", api_key=api_key)
+```
+
+```python
+docs = loader.load()
+```
+
+```python
+print(docs[0].page_content)
+```
+
+```output
+**LangChain** 是一个用于开发由语言模型驱动的应用程序的框架。它支持的应用程序具有以下特点：
+
+- **上下文感知性（Context-aware）**：将语言模型与上下文来源（如提示指令、少样本示例、用于回答的 grounding 内容等）连接起来。
+- **推理能力（Reason）**：依赖语言模型根据提供的上下文、需要采取的操作等来进行推理。
+
+该框架包含几个部分。
+
+- **LangChain 库 (LangChain Libraries)**：Python 和 JavaScript 库。包含大量组件的接口和集成、用于将这些组件组合成链（chains）和代理（agents）的基本运行时，以及现成的链和代理实现。
+- **[LangChain 模板](/docs/templates)**：一套可轻松部署的、用于各种任务的参考架构。
+- **[LangServe](/docs/langserve)**：一个用于将 LangChain 链部署为 REST API 的库。
+- **[LangSmith](https://docs.smith.langchain.com)**：一个开发者平台，允许您调试、测试、评估和监控基于任何 LLM 框架构建的链，并与 LangChain 无缝集成。
+
+![概述 LangChain 框架分层结构的图表，展示了跨多个层互连的部分。](https://python.langchain.com/assets/images/langchain_stack-f21828069f74484521f38199910007c1.svg)
+
+这些产品共同简化了整个应用程序的生命周期：
+
+- **开发 (Develop)**：使用 LangChain/LangChain.js 编写应用程序。通过使用模板快速入门。
+- **生产化 (Productionize)**：使用 LangSmith 来检查、测试和监控您的链，以便您可以不断改进并充满信心地部署。
+- **部署 (Deploy)**：使用 LangServe 将任何链转换为 API。
+
+## LangChain 库 [​](\#langchain-libraries "LangChain 库的直接链接")
+
+LangChain 包的主要价值主张是：
+
+1. **组件 (Components)**：用于处理语言模型的组合式工具和集成。组件是模块化的，易于使用，无论您是否使用 LangChain 框架的其余部分。
+2. **现成的链 (Off-the-shelf chains)**：内置的组件组合，用于完成更高级别的任务。
+
+现成的链使入门变得容易。组件使自定义现有链和构建新链变得容易。
+
+LangChain 库本身由几个不同的包组成。
+
+- **`langchain-core`**：基础抽象和 LangChain 表达式语言 (LCEL)。
+- **`langchain-community`**：第三方集成。
+- **`langchain`**：构成应用程序认知架构的链、代理和检索策略。
+
+## 开始使用 [​](\#get-started "开始使用的直接链接")
+
+[这里](/docs/installation) 介绍了如何安装 LangChain、设置环境并开始构建。
+
+我们建议遵循我们的[快速入门](/oss/python/tutorials/llm_chain)指南，通过构建您的第一个 LangChain 应用程序来熟悉该框架。
+
+note
+
+本指南重点介绍 Python LangChain 库。如需 JavaScript LangChain 库的文档，请[点击此处](https://js.langchain.com)。
+
+
+## 模块 [​](\#modules "模块的直接链接")
+
+LangChain 为以下模块提供了标准、可扩展的接口和集成：
+
+#### [模型 I/O](/docs/modules/model_io/) [​](\#model-io "model-io 的直接链接")
+
+与语言模型进行接口交互
+
+#### [检索 (Retrieval)](/docs/modules/data_connection/) [​](\#retrieval "retrieval 的直接链接")
+
+与应用程序特定的数据进行接口交互
+
+#### [代理 (Agents)](/oss/python/langchain/agents) [​](\#agents "agents 的直接链接")
+
+让模型根据高层级的指令选择使用哪些工具
+
+## 示例、生态系统和资源 [​](\#examples-ecosystem-and-resources "示例、生态系统和资源的直接链接")
+
+### [用例](/oss/python/langchain/rag) [​](\#use-cases "use-cases 的直接链接")
+
+针对常见端到端用例的演练和技术，例如：
+
+- [文档问答](/oss/python/langchain/rag)
+- [聊天机器人](/docs/use_cases/chatbots/)
+- [分析结构化数据](/docs/how_to#qa-over-sql--csv)
+- 以及更多...
+
+### [集成 (Integrations)](/oss/python/integrations/providers/) [​](\#integrations "integrations 的直接链接")
+
+LangChain 是一个丰富的工具生态系统的一部分，这些工具与我们的框架集成或在其之上构建。请查看我们不断增长的[集成](/oss/python/integrations/providers/)列表。
+
+### [指南 (Guides](/oss/python/how-to/debugging) [​](\#guides "guides 的直接链接")
+
+使用 LangChain 进行开发的最佳实践。
+
+### [API 参考](https://python.langchain.com/api_reference/) [​](\#api-reference "api-reference 的直接链接")
+
+请转到参考部分，以获取 LangChain 和 LangChain Experimental Python 包中所有类和方法的完整文档。
+
+### [开发者指南](/docs/contributing) [​](\#developers-guide "developers-guide 的直接链接")
+
+查看开发者指南，了解有关贡献的准则以及如何设置您的开发环境。
+
+前往[社区导航器](/docs/community)，找到提问、分享反馈、结识其他开发人员以及畅想 LLM 未来的地方。
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\tomarkdown.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

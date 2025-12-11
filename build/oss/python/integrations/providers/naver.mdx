@@ -1,0 +1,104 @@
+---
+title: NAVER
+---
+
+所有与 `Naver` 相关的功能，包括 HyperCLOVA X 模型，特别是那些可以通过 `Naver Cloud` [CLOVA Studio](https://clovastudio.ncloud.com/) 访问的功能。
+
+> [Naver](https://navercorp.com/) 是一家全球性科技公司，拥有尖端技术，业务组合多元化，涵盖搜索、电商、金融科技、内容、云和人工智能（AI）。
+
+> [Naver Cloud](https://www.navercloudcorp.com/lang/en/) 是 Naver 的云计算部门，作为领先的云服务提供商，通过其 [Naver Cloud Platform (NCP)](https://www.ncloud.com/) 为企业提供全套的云服务。
+
+有关更详细的说明（也有韩语版本），请参阅 [NCP 用户指南](https://guide.ncloud-docs.com/docs/clovastudio-overview)。
+
+## 安装和设置
+
+- 通过[获取 API 密钥](https://api.ncloud-docs.com/docs/ai-naver-clovastudio-summary#API%ED%82%A4)来获取 CLOVA Studio API 密钥，并将其设置为环境变量（`CLOVASTUDIO_API_KEY`）。
+
+
+Naver 集成存在于两个包中：
+
+- `langchain-naver`: 专用于 Naver 的集成包。
+- `langchain-naver-community`: 一个由社区维护的包，并非 Naver 或 LangChain 的官方维护。
+
+<CodeGroup>
+```bash pip
+pip install -U langchain-naver
+# pip install -U langchain-naver-community // 安装以使用 Naver 搜索工具。
+```
+
+```bash uv
+uv add langchain-naver
+# uv add langchain-naver-community // 安装以使用 Naver 搜索工具。
+```
+</CodeGroup>
+
+> **（注意）** 通过 `langchain-community`（第三方集成集合 [请参阅架构文档](https://python.langchain.com/docs/concepts/architecture/#langchain-community)）进行的 Naver 集成已过时。
+> - **请改用 `langchain-naver`，因为新功能应仅通过此包实现**。
+> - 如果您正在使用 `langchain-community`（过时版本）并且拥有一个不以 `nv-*` 前缀开头的旧版 API 密钥，则应将其设置为 `NCP_CLOVASTUDIO_API_KEY`，并且可能需要通过[创建您的应用](https://guide.ncloud-docs.com/docs/en/clovastudio-playground01#create-test-app)来获取额外的 API Gateway API 密钥，并将其设置为 `NCP_APIGW_API_KEY`。
+
+## 聊天模型
+
+### ChatClovaX
+
+请参阅[使用示例](/oss/python/integrations/chat/naver)。
+
+```python
+from langchain_naver import ChatClovaX
+```
+
+## 嵌入模型
+
+### ClovaXEmbeddings
+
+请参阅[使用示例](/oss/python/integrations/text_embedding/naver)。
+
+```python
+from langchain_naver import ClovaXEmbeddings
+```
+
+## 工具
+
+### Naver 搜索
+
+Naver 搜索集成允许您的 LangChain 应用程序从 Naver 搜索引擎中检索信息。这对于韩语查询以及获取有关韩国主题的最新信息尤其有用。
+
+要使用 Naver 搜索工具，您需要：
+
+1. 登录 [Naver 开发者门户](https://developers.naver.com/main/)
+2. 创建一个新应用并启用搜索 API
+3. 从“应用程序列表”部分获取您的 **NAVER\_CLIENT\_ID** 和 **NAVER\_CLIENT\_SECRET**
+4. 在您的应用程序中将这些设置为环境变量
+
+```python
+from langchain_naver_community.tool import NaverSearchResults
+from langchain_naver_community.utils import NaverSearchAPIWrapper
+
+# 设置搜索包装器
+search = NaverSearchAPIWrapper()
+
+# 创建一个工具
+tool = NaverSearchResults(api_wrapper=search)
+```
+
+有关更多详细信息，请参阅[使用示例](/oss/python/integrations/tools/naver_search)。
+
+### 专业化搜索工具
+
+该包还为不同类型的内容提供了专业的搜索工具：
+
+```python
+from langchain_naver_community.tool import NaverNewsSearch  # 用于新闻文章
+from langchain_naver_community.tool import NaverBlogSearch  # 用于博客文章
+from langchain_naver_community.tool import NaverImageSearch  # 用于图像
+```
+
+这些工具都可以集成到 LangChain Agent 中，以提供更具针对性的搜索功能。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\naver.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,57 @@
+---
+title: LLMRails
+---
+
+让我们加载 LLMRails 嵌入（Embeddings）类。
+
+要使用 LLMRails 嵌入功能，您需要通过参数传递 API 密钥，或使用环境变量 `LLM_RAILS_API_KEY` 进行设置。
+要获取 API 密钥，您需要在 [console.llmrails.com/signup](https://console.llmrails.com/signup) (注册) 并在平台上创建一个密钥后，访问 [console.llmrails.com/api-keys](https://console.llmrails.com/api-keys) 复制生成的密钥。
+
+```python
+from langchain_community.embeddings import LLMRailsEmbeddings
+```
+
+```python
+embeddings = LLMRailsEmbeddings(model="embedding-english-v1")  # 或者 embedding-multi-v1
+```
+
+```python
+text = "This is a test document."
+```
+
+要生成嵌入向量，您可以查询单个文本，也可以查询一个文本列表。
+
+```python
+query_result = embeddings.embed_query(text)
+query_result[:5]
+```
+
+```output
+[-0.09996652603149414,
+ 0.015568195842206478,
+ 0.17670190334320068,
+ 0.16521021723747253,
+ 0.21193109452724457]
+```
+
+```python
+doc_result = embeddings.embed_documents([text])
+doc_result[0][:5]
+```
+
+```output
+[-0.04242777079343796,
+ 0.016536075621843338,
+ 0.10052520781755447,
+ 0.18272875249385834,
+ 0.2079043835401535]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\llm_rails.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

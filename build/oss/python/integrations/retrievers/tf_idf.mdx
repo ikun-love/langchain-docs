@@ -1,0 +1,96 @@
+---
+title: TF-IDF
+---
+
+> [TF-IDF](https://scikit-learn.org/stable/modules/feature_extraction.html#tfidf-term-weighting) 代表“词频-逆文档频率”（Term-Frequency times Inverse Document-Frequency）。
+
+本教程将介绍如何使用一个检索器（Retriever），该检索器底层使用 `scikit-learn` 包中的 [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) 算法。
+
+有关 TF-IDF 细节的更多信息，请参阅[这篇博客文章](https://medium.com/data-science-bootcamp/tf-idf-basics-of-information-retrieval-48de122b2a4c)。
+
+```python
+pip install -qU  scikit-learn
+```
+
+```python
+from langchain_community.retrievers import TFIDFRetriever
+```
+
+## 使用文本创建新的检索器
+
+```python
+retriever = TFIDFRetriever.from_texts(["foo", "bar", "world", "hello", "foo bar"])
+```
+
+## 使用文档创建新的检索器
+
+您现在可以使用已创建的文档来初始化新的检索器。
+
+```python
+from langchain_core.documents import Document
+
+retriever = TFIDFRetriever.from_documents(
+    [
+        Document(page_content="foo"),
+        Document(page_content="bar"),
+        Document(page_content="world"),
+        Document(page_content="hello"),
+        Document(page_content="foo bar"),
+    ]
+)
+```
+
+## 使用检索器
+
+现在我们可以使用这个检索器了！
+
+```python
+result = retriever.invoke("foo")
+```
+
+```python
+result
+```
+
+```output
+[Document(page_content='foo', metadata={}),
+ Document(page_content='foo bar', metadata={}),
+ Document(page_content='hello', metadata={}),
+ Document(page_content='world', metadata={})]
+```
+
+## 保存和加载
+
+您可以轻松地保存和加载此检索器，这对于本地开发非常方便！
+
+```python
+retriever.save_local("testing.pkl")
+```
+
+```python
+retriever_copy = TFIDFRetriever.load_local("testing.pkl")
+```
+
+```python
+retriever_copy.invoke("foo")
+```
+
+```output
+[Document(page_content='foo', metadata={}),
+ Document(page_content='foo bar', metadata={}),
+ Document(page_content='hello', metadata={}),
+ Document(page_content='world', metadata={})]
+```
+
+```
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\tf_idf.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,244 @@
+---
+title: 拒绝并发
+sidebarTitle: 拒绝
+---
+
+本指南假设您了解什么是“重复发送”（double-texting），您可以在[重复发送概念指南](/langsmith/double-texting)中了解相关信息。
+
+本指南涵盖了用于重复发送的 `reject` 选项。此选项会通过抛出错误来拒绝新的图（graph）的运行实例，并让原始运行实例继续执行直到完成。下面是使用 `reject` 选项的一个快速示例。
+
+## 设置
+
+首先，我们将定义一个快速的辅助函数来打印出 JavaScript 和 CURL 模型输出（如果使用 Python，则可以跳过此步骤）：
+
+<Tabs>
+    <Tab title="Javascript">
+    ```js
+    function prettyPrint(m) {
+      const padded = " " + m['type'] + " ";
+      const sepLen = Math.floor((80 - padded.length) / 2);
+      const sep = "=".repeat(sepLen);
+      const secondSep = sep + (padded.length % 2 ? "=" : "");
+
+      console.log(`${sep}${padded}${secondSep}`);
+      console.log("\n\n");
+      console.log(m.content);
+    }
+    ```
+    </Tab>
+    <Tab title="CURL">
+    ```bash
+    # PLACE THIS IN A FILE CALLED pretty_print.sh
+    pretty_print() {
+      local type="$1"
+      local content="$2"
+      local padded=" $type "
+      local total_width=80
+      local sep_len=$(( (total_width - ${#padded}) / 2 ))
+      local sep=$(printf '=%.0s' $(eval "echo {1.."${sep_len}"}"))
+      local second_sep=$sep
+      if (( (total_width - ${#padded}) % 2 )); then
+        second_sep="${second_sep}="
+      fi
+
+      echo "${sep}${padded}${second_sep}"
+      echo
+      echo "$content"
+    }
+    ```
+    </Tab>
+</Tabs>
+
+现在，我们导入所需的包并实例化客户端（client）、助手（assistant）和线程（thread）。
+
+<Tabs>
+    <Tab title="Python">
+    ```python
+    import httpx
+    from langchain_core.messages import convert_to_messages
+    from langgraph_sdk import get_client
+
+    client = get_client(url=<DEPLOYMENT_URL>)
+    # 使用名称为 "agent" 的已部署图
+    assistant_id = "agent"
+    thread = await client.threads.create()
+    ```
+    </Tab>
+    <Tab title="Javascript">
+    ```js
+    import { Client } from "@langchain/langgraph-sdk";
+
+    const client = new Client({ apiUrl: <DEPLOYMENT_URL> });
+    // 使用名称为 "agent" 的已部署图
+    const assistantId = "agent";
+    const thread = await client.threads.create();
+    ```
+    </Tab>
+    <Tab title="CURL">
+    ```bash
+    curl --request POST \
+      --url <DEPLOYMENT_URL>/threads \
+      --header 'Content-Type: application/json' \
+      --data '{}'
+    ```
+    </Tab>
+</Tabs>
+
+## 创建运行实例（Create runs）
+
+现在我们可以运行一个线程，并尝试使用 "reject" 选项运行第二个线程。由于我们已经启动了一个运行实例，第二次尝试应该会失败：
+
+<Tabs>
+    <Tab title="Python">
+    ```python
+    run = await client.runs.create(
+        thread["thread_id"],
+        assistant_id,
+        input={"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
+    )
+    try:
+        await client.runs.create(
+            thread["thread_id"],
+            assistant_id,
+            input={
+                "messages": [{"role": "user", "content": "what's the weather in nyc?"}]
+            },
+            multitask_strategy="reject",
+        )
+    except httpx.HTTPStatusError as e:
+        print("Failed to start concurrent run", e)
+    ```
+    </Tab>
+    <Tab title="Javascript">
+    ```js
+    const run = await client.runs.create(
+      thread["thread_id"],
+      assistantId,
+      input={"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
+    );
+
+    try {
+      await client.runs.create(
+        thread["thread_id"],
+        assistantId,
+        {
+          input: {"messages": [{"role": "user", "content": "what's the weather in nyc?"}]},
+          multitask_strategy:"reject"
+        },
+      );
+    } catch (e) {
+      console.error("Failed to start concurrent run", e);
+    }
+    ```
+    </Tab>
+    <Tab title="CURL">
+    ```bash
+    curl --request POST \
+    --url <DEPLOY<ENT_URL>>/threads/<THREAD_ID>/runs \
+    --header 'Content-Type: application/json' \
+    --data "{
+      \"assistant_id\": \"agent\",
+      \"input\": {\"messages\": [{\"role\": \"human\", \"content\": \"what\'s the weather in sf?\"}]},
+    }" && curl --request POST \
+    --url <DEPLOY<ENT_URL>>/threads/<THREAD_ID>/runs \
+    --header 'Content-Type: application/json' \
+    --data "{
+      \"assistant_id\": \"agent\",
+      \"input\": {\"messages\": [{\"role\": \"human\", \"content\": \"what\'s the weather in nyc?\"}]},
+      \"multitask_strategy\": \"reject\"
+    }" || { echo "Failed to start concurrent run"; echo "Error: $?" >&2; }
+    ```
+    </Tab>
+</Tabs>
+
+输出：
+
+```
+Failed to start concurrent run Client error '409 Conflict' for url 'http://localhost:8123/threads/f9e7088b-8028-4e5c-88d2-9cc9a2870e50/runs'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409
+```
+
+## 查看运行结果（View run results）
+
+我们可以验证原始线程已经完成了执行：
+
+<Tabs>
+    <Tab title="Python">
+    ```python
+    # 等待原始运行实例完成
+    await client.runs.join(thread["thread_id"], run["run_id"])
+
+    state = await client.threads.get_state(thread["thread_id"])
+
+    for m in convert_to_messages(state["values"]["messages"]):
+        m.pretty_print()
+    ```
+    </Tab>
+    <Tab title="Javascript">
+    ```js
+    await client.runs.join(thread["thread_id"], run["run_id"]);
+
+    const state = await client.threads.getState(thread["thread_id"]);
+
+    for (const m of state["values"]["messages"]) {
+      prettyPrint(m);
+    }
+    ```
+    </Tab>
+    <Tab title="CURL">
+    ```bash
+    source pretty_print.sh && curl --request GET \
+    --url <DEPLOYMENT_URL>/threads/<THREAD_ID>/runs/<RUN_ID>/join && \
+    curl --request GET --url <DEPLOYMENT_URL>/threads/<THREAD_ID>/state | \
+    jq -c '.values.messages[]' | while read -r element; do
+        type=$(echo "$element" | jq -r '.type')
+        content=$(echo "$element" | jq -r '.content | if type == "array" then tostring else . end')
+        pretty_print "$type" "$content"
+    done
+    ```
+    </Tab>
+</Tabs>
+
+输出：
+
+```
+================================ Human Message =================================
+
+what's the weather in sf?
+================================== Ai Message ==================================
+
+[{'id': 'toolu_01CyewEifV2Kmi7EFKHbMDr1', 'input': {'query': 'weather in san francisco'}, 'name': 'tavily_search_results_json', 'type': 'tool_use'}]
+Tool Calls:
+tavily_search_results_json (toolu_01CyewEifV2Kmi7EFKHbMDr1)
+Call ID: toolu_01CyewEifV2Kmi7EFKHbMDr1
+Args:
+query: weather in san francisco
+================================= Tool Message =================================
+Name: tavily_search_results_json
+
+[{"url": "https://www.accuweather.com/en/us/san-francisco/94103/june-weather/347629", "content": "Get the monthly weather forecast for San Francisco, CA, including daily high/low, historical averages, to help you plan ahead."}]
+================================== Ai Message ==================================
+
+According to the search results from Tavily, the current weather in San Francisco is:
+
+The average high temperature in San Francisco in June is around 65°F (18°C), with average lows around 54°F (12°C). June tends to be one of the cooler and foggier months in San Francisco due to the marine layer of fog that often blankets the city during the summer months.
+
+Some key points about the typical June weather in San Francisco:
+
+* Mild temperatures with highs in the 60s F and lows in the 50s F
+* Foggy mornings that often burn off to sunny afternoons
+* Little to no rainfall, as June falls in the dry season
+* Breezy conditions, with winds off the Pacific Ocean
+* Layers are recommended for changing weather conditions
+
+So in summary, you can expect mild, foggy mornings giving way to sunny but cool afternoons in San Francisco this time of year. The marine layer keeps temperatures moderate compared to other parts of California in June.
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\reject-concurrent.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

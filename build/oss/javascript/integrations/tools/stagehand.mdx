@@ -1,0 +1,133 @@
+---
+title: Stagehand 工具包
+---
+
+```typescript
+import { Stagehand } from "@browserbasehq/stagehand";
+import {
+  StagehandActTool,
+  StagehandNavigateTool,
+} from "@langchain/community/agents/toolkits/stagehand";
+import { ChatOpenAI } from "@langchain/openai";
+import { createAgent } from "langchain";
+
+async function main() {
+  // 仅初始化一次 Stagehand 实例，并将其传递给工具
+  const stagehand = new Stagehand({
+    env: "LOCAL",
+    enableCaching: true,
+  });
+
+  const actTool = new StagehandActTool(stagehand);
+  const navigateTool = new StagehandNavigateTool(stagehand);
+
+  // 初始化模型
+  const model = new ChatOpenAI({
+    modelName: "gpt-4",
+    temperature: 0,
+  });
+
+  // 使用 langgraph 创建 Agent
+  const agent = createAgent({
+    model,
+    tools: [actTool, navigateTool],
+  });
+
+  // 使用流式传输执行 Agent (第一次执行)
+  const inputs1 = {
+    messages: [
+      {
+        role: "user",
+        content: "Navigate to https://www.google.com",
+      },
+    ],
+  };
+
+  const stream1 = await agent.stream(inputs1, {
+    streamMode: "values",
+  });
+
+  for await (const { messages } of stream1) {
+    const msg =
+      messages && messages.length > 0
+        ? messages[messages.length - 1]
+        : undefined;
+    if (msg?.content) {
+      console.log(msg.content);
+    } else if (msg?.tool_calls && msg.tool_calls.length > 0) {
+      console.log(msg.tool_calls);
+    } else {
+      console.log(msg);
+    }
+  }
+
+  // 使用流式传输执行 Agent (第二次执行)
+  const inputs2 = {
+    messages: [
+      {
+        role: "user",
+        content: "Search for 'OpenAI'",
+      },
+    ],
+  };
+
+  const stream2 = await agent.stream(inputs2, {
+    streamMode: "values",
+  });
+
+  for await (const { messages } of stream2) {
+    const msg =
+      messages && messages.length > 0
+        ? messages[messages.length - 1]
+        : undefined;
+    if (msg?.content) {
+      console.log(msg.content);
+    } else if (msg?.tool_calls && msg.tool_calls.length > 0) {
+      console.log(msg.tool_calls);
+    } else {
+      console.log(msg);
+    }
+  }
+}
+
+main();
+```
+
+## 在 Browserbase 上使用 - 远程无头浏览器
+
+如果你想在远程运行浏览器，可以使用 Browserbase 平台。
+
+你需要设置 `BROWSERBASE_API_KEY` 环境变量为你的 Browserbase API 密钥。
+
+```bash
+export BROWSERBASE_API_KEY="your-browserbase-api-key"
+```
+
+你还需要设置 `BROWSERBASE_PROJECT_ID` 为你的 Browserbase 项目 ID。
+
+```bash
+export BROWSERBASE_PROJECT_ID="your-browserbase-project-id"
+```
+
+然后，使用 `BROWSERBASE` 环境初始化 Stagehand 实例。
+
+```typescript
+const stagehand = new Stagehand({
+  env: "BROWSERBASE",
+});
+```
+
+## 相关资源
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+- [Stagehand 文档](https://github.com/browserbase/stagehand#readme)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\stagehand.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

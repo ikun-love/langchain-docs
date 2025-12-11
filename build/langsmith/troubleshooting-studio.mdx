@@ -1,0 +1,173 @@
+---
+title: Studio 故障排除
+sidebarTitle: 故障排除
+---
+
+## Safari 连接问题
+
+Safari 会阻止纯 HTTP 流量在 `localhost` 上运行。当您使用 `langgraph dev` 运行 Studio 时，可能会看到“Failed to load assistants”（无法加载助手）错误。
+
+### 解决方案 1: 使用 Cloudflare Tunnel
+
+<Tabs>
+    <Tab title="Python">
+    ```shell
+    pip install -U langgraph-cli>=0.2.6
+    langgraph dev --tunnel
+    ```
+    </Tab>
+    <Tab title="JS">
+    ```shell
+    # 需要 @langchain/langgraph-cli>=0.0.26
+    npx @langchain/langgraph-cli dev --tunnel
+    ```
+    </Tab>
+</Tabs>
+
+该命令会输出以下格式的 URL：
+
+```shell
+https://smith.langchain.com/studio/?baseUrl=https://hamilton-praise-heart-costumes.trycloudflare.com
+```
+
+在 Safari 中使用此 URL 来加载 Studio。这里，`baseUrl` 参数指定了您的代理服务器端点。
+
+### 解决方案 2: 使用 Chromium 浏览器
+
+Chrome 和其他 Chromium 浏览器允许在 `localhost` 上使用 HTTP。可以直接使用不带任何额外配置的 `langgraph dev` 命令。
+
+## Chrome 连接问题
+
+从 Chrome 142 版本开始，当您尝试通过 [`langgraph dev`](/langsmith/cli) 将 [LangSmith Studio](/langsmith/studio) 连接到本地开发服务器时，可能会遇到“Failed to initialize Studio”（无法初始化 Studio）错误，并伴有“TypeError: Failed to fetch”（类型错误：获取失败）。即使 `http://127.0.0.1:2024/docs` 处的 API 服务器加载成功，也会出现此问题。
+
+**根本原因:** Chrome 142 完全强制执行“私有网络访问 (PNA)”规范，且没有回退机制。这导致默认情况下会阻止来自 HTTPS 站点（如 `https://smith.langchain.com`）访问 HTTP 的 `localhost` 服务器。
+
+### 症状
+
+- 运行 `langgraph dev` 成功启动服务器。
+- 访问 `http://127.0.0.1:2024/docs` 时，API 文档显示正确。
+- LangSmith Studio 在 `https://smith.langchain.com` 上显示：“Failed to initialize Studio - Please verify if the API server is running or accessible from the browser. TypeError: Failed to fetch”（无法初始化 Studio - 请验证 API 服务器是否正在运行或可从浏览器访问。类型错误：获取失败）。
+- 浏览器控制台显示类似错误：`Permission was denied for this request to access the 'unknown' address space`（访问 'unknown' 地址空间的操作被拒绝）。
+
+### 解决方案：在 Chrome 中允许本地网络访问
+
+1. 在 Chrome 中打开 LangSmith Studio 网址：`https://smith.langchain.com`。
+2. 点击地址栏左侧的**锁形图标**（或站点信息图标）。
+3. 在下拉菜单中找到 **"Local network access"**（本地网络访问）选项。
+4. 将设置从 **"Ask (default)"**（询问/默认）或 **"Block"**（阻止）更改为 **"Allow"**（允许）。
+5. 重新加载页面。
+
+Studio 现在应该能够成功连接到您的本地开发服务器。
+
+### 附加故障排除
+
+**检查浏览器扩展冲突**
+
+浏览器扩展（尤其是 Ollama Chrome 扩展或 AI 模型扩展）可能会干扰 `localhost` 连接：
+
+1. 暂时禁用所有浏览器扩展。
+2. 重新启动 Chrome。
+3. 再次尝试连接 Studio。
+4. 如果连接成功，请逐一重新启用扩展，以找出冲突的元凶。
+
+**验证依赖项是否为最新**
+
+```shell
+pip install -U "langgraph-cli[inmem]"
+```
+
+**清除浏览器缓存和站点数据**
+
+1. 在 Chrome 中，转到 **Settings**（设置）> **Privacy and Security**（隐私和安全）> **Site Settings**（站点设置）。
+2. 在列表中找到 `https://smith.langchain.com`。
+3. 点击 **Clear data**（清除数据）。
+4. 重新启动 Chrome 并重试。
+
+## Brave 连接问题
+
+当 Brave Shields 启用时，Brave 也会阻止纯 HTTP 流量在 `localhost` 上运行。当您使用 `langgraph dev` 运行 Studio 时，可能会看到“Failed to load assistants”（无法加载助手）错误。
+
+### 解决方案 1: 禁用 Brave Shields
+
+使用 URL 栏中的 Brave 图标为 LangSmith 禁用 Brave Shields。
+
+### 解决方案 2: 使用 Cloudflare Tunnel
+
+<Tabs>
+    <Tab title="Python">
+    ```shell
+    pip install -U langgraph-cli>=0.2.6
+    langgraph dev --tunnel
+    ```
+    </Tab>
+    <Tab title="JS">
+    ```shell
+    # 需要 @langchain/langgraph-cli>=0.0.26
+    npx @langchain/langgraph-cli dev --tunnel
+    ```
+    </Tab>
+</Tabs>
+
+该命令会输出以下格式的 URL：
+
+```shell
+https://smith.langchain.com/studio/?baseUrl=https://hamilton-praise-heart-costumes.trycloudflare.com
+```
+
+在 Brave 中使用此 URL 来加载 Studio。这里，`baseUrl` 参数指定了您的代理服务器端点。
+
+## Graph 边（Edge）问题
+
+未定义的条件边可能会在您的图中显示意外的连接。这是因为如果没有适当的定义，Studio 会假设该条件边可以访问所有其他节点。要解决此问题，请使用以下方法之一明确定义路由路径：
+
+### 解决方案 1: 路径映射 (Path map)
+
+定义路由器输出与目标节点之间的映射：
+
+<Tabs>
+    <Tab title="Python">
+    ```python
+    graph.add_conditional_edges("node_a", routing_function, {True: "node_b", False: "node_c"})
+    ```
+    </Tab>
+    <Tab title="Javascript">
+    ```ts
+    graph.addConditionalEdges("node_a", routingFunction, { true: "node_b", false: "node_c" });
+    ```
+    </Tab>
+</Tabs>
+
+<a id="python"></a>
+### 解决方案 2: 路由器类型定义 (Router type definition)
+
+使用 Python 的 `Literal` 类型指定可能的路由目标：
+
+```python
+def routing_function(state: GraphState) -> Literal["node_b","node_c"]:
+    if state['some_condition'] == True:
+        return "node_b"
+    else:
+        return "node_c"
+```
+
+## Studio 中的实验故障排除
+
+### “Run experiment”（运行实验）按钮被禁用
+
+请检查以下几点：
+
+- **已部署的应用**: 如果您的应用程序部署在 LangSmith 上，您可能需要创建一个新的修订版（revision）来启用此功能。
+- **本地开发服务器**: 如果您在本地运行应用程序，请确保已将 `langgraph-cli` 升级到最新版本（`pip install -U langgraph-cli`）。此外，请确保已通过在项目的 `.env` 文件中设置 `LANGSMITH_API_KEY` 来启用跟踪功能。
+
+### 评估器结果缺失
+
+当您运行实验时，任何附加的评估器都会被安排在一个队列中执行。如果您没有立即看到结果，则很可能是它们仍在等待处理中。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\troubleshooting-studio.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

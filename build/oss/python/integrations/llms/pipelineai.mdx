@@ -1,0 +1,85 @@
+---
+title: PipelineAI
+---
+
+>[PipelineAI](https://pipeline.ai) 允许您在云端大规模运行您的机器学习（ML）模型。它还提供了对 [多个大型语言模型 (LLM)](https://pipeline.ai) 的 API 访问。
+
+本 Jupyter Notebook 将指导您如何将 LangChain 与 [PipelineAI](https://docs.pipeline.ai/docs) 结合使用。
+
+## PipelineAI 示例
+
+[此示例展示了 PipelineAI 如何与 LangChain 集成](https://docs.pipeline.ai/docs/langchain)，该示例由 PipelineAI 创建。
+
+## 设置
+
+要使用 `PipelineAI` API（也称为 `Pipeline Cloud`），需要安装 `pipeline-ai` 库。请使用以下命令通过 `pip` 安装 `pipeline-ai`：
+
+```python
+# Install the package
+pip install -qU  pipeline-ai
+```
+
+## 示例
+
+### 导入
+
+```python
+import os
+
+from langchain_community.llms import PipelineAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+```
+
+### 设置环境变量 API 密钥
+
+请确保您已从 PipelineAI 获取您的 API 密钥。请查阅 [云快速入门指南](https://docs.pipeline.ai/docs/cloud-quickstart)。您将获得一个 30 天的免费试用期，包含 10 小时的无服务器 GPU 计算资源，可用于测试不同的模型。
+
+```python
+os.environ["PIPELINE_API_KEY"] = "YOUR_API_KEY_HERE"
+```
+
+## 创建 PipelineAI 实例
+
+在实例化 `PipelineAI` 时，您需要指定要使用的 Pipeline 的 ID 或标签（tag），例如 `pipeline_key = "public/gpt-j:base"`。然后，您可以选择传递额外的特定于 Pipeline 的关键字参数：
+
+```python
+llm = PipelineAI(pipeline_key="YOUR_PIPELINE_KEY", pipeline_kwargs={...})
+```
+
+### 创建一个提示模板
+
+我们将创建一个用于问答（Question and Answer）的提示模板。
+
+```python
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+### 初始化 LLMChain
+
+```python
+llm_chain = prompt | llm | StrOutputParser()
+```
+
+### 运行 LLMChain
+
+提供一个问题并运行 LLMChain。
+
+```python
+question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"
+
+llm_chain.invoke(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\pipelineai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

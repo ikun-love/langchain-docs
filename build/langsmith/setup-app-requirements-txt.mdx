@@ -1,0 +1,215 @@
+---
+title: 使用 requirements.txt 设置应用程序
+sidebarTitle: 使用 requirements.txt
+---
+
+import FrameworkAgnosticPy from '/snippets/langsmith/framework-agnostic-py.mdx';
+import FrameworkAgnosticJS from '/snippets/langsmith/framework-agnostic-js.mdx';
+import PrereleaseBehavior from '/snippets/langsmith/pre-release-behavior.mdx';
+
+为了将应用程序部署到 LangSmith（或进行自托管），它必须使用一个[配置文件](/langsmith/cli#configuration-file）进行配置。本指南将介绍使用 `requirements.txt` 来指定项目依赖项以进行部署的基本步骤。
+
+此示例基于 [此仓库](https://github.com/langchain-ai/langgraph-example)，该仓库使用了 LangGraph 框架。
+
+最终的仓库结构看起来会像这样：
+
+```bash
+my-app/
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
+│   │   ├── __init__.py
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
+│   ├── __init__.py
+│   └── agent.py # 构建图的代码
+├── .env # 环境变量
+└── langgraph.json # LangGraph 的配置文件
+```
+
+<Tip>
+<FrameworkAgnosticPy/>
+
+
+</Tip>
+
+您也可以使用以下方式进行设置：
+
+- `pyproject.toml`: 如果您更喜欢使用 Poetry 进行依赖管理，请查看关于如何使用 `pyproject.toml` 的[这篇指南](/langsmith/setup-app-requirements-txt)。
+- 单仓（monorepo）：如果您有兴趣部署位于 monorepo 中的图，请查看[这个仓库](https://github.com/langchain-ai/langgraph-example-monorepo)以获取如何执行此操作的示例。
+
+在每一步之后，都会提供一个示例文件目录，以演示代码的组织方式。
+
+## 指定依赖项
+
+依赖项可以**选择性地**在以下文件之一中指定：`pyproject.toml`、`setup.py` 或 `requirements.txt`。如果未创建这些文件，则可以在[配置文件](#create-the-configuration-file)中稍后指定依赖项。
+
+下面的依赖项将包含在镜像中，您也可以在代码中使用它们，只要它们具有兼容的版本范围即可：
+
+```
+langgraph>=0.6.0
+langgraph-sdk>=0.1.66
+langgraph-checkpoint>=2.0.23
+langchain-core>=0.2.38
+langsmith>=0.1.63
+orjson>=3.9.7,<3.10.17
+httpx>=0.25.0
+tenacity>=8.0.0
+uvicorn>=0.26.0
+sse-starlette>=2.1.0,<2.2.0
+uvloop>=0.18.0
+httptools>=0.5.0
+jsonschema-rs>=0.20.0
+structlog>=24.1.0
+cloudpickle>=3.0.0
+```
+
+`requirements.txt` 文件的示例：
+
+```
+langgraph
+langchain_anthropic
+tavily-python
+langchain_community
+langchain_openai
+
+```
+
+示例文件目录：
+
+```bash
+my-app/
+├── my_agent # 所有项目代码都在这里
+│   └── requirements.txt # 包依赖项
+```
+
+## 指定环境变量
+
+环境变量可以**选择性地**在一个文件中（例如 `.env`）指定。请参阅[环境变量参考](/langsmith/env-var)以配置部署所需的其他变量。
+
+`.env` 文件的示例：
+
+```
+MY_ENV_VAR_1=foo
+MY_ENV_VAR_2=bar
+OPENAI_API_KEY=key
+```
+
+示例文件目录：
+
+```bash
+my-app/
+├── my_agent # 所有项目代码都在这里
+│   └── requirements.txt # 包依赖项
+└── .env # 环境变量
+```
+
+<Tip>
+<PrereleaseBehavior/>
+</Tip>
+
+## 定义图（Graphs）
+
+实现您的图。图可以定义在单个文件中，也可以定义在多个文件中。请注意，您希望包含在应用程序中的每个 [CompiledStateGraph](https://reference.langchain.com/python/langgraph/graphs/#langgraph.graph.state.CompiledStateGraph) 的变量名称。这些变量名稍后在创建[LangGraph 配置文件](/langsmith/cli#configuration-file)时会用到。
+
+`agent.py` 文件的示例，它展示了如何从您定义的其他模块导入（此处未显示模块的代码，请参阅[此仓库](https://github.com/langchain-ai/langgraph-example)查看其实现）：
+
+```python
+# my_agent/agent.py
+from typing import Literal
+from typing_extensions import TypedDict
+
+from langgraph.graph import StateGraph, END, START
+from my_agent.utils.nodes import call_model, should_continue, tool_node # 导入节点
+from my_agent.utils.state import AgentState # 导入状态
+
+# 定义运行时上下文
+class GraphContext(TypedDict):
+    model_name: Literal["anthropic", "openai"]
+
+workflow = StateGraph(AgentState, context_schema=GraphContext)
+workflow.add_node("agent", call_model)
+workflow.add_node("action", tool_node)
+workflow.add_edge(START, "agent")
+workflow.add_conditional_edges(
+    "agent",
+    should_continue,
+    {
+        "continue": "action",
+        "end": END,
+    },
+)
+workflow.add_edge("action", "agent")
+
+graph = workflow.compile()
+```
+
+示例文件目录：
+
+```bash
+my-app/
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
+│   │   ├── __init__.py
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
+│   ├── __init__.py
+│   └── agent.py # 构建图的代码
+└── .env # 环境变量
+```
+
+## 创建配置文件
+
+创建一个名为 `langgraph.json` 的[配置文件](/langsmith/cli#configuration-file)。请参阅[配置文件参考](/langsmith/cli#configuration-file)以获取配置对象中每个键的详细解释。
+
+`langgraph.json` 文件的示例：
+
+```json
+{
+  "dependencies": ["./my_agent"],
+  "graphs": {
+    "agent": "./my_agent/agent.py:graph"
+  },
+  "env": ".env"
+}
+```
+
+请注意，`CompiledGraph` 的变量名出现在顶级 `graphs` 键下每个子键值的末尾（即 `:<variable_name>`）。
+
+<Warning>
+**配置文件位置**
+配置文件必须放置在与包含已编译图和相关依赖项的 Python 文件**同级或更高级别**的目录中。
+</Warning>
+
+示例文件目录：
+
+```bash
+my-app/
+├── my_agent # 所有项目代码都在这里
+│   ├── utils # 图的工具
+│   │   ├── __init__.py
+│   │   ├── tools.py # 图的工具文件
+│   │   ├── nodes.py # 图的节点函数
+│   │   └── state.py # 图的状态定义
+│   ├── requirements.txt # 包依赖项
+│   ├── __init__.py
+│   └── agent.py # 构建图的代码
+├── .env # 环境变量
+└── langgraph.json # LangGraph 的配置文件
+```
+
+## 后续步骤
+
+在设置好项目并将其放在 GitHub 仓库中之后，就该[部署您的应用程序](/langsmith/deployment-quickstart)了。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\setup-app-requirements-txt.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

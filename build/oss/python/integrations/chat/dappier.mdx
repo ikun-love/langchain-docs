@@ -1,0 +1,72 @@
+---
+title: Dappier AI
+---
+
+**Dappier：利用动态实时数据模型驱动人工智能**
+
+Dappier 提供了一个前沿平台，使开发者能够即时访问涵盖新闻、娱乐、金融、市场数据、天气等领域的广泛实时数据模型。通过我们预训练的数据模型，您可以为 AI 应用注入强大动力，确保它们提供精确、最新的响应，并最大限度地减少不准确性。
+
+Dappier 数据模型可帮助您利用来自全球领先品牌的**可信赖、最新的内容**来构建下一代 LLM（大型语言模型）应用。通过简单的 API，将可操作的专有数据融入您的 GPT 应用或任何 AI 工作流，释放您的创造力。使用来自可信源的专有数据来增强您的 AI，是确保无论问题是什么，都能获得事实准确、内容最新的回复，并减少“幻觉”（Hallucinations）的最佳方式。
+
+**为开发者而生，由开发者打造**
+Dappier 的设计充分考虑了开发者的需求，它简化了从数据集成到货币化的整个流程，为部署和从您的 AI 模型中盈利提供了清晰、直接的路径。访问 **[dappier.com/](https://dappier.com/)**，体验面向新互联网的货币化基础设施的未来。
+
+本示例将介绍如何使用 LangChain 与 Dappier AI 模型进行交互。
+
+-----------------------------------------------------------------------------------
+
+要使用我们的 Dappier AI 数据模型之一，您需要一个 API 密钥。请访问 Dappier 平台 ([platform.dappier.com/](https://platform.dappier.com/)) 登录并在您的个人资料中创建一个 API 密钥。
+
+您可以在 API 参考文档中找到更多详细信息：[docs.dappier.com/introduction](https://docs.dappier.com/introduction)
+
+要使用我们的 Dappier 聊天模型，您可以在初始化类时，通过名为 `dappier_api_key` 的参数直接传入密钥，或者将其设置为环境变量。
+
+```bash
+export DAPPIER_API_KEY="..."
+```
+
+```python
+from langchain_community.chat_models.dappier import ChatDappierAI
+from langchain.messages import HumanMessage
+```
+
+```python
+chat = ChatDappierAI(
+    dappier_endpoint="https://api.dappier.com/app/datamodelconversation",
+    dappier_model="dm_01hpsxyfm2fwdt2zet9cg6fdxt",
+    dappier_api_key="...",
+)
+```
+
+```python
+messages = [HumanMessage(content="Who won the super bowl in 2024?")]
+chat.invoke(messages)
+```
+
+```output
+AIMessage(content='Hey there! The Kansas City Chiefs won Super Bowl LVIII in 2024. They beat the San Francisco 49ers in overtime with a final score of 25-22. It was quite the game! 🏈')
+```
+
+```python
+await chat.ainvoke(messages)
+```
+
+```output
+AIMessage(content='The Kansas City Chiefs won Super Bowl LVIII in 2024! 🏈')
+```
+
+```python
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\dappier.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

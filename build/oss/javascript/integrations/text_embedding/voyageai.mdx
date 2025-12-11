@@ -1,0 +1,45 @@
+---
+title: Voyage AI
+---
+
+`VoyageEmbeddings` 类使用 Voyage AI REST API 为给定文本生成嵌入（Embeddings）。
+
+`inputType` 参数允许您指定输入文本的类型，以获得更好的嵌入结果。您可以将其设置为 `query`（查询）、`document`（文档）或不设置（等同于 `None`）。
+
+- `query`：用于搜索或检索查询。Voyage AI 会在输入前添加一个提示（prompt），以优化用于查询场景的嵌入。
+- `document`：用于希望被检索的文档或内容。Voyage AI 会在输入前添加一个提示（prompt），以优化用于文档场景的嵌入。
+- `None`（默认）：输入文本将直接编码，不添加任何额外的提示。
+
+此外，此类还支持用于进一步定制嵌入过程的新参数：
+
+- **truncation**：是否将输入文本截断（truncate）到模型允许的最大长度。
+- **outputDimension**：期望的输出嵌入的维度（dimension）。
+- **outputDtype**：输出嵌入的数据类型。可以是 `"float"` 或 `"int8"`。
+- **encodingFormat**：输出嵌入的格式。可以是 `"float"`、`"base64"` 或 `"ubinary"`。
+
+```typescript
+import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
+
+const embeddings = new VoyageEmbeddings({
+  apiKey: "YOUR-API-KEY", // 在 Node.js 环境中，它会默认读取 process.env.VOYAGEAI_API_KEY
+  inputType: "document", // 可选：将输入类型指定为 'query'、'document'，或省略以使用 None / Undefined / Null
+  truncation: true, // 可选：启用对输入文本的截断
+  outputDimension: 768, // 可选：设置期望的输出嵌入维度
+  outputDtype: "float", // 可选：设置输出数据类型（"float" 或 "int8"）
+  encodingFormat: "float", // 可选：设置输出编码格式（"float"、"base64" 或 "ubinary"）
+});
+```
+
+## 相关内容
+
+- 嵌入模型 [概念指南](/oss/javascript/integrations/text_embedding)
+- 嵌入模型 [操作指南](/oss/javascript/integrations/text_embedding)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\text_embedding\voyageai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

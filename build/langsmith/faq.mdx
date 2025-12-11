@@ -1,0 +1,165 @@
+---
+title: 常见问题解答
+sidebarTitle: 常见问题
+---
+
+## 可观测性 (Observability)
+
+### *我无法在 UI 中创建 API 密钥或管理用户，有什么问题吗？*
+
+* 您很可能在未设置 SSO (单点登录) 的情况下部署了 LangSmith。LangSmith 要求配置 SSO 才能管理用户和 API 密钥。您可以在 [配置部分](/langsmith/self-host-sso) 找到有关设置 SSO 的更多信息。
+
+### *负载均衡/入口 (Ingress) 如何工作？*
+
+* 您需要将前端容器/服务暴露给您的应用程序/用户。这将处理路由到所有下游服务。
+* 您需要在入口 (ingress) 级别终止 SSL。我们建议使用托管服务，如 AWS ALB、GCP 负载均衡器或 Nginx。
+
+### *我们如何对应用程序进行身份验证？*
+
+* 当前，我们的自托管解决方案支持使用 OAuth2.0 和 OIDC 作为认证 (authentication) 解决方案的 SSO。请注意，我们确实提供了一个“无认证”的解决方案，但强烈建议在投入生产之前设置 OAuth。
+
+您可以在 [配置部分](/langsmith/self-host-sso) 找到有关设置 SSO 的更多信息。
+
+### *我可以使用外部存储服务吗？*
+
+* 您可以配置 LangSmith 以使用所有存储服务的外部版本。在生产环境中，我们强烈建议使用外部存储服务。请查看 [配置部分](/langsmith/self-hosted) 了解更多信息。
+
+### *我的应用程序正常运行是否需要出口 (egress) 访问？*
+
+我们的部署只需要为了以下几件事情进行出口访问（其中大部分可以保留在您的 VPC 内部）：
+
+* 拉取镜像（如果您镜像了您的镜像，则可能不需要此项）
+
+* 与任何 LLM 端点通信
+
+* 与您配置的任何外部存储服务通信
+
+* 拉取 OAuth 信息
+
+* 订阅指标和操作元数据（如果未运行在离线模式下）
+
+  * 需要出口到 `https://beacon.langchain.com`
+  * 请参阅 [Egress](/langsmith/self-host-egress) 了解更多信息
+
+您的 VPC 可以设置规则来限制任何其他访问。请注意：我们要求允许传递 `X-Organization-Id` 和 `X-Tenant-Id` 标头到后端服务。这些头部用于确定请求是针对哪个组织和工作空间（以前称为“租户”）。
+
+### *应用程序的资源需求是多少？*
+
+* 在 Kubernetes 中，我们推荐的最小 Helm 配置可以在 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/examples/medium_size.yaml) 找到。对于 Docker，我们建议至少需要 16GB RAM 和 4 个 CPU。
+* 对于 Postgres，我们建议至少需要 8GB RAM 和 2 个 CPU。
+* 对于 Redis，我们建议 4GB RAM 和 2 个 CPU。
+* 对于 Clickhouse，我们建议 32GB RAM 和 8 个 CPU。
+
+### SAML SSO 常见问题
+
+#### *如何更改 SAML SSO 用户的电子邮件地址？*
+
+一些身份提供商 (IdP) 在更改电子邮件后会保留原始的 `User ID`，而另一些则不会。因此，我们建议您遵循以下步骤，以避免在 LangSmith 中出现重复用户：
+
+1. 从组织中移除该用户（参见 [此处](/langsmith/set-up-a-workspace#manage-users)）
+2. 在 IdP 中更改其电子邮件地址
+3. 让他们再次通过 SAML SSO 登录 LangSmith —— 这将触发带有其新电子邮件地址的常规 [即时 (JIT) 预配](#just-in-time-jit-provisioning) 流程
+
+#### *如何修复“405 方法不允许”错误？*
+
+确保您使用的是正确的 ACS URL：[https://auth.langchain.com/auth/v1/sso/saml/acs](https://auth.langchain.com/auth/v1/sso/saml/acs)
+
+### SCIM 常见问题
+
+#### *我可以在没有 SAML SSO 的情况下使用 SCIM 吗？*
+
+* **云 (Cloud)**: 不可以，云部署中的 SCIM 需要 SAML SSO
+* **自托管 (Self-hosted)**: 可以，SCIM 适用于使用“带有客户端密钥的 OAuth”认证模式
+
+#### *如果我同时启用了 JIT 预配和 SCIM 会发生什么？*
+
+JIT 预配和 SCIM 可能会相互冲突。我们建议在启用 SCIM 之前禁用 JIT 预配，以确保用户预配行为一致。
+
+#### *如何更改用户的角色或工作空间访问权限？*
+
+在您的 IdP 中更新用户的组成员身份。更改将根据 [角色优先级规则](#role-precedence) 同步到 LangSmith。
+
+#### *当用户从所有组中移除时会发生什么？*
+
+该用户将根据您的 IdP 的解除预配设置，从您的 LangSmith 组织中解除预配。
+
+#### *我可以使用自定义组名称吗？*
+
+可以。如果您的身份提供商支持将备用字段同步到 `displayName` 组属性，您可以使用备用属性（如 `description`）作为 LangSmith 中的 `displayName`，并保留身份提供商组名称的完全自定义能力。否则，组必须遵循 [组命名约定](#group-naming-convention) 部分中所述的特定命名约定，以便正确映射到 LangSmith 的角色和工作空间。
+
+#### *为什么我的 Okta 集成不起作用？*
+
+请参阅 Okta 的故障排除指南：https://help.okta.com/en-us/content/topics/users-groups-profiles/usgp-group-push-troubleshoot.htm。
+
+## 部署 (Deployment)
+
+### 我需要使用 LangChain 才能使用 LangGraph 吗？它们之间有什么区别？
+
+不需要。LangGraph 是一个用于复杂代理系统 (agentic systems) 的编排框架，它比 LangChain 的代理更底层、更易于控制。LangChain 提供了一个标准的接口来与模型和其他组件进行交互，这对于直接的链 (chains) 和检索流程非常有用。
+
+### LangGraph 与其他代理框架有何不同？
+
+其他代理框架可能适用于简单、通用的任务，但在处理针对公司特定需求量身定制的复杂任务时可能会不足。LangGraph 提供了一个更具表现力的框架来处理公司独特的任务，而不会限制用户使用单一的“黑盒”认知架构。
+
+### LangGraph 会影响我的应用程序性能吗？
+
+LangGraph 不会对您的代码增加任何开销，并且专为流式处理 (streaming workflows) 而设计。
+
+### LangGraph 是开源的吗？它是免费的吗？
+
+是的。LangGraph 是一个 MIT 许可的开源库，可以免费使用。
+
+### LangGraph 和 LangSmith 有何不同？
+
+LangGraph 是一个有状态的编排框架，为代理工作流程增加了额外的控制力。LangSmith 是一个用于部署和扩展代理应用程序的服务，提供了一套固定的 API 来构建代理用户体验 (UX)，以及一个集成的开发人员 UI。
+
+| 特性 | LangGraph (开源) | LangSmith |
+| :--- | :--- | :--- |
+| 描述 | 用于代理应用程序的有状态编排框架 | 用于部署 LangGraph 应用程序的可扩展基础设施 |
+| SDK | Python 和 JavaScript | Python 和 JavaScript |
+| HTTP API | 无 | 有——可用于检索和更新状态或长期记忆，或创建可配置的助手 |
+| 流式处理 | 基本 | 用于逐个 Token 消息的专用模式 |
+| 检查点 (Checkpointer) | 社区贡献 | 开箱即用支持 |
+| 持久化层 | 自我管理 | 托管的 Postgres 数据库，提供高效存储 |
+| 部署 | 自我管理 | • 云端 <br /> • 免费自托管 <br /> • 企业版（付费自托管） |
+| 可扩展性 | 自我管理 | 任务队列和服务器的自动伸缩 |
+| 容错能力 | 自我管理 | 自动重试 |
+| 并发控制 | 简单线程 | 支持双文本处理 (double-texting) |
+| 调度 | 无 | Cron 调度 |
+| 监控 | 无 | 与 LangSmith 集成以实现可观测性 |
+| IDE 集成 | Studio | Studio |
+
+### LangSmith 是开源的吗？
+
+不是。LangSmith 是一项专有软件。
+
+有一个免费的自托管版本 LangSmith，可以访问基本功能。云部署选项和自托管部署选项是付费服务。[联系我们的销售团队](https://www.langchain.com/contact-sales) 了解更多信息。
+
+有关更多信息，请参阅我们的 [LangSmith 定价页面](https://www.langchain.com/pricing)。
+
+### LangGraph 是否适用于不支持工具调用的 LLM？
+
+是的！您可以在任何 LLM 上使用 LangGraph。我们使用支持工具调用的 LLM 的主要原因是因为这是让 LLM 决定下一步操作的最便捷方式。如果您的 LLM 不支持工具调用，您仍然可以使用它——您只需要编写一些逻辑，将原始 LLM 字符串响应转换为下一步操作的决策即可。
+
+### LangGraph 是否适用于开源 LLM？
+
+是的！LangGraph 完全不关心底层使用哪个 LLM。我们在大多数教程中使用闭源 LLM 的主要原因是它们无缝支持工具调用，而开源 LLM 通常不支持。但工具调用不是必需的（参见 [本节](#does-langgraph-work-with-llms-that-dont-support-tool-calling)），因此您完全可以使用 LangGraph 和开源 LLM。
+
+### 我可以在不登录 LangSmith 的情况下使用 Studio 吗？
+
+是的！您可以使用 [Agent Server 的开发版本](/langsmith/local-server) 在本地运行后端。
+这将连接到作为 LangSmith 一部分的 Studio 前端。
+如果您设置环境变量 `LANGSMITH_TRACING=false`，则不会有任何追踪信息发送到 LangSmith。
+
+### 什么是代理运行 (Agent Run)？
+
+“代理运行”是指通过 LangSmith 部署的 LangGraph 代理的一次端到端调用。节点和子图不单独计费。对其他 LangGraph 代理的调用（通过 `RemoteGraph` 或 LangGraph SDK 或直接通过 API）将单独计费给托管被调用代理的部署。人工干预 (human-in-the-loop) 创建的中断在恢复时会产生一个单独的代理运行。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\faq.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

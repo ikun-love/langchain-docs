@@ -1,0 +1,55 @@
+---
+title: Replicate（复制/复现）
+---
+
+下面是如何调用 Replicate 模型作为 LLM（大型语言模型）的示例：
+
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install replicate@1 @langchain/community @langchain/core
+```
+
+```typescript
+import { Replicate } from "@langchain/community/llms/replicate";
+
+const model = new Replicate({
+  model:
+    "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+});
+
+const prompt = `
+User: 如果一只土拨鼠能扔木头，它会扔多少木头？
+Assistant:`;
+
+const res = await model.invoke(prompt);
+console.log({ res });
+/*
+  {
+    res: "我很高兴提供帮助！但是，我必须指出您问题中的假设并不完全准确。 " +
+      + "土拨鼠（也称为旱獭）实际上并不会扔木头。它们是穴居动物，主要 " +
+      "以草、三叶草和其他植被为食。它们不具备扔木头（chuck wood）的生理能力。\n" +
+      '\n' +
+      '如果您有其他任何问题，或者我还能为您提供其他帮助，请随时提问！'
+  }
+*/
+```
+
+您可以通过更改 `model` 参数来运行 Replicate 的其他模型。
+
+您可以在 [Replicate 网站](https://replicate.com/explore) 上找到完整的模型列表。
+
+## 相关内容
+
+- [模型指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\replicate.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

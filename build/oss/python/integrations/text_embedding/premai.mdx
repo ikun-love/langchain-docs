@@ -1,0 +1,82 @@
+---
+title: PremAI 平台简介
+---
+
+[PremAI](https://premai.io/) 是一个一体化平台，旨在简化由生成式 AI 驱动的健壮、可投入生产的应用程序的创建过程。通过简化开发流程，PremAI 使您能够专注于增强用户体验并推动应用程序的整体增长。您可以通过 [此处](https://docs.premai.io/quick-start) 快速开始使用我们的平台。
+
+### 安装与设置
+
+我们从安装 `langchain` 和 `premai-sdk` 开始。您可以通过输入以下命令进行安装：
+
+```bash
+pip install premai langchain
+```
+
+在继续操作之前，请确保您已经在 PremAI 上创建了账户并拥有一个项目。如果尚未完成，请参阅 [快速入门](https://docs.premai.io/introduction) 指南以开始使用 PremAI 平台。创建您的第一个项目并获取您的 API 密钥。
+
+## PremEmbeddings
+
+在本节中，我们将讨论如何使用 LangChain 中的 `PremEmbeddings` 来访问不同的嵌入模型。让我们从导入模块和设置 API 密钥开始。
+
+```python
+# 让我们开始导入一些模块并定义我们的嵌入对象
+
+from langchain_community.embeddings import PremAIEmbeddings
+```
+
+导入所需模块后，让我们设置客户端。目前，我们假设 `project_id` 为 `8`。但请确保使用您自己的 `project-id`，否则将会抛出错误。
+
+> 注意：与 [ChatPremAI](https://python.langchain.com/v0.1/docs/integrations/chat/premai/) 不同，在 `PremAIEmbeddings` 中设置 `model_name` 参数是**必需的**。
+
+```python
+import getpass
+import os
+
+if os.environ.get("PREMAI_API_KEY") is None:
+    os.environ["PREMAI_API_KEY"] = getpass.getpass("PremAI API 密钥:")
+```
+
+```python
+model = "text-embedding-3-large"
+embedder = PremAIEmbeddings(project_id=8, model=model)
+```
+
+我们支持许多最先进的嵌入模型。您可以在 [此处](https://docs.premai.io/get-started/supported-models) 查看我们支持的 LLM 和嵌入模型的列表。对于此示例，我们暂时使用 `text-embedding-3-large` 模型。
+
+```python
+query = "Hello, this is a test query"
+query_result = embedder.embed_query(query)
+
+# 让我们打印查询嵌入向量的前五个元素
+
+print(query_result[:5])
+```
+
+```output
+[-0.02129288576543331, 0.0008162345038726926, -0.004556538071483374, 0.02918623760342598, -0.02547479420900345]
+```
+
+最后，让我们嵌入一个文档。
+
+```python
+documents = ["This is document1", "This is document2", "This is document3"]
+
+doc_result = embedder.embed_documents(documents)
+
+# 与上一个结果类似，让我们打印第一个文档向量的前五个元素
+
+print(doc_result[0][:5])
+```
+
+```output
+[-0.0030691148713231087, -0.045334383845329285, -0.0161729846149683, 0.04348714277148247, -0.0036920777056366205]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\premai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

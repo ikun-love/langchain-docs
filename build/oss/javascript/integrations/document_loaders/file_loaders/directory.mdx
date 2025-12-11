@@ -1,0 +1,118 @@
+---
+title: DirectoryLoader
+---
+
+
+<Tip>
+**兼容性**: 仅在 Node.js 环境中可用。
+</Tip>
+
+本指南快速概述了如何开始使用 `DirectoryLoader` [文档加载器](/oss/javascript/integrations/document_loaders)。有关 `DirectoryLoader` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain.document_loaders_fs_directory.DirectoryLoader.html)。
+
+本示例介绍了如何从包含多个文件的文件夹中加载数据。第二个参数是一个文件扩展名到加载器工厂的映射。每个文件都将传递给匹配的加载器，然后将结果文档合并在一起。
+
+示例文件夹结构：
+
+```text
+src/document_loaders/example_data/example/
+├── example.json
+├── example.jsonl
+├── example.txt
+└── example.csv
+```
+
+## 概述
+
+### 集成详情
+
+| 类名 | 包 | 兼容性 | 本地 | PY 支持 |
+| :--- | :--- | :---: | :---: |  :---: |
+| [DirectoryLoader](https://api.js.langchain.com/classes/langchain.document_loaders_fs_directory.DirectoryLoader.html) | [langchain](https://api.js.langchain.com/modules/langchain.document_loaders_fs_directory.html) | 仅限 Node | ✅ | ✅ |
+
+## 设置
+
+要使用 `DirectoryLoader` 文档加载器，您需要安装 `langchain` 包。
+
+### 安装
+
+LangChain DirectoryLoader 集成位于 `langchain` 包中：
+
+<CodeGroup>
+```bash npm
+npm install langchain @langchain/core
+```
+```bash yarn
+yarn add langchain @langchain/core
+```
+```bash pnpm
+pnpm add langchain @langchain/core
+```
+</CodeGroup>
+
+## 实例化
+
+现在我们可以实例化我们的模型对象并加载文档：
+
+```typescript
+import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
+import {
+  JSONLoader,
+  JSONLinesLoader,
+} from "@langchain/classic/document_loaders/fs/json";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
+
+const loader = new DirectoryLoader(
+  "../../../../../../examples/src/document_loaders/example_data",
+  {
+    ".json": (path) => new JSONLoader(path, "/texts"),
+    ".jsonl": (path) => new JSONLinesLoader(path, "/html"),
+    ".txt": (path) => new TextLoader(path),
+    ".csv": (path) => new CSVLoader(path, "text"),
+  }
+);
+```
+
+## 加载
+
+```typescript
+const docs = await loader.load()
+// 禁用 console.warn 调用
+console.warn = () => {}
+docs[0]
+```
+
+```output
+Document {
+  pageContent: 'Foo\nBar\nBaz\n\n',
+  metadata: {
+    source: '/Users/bracesproul/code/lang-chain-ai/langchainjs/examples/src/document_loaders/example_data/example.txt'
+  },
+  id: undefined
+}
+```
+
+```typescript
+console.log(docs[0].metadata)
+```
+
+```output
+{
+  source: '/Users/bracesproul/code/lang-chain-ai/langchainjs/examples/src/document_loaders/example_data/example.txt'
+}
+```
+
+---
+
+## API 参考
+
+有关 `DirectoryLoader` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain.document_loaders_fs_directory.DirectoryLoader.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_loaders\file_loaders\directory.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

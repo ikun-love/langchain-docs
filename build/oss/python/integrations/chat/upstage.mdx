@@ -1,0 +1,71 @@
+---
+title: Upstage 聊天模型快速入门指南
+---
+
+本 Notebook 介绍如何开始使用 Upstage 的聊天模型。
+
+## 安装
+
+安装 `langchain-upstage` 包。
+
+```bash
+pip install -U langchain-upstage
+```
+
+## 环境变量设置
+
+请确保设置了以下环境变量：
+
+- `UPSTAGE_API_KEY`: 您从 [Upstage 控制台](https://console.upstage.ai/) 获取的 Upstage API 密钥。
+
+## 使用方法
+
+```python
+import os
+
+os.environ["UPSTAGE_API_KEY"] = "YOUR_API_KEY"
+```
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_upstage import ChatUpstage
+
+# 初始化 ChatUpstage 客户端
+chat = ChatUpstage()
+```
+
+```python
+# 使用 chat.invoke 进行单次调用
+chat.invoke("Hello, how are you?")
+```
+
+```python
+# 使用 chat.stream 进行流式调用
+for m in chat.stream("Hello, how are you?"):
+    print(m)
+```
+
+## 模型链式调用 (Chaining)
+
+```python
+# 使用链式调用
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "你是一个乐于助人的助手，负责将英语翻译成法语。"),
+        ("human", "将这个句子从英语翻译成法语：{english_text}。"),
+    ]
+)
+# 将提示模板与聊天模型串联起来
+chain = prompt | chat
+
+chain.invoke({"english_text": "Hello, how are you?"})
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\upstage.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

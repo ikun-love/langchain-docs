@@ -1,0 +1,47 @@
+---
+title: HuggingFace Hub 工具
+---
+
+> 支持文本 I/O 的 [Huggingface 工具](https://huggingface.co/docs/transformers/v4.29.0/en/custom_tools) 可以通过 `load_huggingface_tool` 函数直接加载。
+
+```python
+# 需要 transformers>=4.29.0 和 huggingface_hub>=0.14.1
+pip install -qU  transformers huggingface_hub > /dev/null
+```
+
+```python
+pip install -qU  langchain-community
+```
+
+```python
+from langchain_community.agent_toolkits.load_tools import load_huggingface_tool
+
+tool = load_huggingface_tool("lysandre/hf-model-downloads")
+
+print(f"{tool.name}: {tool.description}")
+```
+
+```output
+model_download_counter: 这是一个工具，它返回 Hugging Face Hub 上给定任务下载次数最多的模型。它接受任务类别名称（例如 text-classification, depth-estimation 等），并返回对应的检查点名称
+```
+
+```python
+tool.run("text-classification")
+```
+
+```output
+'facebook/bart-large-mnli'
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\huggingface_tools.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

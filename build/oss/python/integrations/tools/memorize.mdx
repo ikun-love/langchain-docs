@@ -1,0 +1,105 @@
+---
+title: 记忆
+---
+
+使用无监督学习对大型语言模型（LLM）本身进行微调，以记忆信息。
+
+此工具要求 LLM 支持微调。目前，仅支持 `langchain.llms import GradientLLM`。
+
+## 导入
+
+```python
+import os
+
+from langchain.agents import AgentExecutor, AgentType, initialize_agent, load_tools
+from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
+from langchain_community.llms import GradientLLM
+```
+
+## 设置环境变量 API 密钥
+
+请确保从 Gradient AI 获取您的 API 密钥。您将获得 $10 的免费积分，用于测试和微调不同的模型。
+
+```python
+from getpass import getpass
+
+if not os.environ.get("GRADIENT_ACCESS_TOKEN", None):
+    # 访问令牌见 https://auth.gradient.ai/select-workspace
+    os.environ["GRADIENT_ACCESS_TOKEN"] = getpass("gradient.ai access token:")
+if not os.environ.get("GRADIENT_WORKSPACE_ID", None):
+    # `ID` 可通过 `$ gradient workspace list` 查看
+    # 登录后在 https://auth.gradient.ai/select-workspace 也会显示
+    os.environ["GRADIENT_WORKSPACE_ID"] = getpass("gradient.ai workspace id:")
+if not os.environ.get("GRADIENT_MODEL_ADAPTER_ID", None):
+    # `ID` 可通过 `$ gradient model list --workspace-id "$GRADIENT_WORKSPACE_ID"` 查看
+    os.environ["GRADIENT_MODEL_ID"] = getpass("gradient.ai model id:")
+```
+
+可选：验证您的环境变量 `GRADIENT_ACCESS_TOKEN` 和 `GRADIENT_WORKSPACE_ID`，以获取当前部署的模型。
+
+## 创建 `GradientLLM` 实例
+
+您可以指定不同的参数，例如模型名称、生成的最大 token 数、温度（temperature）等。
+
+```python
+llm = GradientLLM(
+    model_id=os.environ["GRADIENT_MODEL_ID"],
+    # # 可选：设置新凭证，默认为环境变量
+    # gradient_workspace_id=os.environ["GRADIENT_WORKSPACE_ID"],
+    # gradient_access_token=os.environ["GRADIENT_ACCESS_TOKEN"],
+)
+```
+
+## 加载工具
+
+```python
+tools = load_tools(["memorize"], llm=llm)
+```
+
+## 初始化智能体（Agent）
+
+```python
+agent = initialize_agent(
+    tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    # memory=ConversationBufferMemory(memory_key="chat_history", return_messages=True),
+)
+```
+
+## 运行智能体
+
+要求智能体记忆一段文本。
+
+```python
+agent.run(
+    "Please remember the fact in detail:\nWith astonishing dexterity, Zara Tubikova set a world record by solving a 4x4 Rubik's Cube variation blindfolded in under 20 seconds, employing only their feet."
+)
+```
+
+```output
+> Entering new AgentExecutor chain...
+我应该记住这个事实。
+Action: Memorize
+Action Input: Zara T
+Observation: Train complete. Loss: 1.6853971333333335
+Thought:我现在知道最终答案了。
+Final Answer: Zara Tubikova set a world
+
+> Finished chain.
+```
+
+```output
+'Zara Tubikova set a world'
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\memorize.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

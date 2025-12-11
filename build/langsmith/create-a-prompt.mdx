@@ -1,0 +1,80 @@
+---
+title: 创建提示词
+sidebarTitle: 创建提示词
+---
+
+在左侧边栏或应用程序主页中，导航至相应位置（此处缺少具体入口名称，请用户根据上下文补充）。
+
+![](/langsmith/images/empty-playground.png)
+
+## 编写你的提示词 (Compose your prompt)
+
+左侧是提示词的可编辑视图。
+
+提示词由一系列 **消息 (messages)** 组成，每条消息都有一个 “角色 (role)”—— 包括 `system`（系统）、`human`（用户）和 `ai`（助手）。
+
+### 模板格式 (Template format)
+
+默认的模板格式是 `f-string` 格式。但是，您可以通过点击模型旁边的设置图标，在 “prompt format”（提示词格式） -> “template format”（模板格式）中将其更改为 `mustache` 格式。关于模板格式的更多信息，请点击 [此处](/langsmith/prompt-engineering-concepts#f-string-vs-mustache) 查看。
+![](/langsmith/images/template-format.png)
+
+### 添加模板变量 (Add a template variable)
+
+提示词的强大之处在于能够使用变量。您可以使用变量向提示词中添加动态内容。可以通过以下两种方式之一添加模板变量：
+
+1. 在提示词中添加 `{{variable_name}}`（对于 `f-string`，两侧各一个花括号；对于 `mustache`，两侧各两个花括号）。![](/langsmith/images/prompt-with-variable.png)
+
+2. 选中想要模板化的文本，然后点击出现的工具提示按钮。为变量输入一个名称，然后进行转换。![](/langsmith/images/convert-to-variable.gif)
+
+当我们添加一个变量后，我们会看到一个输入框用于为我们的提示词变量提供示例输入。请用具体的值填充这些输入，以便测试提示词。![](/langsmith/images/prompt-inputs.png)
+
+### 结构化输出 (Structured output)
+
+为提示词添加输出模式 (output schema) 将使输出结果保持结构化格式。关于结构化输出的更多信息，请点击 [此处](/langsmith/prompt-engineering-concepts#structured-output)。![](/langsmith/images/structured-output.png)
+
+### 工具 (Tools)
+
+您也可以通过点击提示词编辑器底部的 `+ Tool` 按钮来添加一个工具。关于如何使用工具的更多信息，请参见 [此处](/langsmith/use-tools)。
+
+## 运行提示词 (Run the prompt)
+
+点击 "Start" 按钮运行提示词。
+
+![](/langsmith/images/create-a-prompt-run.png)
+
+## 保存提示词 (Save your prompt)
+
+要保存您的提示词，请点击 "Save" 按钮，输入提示词名称，并决定它是设置为 "private"（私有）还是 "public"（公开）。私有提示词仅对您的工作区可见，而公开提示词则可被任何人发现。
+
+在 Playground（游乐场）设置中选择的模型和配置将与提示词一起保存。当您重新打开该提示词时，模型和配置将自动从保存的版本中加载。![](/langsmith/images/save-prompt.png)
+
+<Check>
+当您首次创建一个公开提示词时，系统会要求您设置一个 LangChain Hub Handle（句柄）。您所有的公开提示词都将与此句柄关联。在一个共享的工作区中，此句柄将为整个工作区设置。
+</Check>
+
+![](/langsmith/images/public-handle.png)
+
+## 查看你的提示词 (View your prompts)
+
+恭喜，您已经创建了第一个提示词！您可以在 "prompts"（提示词）标签页中查看提示词的表格列表。
+
+![](/langsmith/images/prompt-table.png)
+
+## 添加元数据 (Add metadata)
+
+要为提示词添加元数据，请点击该提示词，然后点击名称旁边的 "Edit"（编辑）铅笔图标。这将带您进入可以添加附加信息的地方，包括描述、README 文件和用例。对于公开提示词，这些信息将在 LangChain Hub 上向任何查看该提示词的人显示。
+
+![](/langsmith/images/pencil.png) ![](/langsmith/images/edit-prompt.png)
+
+# 后续步骤 (Next steps)
+
+现在您已经创建了一个提示词，可以在应用程序代码中使用它了。请参阅 [如何以编程方式拉取提示词](/langsmith/manage-prompts-programmatically#pull-a-prompt)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\create-a-prompt.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

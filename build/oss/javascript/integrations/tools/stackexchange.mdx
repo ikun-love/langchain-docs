@@ -1,0 +1,46 @@
+---
+title: StackExchange 工具 
+---
+
+StackExchange 工具将您的 Agent 和 Chain 连接到 StackExchange 的 API。
+
+## 用法
+
+```typescript
+import { StackExchangeAPI } from "@langchain/community/tools/stackexchange";
+
+// 从 StackExchange API 获取结果
+const stackExchangeTool = new StackExchangeAPI();
+const result = await stackExchangeTool.invoke("zsh: command not found: python");
+console.log(result);
+
+// 使用 title 查询类型从 StackExchange API 获取结果
+const stackExchangeTitleTool = new StackExchangeAPI({
+  queryType: "title",
+});
+const titleResult = await stackExchangeTitleTool.invoke(
+  "zsh: command not found: python"
+);
+console.log(titleResult);
+
+// 使用无效查询从 StackExchange API 获取结果
+const stackExchangeBadTool = new StackExchangeAPI();
+const badResult = await stackExchangeBadTool.invoke(
+  "sjefbsmnazdkhbazkbdoaencopebfoubaef"
+);
+console.log(badResult);
+```
+
+## 相关信息
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\stackexchange.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

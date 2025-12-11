@@ -1,0 +1,126 @@
+---
+title: MultiOn 工具包
+---
+
+[MultiON](https://www.multion.ai/blog/multion-building-a-brighter-future-for-humanity-with-ai-agents) 构建了一个可以与各种 Web 服务和应用程序交互的 AI 智能体。
+
+本 Jupyter Notebook 将指导您如何在浏览器中将 LangChain 连接到 `MultiOn` 客户端。
+
+这样做可以实现利用 MultiON 智能体强大能力的自定义智能体工作流程。
+
+要使用此工具包，您需要在浏览器中添加 `MultiOn 扩展程序`：
+
+* 创建一个 [MultiON 账户](https://app.multion.ai/login?callbackUrl=%2Fprofile)。
+* 添加 [适用于 Chrome 的 MultiOn 扩展程序](https://multion.notion.site/Download-MultiOn-ddddcfe719f94ab182107ca2612c07a5)。
+
+```python
+pip install -qU  multion langchain -q
+```
+
+```python
+pip install -qU langchain-community
+```
+
+```python
+from langchain_community.agent_toolkits import MultionToolkit
+
+toolkit = MultionToolkit()
+toolkit
+```
+
+```output
+MultionToolkit()
+```
+
+```python
+tools = toolkit.get_tools()
+tools
+```
+
+```output
+[MultionCreateSession(), MultionUpdateSession(), MultionCloseSession()]
+```
+
+## MultiOn 设置
+
+创建账户后，请在 [app.multion.ai/](https://app.multion.ai/) 创建一个 API 密钥。
+
+登录以建立与您的扩展程序的连接。
+
+```python
+# 授权连接到您的浏览器扩展程序
+import multion
+
+multion.login()
+```
+
+```output
+Logged in.
+```
+
+## 在智能体中使用 Multion 工具包
+
+这将使用 MultiON Chrome 扩展程序来执行所需的操作。
+
+我们可以运行以下代码，并查看 [Trace](https://smith.langchain.com/public/34aaf36d-204a-4ce3-a54e-4a0976f09670/r) 以了解：
+
+* 智能体使用了 `create_multion_session` 工具
+* 随后它使用 MultiON 来执行查询
+
+```python
+from langchain_classic import hub
+from langchain.agents import AgentExecutor, create_openai_functions_agent
+from langchain_openai import ChatOpenAI
+```
+
+```python
+# Prompt（提示词）
+instructions = """You are an assistant."""
+base_prompt = hub.pull("langchain-ai/openai-functions-template")
+prompt = base_prompt.partial(instructions=instructions)
+```
+
+```python
+# LLM（大语言模型）
+llm = ChatOpenAI(temperature=0)
+```
+
+```python
+# Agent（智能体）
+agent = create_openai_functions_agent(llm, toolkit.get_tools(), prompt)
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=toolkit.get_tools(),
+    verbose=False,
+)
+```
+
+```python
+agent_executor.invoke(
+    {
+        "input": "Use multion to explain how AlphaCodium works, a recently released code language model."
+    }
+)
+```
+
+```output
+WARNING: 'new_session' is deprecated and will be removed in a future version. Use 'create_session' instead.
+WARNING: 'update_session' is deprecated and will be removed in a future version. Use 'step_session' instead.
+WARNING: 'update_session' is deprecated and will be removed in a future version. Use 'step_session' instead.
+WARNING: 'update_session' is deprecated and will be removed in a future version. Use 'step_session' instead.
+WARNING: 'update_session' is deprecated and will be removed in a future version. Use 'step_session' instead.
+```
+
+```output
+{'input': 'Use multion to how AlphaCodium works, a recently released code language model.',
+ 'output': 'AlphaCodium 是一个最近发布的代码语言模型，旨在帮助开发人员更高效地编写代码。它基于先进的机器学习技术和自然语言处理。AlphaCodium 能够理解和生成多种编程语言的代码，使其成为开发人员的多功能工具。\n\n该模型在一个包含代码片段和编程示例的大型数据集上进行训练，使其能够学习编码中的模式和最佳实践。它可以根据上下文和期望的结果提供建议和代码自动完成功能。\n\nAlphaCodium 还具有分析代码并识别潜在错误或错误的 পড়েন 力。它可以为提高代码质量和性能提供改进建议。\n\n总而言之，AlphaCodium 旨在通过提供智能协助并减少编写高质量代码所需的时间和精力来增强编码体验。\n\n如需更详细信息，您可以访问 AlphaCodium 官方网站或查阅在线可用的文档和资源。\n\n希望这有所帮助！如果您有其他任何问题，请告诉我。'}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\multion.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

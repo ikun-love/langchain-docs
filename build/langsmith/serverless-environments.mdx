@@ -1,0 +1,74 @@
+---
+title: 在无服务器环境中追踪 JavaScript 函数
+sidebarTitle: 在无服务器环境中追踪 JavaScript 函数
+---
+
+<Note>
+本节内容与使用 LangSmith JS SDK 版本 0.2.0 及更高版本的用户相关。如果您在无服务器环境中通过 LangChain.js 或 LangGraph.js 进行追踪，请参阅 [此指南](https://js.langchain.com/docs/how_to/callbacks_serverless)。
+</Note>
+
+在追踪 JavaScript 函数时，LangSmith 默认会在后台追踪运行（runs），以避免增加延迟。在执行上下文可能被突然终止的无服务器环境中，务必确保在函数完成之前，所有追踪数据都已正确刷新（flush）。
+
+为确保这种情况发生，您可以采取以下任一操作：
+
+*   将环境变量 `LANGSMITH_TRACING_BACKGROUND` 设置为 `"false"`。这将导致被追踪的函数在返回之前等待追踪完成。
+    *   请注意，此环境变量的命名与 LangChain.js 中的 [环境变量](https://js.langchain.com/docs/how_to/callbacks_serverless) 不同，因为 LangSmith 可以在不依赖 LangChain 的情况下使用。
+*   在被追踪的运行中传入一个自定义客户端，并 `await` 调用 `client.awaitPendingTraceBatches();` 方法。
+
+以下是 [`traceable`](/langsmith/annotate-code) 方法结合使用 `awaitPendingTraceBatches` 的示例：
+
+```typescript
+import { Client } from "langsmith";
+import { traceable } from "langsmith/traceable";
+const langsmithClient = new Client({});
+const tracedFn = traceable(
+  async () => {
+    return "Some return value";
+  },
+  {
+    client: langsmithClient,
+  }
+);
+const res = await tracedFn();
+await langsmithClient.awaitPendingTraceBatches();
+```
+
+## 高并发场景下的速率限制（Rate Limits）[ ](#rate-limits-at-high-concurrency "Direct link to Rate limits at high concurrency")
+
+默认情况下，LangSmith 客户端会随着您的追踪运行执行而批处理操作，每隔几毫秒发送一个新批次。
+
+这在大多数情况下运行良好，但如果您的被追踪函数运行时间较长且并发度非常高，您可能会遇到与总体请求数量相关的速率限制错误。
+
+如果遇到此类速率限制错误，您可以尝试在客户端中设置 `manualFlushMode: true`，如下所示：
+
+```typescript
+import { Client } from "langsmith";
+const langsmithClient = new Client({  manualFlushMode: true,});
+const myTracedFunc = traceable(
+  async () => {
+    // 您的逻辑...
+  },
+  { client: langsmithClient }
+);
+```
+
+然后，在无服务器函数关闭之前，手动调用 `client.flush()`，如下所示：
+
+```typescript
+try {
+  await myTracedFunc();
+} finally {
+  await langsmithClient.flush();
+}
+```
+
+请注意，启用此模式后，运行信息将不会出现在 LangSmith UI 中，直到您调用 `.flush()`。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\serverless-environments.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

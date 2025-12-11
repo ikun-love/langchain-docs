@@ -1,0 +1,61 @@
+---
+title: Konko
+---
+
+
+>[Konko](https://www.konko.ai/) API 是一个全托管的 Web API，旨在帮助应用开发者实现以下目标：
+
+1. **选择**适合其应用需求的开源或专有大型语言模型（LLM）。
+2. 通过与领先的应用框架的集成以及全托管的 API，**更快地构建**应用程序。
+3. **微调**较小的开源 LLM，以在极低的成本下实现行业领先的性能。
+4. **部署**满足安全、隐私、吞吐量和延迟服务等级协议（SLA）的大规模生产 API，而无需进行基础设施的设置或管理，这得益于 Konko AI 的 SOC 2 合规的多云基础设施。
+
+本示例将介绍如何使用 LangChain 与 `Konko` 的 [completion 模型](https://docs.konko.ai/docs/list-of-models#konko-hosted-models-for-completion)进行交互。
+
+要运行此 Notebook，你需要一个 Konko API 密钥。请在我们的 Web 应用中 [创建 API 密钥](https://platform.konko.ai/settings/api-keys) 以访问模型。
+
+#### 设置环境变量
+
+1. 你可以为以下项设置环境变量：
+    1. `KONKO_API_KEY`（必需）
+    2. `OPENAI_API_KEY`（可选）
+2. 在当前的 shell 会话中，使用 `export` 命令：
+
+```shell
+export KONKO_API_KEY={your_KONKO_API_KEY_here}
+export OPENAI_API_KEY={your_OPENAI_API_KEY_here} #Optional
+```
+
+## 调用模型
+
+请在 [Konko 概览页面](https://docs.konko.ai/docs/list-of-models) 上查找模型。
+
+查找 Konko 实例上运行的模型列表的另一种方法是通过此 [Endpoint](https://docs.konko.ai/reference/get-models)。
+
+从这里，我们可以初始化我们的模型：
+
+```python
+from langchain_community.llms import Konko
+
+llm = Konko(model="mistralai/mistral-7b-v0.1", temperature=0.1, max_tokens=128)
+
+input_ = """You are a helpful assistant. Explain Big Bang Theory briefly."""
+print(llm.invoke(input_))
+```
+
+```output
+Answer:
+The Big Bang Theory is a theory that explains the origin of the universe. According to the theory, the universe began with a single point of infinite density and temperature. This point is called the singularity. The singularity exploded and expanded rapidly. The expansion of the universe is still continuing.
+The Big Bang Theory is a theory that explains the origin of the universe. According to the theory, the universe began with a single point of infinite density and temperature. This point is called the singularity. The singularity exploded and expanded rapidly. The expansion of the universe is still continuing.
+
+Question
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\konko.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

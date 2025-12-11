@@ -1,0 +1,437 @@
+---
+title: 批量导出追踪数据
+sidebarTitle: 批量导出追踪数据
+---
+
+<Info>
+**受计划限制**
+
+请注意，数据导出功能仅支持 [LangSmith Plus 或 Enterprise 套件](https://www.langchain.com/pricing-langsmith)。
+</Info>
+
+LangSmith 的批量数据导出功能允许您将追踪数据（traces）导出到外部目标地。如果您希望在外部工具（如 BigQuery, Snowflake, RedShift, Jupyter Notebooks 等）中离线分析数据，这将非常有用。
+
+可以启动一次导出任务，以针对特定的 LangSmith 项目和日期范围进行导出。一旦启动了批量导出，我们的系统将负责处理整个导出过程的协调和弹性恢复。请注意，导出数据可能需要一些时间，具体取决于数据的大小。我们还对可以同时运行的导出任务数量有所限制。批量导出还有一个运行时超时限制，为 24 小时。
+
+## 目标存储（Destinations）
+
+目前我们支持导出到您提供的 S3 存储桶或 S3 API 兼容的存储桶中。数据将以 [Parquet](https://parquet.apache.org/docs/overview/) 列式格式导出。这种格式可以方便地将数据导入到其他系统。数据导出将包含与 [Run 数据格式](/langsmith/run-data-format) 中等效的数据字段。
+
+## 导出数据
+
+### 目标存储 - 提供 S3 存储桶
+
+要导出 LangSmith 数据，您需要提供一个 S3 存储桶，数据将被导出到该存储桶中。
+
+导出需要以下信息：
+
+- **Bucket Name**: 数据将被导出的 S3 存储桶的名称。
+- **Prefix**: 存储桶内数据将被导出的根前缀（路径）。
+- **S3 Region**: 存储桶所在的区域——AWS S3 存储桶需要此信息。
+- **Endpoint URL**: S3 存储桶的端点 URL——S3 API 兼容的存储桶需要此信息。
+- **Access Key**: S3 存储桶的访问密钥。
+- **Secret Key**: S3 存储桶的密钥。
+
+我们支持任何 S3 兼容的存储桶。对于非 AWS 存储桶（如 GCS 或 MinIO），您需要提供 `endpoint_url`。
+
+### 准备目标存储
+
+<Note>
+**对于自托管（self-hosted）和欧盟（EU）区域部署**
+
+在以下请求中，请相应地更新自托管安装或位于欧盟区域的组织的 LangSmith URL。对于欧盟区域，请使用 `eu.api.smith.langchain.com`。
+</Note>
+
+<Note>
+**需要的权限**
+
+`backend` 和 `queue` 服务都需要对目标存储桶的写入访问权限：
+
+- `backend` 服务在创建导出目标时，会尝试向目标存储桶写入一个测试文件。如果具有删除权限，它将删除该测试文件（删除权限是可选的）。
+- `queue` 服务负责执行批量导出并将文件上传到存储桶。
+</Note>
+
+以下示例演示了如何使用 cURL 创建一个目标存储。请将占位符值替换为您实际的配置详情。请注意，凭证将以加密形式安全地存储在我们的系统中。
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/destinations' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "destination_type": "s3",
+    "display_name": "My S3 Destination",
+    "config": {
+      "bucket_name": "your-s3-bucket-name",
+      "prefix": "root_folder_prefix",
+      "region": "your aws s3 region",
+      "endpoint_url": "your endpoint url for s3 compatible buckets"
+    },
+    "credentials": {
+      "access_key_id": "YOUR_S3_ACCESS_KEY_ID",
+      "secret_access_key": "YOUR_S3_SECRET_ACCESS_KEY"
+    }
+  }'
+```
+
+使用返回的 `id` 在后续的批量导出操作中引用此目标存储。
+
+**如果您在创建目标存储时收到错误，请参阅 [调试目标存储错误](#debugging-destination-errors) 以获取详细的调试信息。**
+
+#### 凭证配置
+
+<Note>**需要 LangSmith Helm 版本 >= `0.10.34` (应用版本 >= `0.10.91`)**</Note>
+
+除了静态的 `access_key_id` 和 `secret_access_key` 之外，我们还支持以下额外的凭证格式：
+
+- 要使用包含 AWS 会话令牌的[临时凭证](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html)，在创建批量导出目标时，需要额外提供 `credentials.session_token` 字段。
+- (仅限自托管): 要使用基于环境的凭证，例如与[AWS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) (IRSA) 配合使用时，在创建批量导出目标时，请从请求中省略 `credentials` 字段。
+  在这种情况下，[标准 Boto3 凭证位置](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#credentials)将按照库定义的顺序进行检查。
+
+#### AWS S3 存储桶
+
+对于 AWS S3，您可以省略 `endpoint_url` 字段，并提供与您的存储桶区域匹配的 `region`。
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/destinations' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "destination_type": "s3",
+    "display_name": "My AWS S3 Destination",
+    "config": {
+      "bucket_name": "my_bucket",
+      "prefix": "data_exports",
+      "region": "us-east-1"
+    },
+    "credentials": {
+      "access_key_id": "YOUR_S3_ACCESS_KEY_ID",
+      "secret_access_key": "YOUR_S3_SECRET_ACCESS_KEY"
+    }
+  }'
+```
+
+#### Google GCS XML S3 兼容存储桶
+
+当使用 Google 的 GCS 存储桶时，您需要使用 XML S3 兼容 API，并提供 `endpoint_url`，该 URL 通常是 `https://storage.googleapis.com`。
+以下是使用与 S3 兼容的 GCS XML API 时的 API 请求示例：
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/destinations' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "destination_type": "s3",
+    "display_name": "My GCS Destination",
+    "config": {
+      "bucket_name": "my_bucket",
+      "prefix": "data_exports",
+      "endpoint_url": "https://storage.googleapis.com"
+    },
+    "credentials": {
+      "access_key_id": "YOUR_S3_ACCESS_KEY_ID",
+      "secret_access_key": "YOUR_S3_SECRET_ACCESS_KEY"
+    }
+  }'
+```
+
+请参阅[Google 文档](https://cloud.google.com/storage/docs/interoperability#xml_api)以获取更多信息。
+
+### 创建导出作业（Create an export job）
+
+要导出数据，您需要创建一个导出作业。此作业将指定目标存储、项目、日期范围和用于过滤要导出的数据的**过滤表达式**。过滤表达式用于缩小导出的追踪（runs）集合，它是可选的。如果不设置过滤字段，将导出所有追踪。请参阅我们的[过滤查询语言](/langsmith/trace-query-syntax#filter-query-language)和[示例](/langsmith/export-traces#use-filter-query-language)以确定正确的过滤表达式。
+
+您可以使用以下 cURL 命令创建作业：
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "bulk_export_destination_id": "your_destination_id",
+    "session_id": "project_uuid",
+    "start_time": "2024-01-01T00:00:00Z",
+    "end_time": "2024-01-02T23:59:59Z",
+    "filter": "and(eq(run_type, \"llm\"), eq(name, \"ChatOpenAI\"), eq(input_key, \"messages.content\"), like(input_value, \"%messages.content%\"))"
+  }'
+```
+
+<Note>
+`session_id` 也被称为**追踪项目 ID**（Tracing Project ID），可以从追踪项目列表中点击进入特定项目后，在项目视图中复制得到。
+</Note>
+
+使用返回的 `id` 在后续的批量导出操作中引用此导出。
+
+#### 限制导出的字段
+
+<Note>
+需要 LangSmith Helm 版本 >= `0.12.11` (应用版本 >= `0.12.42`)。此功能**支持**在[计划导出](#scheduled-exports)和[标准批量导出](#create-an-export-job)中使用。
+</Note>
+
+您可以通过使用 `export_fields` 参数限制导出的 Parquet 文件中包含的字段，从而提高批量导出的速度并减小行大小。当提供了 `export_fields` 时，只有指定的字段才会被导出为 Parquet 文件中的列。当未提供 `export_fields` 时，将包含所有可导出的字段。
+
+这在您希望排除如 `inputs` 和 `outputs` 等较大字段时尤其有用。
+
+以下示例创建了一个只包含特定字段的导出作业：
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "bulk_export_destination_id": "your_destination_id",
+    "session_id": "project_uuid",
+    "start_time": "2024-01-01T00:00:00Z",
+    "end_time": "2024-01-02T23:59:59Z",
+    "export_fields": ["id", "name", "run_type", "start_time", "end_time", "status", "total_tokens", "total_cost"]
+  }'
+```
+
+`export_fields` 参数接受一个字段名称数组。可用字段包括[运行数据格式](/langsmith/run-data-format)中的字段以及额外的仅导出字段：
+
+- `tenant_id`
+- `is_root`
+
+<Tip>
+**性能提示**：从导出中排除 `inputs` 和 `outputs` 可以显著提高导出性能并减小文件大小，特别是对于大型运行。只有在分析中需要这些字段时才包含它们。
+</Tip>
+
+### 计划导出（Scheduled exports）
+
+<Note>
+需要 LangSmith Helm 版本 >= `0.10.42` (应用版本 >= `0.10.109`)
+</Note>
+
+计划导出会定期收集运行数据并导出到配置的目标存储。要创建计划导出，请包含 `interval_hours` 字段并移除 `end_time` 字段：
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "bulk_export_destination_id": "your_destination_id",
+    "session_id": "project_uuid",
+    "start_time": "2024-01-01T00:00:00Z",
+    "filter": "and(eq(run_type, \"llm\"), eq(name, \"ChatOpenAI\"), eq(input_key, \"messages.content\"), like(input_value, \"%messages.content%\"))",
+    "interval_hours": 1
+  }'
+```
+
+您也可以将 `export_fields` 与计划导出一起使用，以限制导出的字段：
+
+```bash
+curl --request POST \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "bulk_export_destination_id": "your_destination_id",
+    "session_id": "project_uuid",
+    "start_time": "2024-01-01T00:00:00Z",
+    "interval_hours": 1,
+    "export_fields": ["id", "name", "run_type", "start_time", "end_time", "status", "total_tokens", "total_cost"]
+  }'
+```
+
+**详情**
+
+- `interval_hours` 必须在 1 小时到 168 小时（1 周）之间（包含）。
+- 对于生成的导出（spawned exports），第一次导出的时间范围是 `start_time=(scheduled_export_start_time), end_time=(start_time + interval_hours)`。
+  然后是 `start_time=(previous_export_end_time), end_time=(this_export_start_time + interval_hours)`，依此类推。
+- 对于计划导出，必须省略 `end_time` 字段。对于非计划导出，`end_time` 仍然是必需的。
+- 计划导出可以通过[取消导出](#stop-an-export)来停止。
+  - 由计划导出生成的子导出（spawned exports）会填充 `source_bulk_export_id` 属性。
+  - 如果需要，这些子导出必须与源计划导出单独取消——取消源计划导出**不会**取消子导出。
+- 子导出会在 `end_time + 10 分钟` 时运行，以处理那些在最近过去提交的、`end_time` 在这个时间点之前的运行。
+
+**示例**
+
+如果使用 `start_time=2025-07-16T00:00:00Z` 和 `interval_hours=6` 创建了一个计划导出：
+
+| 导出 | Start Time | End Time | 运行时间 |
+| ------ | -------------------- | -------------------- | -------------------- |
+| 1 | 2025-07-16T00:00:00Z | 2025-07-16T06:00:00Z | 2025-07-16T06:10:00Z |
+| 2 | 2025-07-16T06:00:00Z | 2025-07-16T12:00:00Z | 2025-07-16T12:10:00Z |
+| 3 | 2025-07-16T12:00:00Z | 2025-07-16T18:00:00Z | 2025-07-16T18:10:00Z |
+
+## 监控导出作业
+
+### 监控导出状态
+
+要监控导出作业的状态，请使用以下 cURL 命令：
+
+```bash
+curl --request GET \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/{export_id}' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID'
+```
+
+将 `{export_id}` 替换为您要监控的导出的 ID。此命令将检索指定导出作业的当前状态。
+
+### 列出导出中的运行（Runs）
+
+导出通常被分解为多个运行（runs），这些运行对应于要导出的特定日期分区。要列出与特定导出相关联的所有运行，请使用以下 cURL 命令：
+
+```bash
+curl --request GET \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/{export_id}/runs' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID'
+```
+
+此命令将获取与指定导出相关的所有运行，并提供运行 ID、状态、创建时间、导出行数等详细信息。
+
+### 列出所有导出作业
+
+要检索所有导出作业的列表，请使用以下 cURL 命令：
+
+```bash
+curl --request GET \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID'
+```
+
+此命令将返回所有导出作业的列表，包括它们当前的运行状态和创建时间戳。
+
+### 停止导出
+
+要停止现有的导出作业，请使用以下 cURL 命令：
+
+```bash
+curl --request PATCH \
+  --url 'https://api.smith.langchain.com/api/v1/bulk-exports/{export_id}' \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: YOUR_API_KEY' \
+  --header 'X-Tenant-Id: YOUR_WORKSPACE_ID' \
+  --data '{
+    "status": "Cancelled"
+}'
+```
+
+将 `{export_id}` 替换为您希望取消的导出 ID。请注意，一旦作业被取消，它就不能重新启动，您需要创建一个新的导出作业来代替。
+
+## 分区方案（Partitioning Scheme）
+
+数据将以以下 Hive 分区格式导出到您的存储桶中：
+
+```
+<bucket>/<prefix>/export_id=<export_id>/tenant_id=<tenant_id>/session_id=<session_id>/runs/year=<year>/month=<month>/day=<day>
+```
+
+## 导入数据到其他系统
+
+从 S3 和 Parquet 格式导入数据通常受到大多数分析系统的支持。以下是文档链接：
+
+### BigQuery
+
+要将数据导入 BigQuery，请参阅[从 Parquet 加载数据](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-parquet)以及[Hive 分区加载](https://cloud.google.com/bigquery/docs/hive-partitioned-loads-gcs)。
+
+### Snowflake
+
+您可以按照[从云文档加载](https://docs.snowflake.com/en/user-guide/tutorials/load-from-cloud-tutorial)的说明，将数据从 S3 加载到 Snowflake 中。
+
+### RedShift
+
+您可以通过遵循[AWS COPY 命令文档](https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html)中的说明，将数据从 S3 或 Parquet 复制到 Amazon Redshift。
+
+### Clickhouse
+
+您可以直接查询 S3 / Parquet 格式的数据（在 Clickhouse 中）。例如，如果使用 GCS，您可以按如下方式查询数据：
+
+```sql
+SELECT count(distinct id) FROM s3('https://storage.googleapis.com/<bucket>/<prefix>/export_id=<export_id>/**',
+ 'access_key_id', 'access_secret', 'Parquet')
+```
+
+有关更多信息，请参阅[Clickhouse S3 集成文档](https://clickhouse.com/docs/en/engines/table-engines/integrations/s3)。
+
+### DuckDB
+
+您可以使用 DuckDB 通过 SQL 在内存中查询来自 S3 的数据。请参阅[S3 导入文档](https://duckdb.org/docs/guides/network_cloud_storage/s3_import.html)。
+
+## 错误处理
+
+### 调试目标存储错误
+
+`destinations` API 端点将验证目标存储和凭证是否有效，并检查对存储桶的写入访问权限是否存在。
+
+如果您收到错误，并希望调试此错误，您可以使用 [AWS CLI](https://aws.amazon.com/cli/) 来测试到存储桶的连接性。您应该能够使用与您提供给 `destinations` API 的相同数据写入文件。
+
+**AWS S3:**
+
+```bash
+aws configure
+
+# 设置与您用于目标存储的访问密钥凭证和区域相同
+> AWS Access Key ID: <access_key_id>
+> AWS Secret Access Key: <secret_access_key>
+> Default region name [us-east-1]: <region>
+
+# 列出存储桶
+aws s3 ls /
+
+# 测试写入权限
+touch ./test.txt
+aws s3 cp ./test.txt s3://<bucket-name>/tmp/test.txt
+```
+
+**GCS 兼容存储桶:**
+
+您需要使用 `--endpoint-url` 选项提供 `endpoint_url`。对于 GCS，`endpoint_url` 通常是 `https://storage.googleapis.com`：
+
+```bash
+aws configure
+
+# 设置与您用于目标存储的访问密钥凭证和区域相同
+> AWS Access Key ID: <access_key_id>
+> AWS Secret Access Key: <secret_access_key>
+> Default region name [us-east-1]: <region>
+
+# 列出存储桶
+aws s3 --endpoint-url=<endpoint_url> ls /
+
+# 测试写入权限
+touch ./test.txt
+aws s3 --endpoint-url=<endpoint_url> cp ./test.txt s3://<bucket-name>/tmp/test.txt
+```
+
+### 监控运行
+
+您可以使用[列出导出运行 API](#list-runs-for-an-export)来监控您的运行。如果这是一个已知错误，它将被添加到运行的 `errors` 字段中。
+
+### 常见错误
+
+以下是一些常见错误：
+
+| 错误 | 描述 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Access denied (访问被拒绝) | 实体存储凭证或存储桶无效。当提供的访问密钥和密钥组合没有必要的权限来访问指定存储桶或执行所需操作时，会发生此错误。 |
+| Bucket is not valid (存储桶无效) | 指定的实体存储桶无效。当存储桶不存在或没有足够的访问权限来执行写入操作时，会抛出此错误。 |
+| Key ID you provided does not exist (提供的密钥 ID 不存在) | 提供的实体存储凭证无效。当用于身份验证的访问密钥 ID 不是有效的密钥时，会发生此错误。 |
+| Invalid endpoint (端点无效) | 提供的 `endpoint_url` 无效。当指定的端点无效时，会引发此错误。仅支持 S3 兼容的端点，例如 GCS 的 `https://storage.googleapis.com`，MinIO 的 `https://play.min.io` 等。如果使用 AWS，则应省略 `endpoint_url`。 |
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\data-export.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

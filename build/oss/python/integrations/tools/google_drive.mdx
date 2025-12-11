@@ -1,0 +1,138 @@
+---
+title: Google 云端硬盘
+---
+
+本指南将介绍如何将 LangChain 连接到 `Google Drive API`。
+
+## 先决条件
+
+1. 创建一个新的 Google Cloud 项目或使用现有项目。
+1. 启用 [Google Drive API](https://console.cloud.google.com/flows/enableapi?apiid=drive.googleapis.com)。
+1. [为桌面应用授权凭证](https://developers.google.com/drive/api/quickstart/python#authorize_credentials_for_a_desktop_application)。
+1. 运行 `pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib` 进行安装。
+
+## 获取 Google 文档数据的说明
+
+默认情况下，`GoogleDriveTools` 和 `GoogleDriveWrapper` 期望 `credentials.json` 文件位于 `~/.credentials/credentials.json`。但是，您可以通过将 `GOOGLE_ACCOUNT_FILE` 环境变量设置为您的 `custom/path/to/credentials.json` 来配置此路径。`token.json` 文件的位置遵循相同的目录（或者使用 `token_path` 参数）。请注意，`token.json` 文件将在您首次使用该工具时自动创建。
+
+`GoogleDriveSearchTool` 可以通过一些特定的请求检索选定的文件。
+
+默认情况下，如果您使用了 `folder_id`，则可以在该文件夹中检索所有可以转换为 `Document` 的文件，只要它们的文件名与查询匹配。
+
+```python
+pip install -qU  google-api-python-client google-auth-httplib2 google-auth-oauthlib langchain-community
+```
+
+您可以从 URL 中获取文件夹 ID 和文档 ID：
+
+* 文件夹（Folder）: [drive.google.com/drive/u/0/folders/1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5](https://drive.google.com/drive/u/0/folders/1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5) -> 文件夹 ID 是 `"1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5"`
+* 文档（Document）: [docs.google.com/document/d/1bfaMQ18_i56204VaQDVeAFpqEijJTgvurupdEDiaUQw/edit](https://docs.google.com/document/d/1bfaMQ18_i56204VaQDVeAFpqEijJTgvurupdEDiaUQw/edit) -> 文档 ID 是 `"1bfaMQ18_i56204VaQDVeAFpqEijJTgvurupdEDiaUQw"`
+
+特殊值 `root` 代表您的个人根目录（Google Drive 首页）。
+
+```python
+folder_id = "root"
+# folder_id='1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5'
+```
+
+默认情况下，具有以下 MIME 类型的 Google 文件可以被转换为 `Document` 对象：
+* text/text
+* text/plain
+* text/html
+* text/csv
+* text/markdown
+* image/png
+* image/jpeg
+* application/epub+zip
+* application/pdf
+* application/rtf
+* application/vnd.google-apps.document (GDoc 文档)
+* application/vnd.google-apps.presentation (GSlide 演示文稿)
+* application/vnd.google-apps.spreadsheet (GSheet 表格)
+* application/vnd.google.colaboratory (Colab Notebook)
+* application/vnd.openxmlformats-officedocument.presentationml.presentation (PPTX)
+* application/vnd.openxmlformats-officedocument.wordprocessingml.document (DOCX)
+
+可以查看 `GoogleDriveAPIWrapper` 的文档来更新或自定义此列表。
+
+但是，必须安装相应的软件包。
+
+```python
+pip install -qU  unstructured langchain-googledrive
+```
+
+```python
+import os
+
+from langchain_googledrive.tools.google_drive.tool import GoogleDriveSearchTool
+from langchain_googledrive.utilities.google_drive import GoogleDriveAPIWrapper
+
+os.environ["GOOGLE_ACCOUNT_FILE"] = "custom/path/to/credentials.json"
+
+# 默认情况下，只在文件名中进行搜索。
+tool = GoogleDriveSearchTool(
+    api_wrapper=GoogleDriveAPIWrapper(
+        folder_id=folder_id,
+        num_results=2,
+        template="gdrive-query-in-folder",  # 在文档正文中搜索
+    )
+)
+```
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+```
+
+```python
+tool.run("machine learning")
+```
+
+```python
+tool.description
+```
+
+```output
+"一个围绕 Google Drive 搜索的封装器。当您需要在 Google Drive 中查找文档时非常有用。输入应格式化为由空格分隔的实体列表。例如，关键字列表是 'hello word'。"
+```
+
+## 在 ReAct 代理中使用工具
+
+为了创建一个使用 Google Jobs 工具的代理，请安装 LangGraph：
+
+```python
+pip install -qU langgraph langchain-openai
+```
+
+然后使用 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 功能来初始化一个 ReAct 代理。你还需要设置你的 `OPENAI_API_KEY`（请访问 [platform.openai.com](https://platform.openai.com)）才能访问 OpenAI 的聊天模型。
+
+```python
+import os
+
+from langchain.chat_models import init_chat_model
+from langchain.agents import create_agent
+
+
+os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
+
+
+model = init_chat_model("gpt-4o-mini", model_provider="openai", temperature=0)
+agent = create_agent(model, tools=[tool])
+
+events = agent.stream(
+    {"messages": [("user", "在 Google Drive 中搜索，谁是 'Yann LeCun' ?")]},
+    stream_mode="values",
+)
+for event in events:
+    event["messages"][-1].pretty_print()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\google_drive.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

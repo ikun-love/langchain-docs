@@ -1,0 +1,228 @@
+```markdown
+---
+title: ChatSeekrFlow
+---
+
+> [Seekr](https://www.seekr.com/) 提供了用于结构化、可解释和透明的 AI 交互的 AI 驱动解决方案。
+
+本指南提供了开始使用 Seekr [聊天模型](/oss/python/langchain/models) 的快速概览。有关所有 `ChatSeekrFlow` 功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.seekrflow.ChatSeekrFlow.html)。
+
+## 概述
+
+`ChatSeekrFlow` 类封装了托管在 SeekrFlow 上的聊天模型端点，实现了与 LangChain 应用的无缝集成。
+
+### 集成详情
+
+| 类名 | 包 | 本地 | 可序列化 | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: |  :---: | :---: |
+| [ChatSeekrFlow](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.seekrflow.ChatSeekrFlow.html) | [seekrai](https://python.langchain.com/docs/integrations/providers/seekr/) | ❌ | beta | ![PyPI - Downloads](https://img.shields.io/pypi/dm/seekrai?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/seekrai?style=flat-square&label=%20) |
+
+### 模型特性
+
+| [工具调用](/oss/python/langchain/tools/) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/python/langchain/streaming/) | 原生异步 | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+
+### 支持的方法
+
+`ChatSeekrFlow` 支持 `ChatModel` 的所有方法，**但异步 API 除外**。
+
+### 端点要求
+
+`ChatSeekrFlow` 所封装的服务端点**必须**具有与 OpenAI 兼容的聊天输入/输出格式。它可以用于：
+
+1. **微调过的 Seekr 模型**
+2. **自定义的 SeekrFlow 模型**
+3. **使用 Seekr 的检索系统的 RAG 模型**
+
+对于异步使用，请参阅 `AsyncChatSeekrFlow`（即将推出）。
+
+# 在 LangChain 中开始使用 ChatSeekrFlow
+
+本教程演示了如何在 LangChain 中将 SeekrFlow 用作聊天模型。
+
+## 设置
+
+确保安装了必要的依赖项：
+
+```bash
+pip install seekrai langchain langchain-community
+```
+
+您还必须拥有来自 Seekr 的 API 密钥才能进行请求身份验证。
+
+```python
+# 标准库
+import getpass
+import os
+
+# 第三方库
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema import HumanMessage
+from langchain_core.runnables import RunnableSequence
+
+# OSS SeekrFlow 集成
+from langchain_seekrflow import ChatSeekrFlow
+from seekrai import SeekrFlow
+```
+
+## API 密钥设置
+
+您需要将 API 密钥设置为环境变量以进行请求身份验证。
+
+运行以下单元格。
+
+或者在运行查询之前手动分配它：
+
+```python
+SEEKR_API_KEY = "your-api-key-here"
+```
+
+```python
+os.environ["SEEKR_API_KEY"] = getpass.getpass("Enter your Seekr API key:")
+```
+
+## 实例化
+
+```python
+os.environ["SEEKR_API_KEY"]
+seekr_client = SeekrFlow(api_key=SEEKR_API_KEY)
+
+llm = ChatSeekrFlow(
+    client=seekr_client, model_name="meta-llama/Meta-Llama-3-8B-Instruct"
+)
+```
+
+## 调用 (Invocation)
+
+```python
+response = llm.invoke([HumanMessage(content="Hello, Seekr!")])
+print(response.content)
+```
+
+```output
+Hello there! I'm Seekr, nice to meet you! What brings you here today? Do you have a question, or are you looking for some help with something? I'm all ears (or rather, all text)!
+```
+
+## 链式处理 (Chaining)
+
+```python
+prompt = ChatPromptTemplate.from_template("Translate to French: {text}")
+
+chain: RunnableSequence = prompt | llm
+result = chain.invoke({"text": "Good morning"})
+print(result)
+```
+
+```output
+content='The translation of "Good morning" in French is:\n\n"Bonne journée"' additional_kwargs={} response_metadata={}
+```
+
+```python
+def test_stream():
+    """测试同步调用中的流式传输模式。"""
+    print("\n🔹 Testing Sync `stream()` (Streaming)...")
+
+    for chunk in llm.stream([HumanMessage(content="Write me a haiku.")]):
+        print(chunk.content, end="", flush=True)
+
+
+# ✅ 确保启用了流式传输
+llm = ChatSeekrFlow(
+    client=seekr_client,
+    model_name="meta-llama/Meta-Llama-3-8B-Instruct",
+    streaming=True,  # ✅ 启用流式传输
+)
+
+# ✅ 运行同步流式传输测试
+test_stream()
+```
+
+```output
+🔹 Testing Sync `stream()` (Streaming)...
+Here is a haiku:
+
+Golden sunset fades
+Ripples on the quiet lake
+Peaceful evening sky
+```
+
+## 错误处理与调试
+
+```python
+# 定义一个最小的 Mock SeekrFlow 客户端
+class MockSeekrClient:
+    """Mock SeekrFlow API 客户端，模拟真实的 API 结构。"""
+
+    class MockChat:
+        """带有 completions 方法的 Mock Chat 对象。"""
+
+        class MockCompletions:
+            """带有 create 方法的 Mock Completions 对象。"""
+
+            def create(self, *args, **kwargs):
+                return {
+                    "choices": [{"message": {"content": "Mock response"}}]
+                }  # 模拟 API 响应
+
+        completions = MockCompletions()
+
+    chat = MockChat()
+
+
+def test_initialization_errors():
+    """测试无效的 ChatSeekrFlow 初始化是否会引发预期的错误。"""
+
+    test_cases = [
+        {
+            "name": "缺少客户端 (Missing Client)",
+            "args": {"client": None, "model_name": "seekrflow-model"},
+            "expected_error": "SeekrFlow client cannot be None.",
+        },
+        {
+            "name": "缺少模型名称 (Missing Model Name)",
+            "args": {"client": MockSeekrClient(), "model_name": ""},
+            "expected_error": "A valid model name must be provided.",
+        },
+    ]
+
+    for test in test_cases:
+        try:
+            print(f"Running test: {test['name']}")
+            faulty_llm = ChatSeekrFlow(**test["args"])
+
+            # 如果没有引发错误，则测试失败
+            print(f"❌ Test '{test['name']}' failed: No error was raised!")
+        except Exception as e:
+            error_msg = str(e)
+            assert test["expected_error"] in error_msg, f"Unexpected error: {error_msg}"
+            print(f"✅ Expected Error: {error_msg}")
+
+
+# 运行测试
+test_initialization_errors()
+```
+
+```output
+Running test: 缺少客户端 (Missing Client)
+✅ Expected Error: SeekrFlow client cannot be None.
+Running test: 缺少模型名称 (Missing Model Name)
+✅ Expected Error: A valid model name must be provided.
+```
+
+---
+
+## API 参考
+
+- `ChatSeekrFlow` 类: [`langchain_seekrflow.ChatSeekrFlow`](https://github.com/benfaircloth/langchain-seekrflow/blob/main/langchain_seekrflow/seekrflow.py)
+- PyPI 包: [`langchain-seekrflow`](https://pypi.org/project/langchain-seekrflow/)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\seekrflow.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

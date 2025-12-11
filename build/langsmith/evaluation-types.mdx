@@ -1,0 +1,79 @@
+---
+title: 评估类型
+sidebarTitle: 评估类型
+---
+
+LangSmith 支持针对开发和部署不同阶段的多种评估类型。理解何时使用每种类型有助于构建全面的评估策略。
+
+## 离线评估类型 (Offline evaluation types)
+
+离线评估在应用程序部署前，基于精心策划的数据集上进行测试。通过在带有参考输出（reference outputs）的示例上运行评估，团队可以在将变更暴露给用户之前比较不同版本、验证功能并建立信心。
+
+可以使用 LangSmith SDK（[Python](https://docs.smith.langchain.com/reference/python/reference) 和 [TypeScript](https://docs.smith.langchain.com/reference/js)）在客户端运行离线评估，或通过 [Prompt Playground](/langsmith/observability-concepts#prompt-playground) 或 [Automations](/langsmith/rules)（自动化）在服务器端运行。
+
+![Offline](/langsmith/images/offline.png)
+
+### 基准测试 (Benchmarking)
+
+_基准测试_是在一个精心策划的数据集上比较多个应用程序版本，以确定性能最佳的版本。此过程涉及创建代表性输入的**数据集**，定义性能指标，并测试每个版本。
+
+基准测试需要使用**黄金标准参考输出**和设计良好的比较指标来精心策划数据集。示例：
+- **RAG 问答机器人**: 包含问题和参考答案的数据集，使用一个“LLM 即裁判”评估器来检查实际答案与参考答案之间的语义等价性。
+- **ReACT 代理**: 包含用户请求和参考工具调用（tool calls）的数据集，使用一个**启发式评估器**来验证所有期望的工具调用是否都已执行。
+
+### 单元测试 (Unit tests)
+
+_单元测试_用于验证单个系统组件的正确性。在 LLM（大语言模型）环境中，[单元测试通常是基于规则的断言](https://hamel.dev/blog/posts/evals/#level-1-unit-tests)，针对输入或输出进行（例如，验证 LLM 生成的代码可以编译、JSON 可以成功加载），以验证基本功能。
+
+单元测试通常期望结果一致地通过，因此它们非常适合 CI（持续集成）管道。在 CI 中运行时，请配置缓存以最小化 LLM API 调用及相关的成本。
+
+### 回归测试 (Regression tests)
+
+_回归测试_用于衡量应用程序版本随时间推移的性能一致性。它们确保新版本不会降低当前版本能正确处理的案例的性能，并理想情况下展示相对于基准线的改进。这些测试通常在对用户体验有预期影响的更新（例如模型或架构更改）时运行。
+
+LangSmith 的比较视图会突出显示相对于基准线的回归（显示为红色）和改进（显示为绿色），从而可以快速识别变更。
+
+![Comparison view](/langsmith/images/comparison-view.png)
+
+### 回溯测试 (Backtesting)
+
+_回溯测试_是针对历史生产数据评估新的应用程序版本。生产日志被转换为一个数据集，然后较新的版本处理这些示例，以评估它们在过去、真实的生产用户输入上的性能。
+
+这种方法常用于评估新的模型发布。例如，当一个新模型可用时，可以在最近的生产运行中测试它，并将结果与实际的生产结果进行比较。
+
+### 成对比较评估 (Pairwise evaluation)
+
+_成对比较评估_通过确定相对质量而不是分配绝对分数来进行两个版本输出的比较。对于某些任务，[确定“版本 A 优于版本 B”](https://www.oreilly.com/radar/what-we-learned-from-a-year-of-building-with-llms-part-i/) 比独立地对每个版本打分更容易。
+
+这种方法在处理主观任务时（尤其是在使用“LLM 即裁判”评估时）特别有用。例如，在摘要任务中，确定“哪个摘要更清晰、更简洁？”通常比分配数值清晰度分数要简单。
+
+了解如何运行成对比较评估：[how run pairwise evaluations](/langsmith/evaluate-pairwise)。
+
+## 在线评估类型 (Online evaluation types)
+
+在线评估在接近实时的情况下评估生产应用程序的输出。由于没有参考输出，这些评估侧重于检测问题、监控质量趋势，并识别那些可以为未来离线测试提供信息的**边缘案例**。
+
+在线评估器通常在服务器端运行。LangSmith 提供了内置的 [LLM 即裁判评估器](/langsmith/llm-as-judge) 用于配置，并支持在 LangSmith 内部运行的自定义代码评估器。
+
+![Online](/langsmith/images/online.png)
+
+### 实时监控 (Real-time monitoring)
+
+在用户与系统交互时，持续监控应用程序质量。在线评估自动运行在生产流量上，对每次交互提供即时反馈。这使得在质量下降、异常模式或意外行为影响大量用户之前就能检测到它们。
+
+### 异常检测 (Anomaly detection)
+
+识别偏离预期模式的离群值（outliers）和边缘案例。在线评估器可以标记出具有不寻常特征的运行实例——响应时间过长或过短、意外的错误率，或未能通过安全检查的输出——以便进行人工审查，并可能将其添加到离线数据集。
+
+### 生产反馈循环 (Production feedback loop)
+
+利用生产环境中的洞察来改进离线评估。在线评估会暴露出在精心策划的数据集中可能未出现过的真实世界问题和使用模式。失败的生产运行会成为数据集示例的候选，从而创造一个迭代周期：生产经验持续地完善测试覆盖范围。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\evaluation-types.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

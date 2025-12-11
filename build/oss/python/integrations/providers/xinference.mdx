@@ -1,0 +1,134 @@
+---
+title: Xorbits 推理 (Xinference)
+---
+
+本页面演示了如何将 [Xinference](https://github.com/xorbitsai/inference) 与 LangChain 结合使用。
+
+`Xinference` 是一个强大且用途广泛的库，旨在为您提供服务大型语言模型（LLM）、语音识别模型和多模态模型的能力，即使在您的笔记本电脑上也可以实现。借助 Xorbits Inference，您只需一个命令即可轻松部署和运行您自己或最先进的内置模型。
+
+## 安装与设置
+
+可以通过 PyPI 使用 pip 安装 Xinference：
+
+<CodeGroup>
+```bash pip
+pip install "xinference[all]"
+```
+
+```bash uv
+uv add xinference[all]
+```
+</CodeGroup>
+
+## LLM
+
+Xinference 支持与 GGML 兼容的各种模型，包括 chatglm、baichuan、whisper、vicuna 和 orca。要查看内置模型，请运行以下命令：
+
+```bash
+xinference list --all
+```
+
+
+### Xinference 的包装器 (Wrapper)
+
+您可以通过运行以下命令来启动本地 Xinference 实例：
+
+```bash
+xinference
+```
+
+您也可以在分布式集群中部署 Xinference。为此，首先在您希望运行它的服务器上启动一个 Xinference supervisor（主管程序）：
+
+```bash
+xinference-supervisor -H "${supervisor_host}"
+```
+
+
+然后在您希望运行工作进程（Worker）的每个其他服务器上启动 Xinference worker：
+
+```bash
+xinference-worker -e "http://${supervisor_host}:9997"
+```
+
+您也可以通过运行以下命令来启动本地 Xinference 实例：
+
+```bash
+xinference
+```
+
+一旦 Xinference 运行起来，就可以通过 CLI（命令行界面）或 Xinference 客户端访问一个用于模型管理的端点 (endpoint)。
+
+对于本地部署，端点将是 http://localhost:9997。
+
+
+对于集群部署，端点将是 http://$\{supervisor_host\}:9997。
+
+
+接下来，您需要启动（加载）一个模型。您可以指定模型名称和其他属性，包括 `model_size_in_billions`（模型十亿参数量）和 `quantization`（量化设置）。您可以使用命令行界面 (CLI) 来完成此操作。例如：
+
+```bash
+xinference launch -n orca -s 3 -q q4_0
+```
+
+系统将返回一个模型的 UID（唯一标识符）。
+
+使用示例：
+
+```python
+from langchain_community.llms import Xinference
+
+llm = Xinference(
+    server_url="http://0.0.0.0:9997",
+    model_uid = {model_uid} # 请将 model_uid 替换为启动模型时返回的 UID
+)
+
+llm(
+    prompt="Q: where can we visit in the capital of France? A:",
+    generate_config={"max_tokens": 1024, "stream": True},
+)
+
+```
+
+### 用法
+
+有关更多信息和详细示例，请参阅 [xinference LLM 的示例](/oss/python/integrations/llms/xinference)。
+
+### Embeddings（嵌入）
+
+Xinference 也支持对查询和文档进行嵌入处理。有关更详细的演示，请参阅 [xinference 嵌入的示例](/oss/python/integrations/text_embedding/xinference)。
+
+
+### Xinference LangChain 合作伙伴包安装
+
+使用以下命令安装集成包：
+
+<CodeGroup>
+```bash pip
+pip install langchain-xinference
+```
+
+```bash uv
+uv add langchain-xinference
+```
+</CodeGroup>
+
+## Chat Models（聊天模型）
+
+```python
+from langchain_xinference.chat_models import ChatXinference
+```
+
+## LLM
+
+```python
+from langchain_xinference.llms import Xinference
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\xinference.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,166 @@
+---
+title: Pandas DataFrame
+---
+
+本 Notebook 展示了如何使用 Agent 与 `Pandas DataFrame` 进行交互。它主要针对问答场景进行了优化。
+
+**注意：该 Agent 在底层调用了 `Python` Agent，后者会执行 LLM 生成的 Python 代码——如果 LLM 生成的代码存在安全风险，这可能会很危险。请谨慎使用。**
+
+**注意：自从 LangChain 迁移到 v0.3 版本后，您应该升级 `langchain_openai` 和 `langchain` 库。这样做可以避免导入错误。**
+
+```bash
+pip install -U langchain_openai
+pip install -U langchain
+```
+
+```python
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_openai import ChatOpenAI
+```
+
+```python
+import pandas as pd
+from langchain_openai import OpenAI
+
+# 从指定的 URL 读取 CSV 文件到 DataFrame 中
+df = pd.read_csv(
+    "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv"
+)
+```
+
+## 使用 `ZERO_SHOT_REACT_DESCRIPTION`
+
+这部分展示了如何使用 `ZERO_SHOT_REACT_DESCRIPTION` 代理类型来初始化 Agent。
+
+```python
+agent = create_pandas_dataframe_agent(OpenAI(temperature=0), df, verbose=True)
+```
+
+## 使用 OpenAI Functions
+
+这部分展示了如何使用 `OPENAI_FUNCTIONS` 代理类型来初始化 Agent。请注意，这是上述方法的另一种选择。
+
+```python
+agent = create_pandas_dataframe_agent(
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+    df,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+)
+```
+
+```python
+agent.invoke("how many rows are there?")
+```
+
+```output
+> Entering new  chain...
+
+Invoking: `python_repl_ast` with `df.shape[0]`
+
+
+891There are 891 rows in the dataframe.
+
+> Finished chain.
+```
+
+```output
+'There are 891 rows in the dataframe.'
+```
+
+```python
+agent.invoke("how many people have more than 3 siblings")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: I need to count the number of people with more than 3 siblings
+Action: python_repl_ast
+Action Input: df[df['SibSp'] > 3].shape[0]
+Observation: 30
+Thought: I now know the final answer
+Final Answer: 30 people have more than 3 siblings.
+
+> Finished chain.
+```
+
+```output
+'30 people have more than 3 siblings.'
+```
+
+```python
+agent.invoke("whats the square root of the average age?")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: I need to calculate the average age first
+Action: python_repl_ast
+Action Input: df['Age'].mean()
+Observation: 29.69911764705882
+Thought: I now need to calculate the square root of the average age
+Action: python_repl_ast
+Action Input: math.sqrt(df['Age'].mean())
+Observation: NameError("name 'math' is not defined")
+Thought: I need to import the math library
+Action: python_repl_ast
+Action Input: import math
+Observation:
+Thought: I now need to calculate the square root of the average age
+Action: python_repl_ast
+Action Input: math.sqrt(df['Age'].mean())
+Observation: 5.449689683556195
+Thought: I now know the final answer
+Final Answer: The square root of the average age is 5.449689683556195.
+
+> Finished chain.
+```
+
+```output
+'The square root of the average age is 5.449689683556195.'
+```
+
+## 多 DataFrame 示例
+
+接下来的部分展示了 Agent 如何与传入的多个 DataFrame（以列表形式）进行交互。
+
+```python
+df1 = df.copy()
+# 使用平均年龄填充 df1 中 'Age' 列的缺失值
+df1["Age"] = df1["Age"].fillna(df1["Age"].mean())
+```
+
+```python
+agent = create_pandas_dataframe_agent(OpenAI(temperature=0), [df, df1], verbose=True)
+agent.invoke("how many rows in the age column are different?")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: I need to compare the age columns in both dataframes
+Action: python_repl_ast
+Action Input: len(df1[df1['Age'] != df2['Age']])
+Observation: 177
+Thought: I now know the final answer
+Final Answer: 177 rows in the age column are different.
+
+> Finished chain.
+```
+
+```output
+'177 rows in the age column are different.'
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\pandas.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

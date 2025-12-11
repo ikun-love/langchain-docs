@@ -1,0 +1,408 @@
+```markdown
+---
+title: 概述
+sidebarTitle: 概述
+---
+
+import OrgWorkspaceRole from '/snippets/langsmith/multi-workspace-org-roles.mdx';
+import PermissionReference from '/snippets/langsmith/permissions-reference.mdx';
+
+本概述涵盖了 LangSmith 中与管理用户、组织和工作区相关的各种主题。
+
+## 资源层级结构 (Resource Hierarchy)
+
+### 组织 (Organizations)
+
+组织是 LangSmith 中具有自己计费配置的用户逻辑分组。通常，每个公司对应一个组织。一个组织可以包含多个工作区。有关更多详细信息，请参阅[设置指南](/langsmith/set-up-a-workspace#set-up-an-organization)。
+
+当您首次登录时，系统会自动为您创建一个个人组织。如果您想与他人协作，可以创建一个单独的组织并将团队成员邀请加入。您的个人组织与共享组织之间存在一些重要的区别：
+
+| 特性 | 个人组织 (Personal) | 共享组织 (Shared) |
+| :--- | :--- | :--- |
+| 最大工作区数 | 1 | 可变，取决于套餐（参阅 [定价页面](https://www.langchain.com/pricing-langsmith)） |
+| 协作 | 无法邀请用户 | 可以邀请用户 |
+| 付费套餐 | 仅限开发者套餐 (Developer plan) | 所有其他可用套餐 |
+
+### 工作区 (Workspaces)
+
+<Info>
+工作区之前被称为租户 (Tenants)。在过渡期间，某些代码和 API 可能仍会引用旧名称。
+</Info>
+
+工作区是组织内用户和资源的一个逻辑分组。工作区分隔了资源的信任边界和访问控制。用户在工作区中拥有的权限可以授予他们对该工作区内资源的访问权限，包括追踪项目 (tracing projects)、数据集 (datasets)、标注队列 (annotation queues) 和提示 (prompts)。有关更多详细信息，请参阅[设置指南](/langsmith/set-up-a-workspace)。
+
+建议为组织内的每个团队创建一个独立的工作区。为了进一步组织资源，您可以使用 [资源标签](#resource-tags) 在工作区内对资源进行分组。
+
+下图显示了一个示例工作区设置页面：![Sample Workspace](/langsmith/images/sample-workspace.png)
+
+下图解释了组织、工作区以及在工作区内部署和范围内界定的不同资源之间的关系：![Resource Hierarchy](/langsmith/images/resource-hierarchy.png)
+
+请参阅下表，了解有关哪些功能在哪个范围内（组织或工作区）可用的详细信息：
+
+| 资源/设置 | 范围 (Scope) |
+| :--- | :--- |
+| 追踪项目 (Trace Projects) | 工作区 |
+| 标注队列 (Annotation Queues) | 工作区 |
+| 部署 (Deployments) | 工作区 |
+| 数据集和实验 (Datasets & Experiments) | 工作区 |
+| 提示 (Prompts) | 工作区 |
+| 资源标签 (Resource Tags) | 工作区 |
+| API 密钥 (API Keys) | 工作区 |
+| 设置，包括密钥 (Secrets)、反馈配置 (Feedback config)、模型 (Models)、规则 (Rules) 和共享 URL (Shared URLs) | 工作区 |
+| 用户管理：邀请用户加入工作区 | 工作区 |
+| RBAC：分配工作区角色 | 工作区 |
+| 数据保留、使用限制 | 工作区\* |
+| 套餐和计费、积分、发票 | 组织 |
+| 用户管理：邀请用户加入组织 | 组织\*\* |
+| 添加工作区 | 组织 |
+| 分配组织角色 | 组织 |
+| RBAC：创建/编辑/删除自定义角色 | 组织 |
+
+\* 数据保留设置和使用限制很快也将适用于组织级别 \*\* 自托管安装可以通过功能标志 (feature flag) 启用向组织邀请用户的权限在工作区级别进行。有关详细信息，请参阅[自托管用户管理文档](/langsmith/self-host-user-management)。
+
+### 资源标签 (Resource tags)
+
+资源标签允许您在工作区内组织资源。每个标签都是一个可以分配给资源的键值对。标签可用于在 UI 和 API 中过滤工作区范围的资源：项目、数据集、标注队列、部署和实验。
+
+每个新工作区都带有两个默认标签键：`Application`（应用）和 `Environment`（环境）；顾名思义，这些标签可用于根据资源所属的应用和环境对其进行分类。如有需要，可以添加更多标签。
+
+LangSmith 资源标签与云服务（如 [AWS](https://docs.aws.amazon.com/tag-editor/latest/userguide/tagging.html)）中的标签非常相似。
+
+![Sample Resource Tags](/langsmith/images/resource-tags.png)
+
+## 用户管理与 RBAC
+
+### 用户 (Users)
+
+用户是可以访问 LangSmith 的人员。用户可以是一个或多个组织及其内部工作区的成员。
+
+组织成员在组织设置中进行管理：
+
+![Sample Organization Members](/langsmith/images/org-members-settings.png)
+
+工作区成员在工作区设置中进行管理：
+
+![Sample Workspace Members](/langsmith/images/org-settings-workspaces-tab.png)
+
+### API 密钥 (API keys)
+
+<Warning>
+我们已于 2024 年 10 月 22 日终止对以 `ls__` 为前缀的旧版 API 密钥的支持，转而支持个人访问令牌 (PATs) 和服务密钥 (service keys)。对于所有新集成，我们要求使用 PATs 和服务密钥。前缀为 `ls__` 的 API 密钥在 2024 年 10 月 22 日后将不再有效。
+</Warning>
+
+#### 密钥有效期 (Expiration Dates)
+
+创建 API 密钥时，您可以选择设置有效期。为密钥添加有效期可以增强安全性，并最大限度地降低未经授权访问的风险。例如，您可以为需要提升权限的临时任务设置密钥有效期。
+
+默认情况下，密钥永不过期。密钥过期后将失效，无法重新激活或修改其有效期。
+
+#### 个人访问令牌 (Personal Access Tokens - PATs)
+
+个人访问令牌 (PATs) 用于对 LangSmith API 请求进行身份验证。它们由用户创建并限定于该用户的作用域。PAT 的权限与创建它的用户权限相同。我们建议不要使用它们来验证来自您应用程序的请求，而应将它们用于与 LangSmith API 交互的个人脚本或工具。如果与 PAT 关联的用户从组织中移除，则 PAT 将不再有效。
+
+PAT 的前缀是 `lsv2_pt_`
+
+#### 服务密钥 (Service keys)
+
+服务密钥类似于 PAT，但用于代表服务帐户对 LangSmith API 进行身份验证。只有管理员可以创建服务密钥。我们建议将它们用于需要与 LangSmith API 交互的应用程序/服务，例如 LangGraph 代理或其他集成。服务密钥可以限定于单个工作区、多个工作区或整个组织，并可用于对服务密钥有权访问的任何工作区的 LangSmith API 请求进行身份验证。
+
+服务密钥的前缀是 `lsv2_sk_`
+
+<Warning>
+使用 `X-Tenant-Id` 标头指定目标工作区。
+
+- **使用 PATs 时**: 如果省略此标头，请求将针对密钥的默认工作区执行。
+- **使用组织范围的服务密钥时**: 访问工作区范围的资源时，必须包含 `X-Tenant-Id` 标头。如果没有此标头，请求将以 `403 Forbidden` 错误失败。
+</Warning>
+
+<Note>
+要了解如何创建服务密钥或个人访问令牌，请参阅[设置指南](/langsmith/create-account-api-key)
+</Note>
+
+### 组织角色 (Organization roles)
+
+组织角色与[企业功能的​​工作区 RBAC](#workspace-roles-rbac) 不同，用于在多个[工作区](#workspaces)的上下文中使用。您的组织角色决定了您的工作区成员资格特征以及您的[组织级别权限](/langsmith/organization-workspace-operations)。
+
+选择的组织角色也会影响工作区成员资格，具体说明如下：
+
+- [组织管理员](/langsmith/rbac#organization-admin) (Organization Admin) 授予完全访问权限，以管理所有组织配置、用户、计费和工作区。
+    - 组织管理员对组织内的所有工作区拥有 `Admin` 访问权限。
+- [组织用户](/langsmith/rbac#organization-user) (Organization User) 可以读取组织信息，但不能在组织级别执行任何写入操作。组织用户可以创建[个人访问令牌](#personal-access-tokens-pats)。
+    - 组织用户可以被添加到部分工作区，并像往常一样被分配工作区角色（如果启用了 RBAC），这些角色指定了工作区级别的权限。
+- [组织查看者](/langsmith/rbac#organization-viewer) (Organization Viewer) 等同于组织用户，但**不能**创建个人访问令牌。（对于自托管，在 Helm chart 版本 0.11.25+ 中可用）。
+
+<Info>
+<OrgWorkspaceRole/>
+
+请参阅[安全设置](/langsmith/manage-organization-by-api#security-settings)，了解如何为整个组织禁用 PAT 创建的说明。
+</Info>
+
+有关设置组织和工作区的更多信息，请参阅[组织设置指南](/langsmith/set-up-a-workspace#organization-roles)。
+
+下表提供了组织级别权限的概述：
+
+| | 组织查看者 | 组织用户 | 组织管理员 |
+| :--- | :--- | :--- | :--- |
+| 查看组织配置 | ✅ | ✅ | ✅ |
+| 查看组织角色 | ✅ | ✅ | ✅ |
+| 查看组织成员 | ✅ | ✅ | ✅ |
+| 查看数据保留设置 | ✅ | ✅ | ✅ |
+| 查看使用限制 | ✅ | ✅ | ✅ |
+| 创建个人访问令牌 (PATs) | ❌ | ✅ | ✅ |
+| 对所有工作区拥有管理员访问权限 | ❌ | ❌ | ✅ |
+| 管理计费设置 | ❌ | ❌ | ✅ |
+| 创建工作区 | ❌ | ❌ | ✅ |
+| 创建、编辑和删除组织角色 | ❌ | ❌ | ✅ |
+| 邀请新用户加入组织 | ❌ | ❌ | ✅ |
+| 删除用户邀请 | ❌ | ❌ | ✅ |
+| 将用户从组织中移除 | ❌ | ❌ | ✅ |
+| 更新数据保留设置 | ❌ | ❌ | ✅ |
+| 更新使用限制 | ❌ | ❌ | ✅ |
+
+<PermissionReference/>
+
+### 工作区角色 (RBAC)
+
+<Note>
+RBAC（基于角色的访问控制）是一项仅适用于企业客户的功能。如果您对此功能感兴趣，请[联系我们的销售团队](https://www.langchain.com/contact-sales)。其他套餐默认对所有用户使用 `Admin` 角色。
+</Note>
+
+角色用于定义用户在工作区中拥有的权限集。有三个内置的系统角色，它们不能被编辑：
+
+- [工作区管理员](/langsmith/rbac#workspace-admin) (Workspace Admin) 拥有对工作区内所有资源的完全访问权限。
+- [工作区编辑者](/langsmith/rbac#workspace-editor) (Workspace Editor) 拥有完全权限，但**不包括**工作区管理权限（添加/移除用户、更改角色、配置服务密钥）。
+- [工作区查看者](/langsmith/rbac#workspace-viewer) (Workspace Viewer) 对工作区内的所有资源具有只读访问权限。
+
+[组织管理员](/langsmith/rbac#organization-admin) 也可以创建/编辑自定义角色，为不同资源设置特定权限。
+
+角色可以在**组织设置**的**角色 (Roles)** 选项卡下进行管理：
+
+![The Organization members and roles view showing a list of the roles.](/langsmith/images/roles-tab-rbac.png)
+
+- 有关角色和权限的全面文档，请参阅[基于角色的访问控制](/langsmith/rbac)指南。
+- 有关分配和创建角色的更多详细信息，请参阅[用户管理](/langsmith/user-management)指南。
+- <PermissionReference/>
+
+## 最佳实践
+
+### 环境分离 (Environment Separation)
+
+使用[资源标签](#resource-tags)根据环境组织资源，方法是使用默认标签键 `Environment` 和不同的环境值（例如 `dev`、`staging`、`prod`）。我们不建议使用单独的工作区来进行环境分离，因为资源不能跨工作区共享，这将阻止您在环境之间提升资源（如提示）。
+
+<Note>
+**资源标签与提示管理的提交标签 (Commit Tags) 对比**
+
+虽然这两种类型的标签都可以使用 `dev`、`staging` 和 `prod` 这样的环境术语，但它们的作用不同：
+
+- **资源标签** (`Environment: prod`)：用于*组织和过滤*工作区内的资源。将资源标签应用于追踪项目、数据集和其他资源（包括提示），根据它们所属的环境进行分组，从而实现在 UI 中进行筛选。
+- [提交标签](/langsmith/manage-prompts#commit-tags) (`prod` 标签)：用于管理代码引用的[提示版本](/langsmith/prompt-engineering)。提交标签是引用提示历史记录中特定提交的标签。当您的代码通过标签名称拉取提示（例如 `client.pull_prompt("prompt-name:prod")`）时，它会获取该标签当前指向的提交。要将提示从 `staging` 提升到 `prod`，请将提交标签移动到指向所需的版本。
+
+资源标签组织**哪些资源**属于某个环境。提交标签让您无需更改代码即可控制代码引用**哪个版本的**提示。
+</Note>
+
+## 使用和计费 (Usage and Billing)
+
+### 数据保留 (Data Retention)
+
+本节介绍数据保留的工作原理及其在 LangSmith 中的定价方式。
+
+#### 为什么保留很重要
+
+* **隐私**：许多数据隐私法规，例如欧洲的 GDPR 或加州的 CCPA，要求组织在个人数据不再需要用于收集目的时将其删除。设置保留期限有助于遵守此类法规。
+* **成本**：LangSmith 对数据保留期较短的追踪收取较低费用。有关详细信息，请参阅我们关于如何[优化支出](/langsmith/billing#optimize-your-tracing-spend)的教程。
+
+#### 工作原理
+
+LangSmith 根据数据保留等级将追踪分为两个等级，具有以下特征：
+
+| | 基础级 (Base) | 扩展级 (Extended) |
+| :--- | :--- | :--- |
+| **价格** | $.50 / 1k 次追踪 | $5 / 1k 次追踪 |
+| **保留期限** | 14 天 | 400 天 |
+
+**保留期结束后数据删除**
+
+达到指定的保留期后，追踪将不再可在追踪项目 UI 或 API 中访问。与追踪关联的所有用户数据（例如输入和输出）将在之后的一天内从我们的内部系统中删除。可能保留每个追踪的一些元数据以用于分析和计费目的。
+
+**数据保留自动升级 (Auto-upgrades)**
+
+<Warning>
+自动升级可能会影响您的账单。请仔细阅读本节，以充分了解您估计的 LangSmith 追踪成本。
+</Warning>
+
+当您对 `base` 级别的追踪使用某些功能时，其数据保留期将自动升级到 `extended` 级别。这将同时增加保留期限和追踪的成本。
+
+以下是追踪升级时的完整场景列表：
+
+* 对追踪中的任何运行（或线程中的任何追踪）添加了**反馈**，无论是通过[内联手动标注](/langsmith/annotate-traces-inline#annotate-traces-and-runs-inline)、通过[在线评估器](/langsmith/online-evaluations)自动添加，还是通过[SDK](/langsmith/attach-user-feedback#log-user-feedback-using-the-sdk)以编程方式添加。
+* **[标注队列](/langsmith/annotation-queues#assign-runs-to-an-annotation-queue)** 接收了来自该追踪的任何运行。
+* **[自动化规则](/langsmith/rules#set-up-automation-rules)** 匹配了追踪中的任何运行。
+
+**为什么要自动升级追踪？**
+
+我们采取自动升级模型的原因有两点：
+
+1. 我们认为匹配上述任一条件的追踪比其他追踪本质上更有价值，因此用户能够更长时间地保留它们是件好事。
+2. 我们的理念是，对于可能没有经过有意义交互的追踪，应向客户收取低一个数量级的费用。我们认为自动升级使我们的定价模型与 LangSmith 带来的价值保持一致，只有那些具有有意义交互的追踪才以更高的费率收费。
+
+如果您对我们的定价模式有任何疑问或疑虑，请随时通过 [support.langchain.com](https://support.langchain.com) 联系支持团队并告知我们您的想法！
+
+**数据保留如何影响下游功能？**
+
+* **标注队列、运行规则和反馈**：使用这些功能的追踪将[自动升级](#data-retention-auto-upgrades)。
+* **监控**：即使基础级追踪的数据保留期结束，监控选项卡仍将继续工作。它由存在超过 30 天的追踪元数据驱动，这意味着您的监控图表即使在 `base` 级别的追踪上也会保持准确。
+* **数据集**：数据集具有无限的数据保留期。换句话说，如果您将追踪的输入和输出添加到一个数据集中，它们将永远不会被删除。我们建议您如果使用 LangSmith 进行数据收集，可以利用数据集功能。
+
+#### 计费模型
+
+**可计费指标**
+
+在您的 LangSmith 发票上，您将看到我们收费的两个指标：
+
+* LangSmith Traces (基础费用)
+* LangSmith Traces (扩展数据保留升级)
+
+第一个指标包含所有追踪，无论其等级如何。第二个指标仅计算扩展保留追踪的数量。
+
+**为什么衡量所有追踪 + 升级，而不是基础和扩展追踪？**
+
+在考虑我们的定价时，一个自然的问题是为什么不在发票上直接显示 `base` 级别和 `extended` 级别的追踪数量？
+
+虽然我们理解这样更直接，但它不能很好地处理追踪升级。考虑一个在 6 月 30 日记录，并在 7 月 3 日升级到 `extended` 级别的 `base` 级别追踪。`base` 级别的追踪发生在 6 月份的计费周期，但升级发生在 7 月份的计费周期。因此，我们需要能够独立衡量这两个事件，以便正确地向客户收费。
+
+如果您的追踪被记录为扩展保留追踪，那么 `base` 和 `extended` 指标都将记录相同的时间戳。
+
+**费用细分**
+
+追踪的基础费用是每条追踪 0.05¢。我们将升级定价为使扩展保留追踪的总成本是基础级别追踪成本的 10 倍（每条追踪 0.50¢），包括两个指标。因此，每次升级的费用是 0.45¢。
+
+### 速率限制 (Rate Limits)
+
+LangSmith 具有速率限制，旨在确保服务对所有用户的稳定性。
+
+为确保访问和稳定性，在以下情况下，LangSmith 将响应 HTTP 状态码 429，表明速率或使用限制已被超过：
+
+#### 在 1 分钟周期内，应用程序负载均衡器上的临时吞吐量限制
+
+此 429 是由每 API 密钥/访问令牌在 1 分钟窗口内超出了固定数量的 API 调用次数引起的。窗口的开始时间会略有不同——不保证从时钟的整点开始——并且可能根据应用程序的部署事件而变化。
+
+在收到最大事件数后，我们将响应 429，直到评估窗口开始后的 60 秒时间已到，然后过程重复。
+
+此 429 由我们的应用程序负载均衡器抛出，是一种独立于套餐级别的、旨在确保所有用户服务连续性的机制。
+
+| 方法 | 端点 | 限制 | 窗口 |
+| :--- | :--- | :--- | :--- |
+| `DELETE` | `/sessions*` | 30 | 1 分钟 |
+| `POST` 或 `PATCH` | `/runs*` | 5000 | 1 分钟 |
+| `GET` | `/runs/:id` | 30 | 1 分钟 |
+| `POST` | `/feedbacks*` | 5000 | 1 分钟 |
+| `*` | `*` | 2000 | 1 分钟 |
+
+<Note>
+LangSmith SDK 会采取措施，通过将来自单个 session ID 的最多 100 个运行批处理到单个 API 调用中，最大限度地减少在与运行相关的端点上达到这些限制的可能性。
+</Note>
+
+#### 套餐级别的每小时追踪事件限制 (Plan-level hourly trace event limit)
+
+此 429 是由达到每小时摄入的最大事件数引起的，并在从每个时钟小时开始的固定窗口中进行评估，并在新小时开始时重置。
+
+此处的事件是指运行的创建或更新。因此，如果在同一小时窗口内创建了运行，然后随后更新了该运行，这将计为针对此限制的 2 个事件。
+
+此限制由我们的应用程序抛出，并因套餐等级而异，Startup/Plus 和 Enterprise 套餐级别的组织比设计用于个人使用的 Free 和 Developer 套餐级别具有更高的每小时限制。
+
+| 套餐 | 限制 | 窗口 |
+| :--- | :--- | :--- |
+| 开发者（无已记录付款信息） | 50,000 事件 | 1 小时 |
+| 开发者（有已记录付款信息） | 250,000 事件 | 1 小时 |
+| Startup/Plus | 500,000 事件 | 1 小时 |
+| 企业版 | 自定义 | 自定义 |
+
+#### 套餐级别的每小时追踪数据摄入限制 (Plan-level hourly trace data ingest limit)
+
+此 429 是由达到跨追踪输入、输出和元数据摄入的最大数据量引起的，并在从每个时钟小时开始的固定窗口中进行评估，并在新小时开始时重置。
+
+通常，输入、输出和元数据会在运行创建和更新事件时发送。因此，如果在同一小时窗口内创建了一个运行，且创建时大小为 2.0MB，更新时大小为 3.0MB，那么这将计为针对此限制的 5.0MB 存储。
+
+此限制由我们的应用程序抛出，并因套餐等级而异，Startup/Plus 和 Enterprise 套餐级别的组织比设计用于个人使用的 Free 和 Developer 套餐级别具有更高的每小时限制。
+
+| 套餐 | 限制 | 窗口 |
+| :--- | :--- | :--- |
+| 开发者（无已记录付款信息） | 500MB | 1 小时 |
+| 开发者（有已记录付款信息） | 2.5GB | 1 小时 |
+| Startup/Plus | 5.0GB | 1 小时 |
+| 企业版 | 自定义 | 自定义 |
+
+#### 套餐级别的每月唯一追踪限制 (Plan-level monthly unique traces limit)
+
+此 429 是由达到每月摄入的最大追踪数引起的，并在从每个自然月开始的固定窗口中进行评估，并在新月开始时重置。
+
+此限制由我们的应用程序抛出，并且仅适用于**无**付款方式记录的 Developer 套餐级别。
+
+| 套餐 | 限制 | 窗口 |
+| :--- | :--- | :--- |
+| 开发者（无已记录付款信息） | 5,000 次追踪 | 1 个月 |
+
+#### 自配置的每月使用限制 (Self-configured monthly usage limits)
+
+此 429 是由达到组织管理员配置的使用限制引起的，并在从每个自然月开始的固定窗口中进行评估，并在新月开始时重置。
+
+此限制由我们的应用程序抛出，并根据组织配置的设置而异。
+
+#### 应用程序中处理 429 响应
+
+由于某些 429 响应是临时的，并且在后续调用时可能会成功，如果您直接在应用程序中调用 LangSmith API，我们建议实施带有指数退避和抖动的重试逻辑。
+
+为方便起见，使用 LangSmith SDK 构建的 LangChain 应用程序内置了此功能。
+
+<Note>
+需要注意的是，如果您在扩展的时间段内使端点饱和，重试可能无效，因为您的应用程序最终可能会积累足够大的积压工作量，耗尽所有重试机会。
+
+如果出现这种情况，我们希望与您更具体地讨论您的需求。请通过 [LangSmith 支持](https://support.langchain.com) 联系支持部门，提供有关您的应用程序吞吐量需求的详细信息和示例代码，我们可以共同努力，更好地理解最佳方法是修复错误、更改您的应用程序代码，还是选择其他 LangSmith 套餐。
+</Note>
+
+### 使用限制 (Usage Limits)
+
+LangSmith 允许您配置追踪的使用限制。请注意，这些是*使用*限制，而不是*花费*限制，这意味着它们允许您限制某些事件发生的次数，而不是您将花费的总金额。
+
+LangSmith 允许您设置两个不同的每月限制，这与我们在上述数据保留指南中讨论的可计费指标相呼应：
+
+* 所有追踪限制 (All traces limit)
+* 扩展数据保留追踪限制 (Extended data retention traces limit)
+
+这些限制允许您分别限制追踪总数和扩展数据保留追踪的数量。
+
+#### 使用限制的特性
+
+使用限制是近似的，这意味着我们不保证限制的精确性。在极少数情况下，在应用限制之前，可能会有一小段时间处理了超过限制阈值的额外追踪。
+
+#### 扩展数据保留追踪限制的副作用
+
+扩展数据保留追踪限制会产生副作用。如果此限制已达到，任何可能导致追踪等级自动升级的功能将变得不可访问。这是因为追踪的自动升级将导致创建另一个扩展保留追踪，而该限制不应允许这种情况发生。因此，您将无法再：
+
+1. 匹配运行规则
+2. 为追踪添加反馈
+3. 将运行添加到标注队列
+
+所有这些功能都可能导致自动升级，因此在达到限制时会将其关闭。
+
+#### 更新使用限制
+
+可以在 `Usage and Billing` 下的 `Settings` 页面更新使用限制。限制值是缓存的，因此新限制可能需要一两分钟才能生效。
+
+### 相关内容
+
+* 关于如何[优化支出](/langsmith/billing#optimize-your-tracing-spend)的教程
+
+## 附加资源
+
+* **[发布版本](/langsmith/release-versions)**：了解 LangSmith 的版本支持策略，包括活动 (Active)、关键 (Critical)、生命周期结束 (End of Life) 和弃用 (Deprecated) 的支持级别。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\administration-overview.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

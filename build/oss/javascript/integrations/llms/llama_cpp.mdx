@@ -1,0 +1,159 @@
+---
+title: Llama CPP
+---
+
+<Tip>
+**兼容性**
+
+仅在 Node.js 环境下可用。
+</Tip>
+
+该模块基于 [llama.cpp](https://github.com/ggerganov/llama.cpp) 的 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js 绑定，允许您使用本地运行的大型语言模型（LLM）。这使得您可以使用体积更小、经过量化的模型，这些模型能够在笔记本电脑等环境中运行，非常适合用于测试和快速构思，而无需产生额外的费用！
+
+## 安装设置 (Setup)
+
+您需要安装 `node-llama-cpp` 的 **major 版本 3** 才能与本地模型进行通信。
+
+```bash npm
+npm install -S node-llama-cpp@3
+```
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/community @langchain/core
+```
+您还需要一个本地的 Llama 3 模型（或 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) 支持的其他模型）。您需要在参数中将该模型的路径传递给 `LlamaCpp` 模块（参见示例）。
+
+开箱即用（Out-of-the-box），`node-llama-cpp` 默认针对在 MacOS 平台上运行进行优化，支持 Apple M 系列处理器的 Metal GPU。如果您需要禁用此功能或需要支持 CUDA 架构，请参阅 [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/) 的文档。
+
+给 LangChain.js 贡献者的提示：如果您想运行与此模块相关的测试，您需要在环境变量 `LLAMA_PATH` 中设置本地模型的路径。
+
+## Llama3 安装指南
+
+在本地机器上运行 Llama3 模型是一个前提条件。因此，这里提供一个快速指南，介绍如何获取和构建 Llama 3.1-8B（最小的版本），然后对其进行量化，使其能够在笔记本电脑上流畅运行。为此，您的机器上需要有 `python3`（推荐使用 3.11 版本），还需要 `gcc` 和 `make` 才能编译 `llama.cpp`。
+
+### 获取 Llama3 模型
+
+要获取 Llama3 的副本，您需要访问 [Meta AI](https://ai.meta.com/resources/models-and-libraries/llama-downloads/) 并申请访问其模型的权限。一旦 Meta AI 授予您访问权限，您将收到一封包含唯一 URL 的电子邮件，用于访问文件，这在接下来的步骤中需要用到。
+现在创建一个工作目录，例如：
+
+```
+mkdir llama3
+cd llama3
+```
+现在我们需要进入 Meta AI 的 `llama-models` 仓库，可以在[这里](https://github.com/meta-llama/llama-models)找到。在仓库中，有关于如何下载您所选模型的说明，您应该使用收到的唯一 URL。
+本教程的其余部分假设您已下载了 `Llama3.1-8B`，但从这里开始，任何模型都应该有效。下载模型后，请务必保存模型的下载路径，这将在后面用到。
+
+### 转换和量化模型
+
+在这一步，我们需要使用 `llama.cpp`，所以需要下载该仓库。
+
+```
+cd ..
+git clone https://github.com/ggerganov/llama.cpp.git
+cd llama.cpp
+```
+现在我们需要构建 `llama.cpp` 工具并设置我们的 `python` 环境。在这些步骤中，假设您的 Python 安装可以通过 `python3` 运行，并且虚拟环境可以命名为 `llama3`，请根据您的实际情况进行调整。
+
+```
+cmake -B build
+cmake --build build --config Release
+python3 -m venv llama3
+source llama3/bin/activate
+```
+激活 `llama3` 环境后，您应该会在命令行提示符前看到 `(llama3)` 前缀，表示这是活动环境。注意：如果您以后需要回来构建另一个模型或重新量化模型，请不要忘记再次激活该环境；此外，如果您更新了 `llama.cpp`，则可能需要重新构建工具并安装新的或更新的依赖项！现在我们有了一个活动的 Python 环境，我们需要安装 Python 依赖项。
+
+```
+python3 -m pip install -r requirements.txt
+```
+完成此操作后，我们可以开始转换和量化 Llama3 模型，使其可以通过 `llama.cpp` 本地使用。需要先进行转换为 Hugging Face 模型，然后再转换为 GGUF 模型。
+首先，我们需要找到带有以下脚本的路径：`convert_llama_weights_to_hf.py`。将此脚本复制并粘贴到您当前的目录中。请注意，使用该脚本可能需要您通过 `pip install` 安装额外的依赖项，如有需要请进行操作。
+然后，我们需要转换模型。在转换之前，让我们创建目录来存放我们的 Hugging Face 转换结果和最终模型。
+
+```
+mkdir models/8B
+mkdir models/8B-GGUF
+python3 convert_llama_weights_to_hf.py --model_size 8B --input_dir <dir-to-your-model> --output_dir models/8B --llama_version 3
+python3 convert_hf_to_gguf.py --outtype f16 --outfile models/8B-GGUF/gguf-llama3-f16.bin models/8B
+```
+这应该会在我们创建的目录中生成一个转换后的 Hugging Face 模型和最终的 GGUF 模型。请注意，这只是一个转换后的模型，因此它仍然大约有 16GB 大小；在下一步中，我们将对其进行量化，使其减小到大约 4GB。
+
+```
+./build/bin/llama-quantize ./models/8B-GGUF/gguf-llama3-f16.bin ./models/8B-GGUF/gguf-llama3-Q4_0.bin Q4_0
+```
+运行此命令后，将在 `models\8B-GGUF` 目录中创建一个新模型，名为 `gguf-llama3-Q4_0.bin`，这就是我们可以与 langchain 一起使用的模型。您可以通过使用 `llama.cpp` 工具测试它来验证此模型是否正常工作。
+
+```
+./build/bin/llama-cli -m ./models/8B-GGUF/gguf-llama3-Q4_0.bin -cnv -p "You are a helpful assistant"
+```
+
+运行此命令会启动模型进行聊天会话。顺便说一句，如果您磁盘空间不足，我们只需要这个小模型，所以您可以备份和/或删除原始的以及转换后的 13.5GB 模型。
+
+## 用法 (Usage)
+
+```typescript
+import { LlamaCpp } from "@langchain/community/llms/llama_cpp";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+const question = "Where do Llamas come from?";
+
+const model = await LlamaCpp.initialize({ modelPath: llamaPath });
+
+console.log(`You: ${question}`);
+const response = await model.invoke(question);
+console.log(`AI : ${response}`);
+```
+
+## 流式传输 (Streaming)
+
+```typescript
+import { LlamaCpp } from "@langchain/community/llms/llama_cpp";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await LlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.7,
+});
+
+const prompt = "Tell me a short story about a happy Llama.";
+
+const stream = await model.stream(prompt);
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+
+/*
+
+
+ Once
+  upon
+  a
+  time
+ ,
+  in
+  the
+  rolling
+  hills
+  of
+  Peru
+ ...
+ */
+```;
+
+## 相关链接 (Related)
+
+
+- [模型指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\llama_cpp.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

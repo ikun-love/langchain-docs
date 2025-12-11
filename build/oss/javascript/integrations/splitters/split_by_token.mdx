@@ -1,0 +1,74 @@
+---
+title: 按 Token 分割
+---
+
+语言模型存在 Token 限制。您不应超过此 Token 限制。因此，当您将文本[拆分成块](/oss/javascript/integrations/splitters/)时，最好计算一下 Token 的数量。有很多分词器（Tokenizers）。在计算文本中的 Token 时，您应该使用与语言模型中相同的分词器。
+
+
+
+## js-tiktoken
+
+<Note>
+**[js-tiktoken](https://github.com/dqbd/tiktoken) 是 `OpenAI` 创建的 `BPE` 分词器的 JavaScript 版本。**
+</Note>
+
+我们可以使用 [TokenTextSplitter](https://reference.langchain.com/javascript/classes/_langchain_textsplitters.TokenTextSplitter.html) 估算使用的 Token 数。这对于 OpenAI 模型来说可能更准确。
+
+1. 文本的分割方式：按传入的字符进行分割。
+2. 分块大小的度量方式：使用 `tiktoken` 分词器度量。
+
+<CodeGroup>
+```bash npm
+npm install @langchain/textsplitters
+```
+
+```bash pnpm
+pnpm install @langchain/textsplitters
+```
+
+```bash yarn
+yarn add @langchain/textsplitters
+```
+
+```bash bun
+bun add @langchain/textsplitters
+```
+</CodeGroup>
+
+```ts
+import { TokenTextSplitter } from "@langchain/textsplitters";
+import { readFileSync } from "fs";
+
+// 示例：读取长文档
+const stateOfTheUnion = readFileSync("state_of_the_union.txt", "utf8");
+```
+
+要使用 [TokenTextSplitter](https://reference.langchain.com/javascript/classes/_langchain_textsplitters.TokenTextSplitter.html) 进行分割，然后使用 `tiktoken` 合并分块，请在初始化 [TokenTextSplitter](https://reference.langchain.com/javascript/classes/_langchain_textsplitters.TokenTextSplitter.html) 时传入一个 `encodingName`（例如 cl100k_base）。请注意，此方法产生的分割结果在按 `tiktoken` 分词器度量时，其大小可能大于指定的 `chunk_size`。
+
+```ts
+import { TokenTextSplitter } from "@langchain/textsplitters";
+
+// 示例：使用 cl100k_base 编码
+const splitter = new TokenTextSplitter({ encodingName: "cl100k_base", chunkSize: 10, chunkOverlap: 0 });
+
+const texts = splitter.splitText(stateOfTheUnion);
+console.log(texts[0]);
+```
+```output
+Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.
+
+Last year COVID-19 kept us apart. This year we are finally together again.
+
+Tonight, we meet as Democrats Republicans and Independents. But most importantly as Americans.
+
+With a duty to one another to the American people to the Constitution.
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\integrations\splitters\split_by_token.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

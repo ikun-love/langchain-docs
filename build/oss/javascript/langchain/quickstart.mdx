@@ -1,0 +1,366 @@
+---
+title: 快速开始
+---
+
+此快速开始指南将带您在短短几分钟内，从一个简单的设置到一个功能完备的 AI 智能体（Agent）。
+
+<Tip>
+    **LangChain 文档 MCP 服务器**
+
+    如果您正在使用 AI 编程助手或 IDE（例如 Claude Code 或 Cursor），您应该安装 [LangChain Docs MCP 服务器](/use-these-docs)，以便最大限度地发挥其功能。这可以确保您的智能体能够访问最新的 LangChain 文档和示例。
+</Tip>
+
+## 环境要求
+
+对于以下示例，您需要：
+
+* [安装](/oss/javascript/langchain/install) LangChain 包
+* 设置一个 [Claude (Anthropic)](https://www.anthropic.com/) 账户并获取 API 密钥
+* 在终端中设置 `ANTHROPIC_API_KEY` 环境变量
+
+尽管这些示例使用了 Claude，但您也可以通过更改代码中的模型名称并设置适当的 API 密钥，来使用 [任何受支持的模型](/oss/javascript/integrations/providers/overview)。
+
+## 构建基础智能体
+
+首先，创建一个能够回答问题和调用工具的简单智能体。该智能体将使用 Claude Sonnet 4.5 作为其语言模型，一个基础的天气函数作为工具，以及一个简单的提示词（Prompt）来指导其行为。
+
+
+
+```ts
+import { createAgent, tool } from "langchain";
+import * as z from "zod";
+
+const getWeather = tool(
+  (input) => `It's always sunny in ${input.city}!`,
+  {
+    name: "get_weather",
+    description: "Get weather for a given city",
+    schema: z.object({
+      city: z.string().describe("The city to get the weather for"),
+    }),
+  }
+);
+
+const agent = createAgent({
+  model: "claude-sonnet-4-5-20250929",
+  tools: [getWeather],
+});
+
+console.log(
+  await agent.invoke({
+    messages: [{ role: "user", content: "What's the weather in Tokyo?" }],
+  })
+);
+```
+
+
+<Tip>
+    要了解如何使用 LangSmith 追踪您的智能体，请参阅 [LangSmith 文档](/langsmith/trace-with-langchain)。
+</Tip>
+
+## 构建实际应用中的智能体
+
+接下来，我们将构建一个实用的天气预报智能体，它将演示以下关键的生产环境概念：
+
+1. **详细的系统提示词**以改善智能体行为
+2. **创建工具**以集成外部数据
+3. **模型配置**以确保响应一致性
+4. **结构化输出**以获得可预测的结果
+5. **对话内存**以实现类似聊天的交互
+6. **创建和运行智能体**以构建一个功能完备的智能体
+
+让我们一步步来看：
+
+<Steps>
+    <Step title="定义系统提示词">
+        系统提示词定义了智能体的角色和行为。请确保它具体且具有可操作性：
+
+
+
+        ```ts
+        const systemPrompt = `You are an expert weather forecaster, who speaks in puns.
+
+        You have access to two tools:
+
+        - get_weather_for_location: use this to get the weather for a specific location
+        - get_user_location: use this to get the user's location
+
+        If a user asks you for the weather, make sure you know the location. If you can tell from the question that they mean wherever they are, use the get_user_location tool to find their location.`;
+        ```
+
+    </Step>
+    <Step title="创建工具">
+
+
+        [工具](/oss/javascript/langchain/tools) 是您的智能体可以调用的函数。工具通常需要连接到外部系统，并且依赖运行时配置来完成此操作。请注意，这里的 `getUserLocation` 工具就是这样做的：
+
+        ```ts
+        import { tool, type ToolRuntime } from "langchain";
+        import * as z from "zod";
+
+        const getWeather = tool(
+          (input) => `It's always sunny in ${input.city}!`,
+          {
+            name: "get_weather_for_location",
+            description: "Get the weather for a given city",
+            schema: z.object({
+              city: z.string().describe("The city to get the weather for"),
+            }),
+          }
+        );
+
+        type AgentRuntime = ToolRuntime<unknown, { user_id: string }>;
+
+        const getUserLocation = tool(
+          (_, config: AgentRuntime) => {
+            const { user_id } = config.context;
+            return user_id === "1" ? "Florida" : "SF";
+          },
+          {
+            name: "get_user_location",
+            description: "Retrieve user information based on user ID",
+          }
+        );
+        ```
+
+        <Note>
+            [Zod](https://zod.dev/) 是一个用于验证和解析预定义模式的库。您可以使用它来定义工具的输入模式，以确保智能体仅使用正确的参数调用该工具。
+
+            或者，您可以将 `schema` 属性定义为一个 [JSON schema](https://json-schema.org/overview/what-is-jsonschema) 对象。请记住，JSON 模式**不会**在运行时进行验证。
+
+            <Accordion title="示例：使用 JSON schema 定义工具输入">
+                ```ts
+                const getWeather = tool(
+                  ({ city }) => `It's always sunny in ${city}!`,
+                  {
+                    name: "get_weather_for_location",
+                    description: "Get the weather for a given city",
+                    schema: {
+                      type: "object",
+                      properties: {
+                        city: {
+                          type: "string",
+                          description: "The city to get the weather for"
+                        }
+                      },
+                      required: ["city"]
+                    },
+                  }
+                );
+            ```
+            </Accordion>
+        </Note>
+
+    </Step>
+    <Step title="配置模型">
+        使用适合您用例的参数设置您的[语言模型](/oss/javascript/langchain/models)：
+
+
+
+        ```ts
+        import { initChatModel } from "langchain";
+
+        const model = await initChatModel(
+          "claude-sonnet-4-5-20250929",
+          { temperature: 0.5, timeout: 10, maxTokens: 1000 }
+        );
+        ```
+
+
+        根据所选的模型和提供商，初始化参数可能会有所不同；有关详细信息，请参阅其参考页面。
+    </Step>
+    <Step title="定义响应格式">
+
+
+        如果需要智能体响应匹配特定模式，可以选择定义一个结构化的响应格式。
+
+        ```ts
+        const responseFormat = z.object({
+          punny_response: z.string(),
+          weather_conditions: z.string().optional(),
+        });
+        ```
+
+    </Step>
+    <Step title="添加内存">
+        向您的智能体添加[内存](/oss/javascript/langchain/short-term-memory)以在交互中维护状态。这使智能体能够记住先前的对话和上下文。
+
+
+
+        ```ts
+        import { MemorySaver } from "@langchain/langgraph";
+
+        const checkpointer = new MemorySaver();
+        ```
+
+
+        <Info>
+            在生产环境中，请使用持久化的检查点机制（保存到数据库）。有关更多详细信息，请参阅[添加和管理内存](/oss/javascript/langgraph/add-memory#manage-short-term-memory)。
+        </Info>
+    </Step>
+    <Step title="创建和运行智能体">
+        现在将所有组件组装起来并运行您的智能体！
+
+
+        ```ts
+        import { createAgent } from "langchain";
+
+        const agent = createAgent({
+          model: "claude-sonnet-4-5-20250929",
+          systemPrompt: systemPrompt,
+          tools: [getUserLocation, getWeather],
+          responseFormat,
+          checkpointer,
+        });
+
+        // `thread_id` 是给定对话的唯一标识符。
+        const config = {
+          configurable: { thread_id: "1" },
+          context: { user_id: "1" },
+        };
+
+        const response = await agent.invoke(
+          { messages: [{ role: "user", content: "what is the weather outside?" }] },
+          config
+        );
+        console.log(response.structuredResponse);
+        // {
+        //   punny_response: "Florida is still having a 'sun-derful' day ...",
+        //   weather_conditions: "It's always sunny in Florida!"
+        // }
+
+        // 注意，我们可以使用相同的 `thread_id` 继续对话。
+        const thankYouResponse = await agent.invoke(
+          { messages: [{ role: "user", content: "thank you!" }] },
+          config
+        );
+        console.log(thankYouResponse.structuredResponse);
+        // {
+        //   punny_response: "You're 'thund-erfully' welcome! ...",
+        //   weather_conditions: undefined
+        // }
+        ```
+
+    </Step>
+</Steps>
+
+<Expandable title="完整示例代码">
+
+
+
+```ts
+import { createAgent, tool, initChatModel, type ToolRuntime } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
+import * as z from "zod";
+
+// 定义系统提示词
+const systemPrompt = `You are an expert weather forecaster, who speaks in puns.
+
+You have access to two tools:
+
+- get_weather_for_location: use this to get the weather for a specific location
+- get_user_location: use this to get the user's location
+
+If a user asks you for the weather, make sure you know the location. If you can tell from the question that they mean wherever they are, use the get_user_location tool to find their location.`;
+
+// 定义工具
+const getWeather = tool(
+  ({ city }) => `It's always sunny in ${city}!`,
+  {
+    name: "get_weather_for_location",
+    description: "Get the weather for a given city",
+    schema: z.object({
+      city: z.string(),
+    }),
+  }
+);
+
+type AgentRuntime = ToolRuntime<unknown, { user_id: string }>;
+
+const getUserLocation = tool(
+  (_, config: AgentRuntime) => {
+    const { user_id } = config.context;
+    return user_id === "1" ? "Florida" : "SF";
+  },
+  {
+    name: "get_user_location",
+    description: "Retrieve user information based on user ID",
+    schema: z.object({}),
+  }
+);
+
+// 配置模型
+const model = await initChatModel(
+  "claude-sonnet-4-5-20250929",
+  { temperature: 0 }
+);
+
+// 定义响应格式
+const responseFormat = z.object({
+  punny_response: z.string(),
+  weather_conditions: z.string().optional(),
+});
+
+// 设置内存
+const checkpointer = new MemorySaver();
+
+// 创建智能体
+const agent = createAgent({
+  model,
+  systemPrompt,
+  responseFormat,
+  checkpointer,
+  tools: [getUserLocation, getWeather],
+});
+
+// 运行智能体
+// `thread_id` 是给定对话的唯一标识符。
+const config = {
+  configurable: { thread_id: "1" },
+  context: { user_id: "1" },
+};
+
+const response = await agent.invoke(
+  { messages: [{ role: "user", content: "what is the weather outside?" }] },
+  config
+);
+console.log(response.structuredResponse);
+// {
+//   punny_response: "Florida is still having a 'sun-derful' day! The sunshine is playing 'ray-dio' hits all day long! I'd say it's the perfect weather for some 'solar-bration'! If you were hoping for rain, I'm afraid that idea is all 'washed up' - the forecast remains 'clear-ly' brilliant!",
+//   weather_conditions: "It's always sunny in Florida!"
+// }
+
+// 注意，我们可以使用相同的 `thread_id` 继续对话。
+const thankYouResponse = await agent.invoke(
+  { messages: [{ role: "user", content: "thank you!" }] },
+  config
+);
+console.log(thankYouResponse.structuredResponse);
+// {
+//   punny_response: "You're 'thund-erfully' welcome! It's always a 'breeze' to help you stay 'current' with the weather. I'm just 'cloud'-ing around waiting to 'shower' you with more forecasts whenever you need them. Have a 'sun-sational' day in the Florida sunshine!",
+//   weather_conditions: undefined
+// }
+```
+
+</Expandable>
+
+<Tip>
+    要了解如何使用 LangSmith 追踪您的智能体，请参阅 [LangSmith 文档](/langsmith/trace-with-langchain)。
+</Tip>
+
+恭喜！您现在有了一个能够执行以下操作的 AI 智能体：
+
+- **理解上下文**并记住对话
+- **智能地使用多个工具**
+- **提供结构化的响应**并保持格式一致
+- **通过上下文处理用户特定信息**
+- **在交互中保持对话状态**
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\quickstart.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

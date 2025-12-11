@@ -1,0 +1,109 @@
+---
+title: Pinecone
+---
+
+> [Pinecone](https://docs.pinecone.io/docs/overview) 是一个功能强大的向量数据库。
+
+
+## 安装与设置
+
+安装 Python SDK：
+
+<CodeGroup>
+```bash pip
+pip install langchain-pinecone
+```
+
+```bash uv
+uv add langchain-pinecone
+```
+</CodeGroup>
+
+
+## 向量存储 (Vector Store)
+
+LangChain 封装了 Pinecone 索引，允许您将其用作向量存储（Vectorstore），无论是用于语义搜索还是示例选择。
+
+```python
+from langchain_pinecone import PineconeVectorStore
+```
+
+有关 Pinecone 向量存储的更详细演练，请参阅[本教程](/oss/python/integrations/vectorstores/pinecone)。
+
+### 稀疏向量存储 (Sparse Vector Store)
+
+LangChain 的 ``PineconeSparseVectorStore`` 借助 Pinecone 的稀疏英文模型实现了稀疏检索。它负责将文本映射到稀疏向量，并支持文档添加和相似性搜索功能。
+
+```python
+from langchain_pinecone import PineconeSparseVectorStore
+
+# 初始化稀疏向量存储
+vector_store = PineconeSparseVectorStore(
+    index=my_index,
+    embedding_model="pinecone-sparse-english-v0"
+)
+# 添加文档
+vector_store.add_documents(documents)
+# 查询
+results = vector_store.similarity_search("your query", k=3)
+```
+
+有关更详细的演练，请参阅[Pinecone 稀疏向量存储教程](/oss/python/integrations/vectorstores/pinecone_sparse)。
+
+### 稀疏嵌入 (Sparse Embedding)
+
+LangChain 的 ``PineconeSparseEmbeddings`` 使用 Pinecone 的 ``pinecone-sparse-english-v0`` 模型来生成稀疏嵌入。
+
+```python
+from langchain_pinecone.embeddings import PineconeSparseEmbeddings
+
+# 初始化稀疏嵌入
+sparse_embeddings = PineconeSparseEmbeddings(
+    model="pinecone-sparse-english-v0"
+)
+# 嵌入单个查询（返回 SparseValues 对象）
+query_embedding = sparse_embeddings.embed_query("sample text")
+
+# 嵌入多个文档（返回 SparseValues 对象列表）
+docs = ["Document 1 content", "Document 2 content"]
+doc_embeddings = sparse_embeddings.embed_documents(docs)
+```
+
+有关更详细的使用方法，请参阅[Pinecone 稀疏嵌入教程](/oss/python/integrations/vectorstores/pinecone_sparse)。
+
+
+## 检索器 (Retrievers)
+
+### Pinecone 混合搜索 (Hybrid Search)
+
+<CodeGroup>
+```bash pip
+pip install pinecone pinecone-text
+```
+
+```bash uv
+uv add pinecone pinecone-text
+```
+</CodeGroup>
+
+```python
+from langchain_community.retrievers import (
+    PineconeHybridSearchRetriever,
+)
+```
+
+有关更详细的信息，请参阅[本教程](/oss/python/integrations/retrievers/pinecone_hybrid_search)。
+
+
+### 自我查询检索器 (Self Query Retriever)
+
+Pinecone 向量存储可以用作执行“自我查询”的检索器。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\pinecone.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

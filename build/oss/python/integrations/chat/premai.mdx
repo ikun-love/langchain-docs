@@ -1,0 +1,384 @@
+---
+title: ChatPremAI
+---
+
+[PremAI](https://premai.io/) 是一个一体化平台，旨在简化由生成式 AI 驱动的、健壮的、可投入生产的应用程序的创建过程。通过简化开发流程，PremAI 允许您专注于增强用户体验并推动应用程序的整体增长。您可以通过 [此处](https://docs.premai.io/quick-start) 快速开始使用我们的平台。
+
+本示例将介绍如何使用 LangChain 通过 `ChatPremAI` 与不同的聊天模型进行交互。
+
+### 安装与设置
+
+我们首先安装 `langchain` 和 `premai-sdk`。您可以输入以下命令进行安装：
+
+```bash
+pip install premai langchain
+```
+
+在继续之前，请确保您已在 PremAI 上创建了账户并创建了一个项目。如果没有，请参阅 [快速入门](https://docs.premai.io/introduction) 指南以开始使用 PremAI 平台。创建您的第一个项目并获取您的 API 密钥。
+
+```python
+from langchain_community.chat_models import ChatPremAI
+from langchain.messages import HumanMessage, SystemMessage
+```
+
+### 在 LangChain 中设置 PremAI 客户端
+
+导入所需模块后，我们来设置客户端。目前我们假设 `project_id` 是 `8`。但请确保您使用的是自己的 `project_id`，否则会报错。
+
+要将 LangChain 与 PremAI 结合使用，您无需传递任何模型名称或设置任何参数给我们的聊天客户端。默认情况下，它将使用在 [LaunchPad](https://docs.premai.io/get-started/launchpad) 中使用的模型名称和参数。
+
+> 注意：如果您在设置客户端时更改了 `model` 或其他参数（如 `temperature` 或 `max_tokens`），它将覆盖 LaunchPad 中使用的现有默认配置。
+
+```python
+import getpass
+import os
+
+# 第一步是设置环境变量。
+# 您也可以在实例化模型时传入 API 密钥，但将其设置为环境变量是一种更好的做法。
+
+if os.environ.get("PREMAI_API_KEY") is None:
+    os.environ["PREMAI_API_KEY"] = getpass.getpass("PremAI API Key:")
+```
+
+```python
+# 默认情况下，它将使用通过平台部署的模型
+# 在我的例子中，它是 "gpt-4o"
+
+chat = ChatPremAI(project_id=1234, model_name="gpt-4o")
+```
+
+### 聊天补全 (Chat Completions)
+
+`ChatPremAI` 支持两种方法：`invoke`（与 `generate` 相同）和 `stream`。
+
+前者将给出一个静态结果。而后者将逐个流式传输令牌。以下是生成类似聊天的补全的方式：
+
+```python
+human_message = HumanMessage(content="Who are you?")
+
+response = chat.invoke([human_message])
+print(response.content)
+```
+
+```output
+I am an AI language model created by OpenAI, designed to assist with answering questions and providing information based on the context provided. How can I help you today?
+```
+
+上面看起来很有趣，对吗？我将默认的 LaunchPad 系统提示设置为：“Always sound like a pirate”（永远听起来像个海盗）。如果您需要，也可以覆盖默认的系统提示。方法如下：
+
+```python
+system_message = SystemMessage(content="You are a friendly assistant.")
+human_message = HumanMessage(content="Who are you?")
+
+chat.invoke([system_message, human_message])
+```
+
+```output
+AIMessage(content="I'm your friendly assistant! How can I help you today?", response_metadata={'document_chunks': [{'repository_id': 1985, 'document_id': 1306, 'chunk_id': 173899, 'document_name': '[D] Difference between sparse and dense informati…', 'similarity_score': 0.3209080100059509, 'content': "with the difference or anywhere\nwhere I can read about it?\n\n\n      17                  9\n\n\n      u/ScotiabankCanada        •  Promoted\n\n\n                       Accelerate your study permit process\n                       with Scotiabank's Student GIC\n                       Program. We're here to help you tur…\n\n\n                       startright.scotiabank.com         Learn More\n\n\n                            Add a Comment\n\n\nSort by:   Best\n\n\n      DinosParkour      • 1y ago\n\n\n     Dense Retrieval (DR) m"}]}, id='run-510bbd0e-3f8f-4095-9b1f-c2d29fd89719-0')
+```
+
+您可以在这里提供系统提示，如下所示：
+
+```python
+chat.invoke([system_message, human_message], temperature=0.7, max_tokens=10, top_p=0.95)
+```
+
+```output
+/home/anindya/prem/langchain/libs/community/langchain_community/chat_models/premai.py:355: UserWarning: WARNING: Parameter top_p is not supported in kwargs.
+  warnings.warn(f"WARNING: Parameter {key} is not supported in kwargs.")
+```
+
+```output
+AIMessage(content="I'm your friendly assistant! How can I", response_metadata={'document_chunks': [{'repository_id': 1985, 'document_id': 1306, 'chunk_id': 173899, 'document_name': '[D] Difference between sparse and dense informati…', 'similarity_score': 0.3209080100059509, 'content': "with the difference or anywhere\nwhere I can read about it?\n\n\n      17                  9\n\n\n      u/ScotiabankCanada        •  Promoted\n\n\n                       Accelerate your study permit process\n                       with Scotiabank's Student GIC\n                       Program. We're here to help you tur…\n\n\n                       startright.scotiabank.com         Learn More\n\n\n                            Add a Comment\n\n\nSort by:   Best\n\n\n      DinosParkour      • 1y ago\n\n\n     Dense Retrieval (DR) m"}]}, id='run-c4b06b98-4161-4cca-8495-fd2fc98fa8f8-0')
+```
+
+> 如果您在这里放置系统提示，它将覆盖您在平台上部署应用时固定的系统提示。
+
+### 原生 RAG 支持（使用 Prem 仓库）
+
+Prem 仓库 (Prem Repositories) 允许用户上传文档（.txt, .pdf 等）并将这些仓库连接到 LLM。您可以将 Prem 仓库视为原生 RAG，其中每个仓库都可以被视为一个向量数据库。您可以连接多个仓库。您可以在 [此处](https://docs.premai.io/get-started/repositories) 了解更多关于仓库的信息。
+
+LangChain PremAI 也支持仓库。操作方法如下：
+
+```python
+query = "Which models are used for dense retrieval"
+repository_ids = [
+    1985,
+]
+repositories = dict(ids=repository_ids, similarity_threshold=0.3, limit=3)
+```
+
+我们首先定义带有仓库 ID 的仓库。请确保 ID 是有效的仓库 ID。您可以 [此处](https://docs.premai.io/get-started/repositories) 了解如何获取仓库 ID 的更多信息。
+
+> 请注意：与 `model_name` 类似，当您调用 `repositories` 参数时，您可能会覆盖启动板中连接的仓库。
+
+现在，我们将仓库连接到聊天对象，以调用基于 RAG 的生成。
+
+```python
+import json
+
+response = chat.invoke(query, max_tokens=100, repositories=repositories)
+
+print(response.content)
+print(json.dumps(response.response_metadata, indent=4))
+```
+
+```output
+Dense retrieval models typically include:
+
+1. **BERT-based Models**: Such as DPR (Dense Passage Retrieval) which uses BERT for encoding queries and passages.
+2. **ColBERT**: A model that combines BERT with late interaction mechanisms.
+3. **ANCE (Approximate Nearest Neighbor Negative Contrastive Estimation)**: Uses BERT and focuses on efficient retrieval.
+4. **TCT-ColBERT**: A variant of ColBERT that uses a two-tower
+{
+    "document_chunks": [
+        {
+            "repository_id": 1985,
+            "document_id": 1306,
+            "chunk_id": 173899,
+            "document_name": "[D] Difference between sparse and dense informati\u2026",
+            "similarity_score": 0.3209080100059509,
+            "content": "with the difference or anywhere\nwhere I can read about it?\n\n\n      17                  9\n\n\n      u/ScotiabankCanada        \u2022  Promoted\n\n\n                       Accelerate your study permit process\n                       with Scotiabank's Student GIC\n                       Program. We're here to help you tur\u2026\n\n\n                       startright.scotiabank.com         Learn More\n\n\n                            Add a Comment\n\n\nSort by:   Best\n\n\n      DinosParkour      \u2022 1y ago\n\n\n     Dense Retrieval (DR) m"
+        }
+    ]
+}
+```
+
+> 理想情况下，您无需在此处连接仓库 ID 即可获得检索增强生成（RAG）。如果您已在 prem 平台上连接了仓库，仍然可以获得相同的结果。
+
+### Prem 模板 (Prem Templates)
+
+编写提示模板可能会非常混乱。提示模板冗长、难以管理，并且必须不断调整才能改进并保持整个应用程序的一致性。
+
+使用 **Prem**，编写和管理提示会变得非常简单。[LaunchPad](https://docs.premai.io/get-started/launchpad) 中的 **_Templates_** 选项卡可帮助您编写所需的任意数量的提示，并在 SDK 中使用它们，以使您的应用程序能够使用这些提示运行。您可以阅读有关提示模板的更多信息 [此处](https://docs.premai.io/get-started/prem-templates)。
+
+要在 LangChain 中原生使用 Prem 模板，您需要向 `HumanMessage` 传递一个 ID。此 ID 应该是您的提示模板变量的名称。`[`HumanMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.HumanMessage)` 中的 `content` 应该是该变量的值。
+
+假设您的提示模板如下：
+
+```text
+Say hello to my name and say a feel-good quote
+from my age. My name is: {name} and age is {age}
+```
+
+现在您的 `human_messages` 应该如下所示：
+
+```python
+human_messages = [
+    HumanMessage(content="Shawn", id="name"),
+    HumanMessage(content="22", id="age"),
+]
+```
+
+将此 `human_messages` 传递给 ChatPremAI 客户端。请注意：不要忘记向 `invoke` 传递额外的 `template_id` 以使用 Prem 模板进行生成。如果您不知道 `template_id`，可以在 [我们的文档](https://docs.premai.io/get-started/prem-templates) 中了解更多信息。下面是一个示例：
+
+```python
+template_id = "78069ce8-xxxxx-xxxxx-xxxx-xxx"
+response = chat.invoke([human_messages], template_id=template_id)
+print(response.content)
+```
+
+Prem 模板功能也支持流式传输。
+
+### 流式传输 (Streaming)
+
+在本节中，我们将了解如何使用 LangChain 和 PremAI 流式传输令牌。方法如下：
+
+```python
+import sys
+
+for chunk in chat.stream("hello how are you"):
+    sys.stdout.write(chunk.content)
+    sys.stdout.flush()
+```
+
+```output
+It looks like your message got cut off. If you need information about Dense Retrieval (DR) or any other topic, please provide more details or clarify your question.
+```
+
+与上面类似，如果您想覆盖系统提示和生成参数，您需要添加以下内容：
+
+```python
+import sys
+
+# 出于某些实验原因，如果您想覆盖系统提示，您也可以在这里传递它。
+# 但是，不建议覆盖已部署模型的系统提示。
+
+for chunk in chat.stream(
+    "hello how are you",
+    system_prompt="act like a dog",
+    temperature=0.7,
+    max_tokens=200,
+):
+    sys.stdout.write(chunk.content)
+    sys.stdout.flush()
+```
+
+```output
+Woof! 🐾 How can I help you today? Want to play fetch or maybe go for a walk 🐶🦴
+```
+
+### 工具/函数调用 (Tool/Function Calling)
+
+LangChain PremAI 支持工具/函数调用。工具/函数调用允许模型通过生成与用户定义的模式相匹配的输出来响应给定的提示。
+
+- 您可以在 [此处](https://docs.premai.io/get-started/function-calling) 查阅有关工具调用的所有详细信息。
+- 您可以在 [文档的此部分](https://python.langchain.com/v0.1/docs/modules/model_io/chat/function_calling) 了解有关 LangChain 工具调用的更多信息。
+
+**注意：**
+LangChain ChatPremAI 的当前版本不支持带有流式传输支持的函数/工具调用。流式传输支持以及函数调用即将推出。
+
+#### 将工具传递给模型
+
+为了传递工具并让 LLM 选择它需要的工具，我们需要传递一个工具模式（schema）。工具模式是函数定义以及关于函数的作用、每个参数的含义等的适当文档字符串。下面是一些带有其模式的简单算术函数。
+
+**注意：** 在定义函数/工具模式时，不要忘记添加有关函数参数的信息，否则会引发错误。
+
+```python
+from langchain.tools import tool
+from pydantic import BaseModel, Field
+
+
+# 定义函数参数的模式
+class OperationInput(BaseModel):
+    a: int = Field(description="First number")
+    b: int = Field(description="Second number")
+
+
+# 现在定义参数模式为 OperationInput 的函数
+@tool("add", args_schema=OperationInput, return_direct=True)
+def add(a: int, b: int) -> int:
+    """Adds `a` and `b`.
+
+    Args:
+        a: First int
+        b: Second int
+    """
+    return a + b
+
+
+@tool("multiply", args_schema=OperationInput, return_direct=True)
+def multiply(a: int, b: int) -> int:
+    """Multiplies a and b.
+
+    Args:
+        a: First int
+        b: Second int
+    """
+    return a * b
+```
+
+#### 将工具模式绑定到我们的 LLM
+
+我们现在将使用 `bind_tools` 方法将上述函数转换为“工具”并将其绑定到模型。这意味着每次调用模型时，我们都将传递这些工具信息。
+
+```python
+tools = [add, multiply]
+llm_with_tools = chat.bind_tools(tools)
+```
+
+之后，我们从模型获取响应，该模型现在已绑定到工具。
+
+```python
+query = "What is 3 * 12? Also, what is 11 + 49?"
+
+messages = [HumanMessage(query)]
+ai_msg = llm_with_tools.invoke(messages)
+```
+
+正如我们所看到的，当我们的聊天模型与工具绑定时，它会根据给定的提示，按顺序调用正确的工具集。
+
+```python
+ai_msg.tool_calls
+```
+
+```output
+[{'name': 'multiply',
+  'args': {'a': 3, 'b': 12},
+  'id': 'call_A9FL20u12lz6TpOLaiS6rFa8'},
+ {'name': 'add',
+  'args': {'a': 11, 'b': 49},
+  'id': 'call_MPKYGLHbf39csJIyb5BZ9xIk'}]
+```
+
+我们将上面显示的此消息追加到 LLM，充当上下文，使 LLM 意识到它调用了哪些函数。
+
+```python
+messages.append(ai_msg)
+```
+
+由于函数调用分两个阶段进行：
+
+1. 在第一次调用中，我们收集了 LLM 决定使用的所有工具，以便它可以将结果作为附加上下文以提供更准确、无幻觉的结果。
+
+2. 在第二次调用中，我们将解析这些工具集（在我们的例子中将是定义的函数及其从 LLM 中提取的参数），并将此结果传递给 LLM。
+
+```python
+from langchain.messages import ToolMessage
+
+for tool_call in ai_msg.tool_calls:
+    selected_tool = {"add": add, "multiply": multiply}[tool_call["name"].lower()]
+    tool_output = selected_tool.invoke(tool_call["args"])
+    messages.append(ToolMessage(tool_output, tool_call_id=tool_call["id"]))
+```
+
+最后，我们调用（绑定了工具的）LLM，并将函数响应添加到其上下文中。
+
+```python
+response = llm_with_tools.invoke(messages)
+print(response.content)
+```
+
+```output
+The final answers are:
+
+- 3 * 12 = 36
+- 11 + 49 = 60
+```
+
+### 定义工具模式：Pydantic 类
+
+上面展示了如何使用 `tool` 装饰器定义模式，但我们也可以使用 Pydantic 等效地定义模式。当工具输入更复杂时，Pydantic 非常有用：
+
+```python
+from langchain_core.output_parsers.openai_tools import PydanticToolsParser
+
+
+class add(BaseModel):
+    """Add two integers together."""
+
+    a: int = Field(..., description="First integer")
+    b: int = Field(..., description="Second integer")
+
+
+class multiply(BaseModel):
+    """Multiply two integers together."""
+
+    a: int = Field(..., description="First integer")
+    b: int = Field(..., description="Second integer")
+
+
+tools = [add, multiply]
+```
+
+现在，我们可以将它们绑定到聊天模型并直接获取结果：
+
+```python
+chain = llm_with_tools | PydanticToolsParser(tools=[multiply, add])
+chain.invoke(query)
+```
+
+```output
+[multiply(a=3, b=12), add(a=11, b=49)]
+```
+
+现在，如同上面所做的那样，我们解析此内容并运行这些函数，然后再次调用 LLM 以获取结果。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\premai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

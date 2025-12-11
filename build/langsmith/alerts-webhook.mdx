@@ -1,0 +1,217 @@
+---
+title: 配置 LangSmith 警报的 Webhook 通知
+sidebarTitle: 配置警报的 Webhook 通知
+---
+
+## 概述
+
+本指南详细说明了为 [LangSmith 警报](/langsmith/alerts) 设置 Webhook 通知的过程。在继续操作之前，请确保您已按照[本指南](./alerts)的步骤完成了创建警报前的准备工作。Webhook 通过在警报条件触发时发送 HTTP POST 请求，从而支持与自定义服务和第三方平台的集成。您可以使用 Webhook 将警报数据转发到工单系统、聊天应用程序或自定义监控解决方案。
+
+## 先决条件
+
+* 能够接收 HTTP POST 请求的终端点 (Endpoint)
+* 接收服务的适当身份验证凭据（如果需要）
+
+## 集成配置
+
+### 步骤 1：准备接收终端点
+
+在 LangSmith 中配置 Webhook 之前，请确保您的接收终端点：
+
+* 接受 HTTP POST 请求
+* 能够处理 JSON 有效载荷 (Payload)
+* 可以从外部服务访问
+* 具有适当的身份验证机制（如果需要）
+
+此外，如果使用的是 LangSmith 的自定义部署，请确保没有防火墙设置阻止了来自 LangSmith 服务的出口流量 (egress traffic)。
+
+### 步骤 2：配置 Webhook 参数
+
+![Webhook Setup](/langsmith/images/webhook-setup.png)
+
+在警报的通知部分，使用以下参数完成 Webhook 配置：
+
+**必填字段**
+
+* **URL**: 接收终端点的完整 URL
+  * 示例: `https://api.example.com/incident-webhook`
+
+**可选字段**
+
+* **Headers**: 随 Webhook 请求一起发送的 JSON 键值对
+
+  * 常见 Header 包括：
+
+    * `Authorization`: 用于身份验证令牌
+    * `Content-Type`: 通常设置为 `application/json`（默认值）
+    * `X-Source`: 用于标识来源为 LangSmith
+
+  * 如果没有 Header，则直接使用 `{}`
+
+* **Request Body Template**: 自定义发送到终端点的 JSON 有效载荷
+
+  * 默认值：LangSmith 会发送定义的有效载荷，并在其后追加以下额外的键值对：
+
+    * `project_name`: 被触发警报的项目名称
+    * `alert_rule_id`: 用于识别 LangSmith 警报的 UUID。这可作为 Webhook 服务中的去重键 (de-duplication key)。
+    * `alert_rule_name`: 警报规则的名称。
+    * `alert_rule_type`: 警报的类型（截至 2025/04/01，所有警报类型均为 `threshold`）。
+    * `alert_rule_attribute`: 与警报规则关联的属性——`error_count`（错误计数）、`feedback_score`（反馈分数）或 `latency`（延迟）。
+    * `triggered_metric_value`: 触发阈值时指标的值。
+    * `triggered_threshold`: 触发警报的阈值。
+    * `timestamp`: 触发警报的时间戳。
+
+### 步骤 3：测试 Webhook
+
+点击 **Send Test Alert**（发送测试警报），以发送 Webhook 通知，确保通知按预期工作。
+
+## 故障排除
+
+如果 Webhook 通知未送达：
+
+* 验证 Webhook URL 是否正确且可访问
+* 确保任何身份验证 Header 的格式正确
+* 检查接收终端点是否接受 POST 请求
+* 检查终端点的日志，查看是否有接收到但被拒绝的请求
+* 验证您的自定义有效载荷模板是否为有效的 JSON 格式
+
+## 安全注意事项
+
+* 为您的 Webhook 终端点使用 HTTPS
+* 为您的 Webhook 终端点实现身份验证
+* 考虑在 Header 中添加一个共享密钥 (shared secret) 以验证 Webhook 来源
+* 在处理传入的 Webhook 请求之前对其进行验证
+
+## 使用 Webhook 将警报发送到 Slack
+
+以下是配置 LangSmith 警报以使用 [`chat.postMessage`](https://api.slack.com/methods/chat.postMessage) API 将通知发送到 Slack 频道的示例。
+
+### 先决条件
+
+* 可以访问一个 Slack 工作区
+* 一个用于设置警报的 LangSmith 项目
+* 创建 Slack 应用程序的权限
+
+### 步骤 1：创建 Slack 应用程序
+
+1. 访问 [Slack API 应用程序页面](https://api.slack.com/apps)
+2. 点击 **Create New App**（从零创建新应用）
+3. 选择 **From scratch**（从零开始）
+4. 提供一个**App Name**（例如：“LangSmith Alerts”）
+5. 选择要在其中安装该应用程序的工作区
+6. 点击 **Create App**
+
+### 步骤 2：配置 Bot 权限
+
+1. 在 Slack 应用配置的左侧边栏中，点击 **OAuth & Permissions**（OAuth 与权限）
+
+2. 在 **Scopes**（范围）下的 **Bot Token Scopes**（Bot 令牌范围）中，点击 **Add an OAuth Scope**（添加 OAuth 范围）
+
+3. 添加以下范围：
+
+   * `chat:write`（以应用程序身份发送消息）
+   * `chat:write.public`（发送消息到应用程序未加入的频道）
+   * `channels:read`（查看基本频道信息）
+
+### 步骤 3：将应用程序安装到工作区
+
+1. 滚动到 **OAuth & Permissions** 页面的顶部
+2. 点击 **Install to Workspace**（安装到工作区）
+3. 查看权限并点击 **Allow**（允许）
+4. 复制随后出现的 **Bot User OAuth Token**（Bot 用户 OAuth 令牌）（以 `xoxb-` 开头）
+
+### 步骤 4：在 LangSmith 中配置 Webhook 警报
+
+1. 在 LangSmith 中，导航到您的项目
+2. 选择 **Alerts → Create Alert**（警报 -> 创建警报）
+3. 定义您的警报指标和条件
+4. 在通知部分，选择 **Webhook**
+5. 使用以下设置配置 Webhook：
+
+**Webhook URL**
+
+```json
+https://slack.com/api/chat.postMessage
+```
+
+**Headers**
+
+```json
+{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer xoxb-your-token-here"
+}
+```
+
+> **注意:** 将 `xoxb-your-token-here` 替换为您实际的 Bot User OAuth Token
+
+**Request Body Template**
+
+```json
+{
+  "channel": "{channel_id}",
+  "text": "{alert_name} triggered for {project_name}",
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "🚨{alert_name} has been triggered"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Please check the following link for more information:"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "<{project-url}|View in LangSmith>"
+      }
+    }
+  ]
+}
+```
+
+**注意：** 在创建警报时，请填写 `channel_id`、`alert_name`、`project_name` 和 `project_url`。您可以在浏览器地址栏中找到 `project_url`。复制到不包含任何查询参数的部分即可。
+
+6. 点击 **Save**（保存）以激活 Webhook 配置
+
+### 步骤 5：测试集成
+
+1. 在 LangSmith 警报配置中，点击 **Test Alert**（测试警报）
+2. 检查您指定的 Slack 频道以接收测试通知
+3. 验证消息是否包含预期的警报信息
+
+### (可选) 步骤 6：在请求正文中链接到警报预览
+
+创建警报后，您可以选择在 Webhook 的请求正文中链接到其预览。
+
+![Alert Preview Pane](/langsmith/images/alert-preview-pane.png)
+
+要进行此配置：
+
+1. 保存您的警报
+2. 在警报表中找到并点击您保存的警报
+3. 复制显示的 URL
+4. 点击 "Edit Alert"（编辑警报）
+5. 用复制的警报预览 URL 替换现有的项目 URL
+
+## 附加资源
+
+* [LangSmith 警报文档](/langsmith/alerts)
+* [Slack chat.postMessage API 文档](https://api.slack.com/methods/chat.postMessage)
+* [Slack Block Kit Builder](https://app.slack.com/block-kit-builder/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\alerts-webhook.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

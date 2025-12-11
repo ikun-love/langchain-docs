@@ -1,0 +1,160 @@
+---
+title: 英特尔仅权重量化
+---
+
+## 使用面向 Transformer 的英特尔扩展在 Huggingface 模型上进行仅权重量化 (Weight-Only Quantization)
+
+可以通过 `WeightOnlyQuantPipeline` 类使用仅权重量化在本地运行 Hugging Face 模型。
+
+[Hugging Face Model Hub](https://huggingface.co/models) 托管了超过 12 万个模型、2 万个数据集和 5 万个演示应用（Spaces），所有这些都是开源且公开可用的，位于一个人们可以轻松协作和共同构建机器学习模型的在线平台中。
+
+这些模型可以通过此本地管道包装类从 LangChain 调用。
+
+要使用，您需要安装 `transformers` Python [包](https://pypi.org/project/transformers/)，以及 [pytorch](https://pytorch.org/get-started/locally/) 和 [intel-extension-for-transformers](https://github.com/intel/intel-extension-for-transformers)。
+
+```python
+pip install transformers --quiet
+pip install intel-extension-for-transformers
+```
+
+### 模型加载
+
+可以通过使用 `from_model_id` 方法指定模型参数来加载模型。模型参数包括 `intel_extension_for_transformers` 中的 `WeightOnlyQuantConfig` 类。
+
+```python
+from intel_extension_for_transformers.transformers import WeightOnlyQuantConfig
+from langchain_community.llms.weight_only_quantization import WeightOnlyQuantPipeline
+
+conf = WeightOnlyQuantConfig(weight_dtype="nf4")
+hf = WeightOnlyQuantPipeline.from_model_id(
+    model_id="google/flan-t5-large",
+    task="text2text-generation",
+    quantization_config=conf,
+    pipeline_kwargs={"max_new_tokens": 10},
+)
+```
+
+也可以通过直接传入一个现有的 `transformers` pipeline 来加载它们：
+
+```python
+from intel_extension_for_transformers.transformers import AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, pipeline
+
+model_id = "google/flan-t5-large"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
+pipe = pipeline(
+    "text2text-generation", model=model, tokenizer=tokenizer, max_new_tokens=10
+)
+hf = WeightOnlyQuantPipeline(pipeline=pipe)
+```
+
+### 创建链 (Chain)
+
+将模型加载到内存后，您可以将其与提示 (Prompt) 组合以形成一个链 (Chain)。
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+prompt = PromptTemplate.from_template(template)
+
+chain = prompt | hf
+
+question = "What is electroencephalography?"
+
+print(chain.invoke({"question": question}))
+```
+
+### CPU 推理
+
+目前，intel-extension-for-transformers 只支持 CPU 设备推理。未来将支持英特尔 GPU。在具有 CPU 的机器上运行时，您可以指定 `device="cpu"` 或 `device=-1` 参数将模型置于 CPU 设备上。
+CPU 推理的默认值为 `-1`。
+
+```python
+conf = WeightOnlyQuantConfig(weight_dtype="nf4")
+llm = WeightOnlyQuantPipeline.from_model_id(
+    model_id="google/flan-t5-large",
+    task="text2text-generation",
+    quantization_config=conf,
+    pipeline_kwargs={"max_new_tokens": 10},
+)
+
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+prompt = PromptTemplate.from_template(template)
+
+chain = prompt | llm
+
+question = "What is electroencephalography?"
+
+print(chain.invoke({"question": question}))
+```
+
+### 批量 CPU 推理
+
+您也可以在 CPU 上以批处理模式运行推理。
+
+```python
+conf = WeightOnlyQuantConfig(weight_dtype="nf4")
+llm = WeightOnlyQuantPipeline.from_model_id(
+    model_id="google/flan-t5-large",
+    task="text2text-generation",
+    quantization_config=conf,
+    pipeline_kwargs={"max_new_tokens": 10},
+)
+
+chain = prompt | llm.bind(stop=["\n\n"])
+
+questions = []
+for i in range(4):
+    questions.append({"question": f"What is the number {i} in french?"})
+
+answers = chain.batch(questions)
+for answer in answers:
+    print(answer)
+```
+
+### 面向 Transformer 的英特尔扩展支持的数据类型
+
+我们支持将权重量化为以下数据类型进行存储（`WeightOnlyQuantConfig` 中的 `weight_dtype`）：
+
+* **int8**: 使用 8 位数据类型。
+* **int4_fullrange**: 使用 int4 范围的 -8 值，而不是正常的 int4 范围 [-7, 7]。
+* **int4_clip**: 裁剪并将值保留在 int4 范围内，将其他值设置为零。
+* **nf4**: 使用归一化浮点 4 位数据类型。
+* **fp4_e2m1**: 使用常规浮点 4 位数据类型。“e2”表示使用 2 位表示指数（exponent），“m1”表示使用 1 位表示尾数（mantissa）。
+
+虽然这些技术以 4 位或 8 位存储权重，但计算仍然以 float32、bfloat16 或 int8（`WeightOnlyQuantConfig` 中的 `compute_dtype`）执行：
+
+* **fp32**: 使用 float32 数据类型进行计算。
+* **bf16**: 使用 bfloat16 数据类型进行计算。
+* **int8**: 使用 8 位数据类型进行计算。
+
+### 支持的算法矩阵
+
+面向 Transformer 的英特尔扩展中支持的量化算法（`WeightOnlyQuantConfig` 中的 `algorithm`）：
+
+| 算法 | PyTorch | LLM 运行时 |
+|:------:|:-------:|:----------:|
+|   RTN  |   &#10004;   |   &#10004;   |
+|   AWQ  |   &#10004;   |   敬请期待   |
+|   TEQ  |  &#10004;  |   敬请期待   |
+
+> **RTN (Round-To-Nearest):** 一种我们可以非常直观理解的量化方法。它不需要额外的训练数据集，是一种非常快速的量化方法。通常情况下，RTN 会将权重转换为均匀分布的整数数据类型，但像 Qlora 这样的某些算法提出了非均匀的 NF4 数据类型，并证明了其理论上的最优性。
+
+> **AWQ (Activation-aware Weight Quantization):** 证明了仅保护 1% 的显著权重（salient weights）就能大大减少量化误差。显著权重是通过观察每通道的激活和权重的分布来选择的。显著权重在量化之前，会先乘以一个较大的缩放因子（scale factor）以进行保护。
+
+> **TEQ (Trainable Equivalent Transformation):** 一种保留 FP32 精度在仅权重量化中的可训练等效变换。它受到 AWQ 的启发，同时提供了一种新的解决方案来搜索激活和权重之间的最佳每通道缩放因子。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\weight_only_quantization.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

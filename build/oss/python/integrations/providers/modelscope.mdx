@@ -1,0 +1,66 @@
+---
+title: ModelScope
+---
+
+> [ModelScope](https://www.modelscope.cn/home) 是一个庞大的模型和数据集仓库。
+
+本页介绍如何在 LangChain 中使用 ModelScope 生态系统。内容分为两部分：安装和设置，以及特定 ModelScope 封装的引用。
+
+## 安装
+
+<CodeGroup>
+```bash pip
+pip install -U langchain-modelscope-integration
+```
+
+```bash uv
+uv add langchain-modelscope-integration
+```
+</CodeGroup>
+
+前往 [ModelScope](https://modelscope.cn/) 注册 ModelScope 账户，并生成一个 [SDK 令牌](https://modelscope.cn/my/myaccesstoken)。完成此操作后，设置 `MODELSCOPE_SDK_TOKEN` 环境变量：
+
+```bash
+export MODELSCOPE_SDK_TOKEN=<your_sdk_token>
+```
+
+## 聊天模型 (Chat Models)
+
+`ModelScopeChatEndpoint` 类暴露了来自 ModelScope 的聊天模型。请在此处 [查看可用模型](https://www.modelscope.cn/docs/model-service/API-Inference/intro)。
+
+```python
+from langchain_modelscope import ModelScopeChatEndpoint
+
+llm = ModelScopeChatEndpoint(model="Qwen/Qwen2.5-Coder-32B-Instruct")
+llm.invoke("Sing a ballad of LangChain.")
+```
+
+## 嵌入模型 (Embeddings)
+
+`ModelScopeEmbeddings` 类暴露了来自 ModelScope 的嵌入模型。
+
+```python
+from langchain_modelscope import ModelScopeEmbeddings
+
+embeddings = ModelScopeEmbeddings(model_id="damo/nlp_corom_sentence-embedding_english-base")
+embeddings.embed_query("What is the meaning of life?")
+```
+
+## 大型语言模型 (LLMs)
+`ModelScopeEndpoint` 类暴露了来自 ModelScope 的 LLM 模型。
+
+```python
+from langchain_modelscope import ModelScopeEndpoint
+
+llm = ModelScopeEndpoint(model="Qwen/Qwen2.5-Coder-32B-Instruct")
+llm.invoke("The meaning of life is")
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\modelscope.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

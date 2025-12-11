@@ -1,0 +1,495 @@
+---
+title: 构建 SQL 智能体
+sidebarTitle: SQL 智能体
+---
+
+import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
+import ChatModelTabsJS from '/snippets/chat-model-tabs-js.mdx';
+
+## 概述
+
+在本教程中，您将学习如何使用 LangChain 的 [智能体](/oss/javascript/langchain/agents) 根据 SQL 数据库回答问题。
+
+从高层次上看，该智能体将执行以下操作：
+
+<Steps>
+<Step title="从数据库中获取可用表和模式信息" />
+<Step title="决定哪些表与问题相关" />
+<Step title="获取相关表的模式信息" />
+<Step title="基于问题和模式信息生成查询语句" />
+<Step title="使用 LLM 对查询语句进行初步检查，以避免常见错误" />
+<Step title="执行查询并返回结果" />
+<Step title="纠正数据库引擎报告的错误，直到查询成功为止" />
+<Step title="根据查询结果整合最终回答" />
+</Steps>
+
+<Warning>
+构建 SQL 数据库的问答系统需要执行模型生成的 SQL 查询。这样做存在固有风险。请确保您的数据库连接权限始终尽可能严格地限制在智能体所需范围之内。这将减轻（但不能消除）构建模型驱动系统的风险。
+</Warning>
+
+### 概念
+
+我们将介绍以下概念：
+
+- 用于从 SQL 数据库读取数据的 [工具](/oss/javascript/langchain/tools)
+- LangChain [智能体](/oss/javascript/langchain/agents)
+- [人工干预循环](/oss/javascript/langchain/human-in-the-loop) 流程
+
+
+## 设置
+
+### 安装
+
+
+    <CodeGroup>
+    ```bash npm
+    npm i langchain @langchain/core typeorm sqlite3 zod
+    ```
+    ```bash yarn
+    yarn add langchain @langchain/core typeorm sqlite3 zod
+    ```
+    ```bash pnpm
+    pnpm add langchain @langchain/core typeorm sqlite3 zod
+    ```
+    </CodeGroup>
+
+
+### LangSmith
+设置 [LangSmith](https://smith.langchain.com) 以检查链或智能体内部发生了什么。然后设置以下环境变量：
+
+    ```shell
+    export LANGSMITH_TRACING="true"
+    export LANGSMITH_API_KEY="..."
+    ```
+
+## 1. 选择 LLM
+
+
+选择一个支持 [工具调用](/oss/javascript/integrations/providers/overview) 的模型：
+<ChatModelTabsJS />
+
+
+下面示例中展示的输出使用了 OpenAI 模型。
+
+## 2. 配置数据库
+
+本教程将创建一个 [SQLite 数据库](https://www.sqlitetutorial.net/sqlite-sample-database/)。SQLite 是一种轻量级的数据库，易于设置和使用。我们将加载 `chinook` 数据库，这是一个代表数字媒体商店的示例数据库。
+
+为方便起见，我们将数据库 (`Chinook.db`) 托管在一个公共 GCS 存储桶上。
+
+
+```typescript
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db";
+const localPath = path.resolve("Chinook.db");
+
+async function resolveDbPath() {
+  if (await fs.exists(localPath)) {
+    return localPath;
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`数据库下载失败。状态码: ${resp.status}`);
+  const buf = Buffer.from(await resp.arrayBuffer());
+  await fs.writeFile(localPath, buf);
+  return localPath;
+}
+```
+
+
+
+## 3. 添加数据库交互工具
+
+使用 `langchain/sql_db` 中提供的 `SqlDatabase` 包装器与数据库进行交互。该包装器提供了一个简单的接口来执行 SQL 查询和获取结果：
+```typescript
+import { SqlDatabase } from "@langchain/classic/sql_db";
+import { DataSource } from "typeorm";
+
+let db: SqlDatabase | undefined;
+async function getDb() {
+  if (!db) {
+    const dbPath = await resolveDbPath();
+    const datasource = new DataSource({ type: "sqlite", database: dbPath });
+    db = await SqlDatabase.fromDataSourceParams({ appDataSource: datasource });
+  }
+  return db;
+}
+
+async function getSchema() {
+  const db = await getDb();
+  return await db.getTableInfo();
+}
+```
+
+
+
+
+## 6. 实现人工干预审查
+
+在执行智能体的 SQL 查询之前，检查其中是否存在任何意外操作或效率低下的情况是明智的。
+
+LangChain 智能体支持内置的[人工干预中间件](/oss/javascript/langchain/human-in-the-loop)，用于在智能体工具调用中添加监督。让我们配置智能体，使其在调用 `sql_db_query` 工具时暂停以供人工审查：
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware # [!code highlight]
+from langgraph.checkpoint.memory import InMemorySaver # [!code highlight]
+
+
+agent = create_agent(
+    model,
+    tools,
+    system_prompt=system_prompt,
+    middleware=[ # [!code highlight]
+        HumanInTheLoopMiddleware( # [!code highlight]
+            interrupt_on={"sql_db_query": True}, # [!code highlight]
+            description_prefix="工具执行等待批准", # [!code highlight]
+        ), # [!code highlight]
+    ], # [!code highlight]
+    checkpointer=InMemorySaver(), # [!code highlight]
+)
+```
+<Note>
+我们向智能体添加了一个[检查点](/oss/javascript/langchain/short-term-memory)，以便可以暂停和恢复执行。有关此以及可用中间件配置的详细信息，请参阅[人工干预指南](/oss/javascript/langchain/human-in-the-loop)。
+</Note>
+
+运行智能体时，它现在将在执行 `sql_db_query` 工具之前暂停以供审查：
+```python
+question = "哪个流派平均拥有最长的音轨？"
+config = {"configurable": {"thread_id": "1"}} # [!code highlight]
+
+for step in agent.stream(
+    {"messages": [{"role": "user", "content": question}]},
+    config, # [!code highlight]
+    stream_mode="values",
+):
+    if "messages" in step:
+        step["messages"][-1].pretty_print()
+    elif "__interrupt__" in step: # [!code highlight]
+        print("中断:") # [!code highlight]
+        interrupt = step["__interrupt__"][0] # [!code highlight]
+        for request in interrupt.value["action_requests"]: # [!code highlight]
+            print(request["description"]) # [!code highlight]
+    else:
+        pass
+```
+```
+...
+
+中断:
+工具执行等待批准
+
+工具: sql_db_query
+参数: {'query': 'SELECT g.Name AS Genre, AVG(t.Milliseconds) AS AvgTrackLength FROM Track t JOIN Genre g ON t.GenreId = g.GenreId GROUP BY g.Name ORDER BY AvgTrackLength DESC LIMIT 1;'}
+```
+我们可以在这里使用 [Command](/oss/javascript/langgraph/use-graph-api#combine-control-flow-and-state-updates-with-command) 恢复执行（在本例中接受查询）：
+```python
+from langgraph.types import Command # [!code highlight]
+
+for step in agent.stream(
+    Command(resume={"decisions": [{"type": "approve"}]}), # [!code highlight]
+    config,
+    stream_mode="values",
+):
+    if "messages" in step:
+        step["messages"][-1].pretty_print()
+    elif "__interrupt__" in step:
+        print("中断:")
+        interrupt = step["__interrupt__"][0]
+        for request in interrupt.value["action_requests"]:
+            print(request["description"])
+    else:
+        pass
+```
+```
+================================== AI 消息 ==================================
+工具调用:
+  sql_db_query (call_7oz86Epg7lYRqi9rQHbZPS1U)
+ 调用 ID: call_7oz86Epg7lYRqi9rQHbZPS1U
+  参数:
+    query: SELECT Genre.Name, AVG(Track.Milliseconds) AS AvgDuration FROM Track JOIN Genre ON Track.GenreId = Genre.GenreId GROUP BY Genre.Name ORDER BY AvgDuration DESC LIMIT 5;
+================================= 工具消息 =================================
+名称: sql_db_query
+
+[('Sci Fi & Fantasy', 2911783.0384615385), ('Science Fiction', 2625549.076923077), ('Drama', 2575283.78125), ('TV Shows', 2145041.0215053763), ('Comedy', 1585263.705882353)]
+================================== AI 消息 ==================================
+
+平均音轨长度最长的流派是“Sci Fi & Fantasy”，平均持续时间约为 2,911,783 毫秒，其次是“Science Fiction”和“Drama”。
+```
+
+参考[人工干预指南](/oss/javascript/langchain/human-in-the-loop)了解详细信息。
+
+## 4. 执行 SQL 查询
+
+在运行命令之前，请在 `_safe_sql` 中检查 LLM 生成的命令：
+
+```typescript
+
+const DENY_RE = /\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|REPLACE|TRUNCATE)\b/i;
+const HAS_LIMIT_TAIL_RE = /\blimit\b\s+\d+(\s*,\s*\d+)?\s*;?\s*$/i;
+
+function sanitizeSqlQuery(q) {
+  let query = String(q ?? "").trim();
+
+  // 阻止多个语句（允许一个可选的尾随 ;）
+  const semis = [...query].filter((c) => c === ";").length;
+  if (semis > 1 || (query.endsWith(";") && query.slice(0, -1).includes(";"))) {
+    throw new Error("不允许使用多个语句。")
+  }
+  query = query.replace(/;+\s*$/g, "").trim();
+
+  // 只读门禁
+  if (!query.toLowerCase().startsWith("select")) {
+    throw new Error("只允许 SELECT 语句")
+  }
+  if (DENY_RE.test(query)) {
+    throw new Error("检测到 DML/DDL。只允许只读查询。")
+  }
+
+  // 仅在尚未存在 LIMIT 时追加 LIMIT
+  if (!HAS_LIMIT_TAIL_RE.test(query)) {
+    query += " LIMIT 5";
+  }
+  return query;
+}
+```
+
+然后，使用 `SQLDatabase` 中的 `run` 方法与 `execute_sql` 工具一起执行命令：
+
+```typescript
+import { tool } from "langchain"
+import * as z from "zod";
+
+const executeSql = tool(
+  async ({ query }) => {
+    const q = sanitizeSqlQuery(query);
+    try {
+      const result = await db.run(q);
+      return typeof result === "string" ? result : JSON.stringify(result, null, 2);
+    } catch (e) {
+      throw new Error(e?.message ?? String(e))
+    }
+  },
+  {
+    name: "execute_sql",
+    description: "执行一个只读的 SQLite SELECT 查询并返回结果。",
+    schema: z.object({
+      query: z.string().describe("要执行的 SQLite SELECT 查询（只读）。"),
+    }),
+  }
+);
+```
+
+## 5. 使用 `createAgent`
+
+使用 `createAgent` 以最少的代码构建一个 [ReAct 智能体](https://arxiv.org/pdf/2210.03629)。该智能体会解释请求并生成一个 SQL 命令。工具将检查命令的安全性然后尝试执行它。如果命令出错，错误消息会返回给模型。然后模型可以检查原始请求和新的错误消息，并生成一个新命令。这可以持续进行，直到 LLM 成功生成命令或达到结束次数限制。这种向模型提供反馈（在本例中为错误消息）的模式非常强大。
+
+使用描述性的系统提示初始化智能体以自定义其行为：
+
+```typescript
+import { SystemMessage } from "langchain";
+
+const getSystemPrompt = async () => new SystemMessage(`你是一位细致的 SQLite 分析师。
+
+权威模式（不要编造列/表）：
+${await getSchema()}
+
+规则：
+- 分步思考。
+- 当你需要数据时，调用工具 \`execute_sql\` 并提供一个 SELECT 查询。
+- 仅限只读；不允许 INSERT/UPDATE/DELETE/ALTER/DROP/CREATE/REPLACE/TRUNCATE。
+- 除非用户明确要求，否则限制为 5 行。
+- 如果工具返回 'Error:'，请修改 SQL 并重试。
+- 限制尝试次数为 5 次。
+- 如果 5 次尝试后仍不成功，请向用户返回一条注释。
+- 优先使用明确的列列表；避免使用 SELECT *。
+`);
+```
+
+现在，使用模型、工具和提示创建一个智能体：
+
+```typescript
+import { createAgent } from "langchain";
+
+const agent = createAgent({
+  model: "gpt-5",
+  tools: [executeSql],
+  systemPrompt: getSystemPrompt,
+});
+```
+
+## 6. 运行智能体
+
+对一个示例查询运行智能体并观察其行为：
+
+```typescript
+const question = "哪个流派，平均而言，拥有最长的音轨？";
+const stream = await agent.stream(
+  { messages: [{ role: "user", content: question }] },
+  { streamMode: "values" }
+);
+for await (const step of stream) {
+  const message = step.messages.at(-1);
+  console.log(`${message.role}: ${JSON.stringify(message.content, null, 2)}`);
+}
+```
+
+```
+human: 哪个流派，平均而言，拥有最长的音轨？
+ai:
+tool: [{"Genre":"Sci Fi & Fantasy","AvgMilliseconds":2911783.0384615385}]
+ai: Sci Fi & Fantasy — 平均音轨长度约为 2,911,783 毫秒（约 48.5 分钟）。
+```
+
+该智能体成功编写了查询、检查了查询并执行了查询，从而为最终响应提供了信息。
+
+<Note>
+    您可以在 [LangSmith 追踪](https://smith.langchain.com/public/653d218b-af67-4854-95ca-6abecb9b2520/r) 中检查上述运行的所有方面，包括采取的步骤、调用的工具、LLM 看到的提示等。
+</Note>
+
+#### (可选) 使用 Studio
+
+[Studio](/langsmith/studio) 提供了一个“客户端循环”以及内存，这样您就可以将此运行为一个聊天界面来查询数据库。您可以提出诸如“告诉我数据库的模式”或“向我展示前 5 名客户的发票”之类的问题。您将看到生成的 SQL 命令和最终输出。有关如何启动该功能的详细信息如下。
+<Accordion title="在 Studio 中运行您的智能体">
+
+除了前面提到的包之外，您还需要：
+
+```shell
+npm i -g langgraph-cli@latest
+```
+
+在您将运行的目录中，您需要一个 `langgraph.json` 文件，其中包含以下内容：
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+      "agent": "./sqlAgent.ts:agent",
+      "graph": "./sqlAgentLanggraph.ts:graph"
+  },
+  "env": ".env"
+}
+```
+
+```typescript
+import fs from "node:fs/promises";
+import path from "node:path";
+import { SqlDatabase } from "@langchain/classic/sql_db";
+import { DataSource } from "typeorm";
+import { SystemMessage, createAgent, tool } from "langchain"
+import * as z from "zod";
+
+const url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db";
+const localPath = path.resolve("Chinook.db");
+
+async function resolveDbPath() {
+  if (await fs.exists(localPath)) {
+    return localPath;
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`数据库下载失败。状态码: ${resp.status}`);
+  const buf = Buffer.from(await resp.arrayBuffer());
+  await fs.writeFile(localPath, buf);
+  return localPath;
+}
+
+let db: SqlDatabase | undefined;
+async function getDb() {
+  if (!db) {
+    const dbPath = await resolveDbPath();
+    const datasource = new DataSource({ type: "sqlite", database: dbPath });
+    db = await SqlDatabase.fromDataSourceParams({ appDataSource: datasource });
+  }
+  return db;
+}
+
+async function getSchema() {
+  const db = await getDb();
+  return await db.getTableInfo();
+}
+
+const DENY_RE = /\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|REPLACE|TRUNCATE)\b/i;
+const HAS_LIMIT_TAIL_RE = /\blimit\b\s+\d+(\s*,\s*\d+)?\s*;?\s*$/i;
+
+function sanitizeSqlQuery(q) {
+  let query = String(q ?? "").trim();
+
+  // 阻止多个语句（允许一个可选的尾随 ;）
+  const semis = [...query].filter((c) => c === ";").length;
+  if (semis > 1 || (query.endsWith(";") && query.slice(0, -1).includes(";"))) {
+    throw new Error("不允许使用多个语句。")
+  }
+  query = query.replace(/;+\s*$/g, "").trim();
+
+  // 只读门禁
+  if (!query.toLowerCase().startsWith("select")) {
+    throw new Error("只允许 SELECT 语句")
+  }
+  if (DENY_RE.test(query)) {
+    throw new Error("检测到 DML/DDL。只允许只读查询。")
+  }
+
+  // 仅在尚未存在 LIMIT 时追加 LIMIT
+  if (!HAS_LIMIT_TAIL_RE.test(query)) {
+    query += " LIMIT 5";
+  }
+  return query;
+}
+
+const executeSql = tool(
+  async ({ query }) => {
+    const q = sanitizeSqlQuery(query);
+    try {
+      const result = await db.run(q);
+      return typeof result === "string" ? result : JSON.stringify(result, null, 2);
+    } catch (e) {
+      throw new Error(e?.message ?? String(e))
+    }
+  },
+  {
+    name: "execute_sql",
+    description: "执行一个只读的 SQLite SELECT 查询并返回结果。",
+    schema: z.object({
+      query: z.string().describe("要执行的 SQLite SELECT 查询（只读）。"),
+    }),
+  }
+);
+
+const getSystemPrompt = async () => new SystemMessage(`你是一位细致的 SQLite 分析师。
+
+权威模式（不要编造列/表）：
+${await getSchema()}
+
+规则：
+- 分步思考。
+- 当你需要数据时，调用工具 \`execute_sql\` 并提供一个 SELECT 查询。
+- 仅限只读；不允许 INSERT/UPDATE/DELETE/ALTER/DROP/CREATE/REPLACE/TRUNCATE。
+- 除非用户明确要求，否则限制为 5 行。
+- 如果工具返回 'Error:'，请修改 SQL 并重试。
+- 限制尝试次数为 5 次。
+- 如果 5 次尝试后仍不成功，请向用户返回一条注释。
+- 优先使用明确的列列表；避免使用 SELECT *。
+`);
+
+export const agent = createAgent({
+  model: "gpt-5",
+  tools: [executeSql],
+  systemPrompt: getSystemPrompt,
+});
+```
+</Accordion>
+
+
+## 后续步骤
+
+要进行更深入的定制，请查看[本教程](/oss/javascript/langgraph/sql-agent)，了解如何直接使用 LangGraph 原始组件来实现 SQL 智能体。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\sql-agent.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

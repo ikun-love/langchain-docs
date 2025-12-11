@@ -1,0 +1,54 @@
+```markdown
+---
+title: 如何进行重复评估
+sidebarTitle: 重复评估
+---
+
+运行多次重复评估可以更准确地估算系统的性能，因为大型语言模型（LLM）的输出并不是确定性的。不同重复运行的输出可能会有所不同。对于那些容易出现高变异性的系统（例如智能体/Agents），多次重复是降低噪声的一种有效方法。
+
+## 在实验中配置重复次数
+
+向可选的 `evaluate` / `aevaluate` 函数中添加 `num_repetitions` 参数（[Python](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate), [TypeScript](https://docs.smith.langchain.com/reference/js/interfaces/evaluation.EvaluateOptions#numrepetitions)），以指定对数据集中每个示例进行评估的次数。例如，如果您的数据集中有 5 个示例，并将 `num_repetitions=5`，那么每个示例将被运行 5 次，总共进行 25 次运行。
+
+<CodeGroup>
+
+```python Python
+from langsmith import evaluate
+
+results = evaluate(
+    lambda inputs: label_text(inputs["text"]),
+    data=dataset_name,
+    evaluators=[correct_label],
+    experiment_prefix="Toxic Queries",
+    num_repetitions=3,
+)
+```
+
+```typescript TypeScript
+import { evaluate } from "langsmith/evaluation";
+
+await evaluate((inputs) => labelText(inputs["input"]), {
+  data: datasetName,
+  evaluators: [correctLabel],
+  experimentPrefix: "Toxic Queries",
+  numRepetitions: 3,
+});
+```
+
+</CodeGroup>
+
+## 查看使用重复次数运行的实验结果
+
+如果您使用[重复次数](/langsmith/evaluation-concepts#repetitions)运行了实验，输出结果列中将出现箭头，方便您在表格中查看不同的输出结果。要查看重复运行中的每一次具体运行情况，请将鼠标悬停在输出单元格上，然后点击展开视图。当您使用重复次数运行实验时，LangSmith 会在表格中显示每个反馈得分的**平均值**。点击反馈得分，可以查看来自**单个运行**的反馈得分，或者查看**重复次数之间的标准差**。
+
+![Repetitions](/langsmith/images/repetitions.png)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\repetition.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

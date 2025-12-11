@@ -1,0 +1,263 @@
+```markdown
+---
+title: PGVector
+---
+
+> 使用 `postgres` 作为后端，并利用 `pgvector` 扩展实现的 LangChain 向量存储抽象封装。
+
+该代码位于一个集成包中：[langchain-postgres](https://github.com/langchain-ai/langchain-postgres/)。
+
+## 状态 (Status)
+
+此代码已从 `langchain-community` 迁移到一个专用的包：`langchain-postgres`。进行了以下更改：
+
+* `langchain-postgres` 仅支持 psycopg3。请将您的连接字符串从 `postgresql+psycopg2://...` 更新为 `postgresql+psycopg://langchain:langchain@...`（注意：驱动名称是 `psycopg` 而不是 `psycopg3`，但它会使用 `psycopg3`）。
+* 嵌入存储和集合的 Schema 已更改，以便使用用户指定的 ID 调用 `add_documents` 时能正常工作。
+* 现在必须传入一个显式的连接对象 (`connection object`)。
+
+当前版本**没有**内置机制支持在 Schema 发生更改时轻松进行数据迁移。因此，向量存储中任何 Schema 更改都要求用户重新创建表并重新添加文档。
+如果这对您是问题，请考虑使用其他向量存储。如果不是，此实现应能满足您的使用场景。
+
+## 设置 (Setup)
+
+首先，下载配套包：
+
+```python
+pip install -qU langchain-postgres
+```
+
+您可以使用以下命令启动一个带有 `pgvector` 扩展的 Postgres 容器：
+
+```python
+%docker run --name pgvector-container -e POSTGRES_USER=langchain -e POSTGRES_PASSWORD=langchain -e POSTGRES_DB=langchain -p 6024:5432 -d pgvector/pgvector:pg16
+```
+
+### 凭证 (Credentials)
+
+运行此 Notebook 不需要任何特定凭证，只需确保您已下载 `langchain-postgres` 包并成功启动了 Postgres 容器即可。
+
+如果您希望对模型调用进行一流的自动化跟踪，您还可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_TRACING"] = "true"
+```
+
+## 实例化 (Instantiation)
+
+<EmbeddingTabs/>
+
+```python
+# | output: false
+# | echo: false
+from langchain_openai import OpenAIEmbeddings
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+```
+
+```python
+from langchain_postgres import PGVector
+
+# 请参考上方 docker 命令来启动一个启用了 pgvector 的 postgres 实例。
+connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"  # 使用 psycopg3!
+collection_name = "my_docs"
+
+vector_store = PGVector(
+    embeddings=embeddings,
+    collection_name=collection_name,
+    connection=connection,
+    use_jsonb=True,
+)
+```
+
+## 管理向量存储 (Manage vector store)
+
+### 向向量存储添加条目 (Add items to vector store)
+
+请注意，通过 ID 添加文档将**覆盖**任何匹配该 ID 的现有文档。
+
+```python
+from langchain_core.documents import Document
+
+docs = [
+    Document(
+        page_content="there are cats in the pond",
+        metadata={"id": 1, "location": "pond", "topic": "animals"},
+    ),
+    Document(
+        page_content="ducks are also found in the pond",
+        metadata={"id": 2, "location": "pond", "topic": "animals"},
+    ),
+    Document(
+        page_content="fresh apples are available at the market",
+        metadata={"id": 3, "location": "market", "topic": "food"},
+    ),
+    Document(
+        page_content="the market also sells fresh oranges",
+        metadata={"id": 4, "location": "market", "topic": "food"},
+    ),
+    Document(
+        page_content="the new art exhibit is fascinating",
+        metadata={"id": 5, "location": "museum", "topic": "art"},
+    ),
+    Document(
+        page_content="a sculpture exhibit is also at the museum",
+        metadata={"id": 6, "location": "museum", "topic": "art"},
+    ),
+    Document(
+        page_content="a new coffee shop opened on Main Street",
+        metadata={"id": 7, "location": "Main Street", "topic": "food"},
+    ),
+    Document(
+        page_content="the book club meets at the library",
+        metadata={"id": 8, "location": "library", "topic": "reading"},
+    ),
+    Document(
+        page_content="the library hosts a weekly story time for kids",
+        metadata={"id": 9, "location": "library", "topic": "reading"},
+    ),
+    Document(
+        page_content="a cooking class for beginners is offered at the community center",
+        metadata={"id": 10, "location": "community center", "topic": "classes"},
+    ),
+]
+
+vector_store.add_documents(docs, ids=[doc.metadata["id"] for doc in docs])
+```
+
+```output
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+```
+
+### 从向量存储中删除条目 (Delete items from vector store)
+
+```python
+vector_store.delete(ids=["3"])
+```
+
+## 查询向量存储 (Query vector store)
+
+一旦向量存储被创建并且相关的文档已被添加，您很可能希望在链或代理运行时对其进行查询。
+
+### 过滤支持 (Filtering Support)
+
+该向量存储支持一组可以针对文档的元数据字段应用的过滤器。
+
+| 运算符 | 含义/类别 |
+|----------|-------------------------|
+| \$eq      | 等于 (==) |
+| \$ne      | 不等于 (!=) |
+| \$lt      | 小于 (<) |
+| \$lte     | 小于等于 (<=) |
+| \$gt      | 大于 (>) |
+| \$gte     | 大于等于 (>=) |
+| \$in      | 特殊处理 (在...中) |
+| \$nin     | 特殊处理 (不在...中) |
+| \$between | 特殊处理 (介于...之间) |
+| \$like    | 文本 (like) |
+| \$ilike   | 文本 (不区分大小写的 like) |
+| \$and     | 逻辑 (与) |
+| \$or      | 逻辑 (或) |
+
+### 直接查询 (Query directly)
+
+执行简单的相似性搜索可以按如下方式完成：
+
+```python
+results = vector_store.similarity_search(
+    "kitty", k=10, filter={"id": {"$in": [1, 5, 2, 9]}}
+)
+for doc in results:
+    print(f"* {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* there are cats in the pond [{'id': 1, 'topic': 'animals', 'location': 'pond'}]
+* the library hosts a weekly story time for kids [{'id': 9, 'topic': 'reading', 'location': 'library'}]
+* ducks are also found in the pond [{'id': 2, 'topic': 'animals', 'location': 'pond'}]
+* the new art exhibit is fascinating [{'id': 5, 'topic': 'art', 'location': 'museum'}]
+```
+
+如果您提供一个包含多个字段但没有运算符的字典，顶层将被解释为逻辑 **AND** 过滤器。
+
+```python
+vector_store.similarity_search(
+    "ducks",
+    k=10,
+    filter={"id": {"$in": [1, 5, 2, 9]}, "location": {"$in": ["pond", "market"]}},
+)
+```
+
+```output
+[Document(metadata={'id': 1, 'topic': 'animals', 'location': 'pond'}, page_content='there are cats in the pond'),
+ Document(metadata={'id': 2, 'topic': 'animals', 'location': 'pond'}, page_content='ducks are also found in the pond')]
+```
+
+```python
+vector_store.similarity_search(
+    "ducks",
+    k=10,
+    filter={
+        "$and": [
+            {"id": {"$in": [1, 5, 2, 9]}},
+            {"location": {"$in": ["pond", "market"]}},
+        ]
+    },
+)
+```
+
+```output
+[Document(metadata={'id': 1, 'topic': 'animals', 'location': 'pond'}, page_content='there are cats in the pond'),
+ Document(metadata={'id': 2, 'topic': 'animals', 'location': 'pond'}, page_content='ducks are also found in the pond')]
+```
+
+如果您想执行相似性搜索并接收相应的分数，可以运行：
+
+```python
+results = vector_store.similarity_search_with_score(query="cats", k=1)
+for doc, score in results:
+    print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* [SIM=0.763449] there are cats in the pond [{'id': 1, 'topic': 'animals', 'location': 'pond'}]
+```
+
+有关您可以对 `PGVector` 向量存储执行的不同搜索类型的完整列表，请参阅 [API 参考](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html)。
+
+### 通过转换为检索器进行查询 (Query by turning into retriever)
+
+您也可以将向量存储转换为检索器，以便在链中使用更方便。
+
+```python
+retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 1})
+retriever.invoke("kitty")
+```
+
+```output
+[Document(metadata={'id': 1, 'topic': 'animals', 'location': 'pond'}, page_content='there are cats in the pond')]
+```
+
+## 用于检索增强生成 (RAG) 的用法
+
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
+
+* [教程](/oss/python/langchain/rag)
+* [操作指南：使用 RAG 进行问答](https://python.langchain.com/docs/how_to/#qa-with-rag)
+* [检索概念文档](https://python.langchain.com/docs/concepts/retrieval)
+
+---
+
+## API 参考 (API reference)
+
+有关 __ModuleName__VectorStore 的所有功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\pgvector.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,412 @@
+---
+title: 为 LangSmith Agent Server 配置以实现规模化
+sidebarTitle: 为 Agent Server 配置以实现规模化
+---
+
+LangSmith Agent Server 的默认配置旨在处理跨多种不同工作负载的大量读写操作。通过遵循下面概述的最佳实践，您可以调整 Agent Server 以针对您的特定工作负载实现最佳性能。本文介绍 Agent Server 的规模化注意事项，并提供示例以帮助配置您的部署。
+
+有关一些自托管配置的示例，请参阅 [Agent Server 规模化配置示例](#example-agent-server-configurations-for-scale) 部分。
+
+## 针对写入负载的规模化
+
+写入负载主要由以下因素驱动：
+
+- 创建新的 [运行 (runs](/langsmith/background-run))
+- 在运行执行期间创建新的检查点 (checkpoints)
+- 写入长期记忆 (long term memory)
+- 创建新的 [线程 (threads](/langsmith/use-threads))
+- 创建新的 [助手 (assistants](/langsmith/assistants))
+- 删除运行、检查点、线程、助手和定时作业 (cron jobs)
+
+以下组件主要负责处理写入负载：
+
+- API 服务器 (API server): 处理初始请求并将数据持久化到数据库。
+- 队列工作进程 (Queue worker): 负责执行运行。
+- Redis: 负责存储关于正在进行的运行的临时数据。
+- Postgres: 负责存储所有数据，包括运行、线程、助手、定时作业、检查点和长期记忆。
+
+### 写入路径规模化的最佳实践
+
+#### 根据助手特性更改 `N_JOBS_PER_WORKER`
+
+[`N_JOBS_PER_WORKER`](/langsmith/env-var#n-jobs-per-worker) 的默认值是 10。您可以更改此值，根据您助手的特性来调整单个队列工作进程可以同时执行的最大运行次数。
+
+关于更改 `N_JOBS_PER_WORKER` 的一般指导原则如下：
+
+- 如果您的助手是 CPU 密集型的，默认值 10 可能就足够了。如果您注意到队列工作进程上的 CPU 使用率过高或运行执行出现延迟，可以考虑降低 `N_JOBS_PER_WORKER`。
+- 如果您的助手是 IO 密集型的，请增加 `N_JOBS_PER_WORKER` 以使每个工作进程处理更多的并发运行。
+
+`N_JOBS_PER_WORKER` 没有上限。但是，队列工作进程在获取新运行时是“贪婪的”，这意味着它们会尝试获取尽可能多的可用任务，并立即开始执行。在流量突发（bursty traffic）的环境中将 `N_JOBS_PER_WORKER` 设置得过高，可能导致工作进程利用率不均衡并增加运行执行时间。
+
+#### 避免同步阻塞操作
+
+在您的代码中应避免同步阻塞操作，并优先使用异步操作。长时间的同步操作会阻塞主事件循环，导致更长的请求和运行执行时间，以及潜在的超时。
+
+例如，考虑一个需要休眠 1 秒的应用程序。不要使用像这样的同步代码：
+```python
+import time
+
+def my_function():
+    time.sleep(1)
+```
+
+而应优先使用像这样的异步代码：
+```python
+import asyncio
+
+async def my_function():
+    await asyncio.sleep(1)
+```
+
+如果助手需要同步阻塞操作，请将 [`BG_JOB_ISOLATED_LOOPS`](/langsmith/env-var#bg-job-isolated-loops) 设置为 `True`，以便在单独的事件循环中执行每个运行。
+
+#### 最小化冗余检查点写入
+
+通过将 [`durability`](/oss/python/langgraph/durable-execution#durability-modes) 设置为确保数据持久化所需的最小值，来最小化冗余的检查点写入。
+
+默认的持久性模式是 `"async"`，这意味着检查点在每个步骤后异步写入。如果助手只需要持久化运行的最终状态，可以将 `durability` 设置为 `"exit"`，仅存储运行的最终状态。这可以在创建运行时设置：
+
+```python
+from langgraph_sdk import get_client
+
+client = get_client(url=<DEPLOYMENT_URL>)
+thread = await client.threads.create()
+run = await client.runs.create(
+    thread_id=thread["thread_id"],
+    assistant_id="agent",
+    durability="exit"
+)
+```
+
+#### 自托管 (Self-hosted)
+
+<Note>
+这些设置仅适用于 [自托管](/langsmith/self-hosted) 部署。默认情况下，[云端](/langsmith/cloud) 部署已启用这些最佳实践。
+</Note>
+
+##### 启用队列工作进程的使用
+
+默认情况下，API 服务器管理队列并且不使用队列工作进程。您可以通过将 `queue.enabled` 配置设置为 `true` 来启用队列工作进程的使用。
+
+```yaml
+queue:
+  enabled: true
+```
+
+这将允许 API 服务器将队列管理卸载给队列工作进程，从而显著减轻 API 服务器的负载，使其能够专注于处理请求。
+
+##### 支持与预期吞吐量相等的作业数
+
+您并行执行的运行越多，就需要越多的作业来处理负载。有两个主要参数可以调整可用作业数：
+
+- `number_of_queue_workers`: 配置的队列工作进程数量。
+- `N_JOBS_PER_WORKER`: 单个队列工作进程可以同时执行的运行次数。默认为 10。
+
+您可以使用以下公式计算可用作业数：
+```
+available_jobs = number_of_queue_workers * `N_JOBS_PER_WORKER`
+```
+
+吞吐量即为可用作业每秒可以执行的运行次数：
+```
+throughput_per_second = available_jobs / average_run_execution_time_seconds
+```
+
+因此，要支持您预期的稳定状态吞吐量，应配置的最小队列工作进程数量为：
+```
+number_of_queue_workers = throughput_per_second * average_run_execution_time_seconds / `N_JOBS_PER_WORKER`
+```
+
+##### 为突发工作负载配置自动伸缩 (Autoscaling)
+
+自动伸缩默认是禁用的，但应为突发工作负载进行配置。使用与[上一节](#support-a-number-of-jobs-equal-to-expected-throughput)相同的计算方法，您可以根据最大预期吞吐量来确定自动伸缩器应扩展到的最大队列工作进程数量。
+
+## 针对读取负载的规模化
+
+读取负载主要由以下因素驱动：
+
+- 获取 [运行 (run](/langsmith/background-run)) 的结果
+- 获取 [线程 (thread](/langsmith/use-threads)) 的状态
+- 搜索 [运行](/langsmith/background-run)、[线程](/langsmith/use-threads)、[定时作业](/langsmith/cron-jobs) 和 [助手 (assistants](/langsmith/assistants))
+- 检索检查点和长期记忆
+
+以下组件主要负责处理读取负载：
+
+- API 服务器 (API server): 处理请求并直接从数据库检索数据。
+- Postgres: 负责存储所有数据，包括运行、线程、助手、定时作业、检查点和长期记忆。
+- Redis: 负责存储关于正在进行的运行的临时数据，包括从队列工作进程到 API 服务器的流式消息。
+
+### 读取路径规模化的最佳实践
+
+#### 使用过滤来减少每次请求返回的资源数量
+
+[Agent Server](/langsmith/agent-server) 为每种资源类型提供了一个搜索 API。这些 API 默认实现分页，并提供许多过滤选项。使用过滤来减少每次请求返回的资源数量，从而提高性能。
+
+#### 设置 TTL 以自动删除旧数据
+
+在 [线程上设置 TTL](/langsmith/configure-ttl) 以自动清理旧数据。当关联的线程被删除时，运行和检查点也会被自动删除。
+
+#### 避免轮询 (polling) 并使用 /join 监控运行状态
+
+避免通过使用 `/join` API 端点来轮询运行的状态。此方法在运行完成后返回其最终状态。
+
+如果您需要实时监控运行的输出，请使用 `/stream` API 端点。此方法会流式传输运行输出，包括运行的最终状态。
+
+#### 自托管 (Self-hosted)
+
+<Note>
+这些设置仅适用于 [自托管](/langsmith/self-hosted) 部署。默认情况下，[云端](/langsmith/cloud) 部署已启用这些最佳实践。
+</Note>
+
+##### 为突发工作负载配置自动伸缩
+
+自动伸缩默认是禁用的，但应为突发工作负载进行配置。您可以根据最大预期吞吐量来确定自动伸缩器应扩展到的最大 API 服务器数量。[云端](/langsmith/cloud) 部署的默认最大 API 服务器数量为 10 台。
+
+## 示例自托管 Agent Server 配置
+
+<Note>
+确切的最佳配置取决于您的应用程序复杂性、请求模式和数据需求。请结合使用前述信息以及您的特定使用情况来更新您的部署配置，参考以下示例。如果您有任何疑问，请通过 [support.langchain.com](https://support.langchain.com) 联系支持。
+</Note>
+
+下表概述了不同负载模式（每秒读取请求数 / 每秒写入请求数）和标准助手特性（平均运行执行时间 1 秒，中等 CPU 和内存使用率）下 LangSmith Agent Server 配置的比较：
+
+| | **[低 / 低](#low-reads-low-writes)** | **[低 / 高](#low-reads-high-writes)** | **[高 / 低](#high-reads-low-writes)** | [中 / 中](#medium-reads-medium-writes) | [高 / 高](#high-reads-high-writes) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| <Tooltip tip="部署每秒处理的写入请求数">每秒写入请求数</Tooltip> | 5 | 5 | 500 | 50 | 500 |
+| <Tooltip tip="部署每秒处理的读取请求数">每秒读取请求数</Tooltip> | 5 | 500 | 5 | 50 | 500 |
+| **API 服务器**<br />(1 CPU, 每个服务器 2Gi) | 1 (默认) | 6 | 10 | 3 | 15 |
+| **队列工作进程**<br />(1 CPU, 每个工作进程 2Gi) | 1 (默认) | 10 | 1 (默认) | 5 | 10 |
+| **`N_JOBS_PER_WORKER`** | 10 (默认) | 50 | 10 | 10 | 50 |
+| **Redis 资源** | 2 Gi (默认) | 2 Gi (默认) | 2 Gi (默认) | 2 Gi (默认) | 2 Gi (默认) |
+| **Postgres 资源** | 2 CPU<br />8 Gi (默认) | 4 CPU<br />16 Gi 内存 | 4 CPU<br />16 Gi | 4 CPU<br />16 Gi 内存 | 8 CPU<br />32 Gi 内存 |
+
+以下示例配置实现了上述每种设置。负载级别定义如下：
+
+- 低 (Low) 表示每秒大约 5 个请求
+- 中 (Medium) 表示每秒大约 50 个请求
+- 高 (High) 表示每秒大约 500 个请求
+
+### 低读取，低写入 <a name="low-reads-low-writes"></a>
+
+默认的 [LangSmith 部署](/langsmith/deployments) 配置可以处理此负载。此处无需自定义资源配置。
+
+### 低读取，高写入 <a name="low-reads-high-writes"></a>
+
+您的部署正在处理大量写入请求（每秒 500 次），但读取请求相对较少（每秒 5 次）。
+
+对于这种情况，我们推荐如下配置：
+
+```yaml
+# 低读取、高写入（每秒 5 次读取 / 每秒 500 次写入）的示例配置
+api:
+  replicas: 6
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+queue:
+  replicas: 10
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+config:
+  numberOfJobsPerWorker: 50
+
+redis:
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+
+postgres:
+  resources:
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+    limits:
+      cpu: "8"
+      memory: "32Gi"
+```
+
+### 高读取，低写入 <a name="high-reads-low-writes"></a>
+
+您有大量的读取请求（每秒 500 次），但写入请求相对较少（每秒 5 次）。
+
+对于这种情况，我们推荐如下配置：
+
+```yaml
+# 高读取、低写入（每秒 500 次读取 / 每秒 5 次写入）的示例配置
+api:
+  replicas: 10
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+queue:
+  replicas: 1  # 默认，写入负载最小
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+redis:
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+
+postgres:
+  resources:
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+    limits:
+      cpu: "8"
+      memory: "32Gi"
+  # 在高读取场景下考虑使用读取副本
+  readReplicas: 2
+```
+
+### 中读取，中写入 <a name="medium-reads-medium-writes"></a>
+
+这是一个平衡的配置，应该可以处理中等的读写负载（每秒 50 次读取 / 每秒 50 次写入）。
+
+对于这种情况，我们推荐如下配置：
+
+```yaml
+# 中读取、中写入（每秒 50 次读取 / 每秒 50 次写入）的示例配置
+api:
+  replicas: 3
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+queue:
+  replicas: 5
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+redis:
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+
+postgres:
+  resources:
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+    limits:
+      cpu: "8"
+      memory: "32Gi"
+```
+
+### 高读取，高写入 <a name="high-reads-high-writes"></a>
+
+您有大量的读取和写入请求（每秒 500 次读取 / 每秒 500 次写入）。
+
+对于这种情况，我们推荐如下配置：
+
+```yaml
+# 高读取、高写入（每秒 500 次读取 / 每秒 500 次写入）的示例配置
+api:
+  replicas: 15
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+queue:
+  replicas: 10
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+config:
+  numberOfJobsPerWorker: 50
+
+redis:
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+
+postgres:
+  resources:
+    requests:
+      cpu: "8"
+      memory: "32Gi"
+    limits:
+      cpu: "16"
+      memory: "64Gi"
+```
+
+### 自动伸缩 (Autoscaling)
+
+如果您的部署遇到突发流量，可以启用自动伸缩，根据负载需求调整 API 服务器和队列工作进程的数量。
+
+以下是针对高读取和高写入进行自动伸缩的示例配置：
+
+```yaml
+api:
+  autoscaling:
+    enabled: true
+    minReplicas: 15
+    maxReplicas: 25
+
+queue:
+  autoscaling:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 20
+```
+
+<Note>
+请确保您的部署环境有足够的资源来扩展到推荐的大小。监控您的应用程序和基础设施以确保最佳性能。考虑实施监控和警报机制来跟踪资源使用情况和应用程序性能。
+</Note>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-server-scale.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

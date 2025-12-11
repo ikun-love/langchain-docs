@@ -1,0 +1,111 @@
+```markdown
+---
+title: LocalFileStore
+---
+
+这将帮助你开始使用本地文件系统 [key-value 存储](/oss/python/integrations/stores)。有关 `LocalFileStore` 所有特性和配置的详细文档，请前往 [API 参考](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html)。
+
+## 概述
+
+`LocalFileStore` 是 `ByteStore` 的一个持久化实现，它将所有内容存储在你选择的文件夹中。如果你正在使用单机环境，并且不介意文件被添加或删除，那么这个实现非常有用。
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | [JS 支持](https://js.langchain.com/docs/integrations/stores/file_system) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: |
+| [LocalFileStore](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html) | [langchain](https://python.langchain.com/api_reference/langchain/index.html) | ✅ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain?style=flat-square&label=%20) |
+
+### 安装
+
+LangChain 的 `LocalFileStore` 集成位于 `langchain` 包中：
+
+```python
+pip install -qU langchain-classic
+```
+
+## 实例化
+
+现在我们可以实例化我们的字节存储（byte store）：
+
+```python
+from pathlib import Path
+
+from langchain_classic.storage import LocalFileStore
+
+# 可以是字符串设定的路径，也可以是 Path 对象
+root_path = Path.cwd() / "data"
+
+kv_store = LocalFileStore(root_path)
+```
+
+## 用法
+
+你可以使用 `mset` 方法像这样设置（存储）键值对：
+
+```python
+kv_store.mset(
+    [
+        ["key1", b"value1"],
+        ["key2", b"value2"],
+    ]
+)
+
+kv_store.mget(
+    [
+        "key1",
+        "key2",
+    ]
+)
+```
+
+```output
+[b'value1', b'value2']
+```
+
+你可以在 `data` 文件夹中看到创建的文件：
+
+```python
+!ls {root_path}
+```
+
+```output
+key1 key2
+```
+
+你可以使用 `mdelete` 方法删除数据：
+
+```python
+kv_store.mdelete(
+    [
+        "key1",
+        "key2",
+    ]
+)
+
+kv_store.mget(
+    [
+        "key1",
+        "key2",
+    ]
+)
+```
+
+```output
+[None, None]
+```
+
+---
+
+## API 参考
+
+有关 `LocalFileStore` 所有特性和配置的详细文档，请前往 API 参考：[python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html](https://python.langchain.com/api_reference/langchain/storage/langchain.storage.file_system.LocalFileStore.html)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\stores\file_system.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

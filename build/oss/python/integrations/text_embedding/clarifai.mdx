@@ -1,0 +1,99 @@
+---
+title: Clarifai
+---
+
+>[Clarifai](https://www.clarifai.com/) 是一个人工智能平台，它提供了完整的人工智能生命周期，涵盖了从数据探索、数据标注、模型训练、评估到推理的全部环节。
+
+本示例将介绍如何使用 LangChain 与 `Clarifai` [模型](https://clarifai.com/explore/models)进行交互。特别是文本嵌入模型，您可以在[此处](https://clarifai.com/explore/models?page=1&perPage=24&filterData=%5B%7B%22field%22%3A%22model_type_id%22%2C%22value%22%3A%5B%22text-embedder%22%5D%7D%5D)找到它们。
+
+要使用 Clarifai，您必须拥有一个账户和一个个人访问令牌（PAT）密钥。
+请[在此处](https://clarifai.com/settings/security)查看如何获取或创建 PAT。
+
+# 依赖项 (Dependencies)
+
+```python
+# 安装所需的依赖项
+pip install -qU  clarifai
+```
+
+# 导入 (Imports)
+
+在这里，我们将设置个人访问令牌。您可以在 Clarifai 账户的 [settings/security](https://clarifai.com/settings/security) 下找到您的 PAT。
+
+```python
+# 请登录并从 https://clarifai.com/settings/security 获取您的 API 密钥
+from getpass import getpass
+
+CLARIFAI_PAT = getpass()
+```
+
+```python
+# 导入所需的模块
+from langchain.chains import LLMChain
+from langchain_community.embeddings import ClarifaiEmbeddings
+from langchain_core.prompts import PromptTemplate
+```
+
+# 输入 (Input)
+
+创建一个提示模板供 LLM Chain 使用：
+
+```python
+template = """Question: {question}
+
+Answer: Let's think step by step."""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+# 设置 (Setup)
+
+设置用户 ID (`user id`) 和应用 ID (`app id`)，以指向模型所在的应用程序。您可以在 [clarifai.com/explore/models](https://clarifai.com/explore/models) 上找到公共模型的列表。
+
+您还需要初始化模型 ID，如果需要，也可以初始化模型版本 ID (`model version id`)。有些模型有多个版本，您可以根据您的任务选择合适的版本。
+
+```python
+USER_ID = "clarifai"
+APP_ID = "main"
+MODEL_ID = "BAAI-bge-base-en-v15"
+MODEL_URL = "https://clarifai.com/clarifai/main/models/BAAI-bge-base-en-v15"
+
+# 进一步地，您还可以通过 model_version_id 参数提供一个特定的模型版本。
+# MODEL_VERSION_ID = "MODEL_VERSION_ID"
+```
+
+```python
+# 初始化一个 Clarifai 嵌入模型
+embeddings = ClarifaiEmbeddings(user_id=USER_ID, app_id=APP_ID, model_id=MODEL_ID)
+
+# 使用模型 URL 初始化一个 clarifai 嵌入模型
+embeddings = ClarifaiEmbeddings(model_url=MODEL_URL)
+
+# 或者，您可以使用 pat 参数初始化 clarifai 类。
+```
+
+```python
+text = "roses are red violets are blue."
+text2 = "Make hay while the sun shines."
+```
+
+您可以使用 `embed_query` 函数嵌入单行文本！
+
+```python
+query_result = embeddings.embed_query(text)
+```
+
+要嵌入文本/文档列表，请使用 `embed_documents` 函数。
+
+```python
+doc_result = embeddings.embed_documents([text, text2])
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\clarifai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

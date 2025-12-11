@@ -1,0 +1,578 @@
+```markdown
+---
+title: 组织和工作区操作参考
+sidebarTitle: 组织和工作区操作
+mode: wide
+---
+
+此页面提供了工作区 (Workspace) 和组织 (Organization) 操作的综合参考表，以及哪些角色可以执行这些操作。
+
+该列表包含 LangSmith 中的 API 操作以及：
+
+*   可以执行每项操作的系统角色。
+*   所需的特定权限字符串。
+*   关于部分访问权限或特殊情况的注释。
+
+<Info>
+有关 LangSmith 的 RBAC 系统、角色定义和权限概念的概述，请参阅 [基于角色的访问控制](/langsmith/rbac)。
+</Info>
+
+## 目录
+
+| 组织级别操作 | 工作区级别操作 |
+|-------------------------------|---------------------------|
+| **核心管理：**<br/>• [组织设置](#organization-settings)：组织信息和配置<br/>• [工作区](#workspaces)：工作区管理<br/>• [组织成员](#organization-members)：成员管理<br/>• [角色和权限](#roles-and-permissions)：自定义角色 | **核心资源：**<br/>• [项目](#projects)：组织追踪和运行记录<br/>• [运行记录](#runs)：单个执行追踪<br/>• [数据集](#datasets)：用于评估的测试数据集<br/>• [示例](#examples)：单个数据集示例<br/>• [实验](#experiments)：比较实验 |
+| **安全和认证：**<br/>• [SSO 和认证](#sso-and-authentication)：单点登录设置<br/>• [SCIM](#scim)：身份配置<br/>• [访问策略](#access-policies)：基于属性的访问控制 | **监控和分析：**<br/>• [规则](#rules)：自动化的运行规则<br/>• [警报](#alerts)：用于监控的警报规则<br/>• [反馈](#feedback)：输出的评分和标签<br/>• [注释队列](#annotation-queues)：人工审核队列<br/>• [图表](#charts)：自定义可视化 |
+| **计费和账户：**<br/>• [计费和支付](#billing-and-payments)：订阅管理<br/>• [API 密钥](#api-keys)：组织级别密钥 | **开发和配置：**<br/>• [提示词](#prompts)：提示词模板（LangChain Hub）<br/>• [部署](#deployments)：部署配置<br/>• [MCP 服务器](#mcp-servers)：模型上下文协议 (MCP) 服务器 |
+| **分析：**<br/>• [图表和仪表板](#organization-charts-and-dashboards)：组织级别可视化<br/>• [使用情况和分析](#usage-and-analytics)：使用情况跟踪和 TTL 设置 | **工作区管理：**<br/>• [工作区设置](#workspace-settings-and-management)：成员、设置<br/>• [标签](#tags)：元数据标记系统<br/>• [批量导出](#bulk-exports)：数据导出操作 |
+
+**附加信息：**
+
+- [用户级别操作](#user-level-operations)：所有经过身份验证用户的操作
+- [权限继承](#permission-inheritance)：角色如何在组织/工作区之间继承
+
+## 图例
+
+- ✓ **允许 (Allowed)**：具有此角色的用户可以执行此操作
+- ✗ **不允许 (Not Allowed)**：具有此角色的用户无法执行此操作
+- ⚠ **部分 (Partial)**：用户访问受限（参见注释）
+
+## 组织级别操作
+
+<Info>
+组织级别操作由组织角色控制，这与 RBAC 功能是分开的。在 [基于角色的访问控制](/langsmith/rbac#organization-roles) 指南中了解更多信息。
+</Info>
+
+### 组织设置 (Organization settings)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 查看组织信息 | ✓ | ✓ | ✓ | `organization:read` |
+| 查看组织仪表板 | ✓ | ✓ | ✓ | `organization:read` |
+| 更新组织信息 | ✓ | ✗ | ✗ | `organization:manage` |
+| 查看计费信息 | ✓ | ✓ | ✓ | `organization:read` |
+| 查看公司信息 | ✓ | ✓ | ✓ | `organization:read` |
+| 设置公司信息 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### 工作区 (Workspaces)
+
+组织级别的*工作区管理*操作。
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出所有工作区 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建工作区 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### 组织成员 (Organization members)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 查看组织成员 | ✓ | ✓ | ✓ | `organization:read` |
+| 查看活跃组织成员 | ✓ | ✓ | ✓ | `organization:read` |
+| 查看待定组织成员 | ✓ | ✓ | ✓ | `organization:read` |
+| 邀请成员加入组织 | ✓ | ✗ | ✗ | `organization:manage` |
+| 邀请成员（批量） | ✓ | ✗ | ✗ | `organization:manage` |
+| 添加基础认证成员 | ✓ | ✗ | ✗ | `organization:manage` |
+| 移除组织成员 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新组织成员角色 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除待定组织成员 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### 角色和权限 (Roles and permissions)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出组织角色 | ✓ | ✓ | ✓ | `organization:read` |
+| 列出可用权限 | ✓ | ✓ | ✓ | N/A (用户级别) |
+| 创建自定义角色 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新自定义角色 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除自定义角色 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### SSO 和认证 (SSO and authentication)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 查看 SSO 设置 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建 SSO 设置 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新 SSO 设置 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除 SSO 设置 | ✓ | ✗ | ✗ | `organization:manage` |
+| 查看登录方法 | ✓ | ✓ | ✓ | `organization:read` |
+| 更新允许的登录方法 | ✓ | ✗ | ✗ | `organization:manage` |
+| 设置默认 SSO 配置 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### SCIM
+
+用于用户配置的跨域身份管理系统 (System for Cross-domain Identity Management)。
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出 SCIM 令牌 | ✓ | ✓ | ✓ | `organization:read` |
+| 获取 SCIM 令牌 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建 SCIM 令牌 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新 SCIM 令牌 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除 SCIM 令牌 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### 访问策略 (Access policies)
+
+用于细粒度权限的基于属性的访问控制 (ABAC) 策略。
+
+<Note>
+ABAC 处于私有预览阶段。
+</Note>
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出访问策略 | ✓ | ✓ | ✓ | `organization:read` |
+| 获取访问策略 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建访问策略 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除访问策略 | ✓ | ✗ | ✗ | `organization:manage` |
+| 将访问策略附加到角色 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### 计费和支付 (Billing and payments)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 创建 Stripe 设置意图 | ✓ | ✗ | ✗ | `organization:manage` |
+| 处理支付方式创建 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更改支付方案 | ✓ | ✗ | ✗ | `organization:manage` |
+| 创建 Stripe 结账会话 | ✓ | ✗ | ✗ | `organization:manage` |
+| 确认结账完成 | ✓ | ✗ | ✗ | `organization:manage` |
+| 创建 Stripe 账户链接 | ✓ | ✗ | ✗ | `organization:manage` |
+
+### API 密钥 (API keys)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出组织范围的 API 密钥 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建组织范围的 API 密钥 (工作区范围)* | ✓ | ⚠ | ✗ | `organization:pats:create` |
+| 创建组织范围的 API 密钥 (组织范围)* | ✓ | ✗ | ✗ | `organization:pats:create` + `organization:manage` |
+| 列出个人访问令牌 | ✓ | ✓ | ✗ | `organization:read` |
+| 创建个人访问令牌 | ✓ | ✓ | ✗ | `organization:pats:create` |
+| 删除个人访问令牌 | ✓ | ✓ | ✗ | `organization:read` |
+
+<Note>
+\* 组织用户只能为其作为工作区管理员的*工作区*创建工作区范围的 API 密钥。组织范围的 API 密钥需要组织管理员角色。
+</Note>
+
+### 组织图表和仪表板 (Organization charts and dashboards)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 列出组织图表 | ✓ | ✓ | ✓ | `organization:read` |
+| 按 ID 获取组织图表 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建组织图表 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新组织图表 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除组织图表 | ✓ | ✗ | ✗ | `organization:manage` |
+| 渲染组织图表 | ✓ | ✓ | ✓ | `organization:read` |
+| 获取组织图表部分 | ✓ | ✓ | ✓ | `organization:read` |
+| 创建组织图表部分 | ✓ | ✗ | ✗ | `organization:manage` |
+| 更新组织图表部分 | ✓ | ✗ | ✗ | `organization:manage` |
+| 删除组织图表部分 | ✓ | ✗ | ✗ | `organization:manage` |
+| 渲染组织图表部分 | ✓ | ✓ | ✓ | `organization:read` |
+
+### 使用情况和分析 (Usage and analytics)
+
+| 操作 (Operation) | 组织管理员 (Org Admin) | 组织用户 (Org User) | 组织查看者 (Org Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------:|:--------:|:----------:|---------------------|
+| 查看组织使用情况 | ✓ | ✓ | ✓ | `organization:read` |
+| 查看 TTL 设置 | ✓ | ✓ | ✓ | `organization:read` |
+| 插入/更新 TTL 设置 | ✓ | ✗ | ✗ | `organization:manage` |
+
+## 工作区级别操作
+
+这些操作由[工作区级别的角色和权限](/langsmith/rbac#workspace-roles)控制。
+
+<Tip>
+要了解每个角色的含义及其总体能力，请参阅 [基于角色的访问控制](/langsmith/rbac) 指南。
+</Tip>
+
+### 项目 (Projects)
+
+项目用于组织来自 LLM 应用程序的追踪和运行记录。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 创建新项目 | ✓ | ✗ | ✗ | `projects:create` |
+| 查看项目列表 | ✓ | ✓ | ✓ | `projects:read` |
+| 查看项目详情 | ✓ | ✓ | ✓ | `projects:read` |
+| 查看预建仪表板 | ✓ | ✓ | ✓ | `projects:read` |
+| 查看项目元数据 (Top K 值) | ✓ | ✓ | ✓ | `projects:read` |
+| 更新项目元数据（名称、描述、标签） | ✓ | ✓ | ✗ | `projects:update` |
+| 创建筛选视图 | ✓ | ✗ | ✗ | `projects:create` |
+| 查看筛选视图 | ✓ | ✓ | ✓ | `projects:read` |
+| 查看特定筛选视图 | ✓ | ✓ | ✓ | `projects:read` |
+| 更新筛选视图 | ✓ | ✓ | ✗ | `projects:update` |
+| 删除筛选视图 | ✓ | ✗ | ✗ | `projects:delete` |
+| 删除项目 | ✓ | ✗ | ✗ | `projects:delete` |
+| 删除多个项目 | ✓ | ✗ | ✗ | `projects:delete` |
+| 获取洞察作业 (Insights Jobs) (Beta) | ✓ | ✓ | ✓ | `projects:read` |
+| 获取特定洞察作业 (Beta) | ✓ | ✓ | ✓ | `projects:read` |
+| 创建洞察作业 (Beta) | ✓ | ✓ | ✓ | `projects:read` + `rules:create` |
+| 更新洞察作业 (Beta) | ✓ | ✓ | ✗ | `projects:update` |
+| 删除洞察作业 (Beta) | ✓ | ✗ | ✗ | `projects:delete` |
+| 获取洞察作业配置 (Beta) | ✓ | ✓ | ✓ | `rules:read` |
+| 创建洞察作业配置 (Beta) | ✓ | ✓ | ✗ | `rules:create` |
+| 自动生成洞察作业配置 (Beta) | ✓ | ✓ | ✗ | `rules:create` |
+| 更新洞察作业配置 (Beta) | ✓ | ✓ | ✗ | `rules:update` |
+| 删除洞察作业配置 (Beta) | ✓ | ✓ | ✗ | `rules:delete` |
+| 从洞察作业获取运行聚类 (Beta) | ✓ | ✓ | ✓ | `projects:read` |
+| 从洞察作业获取运行记录 (Beta) | ✓ | ✓ | ✓ | `projects:read` |
+
+### 运行记录 (Runs)
+
+来自 LLM 应用程序的单个执行追踪和跨度 (Spans)。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 从 SDK 发送追踪（包括单次运行、批量、多部分和 OTEL） | ✓ | ✓ | ✗ | `runs:create` |
+| 查看特定运行记录 | ✓ | ✓ | ✓ | `runs:read` |
+| 查看线程预览 | ✓ | ✓ | ✓ | `runs:read` |
+| 查询/列出运行记录 | ✓ | ✓ | ✓ | `runs:read` |
+| 查看运行记录统计数据 | ✓ | ✓ | ✓ | `runs:read` |
+| 查看分组的运行记录统计数据 | ✓ | ✓ | ✓ | `runs:read` |
+| 按表达式分组运行记录 | ✓ | ✓ | ✓ | `runs:read` |
+| 从自然语言生成筛选查询 | ✓ | ✓ | ✓ | `runs:read` |
+| 预取运行记录 | ✓ | ✓ | ✓ | `runs:read` |
+| 更新运行记录 (PATCH) | ✓ | ✓ | ✗ | `runs:create` |
+| 查看运行记录共享状态 | ✓ | ✓ | ✓ | `runs:read` |
+| 公开共享运行记录 | ✓ | ✓ | ✗ | `runs:share` |
+| 取消共享运行记录 | ✓ | ✓ | ✗ | `runs:share` |
+| 按追踪 ID 或元数据删除运行记录 | ✓ | ✗ | ✗ | `runs:delete` |
+
+### 规则 (Rules)
+
+基于运行条件触发操作的自动化运行规则。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出所有运行规则 | ✓ | ✓ | ✓ | `rules:read` |
+| 创建运行规则 | ✓ | ✓ | ✗ | `rules:create` |
+| 更新运行规则 | ✓ | ✓ | ✗ | `rules:update` |
+| 删除运行规则 | ✓ | ✓ | ✗ | `rules:delete` |
+| 查看规则日志 | ✓ | ✓ | ✓ | `rules:read` |
+| 获取最后应用的规则 | ✓ | ✓ | ✓ | `rules:read` |
+| 手动触发规则 | ✓ | ✓ | ✗ | `rules:update` |
+| 触发多个规则 | ✓ | ✓ | ✗ | `rules:update` |
+
+### 警报 (Alerts)
+
+用于监控运行条件的警报规则。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 创建警报规则 | ✓ | ✓ | ✓ | `runs:read` |
+| 更新警报规则 | ✓ | ✓ | ✓ | `runs:read` |
+| 删除警报规则 | ✓ | ✓ | ✓ | `runs:read` |
+| 获取警报规则 | ✓ | ✓ | ✓ | `runs:read` |
+| 列出警报规则 | ✓ | ✓ | ✓ | `runs:read` |
+| 测试警报操作 | ✓ | ✓ | ✓ | `runs:read` |
+
+### 数据集 (Datasets)
+
+用于评估的带示例的测试数据集。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 创建数据集 | ✓ | ✓ | ✗ | `datasets:create` |
+| 列出数据集 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看数据集详情 | ✓ | ✓ | ✓ | `datasets:read` |
+| 更新数据集元数据 | ✓ | ✓ | ✗ | `datasets:update` |
+| 删除数据集 | ✓ | ✗ | ✗ | `datasets:delete` |
+| 从 CSV 上传数据集 | ✓ | ✓ | ✗ | `datasets:create` |
+| 克隆数据集 | ✓ | ✓ | ✗ | `datasets:update` |
+| 获取数据集版本 | ✓ | ✓ | ✓ | `datasets:read` |
+| 获取数据集版本列表 | ✓ | ✓ | ✓ | `datasets:read` |
+| 对比数据集版本 | ✓ | ✓ | ✓ | `datasets:read` |
+| 更新数据集版本（标签） | ✓ | ✓ | ✗ | `datasets:update` |
+| 下载数据集 (OpenAI 格式) | ✓ | ✓ | ✓ | `datasets:read` |
+| 下载数据集 (OpenAI fine-tuning 格式) | ✓ | ✓ | ✓ | `datasets:read` |
+| 下载数据集 (CSV) | ✓ | ✓ | ✓ | `datasets:read` |
+| 下载数据集 (JSONL) | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看数据集共享状态 | ✓ | ✓ | ✓ | `datasets:read` |
+| 公开共享数据集 | ✓ | ✗ | ✗ | `datasets:share` |
+| 取消共享数据集 | ✓ | ✗ | ✗ | `datasets:share` |
+| 获取索引信息 | ✓ | ✓ | ✓ | `datasets:read` |
+| 索引数据集 | ✓ | ✓ | ✗ | `datasets:update` |
+| 同步数据集索引 | ✓ | ✓ | ✗ | `datasets:update` |
+| 移除数据集索引 | ✓ | ✓ | ✗ | `datasets:update` |
+| 搜索数据集 | ✓ | ✓ | ✓ | `datasets:read` |
+| 生成合成示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 获取数据集分区 (Splits) | ✓ | ✓ | ✓ | `datasets:read` |
+| 更新数据集分区 (Splits) | ✓ | ✓ | ✓ | `datasets:read` |
+| 运行 Playground 实验（批量） | ✓ | ⚠ | ✗ | `prompts:read` + `datasets:read` + `projects:create` |
+| 运行 Playground 实验（流式） | ✓ | ⚠ | ✗ | `prompts:read` + `datasets:read` + `projects:create` |
+| 运行 Studio 实验 | ✓ | ⚠ | ✗ | `datasets:read` + `projects:create` |
+
+<Note>
+工作区编辑器具有部分访问权限，因为他们无法创建项目，这限制了他们创建新实验的能力。
+</Note>
+
+### 示例 (Examples)
+
+数据集中的单个示例。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 计算示例数量 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看特定示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 列出示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 创建新示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 创建示例（批量） | ✓ | ✓ | ✗ | `datasets:update` |
+| 更新单个示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 更新示例（批量） | ✓ | ✓ | ✗ | `datasets:update` |
+| 更新示例（多部分） | ✓ | ✓ | ✗ | `datasets:update` |
+| 从 CSV 上传示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 从 JSONL 上传示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 删除单个示例 | ✓ | ✓ | ✗ | `datasets:update` |
+| 删除示例（批量） | ✓ | ✓ | ✗ | `datasets:update` |
+| 查看带运行记录的示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看带运行记录的分组示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 验证单个示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 验证示例（批量） | ✓ | ✓ | ✓ | `datasets:read` |
+
+### 实验 (Experiments)
+
+用于评估 LLM 输出的比较实验。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 查看比较实验 | ✓ | ✓ | ✓ | `projects:read` |
+| 创建比较实验 | ✓ | ⚠ | ✗ | `projects:create` |
+| 删除比较实验 | ✓ | ✗ | ✗ | `projects:delete` |
+| 查看带运行记录的示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看带运行记录的分组示例 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看分组实验 | ✓ | ✓ | ✓ | `datasets:read` |
+| 查看反馈增量 | ✓ | ✓ | ✓ | `datasets:read` |
+| 上传实验结果 | ✓ | ⚠ | ✗ | `datasets:create` + `datasets:update` + `projects:create` + `runs:create` |
+| 获取实验视图覆盖（Overrides） | ✓ | ✓ | ✗ | `datasets:update` |
+| 创建实验视图覆盖 | ✓ | ✓ | ✗ | `datasets:update` |
+| 更新实验视图覆盖 | ✓ | ✓ | ✗ | `datasets:update` |
+| 删除实验视图覆盖 | ✓ | ✓ | ✗ | `datasets:update` |
+
+<Note>
+工作区编辑器具有部分访问权限，因为他们无法创建项目，这限制了他们创建新实验的能力。
+</Note>
+
+### 反馈 (Feedback)
+
+LLM 输出上的评分、标签和更正。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出反馈公式 | ✓ | ✓ | ✓ | `feedback:read` |
+| 获取反馈公式 | ✓ | ✓ | ✓ | `feedback:read` |
+| 创建反馈公式 | ✓ | ✓ | ✗ | `feedback:create` |
+| 更新反馈公式 | ✓ | ✓ | ✗ | `feedback:update` |
+| 删除反馈公式 | ✓ | ✓ | ✗ | `feedback:delete` |
+| 查看特定反馈 | ✓ | ✓ | ✓ | `feedback:read` |
+| 列出反馈 | ✓ | ✓ | ✓ | `feedback:read` |
+| 创建反馈 | ✓ | ✓ | ✗ | `feedback:create` |
+| 立即创建反馈 | ✓ | ✓ | ✗ | `feedback:create` |
+| 更新反馈 | ✓ | ✓ | ✗ | `feedback:update` |
+| 删除反馈 | ✓ | ✓ | ✗ | `feedback:delete` |
+| 批量摄取反馈 | ✓ | ✓ | ✗ | `feedback:create` |
+| 创建反馈摄取令牌 | ✓ | ✓ | ✗ | `feedback:create` |
+| 列出反馈摄取令牌 | ✓ | ✓ | ✗ | `feedback:create` |
+| 使用令牌创建反馈（无需身份验证） | ✓ | ✓ | ✓ | N/A (基于令牌) |
+| 列出反馈配置 | ✓ | ✓ | ✓ | `feedback:read` |
+| 创建反馈配置 | ✓ | ✓ | ✗ | `feedback:create` |
+| 更新反馈配置 | ✓ | ✓ | ✗ | `feedback:update` |
+
+### 注释队列 (Annotation Queues)
+
+LLM 输出的人工审核队列。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出注释队列 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 获取注释队列 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 创建注释队列 | ✓ | ✓ | ✗ | `annotation-queues:create` |
+| 更新注释队列 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 删除注释队列 | ✓ | ✗ | ✗ | `annotation-queues:delete` |
+| 填充注释队列 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 从队列获取运行记录 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 按索引从队列获取运行记录 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 获取运行记录所在的队列 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 获取队列总大小 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 获取队列总归档数 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 获取队列大小 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+| 向队列添加运行记录 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 更新队列中的运行记录 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 从队列中删除运行记录 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 批量从队列中删除运行记录 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 创建身份注释队列运行状态 | ✓ | ✓ | ✗ | `annotation-queues:update` |
+| 导出归档运行记录 | ✓ | ✓ | ✓ | `annotation-queues:read` |
+
+### 提示词 (Prompts)
+
+LangChain Hub 中的提示词模板和链。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出提示词仓库 | ✓ | ✓ | ✓ | `prompts:read` |
+| 查看提示词仓库 | ✓ | ✓ | ✓ | `prompts:read` |
+| 创建提示词仓库 | ✓ | ✓ | ✗ | `prompts:create` |
+| Fork 提示词仓库 | ✓ | ✓ | ✗ | `prompts:create` |
+| 更新提示词仓库 | ✓ | ✓ | ✗ | `prompts:update` |
+| 删除提示词仓库 | ✓ | ✓ | ✗ | `prompts:delete` |
+| 列出提交记录 | ✓ | ✓ | ✓ | `prompts:read` |
+| 查看提交记录 | ✓ | ✓ | ✓ | `prompts:read` |
+| 推送提交记录 | ✓ | ✓ | ✗ | `prompts:update` |
+| 列出仓库标签 | ✓ | ✓ | ✓ | `prompts:read` |
+| 获取所有标签 | ✓ | ✓ | ✓ | `prompts:read` |
+| 创建标签 | ✓ | ✓ | ✗ | `prompts:create` |
+| 更新标签 | ✓ | ✓ | ✗ | `prompts:update` |
+| 删除标签 | ✓ | ✓ | ✗ | `prompts:delete` |
+| 查看事件 | ✓ | ✓ | ✓ | `prompts:read` |
+| 列出评论 | ✓ | ✓ | ✓ | `prompts:read` |
+| 创建评论 | ✓ | ✓ | ✗ | `prompts:read` |
+| 删除评论 | ✓ | ✓ | ✗ | `prompts:read` |
+| 切换“喜欢”状态 | ✓ | ✓ | ✗ | `prompts:read` |
+| 优化提示词 | ✓ | ✓ | ✗ | `prompts:update` |
+| 列出优化作业 | ✓ | ✓ | ✓ | `prompts:read` |
+| 创建优化作业 | ✓ | ✓ | ✗ | `prompts:create` |
+| 更新优化作业 | ✓ | ✓ | ✗ | `prompts:update` |
+| 删除优化作业 | ✓ | ✓ | ✗ | `prompts:delete` |
+| 调用提示词画布 | ✓ | ✓ | ✗ | `prompts:update` |
+| 列出快速操作 | ✓ | ✓ | ✓ | `prompts:read` |
+| 创建快速操作 | ✓ | ✓ | ✓ | `prompts:read` |
+| 删除快速操作 | ✓ | ✓ | ✓ | `prompts:read` |
+| 更新快速操作 | ✓ | ✓ | ✓ | `prompts:read` |
+
+<Note>
+一些提示词操作支持已共享提示词的公共访问。
+</Note>
+
+### 图表 (Charts)
+
+自定义可视化和仪表板。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出图表 | ✓ | ✓ | ✓ | `charts:read` |
+| 按 ID 获取图表 | ✓ | ✓ | ✓ | `charts:read` |
+| 创建图表 | ✓ | ✓ | ✗ | `charts:create` |
+| 更新图表 | ✓ | ✓ | ✗ | `charts:update` |
+| 删除图表 | ✓ | ✓ | ✗ | `charts:delete` |
+| 渲染图表 | ✓ | ✓ | ✓ | `charts:read` |
+| 列出图表部分 | ✓ | ✓ | ✓ | `charts:read` |
+| 按 ID 获取图表部分 | ✓ | ✓ | ✓ | `charts:read` |
+| 创建图表部分 | ✓ | ✓ | ✗ | `charts:create` |
+| 更新图表部分 | ✓ | ✓ | ✗ | `charts:update` |
+| 删除图表部分 | ✓ | ✓ | ✗ | `charts:delete` |
+| 渲染图表部分 | ✓ | ✓ | ✓ | `charts:read` |
+
+### 部署 (Deployments)
+
+[LangSmith 部署](/langsmith/deployments) 配置。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 创建部署 | ✓ | ✓ | ✗ | `deployments:create` |
+| 查看部署 | ✓ | ✓ | ✓ | `deployments:read` |
+| 更新部署 | ✓ | ✓ | ✗ | `deployments:update` |
+| 删除部署 | ✓ | ✗ | ✗ | `deployments:delete` |
+
+### 工作区设置和管理 (Workspace settings and management)
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 查看工作区信息 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 查看工作区统计数据 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 更新工作区（名称、描述） | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 删除工作区 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 查看工作区成员 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 查看活跃工作区成员 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 查看待定工作区成员 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 将成员添加到工作区 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 添加成员（批量） | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 更新工作区成员角色 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 移除工作区成员 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 删除待定工作区成员 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 查看使用限制 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 查看共享实体 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 批量取消共享实体 | ✓ | ✗ | ✗ | `workspaces:manage` |
+
+### 标签 (Tags)
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出标签键 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 获取标签键 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建标签键 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 更新标签键 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 删除标签键 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 列出标签值 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 获取标签值 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建标签值 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 更新标签值 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 删除标签值 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 列出标签 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 列出资源的标签 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 列出资源的标签（批量） | ✓ | ✓ | ✓ | `workspaces:read` |
+| 列出标签关联 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建标签关联 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 删除标签关联 | ✓ | ✗ | ✗ | `workspaces:manage` |
+
+### 批量导出 (Bulk exports)
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出批量导出 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 获取批量导出 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建批量导出 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 取消批量导出 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 获取批量导出目标 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 获取批量导出目标 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建批量导出目标 | ✓ | ✗ | ✗ | `workspaces:manage` |
+| 获取筛选后的导出运行记录 | ✓ | ✓ | ✓ | `workspaces:read` |
+
+### MCP 服务器 (MCP servers)
+
+用于扩展功能的模型上下文协议 (Model Context Protocol) 服务器。
+
+| 操作 (Operation) | 工作区管理员 (Workspace Admin) | 工作区编辑器 (Workspace Editor) | 工作区查看者 (Workspace Viewer) | 所需权限 (Required Permission) |
+|-----------|:---------------:|:--------------:|:----------------:|---------------------|
+| 列出 MCP 服务器 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 获取 MCP 服务器 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 创建 MCP 服务器 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 更新 MCP 服务器 | ✓ | ✓ | ✓ | `workspaces:read` |
+| 删除 MCP 服务器 | ✓ | ✓ | ✓ | `workspaces:read` |
+
+## 用户级别操作 (User-level operations)
+
+这些操作对所有经过身份验证的用户都可用，不需要特定的工作区或组织权限：
+
+- 查看自己的用户资料
+- 更新自己的用户资料
+- 列出用户所属的组织
+- 创建新组织
+- 列出待处理的工作区邀请
+- 删除待处理的工作区邀请
+- 认领待处理的工作区邀请
+- 列出待处理的组织邀请
+- 删除待处理的组织邀请
+- 认领待处理的组织邀请
+
+## 权限继承 (Permission inheritance)
+
+### 从组织到工作区
+
+- [组织管理员](/langsmith/rbac#organization-admin) 自动拥有所有工作区的完全权限。
+- 只有当 [组织用户](/langsmith/rbac#organization-user) 和 [组织查看者](/langsmith/rbac#organization-viewer) 被明确添加到工作区并被授予工作区级别角色时，他们才会获得工作区访问权限。
+
+有关详细的角色定义，请参阅 [组织角色](/langsmith/rbac#organization-roles) 和 [工作区角色](/langsmith/rbac#workspace-roles)。
+
+### 工作区角色的独立性 (Workspace role independence)
+
+- 用户可以在不同的工作区拥有不同的工作区角色。
+- 用户在一个工作区可能是[工作区管理员](/langsmith/rbac#workspace-admin)，而在另一个工作区可能是[工作区查看者](/langsmith/rbac#workspace-viewer)。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\organization-workspace-operations.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

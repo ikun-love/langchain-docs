@@ -1,0 +1,177 @@
+---
+title: TavilySearchResults (已弃用)
+---
+
+<Info>
+**弃用通知 (Deprecation Notice)**
+
+此工具已被弃用。请改用 `@langchain/tavily` 包中的 [TavilySearch](./tavily_search) 工具。
+
+</Info>
+
+[Tavily](https://tavily.com/) Search 是一个专为 LLM Agent 量身定制的强大搜索 API。它能无缝集成到各种数据源中，以确保提供更优越、更相关的搜索体验。
+
+本指南将快速概述 Tavily [工具](/oss/javascript/integrations/tools/) 的入门步骤。如需了解 Tavily 工具的完整细节，请参阅 [API 参考文档](https://v03.api.js.langchain.com/classes/_langchain_community.tools_tavily_search.TavilySearchResults.html)。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | [PY 支持](https://python.langchain.com/docs/integrations/tools/tavily_search/) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |
+| [TavilySearchResults](https://api.js.langchain.com/classes/langchain_community_tools_tavily_search.TavilySearchResults.html) | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) | ✅ |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+
+## 设置
+
+集成位于 `@langchain/community` 包中，您可以通过以下方式安装它：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+### 凭证 (Credentials)
+
+请在 [此处](https://app.tavily.com) 设置您的 API 密钥，并将其设置为名为 `TAVILY_API_KEY` 的环境变量。
+
+```typescript
+process.env.TAVILY_API_KEY = "YOUR_API_KEY"
+```
+
+同时，设置 [LangSmith](https://smith.langchain.com/) 也有帮助（但非必须），以便获得一流的可观测性：
+
+```typescript
+process.env.LANGSMITH_TRACING="true"
+process.env.LANGSMITH_API_KEY="your-api-key"
+```
+
+## 实例化
+
+您可以像下面这样导入并实例化一个 `TavilySearchResults` 工具：
+
+```typescript
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+
+const tool = new TavilySearchResults({
+  maxResults: 2,
+  // ...
+});
+```
+
+## 调用 (Invocation)
+
+### [直接使用参数调用](/oss/javascript/langchain/tools)
+
+您可以像这样直接调用该工具：
+
+```typescript
+await tool.invoke({
+  input: "what is the current weather in SF?",
+});
+```
+
+### [使用 ToolCall 调用](/oss/javascript/langchain/tools)
+
+我们也可以使用模型生成的 `ToolCall` 来调用该工具，在这种情况下，会返回一个 [`ToolMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.ToolMessage.html)：
+
+```typescript
+// 这通常由模型生成，但我们在此处直接创建一个 tool call 用于演示。
+const modelGeneratedToolCall = {
+  args: {
+    query: "what is the current weather in SF?"
+  },
+  id: "1",
+  name: tool.name,
+  type: "tool_call",
+}
+
+await tool.invoke(modelGeneratedToolCall)
+```
+
+## 链式调用 (Chaining)
+
+我们可以通过首先将工具绑定到一个 [工具调用模型](/oss/javascript/langchain/tools/)，然后调用它来实现工具的链式使用：
+
+```typescript
+// @lc-docs-hide-cell
+
+import { ChatOpenAI } from "@langchain/openai"
+
+const llm = new ChatOpenAI({
+  model: "gpt-4o",
+  temperature: 0,
+})
+```
+
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnableLambda } from "@langchain/core/runnables";
+
+const prompt = ChatPromptTemplate.fromMessages(
+  [
+    ["system", "You are a helpful assistant."],
+    ["placeholder", "{messages}"],
+  ]
+)
+
+const llmWithTools = llm.bindTools([tool]);
+
+const chain = prompt.pipe(llmWithTools);
+
+const toolChain = RunnableLambda.from(
+  async (userInput: string, config) => {
+    const humanMessage = new HumanMessage(userInput,);
+    const aiMsg = await chain.invoke({
+      messages: [new HumanMessage(userInput)],
+    }, config);
+    const toolMsgs = await tool.batch(aiMsg.tool_calls, config);
+    return chain.invoke({
+      messages: [humanMessage, aiMsg, ...toolMsgs],
+    }, config);
+  }
+);
+
+const toolChainResult = await toolChain.invoke("what is the current weather in sf?");
+```
+
+```typescript
+const { tool_calls, content } = toolChainResult;
+
+console.log("AIMessage", JSON.stringify({
+  tool_calls,
+  content,
+}, null, 2));
+```
+
+## 代理 (Agents)
+
+有关如何在 Agent 中使用 LangChain 工具的指南，请参阅 [LangGraph.js](https://langchain-ai.github.io/langgraphjs/) 文档。
+
+---
+
+## API 参考
+
+有关 `TavilySearchResults` 所有功能和配置的详细文档，请访问 API 参考：
+
+[api.js.langchain.com/classes/langchain_community_tools_tavily_search.TavilySearchResults.html](https://api.js.langchain.com/classes/langchain_community_tools_tavily_search.TavilySearchResults.html)
+
+## 相关内容
+
+* [工具文档](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\tavily_search_community.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

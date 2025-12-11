@@ -1,0 +1,92 @@
+---
+title: Discord 工具
+---
+
+Discord 工具赋予您的智能体（Agent）能力，使其能够搜索、读取和写入 Discord 频道中的消息。
+当您需要与 Discord 频道进行交互时，这个工具非常有用。
+
+## 设置
+
+要使用 Discord 工具，您需要安装以下官方对等依赖项（peer dependency）：
+
+```bash npm
+npm install discord.js
+```
+## 独立使用
+
+```typescript
+import {
+  DiscordGetMessagesTool,
+  DiscordChannelSearchTool,
+  DiscordSendMessagesTool,
+  DiscordGetGuildsTool,
+  DiscordGetTextChannelsTool,
+} from "@langchain/community/tools/discord";
+
+// 根据频道 ID 获取消息
+const getMessageTool = new DiscordGetMessagesTool();
+const messageResults = await getMessageTool.invoke("1153400523718938780");
+console.log(messageResults);
+
+// 获取服务器/群组 (Guilds)
+const getGuildsTool = new DiscordGetGuildsTool();
+const guildResults = await getGuildsTool.invoke("");
+console.log(guildResults);
+
+// 在给定频道中搜索结果（不区分大小写）
+const searchTool = new DiscordChannelSearchTool();
+const searchResults = await searchTool.invoke("Test");
+console.log(searchResults);
+
+// 获取服务器中的所有文本频道
+const getChannelsTool = new DiscordGetTextChannelsTool();
+const channelResults = await getChannelsTool.invoke("1153400523718938775");
+console.log(channelResults);
+
+// 发送消息
+const sendMessageTool = new DiscordSendMessagesTool();
+const sendMessageResults = await sendMessageTool.invoke("test message");
+console.log(sendMessageResults);
+```
+
+## 在 Agent 中使用
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
+import { DiscordSendMessagesTool } from "@langchain/community/tools/discord";
+import { DadJokeAPI } from "@langchain/community/tools/dadjokeapi";
+
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0,
+});
+
+const tools = [new DiscordSendMessagesTool(), new DadJokeAPI()];
+
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+  verbose: true,
+});
+
+const res = await executor.invoke({
+  input: `在 Discord 频道里讲个笑话`,
+});
+
+console.log(res.output);
+// "What's the best thing about elevator jokes? They work on so many levels."
+```
+
+## 相关内容
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\discord_tool.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,76 @@
+---
+title: Minimax
+---
+
+[Minimax](https://api.minimax.chat) 是一家提供自然语言处理模型的中国初创公司，服务于企业和个人用户。
+
+本示例演示了如何使用 LangChain 与 Minimax 进行交互。
+
+# 设置
+
+要运行此示例（Notebook），你需要一个 [Minimax 账户](https://api.minimax.chat)，一个 [API 密钥](https://api.minimax.chat/user-center/basic-information/interface-key) 和一个 [Group ID](https://api.minimax.chat/user-center/basic-information)。
+
+# 单次模型调用
+
+```python
+from langchain_community.llms import Minimax
+```
+
+```python
+# 加载模型
+minimax = Minimax(minimax_api_key="YOUR_API_KEY", minimax_group_id="YOUR_GROUP_ID")
+```
+
+```python
+# 提示模型
+minimax("大熊猫和熊之间的区别是什么？")
+```
+
+# 链式模型调用
+
+```python
+# 获取 api_key 和 group_id: https://api.minimax.chat/user-center/basic-information
+# 我们需要 `MINIMAX_API_KEY` 和 `MINIMAX_GROUP_ID` 环境变量
+
+import os
+
+os.environ["MINIMAX_API_KEY"] = "YOUR_API_KEY"
+os.environ["MINIMAX_GROUP_ID"] = "YOUR_GROUP_ID"
+```
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms import Minimax
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+template = """问题: {question}
+
+答案: 我们一步一步地思考。"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+llm = Minimax()
+```
+
+```python
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+```python
+question = "周杰伦出生那年，哪支 NBA 球队赢得了总冠军？"
+
+llm_chain.run(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\minimax.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

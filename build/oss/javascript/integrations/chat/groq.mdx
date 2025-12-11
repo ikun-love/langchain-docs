@@ -1,0 +1,158 @@
+---
+title: ChatGroq
+---
+
+[Groq](https://groq.com/) 是一家提供快速 AI 推理服务的公司，其技术基于 LPU™ AI 推理技术，能够实现快速、经济和高能效的 AI 运算。
+
+本指南将帮助您快速上手 ChatGroq [聊天模型](/oss/javascript/langchain/models)。如需了解 ChatGroq 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_groq.ChatGroq.html)。
+
+## 概述 (Overview)
+
+### 集成详情 (Integration details)
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [PY 支持](https://python.langchain.com/docs/integrations/chat/groq) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [ChatGroq](https://api.js.langchain.com/classes/langchain_groq.ChatGroq.html) | [`@langchain/groq`](https://www.npmjs.com/package/@langchain/groq) | ❌ | ❌ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/groq?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/groq?style=flat-square&label=%20&) |
+
+### 模型特性 (Model features)
+
+请参阅下方表格标题中的链接，以获取关于如何使用特定功能的指南。
+
+| [工具调用](/oss/javascript/langchain/tools) | [结构化输出](/oss/javascript/langchain/structured-output) | JSON 模式 | [图像输入](/oss/javascript/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/javascript/langchain/streaming/) | [Token 使用量](/oss/javascript/langchain/models#token-usage) | [Logprobs (对数概率)](/oss/javascript/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+
+## 设置 (Setup)
+
+要访问 ChatGroq 模型，您需要创建一个 Groq 账户，获取一个 API 密钥，并安装 `@langchain/groq` 集成包。
+
+### 凭证 (Credentials)
+
+为了使用 Groq API，您需要一个 API 密钥。您可以在 [此处](https://wow.groq.com/) 注册 Groq 账户并创建 API 密钥。
+然后，您可以在终端中将此 API 密钥设置为环境变量：
+
+```bash
+export GROQ_API_KEY="your-api-key"
+```
+
+如果您希望对模型调用进行自动跟踪，也可以取消注释以下内容来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="your-api-key"
+```
+
+### 安装 (Installation)
+
+LangChain ChatGroq 集成位于 `@langchain/groq` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/groq @langchain/core
+```
+```bash yarn
+yarn add @langchain/groq @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/groq @langchain/core
+```
+</CodeGroup>
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化我们的模型对象并生成聊天补全（completions）：
+
+```typescript
+import { ChatGroq } from "@langchain/groq"
+
+const llm = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+    temperature: 0,
+    maxTokens: undefined,
+    maxRetries: 2,
+    // other params...
+})
+```
+
+## 调用 (Invocation)
+
+```typescript
+const aiMsg = await llm.invoke([
+    {
+      role: "system",
+      content: "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    },
+    { role: "user", content: "I love programming." },
+])
+aiMsg
+```
+
+```output
+AIMessage {
+  "content": "I enjoy programming. (The French translation is: \"J'aime programmer.\")\n\nNote: I chose to translate \"I love programming\" as \"J'aime programmer\" instead of \"Je suis amoureux de programmer\" because the latter has a romantic connotation that is not present in the original English sentence.",
+  "additional_kwargs": {},
+  "response_metadata": {
+    "tokenUsage": {
+      "completionTokens": 73,
+      "promptTokens": 31,
+      "totalTokens": 104
+    },
+    "finish_reason": "stop"
+  },
+  "tool_calls": [],
+  "invalid_tool_calls": []
+}
+```
+
+```typescript
+console.log(aiMsg.content)
+```
+
+```output
+I enjoy programming. (The French translation is: "J'aime programmer.")
+
+Note: I chose to translate "I love programming" as "J'aime programmer" instead of "Je suis amoureux de programmer" because the latter has a romantic connotation that is not present in the original English sentence.
+```
+
+## JSON 调用 (Json invocation)
+
+```typescript
+const messages = [
+  {
+    role: "system",
+    content: "You are a math tutor that handles math exercises and makes output in json in format { result: number }.",
+  },
+  { role: "user",  content: "2 + 2 * 2" },
+];
+
+const aiInvokeMsg = await llm.invoke(messages, { response_format: { type: "json_object" } });
+
+// if you want not to pass response_format in every invoke, you can bind it to the instance
+const llmWithResponseFormat = llm.bind({ response_format: { type: "json_object" } });
+const aiBindMsg = await llmWithResponseFormat.invoke(messages);
+
+// they are the same
+console.log({ aiInvokeMsgContent: aiInvokeMsg.content, aiBindMsg: aiBindMsg.content });
+```
+
+```output
+{
+  aiInvokeMsgContent: '{\n"result": 6\n}',
+  aiBindMsg: '{\n"result": 6\n}'
+}
+```
+
+---
+
+## API 参考 (API reference)
+
+如需了解 ChatGroq 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_groq.ChatGroq.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\chat\groq.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

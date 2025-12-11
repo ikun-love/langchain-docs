@@ -1,0 +1,63 @@
+```markdown
+---
+title: 生成 ClickHouse 统计数据
+sidebarTitle: 生成 ClickHouse 统计数据
+---
+
+在排查您自托管的 LangSmith 实例问题时，LangChain 团队可能会要求您生成 ClickHouse 统计数据，以帮助我们了解内存和 CPU 的消耗情况以及连接的并发性。
+
+此命令将生成一个 CSV 文件，您可以将其分享给 LangChain 团队。
+
+### 前提条件
+
+请确保您已准备好以下工具/信息。
+
+1. kubectl
+
+   * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+
+2. ClickHouse 数据库凭证
+
+   * 主机 (Host)
+   * 端口 (Port)
+   * 用户名 (Username)
+     * 如果使用捆绑版本 (bundled version)，则为 `default`
+   * 密码 (Password)
+     * 如果使用捆绑版本 (bundled version)，则为 `password`
+   * 数据库名称 (Database name)
+     * 如果使用捆绑版本 (bundled version)，则为 `default`
+
+3. 从您将运行 `get_clickhouse_stats` 脚本的机器到 ClickHouse 数据库的网络连通性。
+
+   * 如果您使用的是捆绑版本，您可能需要将 ClickHouse 服务通过端口转发 (port forward) 到本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-clickhouse 8123:8123` 将 ClickHouse 服务端口转发到您的本地机器。
+
+4. 用于生成 ClickHouse 统计数据的脚本
+
+   * 您可以从 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/get_clickhouse_stats.sh) 下载该脚本
+
+### 运行 ClickHouse 统计数据生成脚本
+
+运行以下命令来执行统计数据生成脚本：
+
+```bash
+sh get_clickhouse_stats.sh <clickhouse_url> --output path/to/file.csv
+```
+
+例如，如果您正在使用捆绑版本并通过端口转发连接，则命令应如下所示：
+
+```bash
+sh get_clickhouse_stats.sh "clickhouse://default:password@localhost:8123/default" --output clickhouse_stats.csv
+```
+
+执行此命令后，您应该会看到一个名为 `clickhouse_stats.csv` 的文件已创建，其中包含 ClickHouse 的统计信息。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\script-generate-clickhouse-stats.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

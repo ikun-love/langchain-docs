@@ -1,0 +1,58 @@
+---
+title: Google Cloud Storage
+---
+
+<Tip>
+**兼容性**
+
+仅适用于 Node.js 环境。
+</Tip>
+
+本文档介绍如何将 Google Cloud Storage（GCS）文件加载到 LangChain 的 `Document` 对象中。
+
+## 设置 (Setup)
+
+要使用此加载器，您需要已经设置好 Unstructured 库，并使其在可用的 URL 端点上可访问。您也可以配置它以便本地运行。
+
+有关如何进行设置的详细信息，请参阅 [此处](/oss/javascript/integrations/document_loaders/file_loaders/unstructured) 的文档。
+
+您还需要安装官方的 Google Cloud Storage SDK：
+
+```bash npm
+npm install @langchain/community @langchain/core @google-cloud/storage
+```
+
+## 用法 (Usage)
+
+一旦 Unstructured 配置完成，您就可以使用 Google Cloud Storage 加载器来加载文件，然后将其转换为 `Document` 对象。
+
+此外，您可以选择性地提供 `storageOptions` 参数，以便不仅指定存储选项，还可以在您不希望使用默认的应用程序默认凭据 (Application Default Credentials, ADC) 的情况下指定其他身份验证方式。
+
+```typescript
+import { GoogleCloudStorageLoader } from "@langchain/community/document_loaders/web/google_cloud_storage";
+
+const loader = new GoogleCloudStorageLoader({
+  bucket: "my-bucket-123",
+  file: "path/to/file.pdf",
+  storageOptions: {
+    keyFilename: "/path/to/keyfile.json",
+  },
+  unstructuredLoaderOptions: {
+    apiUrl: "http://localhost:8000/general/v0/general",
+    apiKey: "", // 此项很快将会是必需的
+  },
+});
+
+const docs = await loader.load();
+
+console.log(docs);
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_loaders\web_loaders\google_cloud_storage.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

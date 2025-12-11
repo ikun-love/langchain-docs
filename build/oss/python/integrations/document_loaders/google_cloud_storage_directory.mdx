@@ -1,0 +1,80 @@
+---
+title: Google Cloud Storage 目录
+---
+
+>[Google Cloud Storage](https://en.wikipedia.org/wiki/Google_Cloud_Storage) 是一项用于存储非结构化数据的托管服务。
+
+本文将介绍如何从 `Google Cloud Storage (GCS) 目录（存储桶/Bucket）` 中加载文档对象。
+
+```python
+pip install -qU  langchain-google-community[gcs]
+```
+
+```python
+from langchain_google_community import GCSDirectoryLoader
+```
+
+```python
+loader = GCSDirectoryLoader(project_name="aist", bucket="testing-hwc")
+```
+
+```python
+loader.load()
+```
+
+```output
+/Users/harrisonchase/workplace/langchain/.venv/lib/python3.10/site-packages/google/auth/_default.py:83: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. We recommend you rerun `gcloud auth application-default login` and make sure a quota project is added. Or you can use service accounts instead. For more information about service accounts, see https://cloud.google.com/docs/authentication/
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+/Users/harrisonchase/workplace/langchain/.venv/lib/python3.10/site-packages/google/auth/_default.py:83: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. We recommend you rerun `gcloud auth application-default login` and make sure a quota project is added. Or you can use service accounts instead. For more information about service accounts, see https://cloud.google.com/docs/authentication/
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+```
+
+```output
+[Document(page_content='Lorem ipsum dolor sit amet.', lookup_str='', metadata={'source': '/var/folders/y6/8_bzdg295ld6s1_97_12m4lr0000gn/T/tmpz37njh7u/fake.docx'}, lookup_index=0)]
+```
+
+## 指定前缀 (Prefix)
+
+您也可以指定一个 `prefix`（前缀）以实现对要加载文件的更精细控制——这包括加载特定文件夹中的所有文件。
+
+```python
+loader = GCSDirectoryLoader(project_name="aist", bucket="testing-hwc", prefix="fake")
+```
+
+```python
+loader.load()
+```
+
+```output
+/Users/harrisonchase/workplace/langchain/.venv/lib/python3.10/site-packages/google/auth/_default.py:83: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. We recommend you rerun `gcloud auth application-default login` and make sure a quota project is added. Or you can use service accounts instead. For more information about service accounts, see https://cloud.google.com/docs/authentication/
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+/Users/harrisonchase/workplace/langchain/.venv/lib/python3.10/site-packages/google/auth/_default.py:83: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. We recommend you rerun `gcloud auth application-default login` and make sure a quota project is added. Or you can use service accounts instead. For more information about service accounts, see https://cloud.google.com/docs/authentication/
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+```
+
+```output
+[Document(page_content='Lorem ipsum dolor sit amet.', lookup_str='', metadata={'source': '/var/folders/y6/8_bzdg295ld6s1_97_12m4lr0000gn/T/tmpylg6291i/fake.docx'}, lookup_index=0)]
+```
+
+## 遇到单个文件加载失败时继续执行
+
+GCS 存储桶中的某些文件在处理过程中可能会导致错误。启用 `continue_on_failure=True` 参数可以允许静默失败。这意味着单个文件的处理失败不会中断整个函数，而会记录一个警告信息。
+
+```python
+loader = GCSDirectoryLoader(
+    project_name="aist", bucket="testing-hwc", continue_on_failure=True
+)
+```
+
+```python
+loader.load()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\google_cloud_storage_directory.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

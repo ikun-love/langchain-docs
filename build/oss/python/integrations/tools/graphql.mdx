@@ -1,0 +1,138 @@
+---
+title: GraphQL
+---
+
+>[GraphQL](https://graphql.org/) 是一种用于 API 的查询语言，也是一个运行时环境，用于针对您的数据执行这些查询。`GraphQL` 提供了对 API 中数据的完整且易于理解的描述，赋予客户端只请求其所需而不多余内容的权力，使 API 随时间推移的演进更加轻松，并支持强大的开发者工具。
+
+通过将 `BaseGraphQLTool` 包含在提供给 Agent 的工具列表中，您可以授予 Agent 查询 GraphQL API 数据的能力，以满足您的任何需求。
+
+本 Jupyter Notebook 演示了如何将 `GraphQLAPIWrapper` 组件与 Agent 配合使用。
+
+在这个示例中，我们将使用以下端点提供的公共 `Star Wars GraphQL API`：[swapi-graphql.netlify.app/graphql](https://swapi-graphql.netlify.app/graphql) 。
+
+首先，您需要安装 `httpx` 和 `gql` Python 包。
+
+```python
+pip install httpx gql > /dev/null
+```
+
+```python
+pip install -qU  langchain-community
+```
+
+现在，让我们使用指定的 Star Wars API 端点创建一个 `BaseGraphQLTool` 实例，并初始化一个带有该工具的 Agent。
+
+```python
+import os
+
+os.environ["OPENAI_API_KEY"] = ""
+```
+
+```python
+from langchain_community.agent_toolkits.load_tools import load_tools
+
+tools = load_tools(
+    ["graphql"],
+    graphql_endpoint="https://swapi-graphql.netlify.app/graphql",
+)
+```
+
+```python
+from langchain.agents import create_agent
+
+
+agent = create_agent("gpt-4.1-mini", tools)
+```
+
+现在，我们可以使用 Agent 对 Star Wars GraphQL API 运行查询。让我们要求 Agent 列出所有的星球大战电影及其上映日期。
+
+```python
+graphql_fields = """allFilms {
+    films {
+      title
+      director
+      releaseDate
+      speciesConnection {
+        species {
+          name
+          classification
+          homeworld {
+            name
+          }
+        }
+      }
+    }
+  }
+
+"""
+
+suffix = "Search for the titles of all the stawars films stored in the graphql database that has this schema "
+
+input_message = {
+    "role": "user",
+    "content": suffix + graphql_fields,
+}
+
+for step in agent.stream(
+    {"messages": [input_message]},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+Search for the titles of all the stawars films stored in the graphql database that has this schema allFilms {
+    films {
+      title
+      director
+      releaseDate
+      speciesConnection {
+        species {
+          name
+          classification
+          homeworld {
+            name
+          }
+        }
+      }
+    }
+  }
+
+
+================================== Ai Message ==================================
+Tool Calls:
+  query_graphql (call_tN5A0dBbfOMewuw8Yy13bYpW)
+ Call ID: call_tN5A0dBbfOMewuw8Yy13bYpW
+  Args:
+    tool_input: query { allFilms { films { title } } }
+================================= Tool Message =================================
+Name: query_graphql
+
+"{\n  \"allFilms\": {\n    \"films\": [\n      {\n        \"title\": \"A New Hope\"\n      },\n      {\n        \"title\": \"The Empire Strikes Back\"\n      },\n      {\n        \"title\": \"Return of the Jedi\"\n      },\n      {\n        \"title\": \"The Phantom Menace\"\n      },\n      {\n        \"title\": \"Attack of the Clones\"\n      },\n      {\n        \"title\": \"Revenge of the Sith\"\n      }\n    ]\n  }\n}"
+================================== Ai Message ==================================
+
+The titles of all the Star Wars films stored in the database are:
+1. A New Hope
+2. The Empire Strikes Back
+3. Return of the Jedi
+4. The Phantom Menace
+5. Attack of the Clones
+6. Revenge of the Sith
+
+If you would like more information about any of these films, please let me know!
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\graphql.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

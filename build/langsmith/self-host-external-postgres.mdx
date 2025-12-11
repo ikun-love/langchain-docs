@@ -1,0 +1,86 @@
+---
+title: 连接到外部 PostgreSQL 数据库
+sidebarTitle: 连接到外部 PostgreSQL 数据库
+---
+
+LangSmith 使用 PostgreSQL 数据库作为事务性工作负载和操作数据（几乎所有除了运行记录 Run 之外的数据）的主要数据存储。默认情况下，LangSmith 自托管（Self-Hosted）会使用一个内部的 PostgreSQL 数据库。然而，您可以配置 LangSmith 以使用外部 PostgreSQL 数据库。通过配置外部 PostgreSQL 数据库，您可以更轻松地管理数据库的备份、扩展和其他操作任务。
+
+## 要求 (Requirements)
+
+*   一个已预配的 PostgreSQL 数据库，您的 LangSmith 实例能够通过网络访问该数据库。我们推荐使用托管的 PostgreSQL 服务，例如：
+
+    *   [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
+    *   [Google Cloud SQL](https://cloud.google.com/curated-resources/cloud-sql#section-1)
+    *   [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql#features)
+
+*   注意：我们**只官方支持** PostgreSQL 版本 $\ge 14$。
+
+*   一个对 PostgreSQL 数据库具有管理员权限的用户。该用户将用于创建必要的表、索引和模式（schema）。
+
+*   该用户还需要具备在数据库中创建扩展（extension）的能力。我们会使用/尝试安装 `btree_gin`、`btree_gist`、`pgcrypto`、`citext`、`ltree` 和 `pg_trgm` 这些扩展。
+
+*   如果使用的 schema 不是 `public`，请确保您没有在其他任何 schema 中启用这些扩展，或者您必须将这些扩展包含在您的搜索路径（search path）中。
+
+*   对 `pgbouncer` 和其他连接池器的支持是基于社区的。社区成员报告说，`pgbouncer` 在使用 `pool_mode` = `session` 且 `ignore_startup_parameters` 设置合适时可以正常工作（截至撰写本文时，需要忽略 `search_path` 和 `lock_timeout`）。需要小心以避免污染连接池；因此，建议具备一定级别的 PostgreSQL 专业知识。LangChain Inc 目前没有将 `pgbouncer`、`amazon rds proxy` 或任何其他池器的正式测试覆盖或商业支持纳入路线图的计划，但社区欢迎通过 GitHub Issue 讨论和协作支持事宜。
+
+*   默认情况下，我们推荐至少配备 2 个 vCPU 和 8GB 内存的实例。但是，实际要求将取决于您的工作负载和用户数量。我们建议监控您的 PostgreSQL 实例，并根据需要向上扩展。
+
+## 连接字符串 (Connection String)
+
+您需要提供一个到您的 PostgreSQL 数据库的连接字符串。此连接字符串应包含以下信息：
+
+*   主机 (Host)
+*   端口 (Port)
+*   数据库 (Database)
+*   用户名 (Username)
+*   密码 (Password) (如果存在特殊字符，请确保对其进行 URL 编码)
+*   URL 参数 (URL params)
+
+其形式如下：
+
+```
+username:password@host:port/database?<url_params>
+```
+
+一个示例连接字符串可能如下所示：
+
+```
+myuser:mypassword@myhost:5432/mydatabase?sslmode=disable
+```
+
+如果没有 URL 参数，连接字符串应如下所示：
+
+```
+myuser:mypassword@myhost:5432/mydatabase
+```
+
+## 配置 (Configuration)
+
+获取连接字符串后，您可以配置 LangSmith 实例以使用外部 PostgreSQL 数据库。您可以通过修改 LangSmith Helm Chart 安装的 `values` 文件或 Docker 安装的 `.env` 文件来完成此操作。
+
+<CodeGroup>
+
+```yaml Helm
+postgres:
+  external:
+    enabled: true
+    connectionUrl: "Your connection url"
+```
+
+```bash Docker
+# 在您的 .env 文件中
+POSTGRES_DATABASE_URI="Your connection url"
+```
+
+</CodeGroup>
+
+配置完成后，您应该能够重新安装 LangSmith 实例。如果所有配置正确，您的 LangSmith 实例现在应该会使用您的外部 PostgreSQL 数据库了。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\self-host-external-postgres.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

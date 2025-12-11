@@ -1,0 +1,104 @@
+```yaml
+title: GPT4All
+```
+
+[GitHub:nomic-ai/gpt4all](https://github.com/nomic-ai/gpt4all) 是一个开源聊天机器人生态系统，它在大量的干净助手数据（包括代码、故事和对话）上进行了训练。
+
+本示例将介绍如何使用 LangChain 与 `GPT4All` 模型进行交互。
+
+```python
+pip install -qU langchain-community gpt4all
+```
+
+### 导入 GPT4All
+
+```python
+from langchain_community.llms import GPT4All
+from langchain_core.prompts import PromptTemplate
+```
+
+### 设置要传递给 LLM 的问题
+
+```python
+template = """Question: {question}
+
+Answer: 让我们一步一步思考（Let's think step by step.）"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+### 指定模型
+
+要在本地运行，请下载兼容的 ggml 格式模型。
+
+[gpt4all 页面](https://gpt4all.io/index.html) 包含一个有用的 `Model Explorer`（模型浏览器）部分：
+
+* 选择一个感兴趣的模型
+* 使用 UI 下载，并将生成的 `.bin` 文件移动到（下文提到的）`local_path` 路径下
+
+如需了解更多信息，请访问 [github.com/nomic-ai/gpt4all](https://github.com/nomic-ai/gpt4all)。
+
+---
+
+此集成目前不支持通过 [`.stream()`](https://python.langchain.com/docs/how_to/streaming/) 方法以块（chunks）的形式进行流式传输。下面的示例使用带有 `streaming=True` 的回调处理程序：
+
+```python
+local_path = (
+    "./models/Meta-Llama-3-8B-Instruct.Q4_0.gguf"  # 替换为您本地的文件路径
+)
+```
+
+```python
+from langchain_core.callbacks import BaseCallbackHandler
+
+count = 0
+
+
+class MyCustomHandler(BaseCallbackHandler):
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        global count
+        if count < 10:
+            print(f"Token: {token}")
+            count += 1
+
+
+# 必须设置 Verbose 才能将回调信息传递给回调管理器
+llm = GPT4All(model=local_path, callbacks=[MyCustomHandler()], streaming=True)
+
+# 如果您想使用自定义模型，请添加 backend 参数
+# 查阅 https://docs.gpt4all.io/gpt4all_python.html 了解支持的后端
+# llm = GPT4All(model=local_path, backend="gptj", callbacks=callbacks, streaming=True)
+
+chain = prompt | llm
+
+question = "What NFL team won the Super Bowl in the year Justin Bieber was born?"
+
+# 流式传输的 token 将通过传入的回调进行记录/聚合
+res = chain.invoke({"question": question})
+```
+
+```output
+Token:  Justin
+Token:  Bieber
+Token:  was
+Token:  born
+Token:  on
+Token:  March
+Token:
+Token: 1
+Token: ,
+Token:
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\gpt4all.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

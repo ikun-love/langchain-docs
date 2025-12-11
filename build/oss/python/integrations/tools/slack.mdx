@@ -1,0 +1,157 @@
+---
+title: Slack 工具包
+---
+
+本指南将帮助您开始使用 Slack [工具包](/oss/python/langchain/tools#toolkits)。有关 `SlackToolkit` 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/agent_toolkits/langchain_community.agent_toolkits.slack.toolkit.SlackToolkit.html)。
+
+## 设置 (Setup)
+
+要使用此工具包，您需要按照 [Slack API 文档](https://api.slack.com/tutorials/tracks/getting-a-token) 中的说明获取一个令牌。在您收到 `SLACK_USER_TOKEN` 后，可以在下面的环境变量中输入它。
+
+```python
+import getpass
+import os
+
+if not os.getenv("SLACK_USER_TOKEN"):
+    os.environ["SLACK_USER_TOKEN"] = getpass.getpass("输入您的 Slack 用户令牌 (Enter your Slack user token): ")
+```
+
+要启用对单个工具的自动化追踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入您的 LangSmith API 密钥 (Enter your LangSmith API key): ")
+os.environ["LANGSMITH_TRACING"] = "true"
+```
+
+### 安装 (Installation)
+
+此工具包位于 `langchain-community` 包中。我们还需要 Slack SDK：
+
+```python
+pip install -qU langchain-community slack_sdk
+```
+
+可选地，我们可以安装 `beautifulsoup4` 以帮助解析 HTML 消息：
+
+```python
+pip install -qU beautifulsoup4 # 这是可选的，但对解析 HTML 消息很有用
+```
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化我们的工具包：
+
+```python
+from langchain_community.agent_toolkits import SlackToolkit
+
+toolkit = SlackToolkit()
+```
+
+## 工具 (Tools)
+
+查看可用的工具：
+
+```python
+tools = toolkit.get_tools()
+
+tools
+```
+
+```output
+[SlackGetChannel(client=<slack_sdk.web.client.WebClient object at 0x113caa8c0>),
+ SlackGetMessage(client=<slack_sdk.web.client.WebClient object at 0x113caa4d0>),
+ SlackScheduleMessage(client=<slack_sdk.web.client.WebClient object at 0x113caa440>),
+ SlackSendMessage(client=<slack_sdk.web.client.WebClient object at 0x113caa410>)]
+```
+
+此工具包加载了以下工具：
+
+- [SlackGetChannel](https://python.langchain.com/api_reference/community/tools/langchain_community.tools.slack.get_channel.SlackGetChannel.html)
+- [SlackGetMessage](https://python.langchain.com/api_reference/community/tools/langchain_community.tools.slack.get_message.SlackGetMessage.html)
+- [SlackScheduleMessage](https://python.langchain.com/api_reference/community/tools/langchain_community.tools.slack.schedule_message.SlackScheduleMessage.html)
+- [SlackSendMessage](https://python.langchain.com/api_reference/community/tools/langchain_community.tools.slack.send_message.SlackSendMessage.html)
+
+## 在 Agent 中使用
+
+让我们为 Agent 配备 Slack 工具包，并查询有关某个频道的 (channel) 信息。
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+
+model = ChatOpenAI(model="gpt-4o-mini")
+
+agent_executor = create_agent(model, tools)
+```
+
+```python
+example_query = "创建 #general 频道是在什么时候？"
+
+events = agent_executor.stream(
+    {"messages": [("user", example_query)]},
+    stream_mode="values",
+)
+for event in events:
+    message = event["messages"][-1]
+    if message.type != "tool":  # 屏蔽敏感信息
+        event["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+创建 #general 频道是在什么时候？
+================================== Ai Message ==================================
+Tool Calls:
+  get_channelid_name_dict (call_NXDkALjoOx97uF1v0CoZTqtJ)
+ Call ID: call_NXDkALjoOx97uF1v0CoZTqtJ
+  Args:
+================================== Ai Message ==================================
+
+#general 频道创建于时间戳 1671043305。
+```
+
+```python
+example_query = "向频道 C072Q1LP4QM 发送一条友好的问候。"
+
+events = agent_executor.stream(
+    {"messages": [("user", example_query)]},
+    stream_mode="values",
+)
+for event in events:
+    message = event["messages"][-1]
+    if message.type != "tool":  # 屏蔽敏感信息
+        event["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+向频道 C072Q1LP4QM 发送一条友好的问候。
+================================== Ai Message ==================================
+Tool Calls:
+  send_message (call_xQxpv4wFeAZNZgSBJRIuaizi)
+ Call ID: call_xQxpv4wFeAZNZgSBJRIuaizi
+  Args:
+    message: Hello! Have a great day!
+    channel: C072Q1LP4QM
+================================== Ai Message ==================================
+
+我已向频道 C072Q1LP4QM 发送了一条友好的问候。
+```
+
+---
+
+## API 参考 (API reference)
+
+有关 `SlackToolkit` 所有功能和配置的详细文档，请参阅 [API 参考](https://python.langchain.com/api_reference/community/agent_toolkits/langchain_community.agent_toolkits.slack.toolkit.SlackToolkit.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\slack.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

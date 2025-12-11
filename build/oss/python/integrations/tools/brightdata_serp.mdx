@@ -1,0 +1,182 @@
+---
+title: BrightDataSERP
+---
+
+[Bright Data](https://brightdata.com/) 提供了一个强大的 SERP API，允许您使用地理定位和高级自定义选项查询搜索引擎（Google、Bing、DuckDuckGo、Yandex），这对于需要实时网络信息的 AI 智能体来说尤其有用。
+
+## 概述
+
+### 集成详情
+
+| 类名 (Class) | 包 (Package) | 可序列化 (Serializable) | JS 支持 | 版本 (Version) |
+|:--|:--|:-:|:-:|:-:|
+|[BrightDataSERP](https://pypi.org/project/langchain-brightdata/)|[langchain-brightdata](https://pypi.org/project/langchain-brightdata/)|✅|❌|![PyPI - Version](https://img.shields.io/pypi/v/langchain-brightdata?style=flat-square&label=%20)|
+
+### 工具特性 (Tool features)
+
+| 原生异步 (Native async) | 返回工件 (Returns artifact) | 返回数据 (Return data) | 定价 (Pricing) |
+|:-:|:-:|:--|:-:|
+|❌|❌|标题 (Title)、URL、摘要 (snippet)、排名 (position) 以及其他搜索结果数据|需要 Bright Data 账户|
+
+## 设置
+
+该集成位于 `langchain-brightdata` 包中。
+
+```bash
+pip install langchain-brightdata
+```
+
+### 凭证 (Credentials)
+
+您需要一个 Bright Data API 密钥才能使用此工具。您可以将其设置为环境变量：
+
+```python
+import os
+
+os.environ["BRIGHT_DATA_API_KEY"] = "your-api-key"
+```
+
+或者在初始化工具时直接传入：
+
+```python
+from langchain_brightdata import BrightDataSERP
+
+serp_tool = BrightDataSERP(bright_data_api_key="your-api-key")
+```
+
+## 实例化
+
+这里我们展示如何实例化一个 `BrightDataSERP` 工具的实例。此工具允许您执行搜索引擎查询，并提供多种自定义选项，包括地理定位、语言偏好、设备类型模拟以及使用 Bright Data SERP API 的特定搜索类型。
+
+该工具在实例化时接受各种参数：
+
+- `bright_data_api_key` (必需, str): 您的 Bright Data API 密钥，用于身份验证。
+- `search_engine` (可选, str): 用于查询的搜索引擎。默认为 "google"。其他选项包括 "bing"、"yahoo"、"yandex"、"DuckDuckGo" 等。
+- `country` (可选, str): 用于本地化搜索结果的两位字母国家/地区代码（例如："us"、"gb"、"de"、"jp"）。默认为 "us"。
+- `language` (可选, str): 搜索结果的两位字母语言代码（例如："en"、"es"、"fr"、"de"）。默认为 "en"。
+- `results_count` (可选, int): 要返回的搜索结果数量。默认为 10。最大值通常为 100。
+- `search_type` (可选, str): 要执行的搜索类型。选项包括：
+  - None (默认): 常规网页搜索
+  - "isch": 图片搜索
+  - "shop": 购物搜索
+  - "nws": 新闻搜索
+  - "jobs": 工作搜索
+- `device_type` (可选, str): 要模拟搜索所用的设备类型。选项包括：
+  - None (默认): 桌面设备
+  - "mobile": 通用移动设备
+  - "ios": iOS 设备 (iPhone)
+  - "android": Android 设备
+- `parse_results` (可选, bool): 是否返回已解析的 JSON 结果。默认为 False，此时返回原始 HTML 响应。
+
+## 调用 (Invocation)
+
+### 基本用法
+
+```python
+from langchain_brightdata import BrightDataSERP
+
+# 初始化工具
+serp_tool = BrightDataSERP(
+    bright_data_api_key="your-api-key"  # 如果已在环境变量中设置，则此项可选
+)
+
+# 执行基本搜索
+results = serp_tool.invoke("latest AI research papers")
+
+print(results)
+```
+
+### 使用参数的高级用法
+
+```python
+from langchain_brightdata import BrightDataSERP
+
+# 使用默认参数初始化
+serp_tool = BrightDataSERP(
+    bright_data_api_key="your-api-key",
+    search_engine="google",  # 默认值
+    country="us",  # 默认值
+    language="en",  # 默认值
+    results_count=10,  # 默认值
+    parse_results=True,  # 获取结构化的 JSON 结果
+)
+
+# 使用特定参数进行搜索
+results = serp_tool.invoke(
+    {
+        "query": "best electric vehicles",
+        "country": "de",  # 模拟从德国搜索
+        "language": "de",  # 获取德语结果
+        "search_type": "shop",  # 获取购物结果
+        "device_type": "mobile",  # 模拟移动设备
+        "results_count": 15,
+    }
+)
+
+print(results)
+```
+
+## 自定义选项
+
+`BrightDataSERP` 工具接受多个参数用于自定义：
+
+| 参数 (Parameter) | 类型 (Type) | 描述 (Description) |
+|:--|:--|:--|
+|`query`|str|要执行的搜索查询|
+|`search_engine`|str|要使用的搜索引擎（默认："google"）|
+|`country`|str|用于本地结果的两位字母国家/地区代码（默认："us"）|
+|`language`|str|两位字母语言代码（默认："en"）|
+|`results_count`|int|要返回的结果数量（默认：10）|
+|`search_type`|str|搜索类型：None (网页), "isch" (图片), "shop", "nws" (新闻), "jobs"|
+|`device_type`|str|设备类型：None (桌面), "mobile", "ios", "android"|
+|`parse_results`|bool|是否返回结构化 JSON（默认：False）|
+
+## 在智能体中使用 (Use within an agent)
+
+```python
+from langchain_brightdata import BrightDataSERP
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import create_agent
+
+
+# 初始化 LLM
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key="your-api-key")
+
+# 初始化 Bright Data SERP 工具
+serp_tool = BrightDataSERP(
+    bright_data_api_key="your-api-key",
+    search_engine="google",
+    country="us",
+    language="en",
+    results_count=10,
+    parse_results=True,
+)
+
+# 创建智能体
+agent = create_agent(llm, [serp_tool])
+
+# 提供用户查询
+user_input = "Search for 'best electric vehicles' shopping results in Germany in German using mobile."
+
+# 分步流式传输智能体的输出
+for step in agent.stream(
+    {"messages": user_input},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
+```
+
+---
+
+## API 参考
+
+- [Bright Data API 文档](https://docs.brightdata.com/scraping-automation/serp-api/introduction)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\brightdata_serp.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

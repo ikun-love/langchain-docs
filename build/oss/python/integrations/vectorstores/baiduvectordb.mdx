@@ -1,0 +1,66 @@
+---
+title: 百度向量数据库 (Baidu VectorDB)
+---
+
+>[Baidu VectorDB](https://cloud.baidu.com/product/vdb.html) 是百度智能云精心研发并完全托管的一项企业级分布式数据库服务。它专注于提供卓越的多维向量数据存储、检索和分析能力。VectorDB 的核心基于百度自研的“Mochow”向量数据库内核，这确保了它具备高性能、高可用性和高安全性，同时还兼具出色的可扩展性和易用性。
+
+该数据库服务支持多种索引类型和相似度计算方法，以满足不同的业务需求。VectorDB 的一个突出特点是其管理海量向量规模的能力，最高可达 100 亿条，同时还能保持令人印象深刻的查询性能，支持每秒数百万次查询 (QPS)，且查询延迟控制在毫秒级别。
+
+您需要安装 `langchain-community` 才能使用此集成：`pip install -qU langchain-community`
+
+本 Notebook 示例展示了如何使用与 Baidu VectorDB 相关的 LangChain 功能。
+
+要运行此示例，您需要拥有一个 [数据库实例](https://cloud.baidu.com/doc/VDB/s/hlrso4zu)（Database instance）。
+
+```python
+!pip3 install pymochow
+```
+
+```python
+from langchain_community.document_loaders import TextLoader
+from langchain_community.embeddings.fake import FakeEmbeddings
+from langchain_community.vectorstores import BaiduVectorDB
+from langchain_community.vectorstores.baiduvectordb import ConnectionParams
+from langchain_text_splitters import CharacterTextSplitter
+```
+
+```python
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+embeddings = FakeEmbeddings(size=128)
+```
+
+```python
+conn_params = ConnectionParams(
+    endpoint="http://192.168.xx.xx:xxxx", account="root", api_key="****"
+)
+
+vector_db = BaiduVectorDB.from_documents(
+    docs, embeddings, connection_params=conn_params, drop_old=True
+)
+```
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+docs = vector_db.similarity_search(query)
+docs[0].page_content
+```
+
+```python
+vector_db = BaiduVectorDB(embeddings, conn_params)
+vector_db.add_texts(["Ankush went to Princeton"])
+query = "Where did Ankush go to college?"
+docs = vector_db.max_marginal_relevance_search(query)
+docs[0].page_content
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\baiduvectordb.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

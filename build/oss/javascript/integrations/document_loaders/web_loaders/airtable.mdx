@@ -1,0 +1,74 @@
+---
+title: AirtableLoader
+---
+
+`AirtableLoader` 类提供了从 Airtable 表中加载文档的功能。它支持两种主要方法：
+
+1. `load()`: 一次性检索所有记录，适用于小型到中型数据集。
+2. `loadLazy()`: 一次获取一条记录，对于大型数据集来说，这种方式更节省内存。
+
+## 前提条件
+
+请确保你的 Airtable API 令牌已设置为环境变量：
+
+```typescript
+process.env.AIRTABLE_API_TOKEN = "YOUR_AIRTABLE_API_TOKEN";
+```
+
+## 用法
+
+```typescript
+import { AirtableLoader } from "@langchain/community/document_loaders/web/airtable";
+import { Document } from "@langchain/core/documents";
+
+// 默认的 Airtable 加载器
+const loader = new AirtableLoader({
+  tableId: "YOUR_TABLE_ID",
+  baseId: "YOUR_BASE_ID",
+});
+
+try {
+  const documents: Document[] = await loader.load();
+  console.log("加载的文档:", documents);
+} catch (error) {
+  console.error("加载文档时出错:", error);
+}
+
+// 惰性（Lazy）的 Airtable 加载器
+const loaderLazy = new AirtableLoader({
+  tableId: "YOUR_TABLE_ID",
+  baseId: "YOUR_BASE_ID",
+});
+
+try {
+  console.log("正在惰性加载文档:");
+  for await (const document of loader.loadLazy()) {
+    console.log("加载的文档:", document);
+  }
+} catch (error) {
+  console.error("惰性加载文档时出错:", error);
+}
+
+// 使用特定视图的 Airtable 加载器
+const loaderView = new AirtableLoader({
+  tableId: "YOUR_TABLE_ID",
+  baseId: "YOUR_BASE_ID",
+  kwargs: { view: "YOUR_VIEW_NAME" },
+});
+
+try {
+  const documents: Document[] = await loader.load();
+  console.log("带视图加载的文档:", documents);
+} catch (error) {
+  console.error("使用视图加载文档时出错:", error);
+}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_loaders\web_loaders\airtable.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

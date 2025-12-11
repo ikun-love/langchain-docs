@@ -1,0 +1,124 @@
+---
+title: HTML 转文本
+---
+
+[html2text](https://github.com/Alir3z4/html2text/) 是一个 Python 包，可以将一页 `HTML` 内容转换为干净、易于阅读的纯 `ASCII` 文本。
+
+这种 ASCII 文本恰好也是有效的 `Markdown`（一种文本转 HTML 的格式）。
+
+```python
+pip install -qU html2text
+```
+
+```python
+from langchain_community.document_loaders import AsyncHtmlLoader
+
+urls = ["https://www.espn.com", "https://lilianweng.github.io/posts/2023-06-23-agent/"]
+loader = AsyncHtmlLoader(urls)
+docs = loader.load()
+```
+
+```output
+USER_AGENT 环境变量未设置，建议设置它来标识您的请求。
+正在获取页面: 100%|##########| 2/2 [00:00<00:00, 14.74it/s]
+```
+
+```python
+from langchain_community.document_transformers import Html2TextTransformer
+
+urls = ["https://www.espn.com", "https://lilianweng.github.io/posts/2023-06-23-agent/"]
+html2text = Html2TextTransformer()
+docs_transformed = html2text.transform_documents(docs)
+
+print(docs_transformed[0].page_content[1000:2000])
+
+print(docs_transformed[1].page_content[1000:2000])
+```
+
+```output
+## 梦幻体育 (Fantasy)
+
+  * 足球 (Football)
+
+  * 棒球 (Baseball)
+
+  * 篮球 (Basketball)
+
+  * 曲棍球 (Hockey)
+
+## ESPN 网站
+
+  * ESPN Deportes
+
+  * Andscape
+
+  * espnW
+
+  * ESPNFC
+
+  * X Games
+
+  * SEC Network
+
+## ESPN 应用
+
+  * ESPN
+
+  * ESPN Fantasy
+
+  * Tournament Challenge
+
+## 关注 ESPN
+
+  * Facebook
+
+  * X/Twitter
+
+  * Instagram
+
+  * Snapchat
+
+  * TikTok
+
+  * YouTube
+
+## NBA 模拟选秀的最新消息：在第一轮开始前几小时我们听到的所有信息
+
+在第一轮开始前几小时（美国东部时间晚上 8 点，ESPN 和 ABC 播出），ESPN 选秀内部人士 Jonathan Givony 和 Jeremy Woo 带来了关于乐透签位及更多信息的最新情报。
+
+2小时前Jonathan Givony 和 Jeremy Woo
+
+ESPN 供图
+
+## 从 1 号到 100 号：2024 年 NBA 选秀潜力新秀排名
+
+谁是 1 号秀？肯塔基大学、杜克大学和康涅狄格大学的球员排名如何？这是我们最终的百强新秀榜单。
+
+6小时前Jonathan Givony 和 Jeremy Woo
+
+  * 完整的选秀顺位：两轮全部 58 个选秀权
+  * 交易追踪器：所有交易的详细信息
+
+  * 博彩热点：湖人队最有可能选中 Bronny
+  * 使用我们的 NBA 选秀模拟器
+系统，LLM（大型语言模型）充当智能体的“大脑”，
+并由几个关键组件进行补充：
+
+  * **规划 (Planning)**
+    * 子目标与分解 (Subgoal and decomposition)：智能体将大型任务分解为更小、更易于管理的子目标，从而能够高效地处理复杂任务。
+    * 反思与完善 (Reflection and refinement)：智能体能够对过去的行动进行自我批评和自我反思，从错误中学习并在后续步骤中进行改进，从而提高最终结果的质量。
+  * **记忆 (Memory)**
+    * 短期记忆 (Short-term memory)：我会将所有上下文学习（参见提示工程 Prompt Engineering）视为利用模型的短期记忆来进行学习。
+    * 长期记忆 (Long-term memory)：这为智能体提供了在扩展的时间内保留和检索（无限的）信息的能力，通常通过利用外部向量存储和快速检索来实现。
+  * **工具使用 (Tool use)**
+    * 智能体学习调用外部 API 以获取模型权重中缺失的额外信息（这部分信息在预训练后通常难以更改），其中包括：
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_transformers\html2text.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

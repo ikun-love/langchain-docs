@@ -1,0 +1,414 @@
+---
+title: 如何将提示词与 GitHub 同步
+sidebarTitle: 与 GitHub 同步提示词
+---
+
+LangSmith 提供了一个协作界面，用于创建、测试和迭代提示词（Prompts）。
+
+虽然你可以[在运行时从 LangSmith 动态获取提示词](/langsmith/manage-prompts-programmatically#pull-a-prompt)到你的应用程序中，但你可能更喜欢将提示词同步到你自己的数据库或版本控制系统中。为了支持这种工作流程，LangSmith 允许你通过 Webhook 接收有关提示词更新的通知。
+
+**为什么要将提示词与 GitHub 同步？**
+
+* **版本控制：** 在你熟悉且结构化的系统中，与应用程序代码一起对提示词进行版本管理。
+* **CI/CD 集成：** 当关键提示词发生变化时，可以触发自动化的暂存（Staging）或生产环境部署。
+
+![Prompt Webhook Diagram](/langsmith/images/prompt-excalidraw.png)
+
+## 先决条件
+
+在开始之前，请确保你已设置好以下内容：
+
+1. **GitHub 账户：** 一个标准的 GitHub 账户。
+
+2. **GitHub 仓库：** 创建一个新的（或选择一个现有的）仓库来存储你的 LangSmith 提示词清单（manifests）。这可以是与你的应用程序代码相同的仓库，也可以是专门用于提示词的仓库。
+
+3. **GitHub 个人访问令牌 (PAT)：**
+
+   * LangSmith Webhook 不会直接与 GitHub 交互——它们会调用一个由*你*创建的中间服务器。
+   * 此服务器需要一个 GitHub PAT 才能进行身份验证并向你的仓库提交更改（commits）。
+   * 必须包含 `repo` 作用域（对于公共仓库，`public_repo` 权限就足够了）。
+   * 导航至 **GitHub > Settings > Developer settings > Personal access tokens > Tokens (classic)**。
+   * 点击 **Generate new token (classic)**。
+   * 为其命名（例如："LangSmith Prompt Sync"），设置过期时间，并选择所需的权限范围。
+   * 点击 **Generate token** 并**立即复制它**——它之后将不会再显示。
+   * 将该令牌安全存储，并将其作为环境变量提供给你的服务器。
+
+## 理解 LangSmith 的“提示词提交”和 Webhook
+
+在 LangSmith 中，当你保存对提示词的更改时，你本质上是创建了一个新版本或一个“提示词提交”（Prompt Commit）。这些提交可以触发 Webhook。
+
+Webhook 将发送一个包含新的**提示词清单（prompt manifest）**的 JSON 有效载荷（payload）。
+
+<Accordion title="示例 Webhook 有效载荷">
+  ```json
+  {
+    "prompt_id": "f33dcb51-eb17-47a5-83ca-64ac8a027a29",
+    "prompt_name": "My Prompt",
+    "commit_hash": "commit_hash_1234567890",
+    "created_at": "2021-01-01T00:00:00Z",
+    "created_by": "Jane Doe",
+    "manifest": {
+      "lc": 1,
+      "type": "constructor",
+      "id": ["langchain", "schema", "runnable", "RunnableSequence"],
+      "kwargs": {
+        "first": {
+          "lc": 1,
+          "type": "constructor",
+          "id": ["langchain", "prompts", "chat", "ChatPromptTemplate"],
+          "kwargs": {
+            "messages": [
+              {
+                "lc": 1,
+                "type": "constructor",
+                "id": [
+                  "langchain_core",
+                  "prompts",
+                  "chat",
+                  "SystemMessagePromptTemplate"
+                ],
+                "kwargs": {
+                  "prompt": {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                      "langchain_core",
+                      "prompts",
+                      "prompt",
+                      "PromptTemplate"
+                    ],
+                    "kwargs": {
+                      "input_variables": [],
+                      "template_format": "mustache",
+                      "template": "You are a chatbot."
+                    }
+                  }
+                }
+              },
+              {
+                "lc": 1,
+                "type": "constructor",
+                "id": [
+                  "langchain_core",
+                  "prompts",
+                  "chat",
+                  "HumanMessagePromptTemplate"
+                ],
+                "kwargs": {
+                  "prompt": {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                      "langchain_core",
+                      "prompts",
+                      "prompt",
+                      "PromptTemplate"
+                    ],
+                    "kwargs": {
+                      "input_variables": ["question"],
+                      "template_format": "mustache",
+                      "template": "{{question}}"
+                    }
+                  }
+                }
+              }
+            ],
+            "input_variables": ["question"]
+          }
+        },
+        "last": {
+          "lc": 1,
+          "type": "constructor",
+          "id": ["langchain", "schema", "runnable", "RunnableBinding"],
+          "kwargs": {
+            "bound": {
+              "lc": 1,
+              "type": "constructor",
+              "id": ["langchain", "chat_models", "openai", "ChatOpenAI"],
+              "kwargs": {
+                "temperature": 1,
+                "top_p": 1,
+                "presence_penalty": 0,
+                "frequency_penalty": 0,
+                "model": "gpt-4.1-mini",
+                "extra_headers": {},
+                "openai_api_key": {
+                  "id": ["OPENAI_API_KEY"],
+                  "lc": 1,
+                  "type": "secret"
+                }
+              }
+            },
+            "kwargs": {}
+          }
+        }
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Note>
+需要理解的是，LangSmith 中用于提示词提交的 Webhook 通常是在**工作区级别**触发的。这意味着，如果你的 LangSmith 工作区中**任何**提示词被修改并保存了“提示词提交”，Webhook 就会触发，并发送该提示词的更新清单。有效载荷可以通过 `prompt_id` 来识别。你的接收服务器应考虑到这一点进行设计。
+</Note>
+
+## 实现一个用于接收 Webhook 的 FastAPI 服务器
+
+为了有效地处理 LangSmith 在提示词更新时发送的 Webhook 通知，需要一个中间服务器应用程序。此服务器将作为 LangSmith 发送的 HTTP POST 请求的接收方。在本指南中，我们将概述如何创建一个简单的 FastAPI 应用程序来完成此角色。
+
+这个可以公开访问的服务器将负责：
+
+1. **接收 Webhook 请求：** 监听传入的 HTTP POST 请求。
+2. **解析有效载荷：** 提取并解释请求主体中的 JSON 格式提示词清单。
+3. **提交到 GitHub：** 在你指定的 GitHub 仓库中以编程方式创建一个新的提交，其中包含更新后的提示词清单。这确保了当 LangSmith 中发生更改时，你的提示词保持版本化并同步。
+
+对于部署，可以使用 Render.com（提供合适的免费套餐）、Vercel、Fly.io 或其他云提供商（AWS、GCP、Azure）来托管 FastAPI 应用程序并获取公共 URL。
+
+该服务器的核心功能将包括一个用于接收 Webhook 的端点、用于解析清单的逻辑，以及使用个人访问令牌进行身份验证以管理提交的 GitHub API 集成。
+
+<Accordion title="最小化 FastAPI 服务器代码 ()">
+  `main.py`
+
+  此服务器将监听来自 LangSmith 的传入 Webhook，并将收到的提示词清单直接提交到你的 GitHub 仓库。
+
+  ```python
+  import base64
+  import json
+  import uuid
+  from typing import Any, Dict
+  import httpx
+  from fastapi import FastAPI, HTTPException, Body
+  from pydantic import BaseModel, Field
+  from pydantic_settings import BaseSettings, SettingsConfigDict
+
+  # --- 配置 (Configuration) ---
+  class AppConfig(BaseSettings):
+      """
+      应用程序配置模型。
+      从环境变量加载设置。
+      """
+      GITHUB_TOKEN: str
+      GITHUB_REPO_OWNER: str
+      GITHUB_REPO_NAME: str
+      GITHUB_FILE_PATH: str = "prompt_manifest.json"
+      GITHUB_BRANCH: str = "main"
+      model_config = SettingsConfigDict(
+          env_file=".env",
+          env_file_encoding='utf-8',
+          extra='ignore'
+      )
+
+  settings = AppConfig()
+
+  # --- Pydantic 模型 ---
+  class WebhookPayload(BaseModel):
+      """
+      定义传入 Webhook 有效载荷的预期结构。
+      """
+      prompt_id: UUID = Field(
+          ...,
+          description="提示词的唯一标识符。"
+      )
+      prompt_name: str = Field(
+          ...,
+          description="提示词的名称/标题。"
+      )
+      commit_hash: str = Field(
+          ...,
+          description="触发 Webhook 的提交事件的标识符。"
+      )
+      created_at: str = Field(
+          ...,
+          description="指示事件创建时间的时戳（倾向于 ISO 格式）。"
+      )
+      created_by: str = Field(
+          ...,
+          description="创建事件的用户的名称。"
+      )
+      manifest: Dict[str, Any] = Field(
+          ...,
+          description="要提交到 GitHub 的主要内容或配置数据。"
+      )
+
+  # --- GitHub 辅助函数 ---
+  async def commit_manifest_to_github(payload: WebhookPayload) -> Dict[str, Any]:
+      """
+      辅助函数，用于将清单直接提交到配置的分支。
+      """
+      github_api_base_url = "https://api.github.com"
+      repo_file_url = (
+          f"{github_api_base_url}/repos/{settings.GITHUB_REPO_OWNER}/"
+          f"{settings.GITHUB_REPO_NAME}/contents/{settings.GITHUB_FILE_PATH}"
+      )
+      headers = {
+          "Authorization": f"Bearer {settings.GITHUB_TOKEN}",
+          "Accept": "application/vnd.github.v3+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+      }
+      manifest_json_string = json.dumps(payload.manifest, indent=2)
+      content_base64 = base64.b64encode(manifest_json_string.encode('utf-8')).decode('utf-8')
+      commit_message = f"feat: Update {settings.GITHUB_FILE_PATH} via webhook - commit {payload.commit_hash}"
+      data_to_commit = {
+          "message": commit_message,
+          "content": content_base64,
+          "branch": settings.GITHUB_BRANCH,
+      }
+      async with httpx.AsyncClient() as client:
+          current_file_sha = None
+          try:
+              params_get = {"ref": settings.GITHUB_BRANCH}
+              response_get = await client.get(repo_file_url, headers=headers, params=params_get)
+              if response_get.status_code == 200:
+                  current_file_sha = response_get.json().get("sha")
+              elif response_get.status_code != 404: # 如果不是 404 (未找到)，则是意外错误
+                  response_get.raise_for_status()
+          except httpx.HTTPStatusError as e:
+              error_detail = f"GitHub API error (GET file SHA): {e.response.status_code} - {e.response.text}"
+              print(f"[ERROR] {error_detail}")
+              raise HTTPException(status_code=e.response.status_code, detail=error_detail)
+          except httpx.RequestError as e:
+              error_detail = f"Network error connecting to GitHub (GET file SHA): {str(e)}"
+              print(f"[ERROR] {error_detail}")
+              raise HTTPException(status_code=503, detail=error_detail)
+          if current_file_sha:
+              data_to_commit["sha"] = current_file_sha
+          try:
+              response_put = await client.put(repo_file_url, headers=headers, json=data_to_commit)
+              response_put.raise_for_status()
+              return response_put.json()
+          except httpx.HTTPStatusError as e:
+              error_detail = f"GitHub API error (PUT content): {e.response.status_code} - {e.response.text}"
+              if e.response.status_code == 409: # 冲突
+                  error_detail = (
+                      f"GitHub API conflict (PUT content): {e.response.text}. "
+                      "这可能是由于 SHA 过期或分支保护规则引起的。"
+                  )
+              elif e.response.status_code == 422: # 无法处理的实体
+                  error_detail = (
+                      f"GitHub API Unprocessable Entity (PUT content): {e.response.text}. "
+                      f"请确保分支 '{settings.GITHUB_BRANCH}' 存在且有效载荷格式正确。"
+                  )
+              print(f"[ERROR] {error_detail}")
+              raise HTTPException(status_code=e.response.status_code, detail=error_detail)
+          except httpx.RequestError as e:
+              error_detail = f"Network error connecting to GitHub (PUT content): {str(e)}"
+              print(f"[ERROR] {error_detail}")
+              raise HTTPException(status_code=503, detail=error_detail)
+
+  # --- FastAPI 应用程序 ---
+  app = FastAPI(
+      title="最小化 Webhook 到 GitHub 提交服务",
+      description="接收 Webhook 并将其 'manifest' 部分直接提交到 GitHub 仓库。",
+      version="0.1.0",
+  )
+
+  @app.post("/webhook/commit", status_code=201, tags=["GitHub Webhooks"])
+  async def handle_webhook_direct_commit(payload: WebhookPayload = Body(...)):
+      """
+      Webhook 端点，用于接收事件并直接提交到配置的分支。
+      """
+      try:
+          github_response = await commit_manifest_to_github(payload)
+          return {
+              "message": "Webhook 已接收，清单已直接提交到 GitHub 成功。",
+              "github_commit_details": github_response.get("commit", {}),
+              "github_content_details": github_response.get("content", {})
+          }
+      except HTTPException:
+          raise # 如果是 HTTPException，则重新抛出
+      except Exception as e:
+          error_message = f"发生意外错误: {str(e)}"
+          print(f"[ERROR] {error_message}")
+          raise HTTPException(status_code=500, detail="发生内部服务器错误。")
+
+  @app.get("/health", status_code=200, tags=["Health"])
+  async def health_check():
+      """
+      一个简单的健康检查端点。
+      """
+      return {"status": "ok", "message": "服务正在运行中。"}
+
+  # 运行此服务器（保存为 main.py）：
+  # 1. 安装依赖项: pip install fastapi uvicorn pydantic pydantic-settings httpx python-dotenv
+  # 2. 创建一个包含你的 GitHub 令牌和仓库详细信息的 .env 文件。
+  # 3. 使用 Uvicorn 运行: uvicorn main:app --reload
+  # 4. 部署到公共平台（如 Render.com）。
+  ```
+
+  **该服务器的关键方面：**
+
+  * **配置（`.env`）：** 它期望有一个 `.env` 文件，其中包含你的 `GITHUB_TOKEN`、`GITHUB_REPO_OWNER` 和 `GITHUB_REPO_NAME`。你还可以自定义 `GITHUB_FILE_PATH`（默认值：`prompt_manifest.json`）和 `GITHUB_BRANCH`（默认值：`main`）。
+  * **GitHub 交互：** `commit_manifest_to_github` 函数处理获取当前文件 SHA（以便更新它）然后提交新清单内容的逻辑。
+  * **Webhook 端点（`/webhook/commit`）：** 这是你的 LangSmith Webhook 将指向的 URL 路径。
+  * **错误处理：** 包含了针对 GitHub API 交互的基本错误处理。
+
+  **将此服务器部署到你选择的平台（例如 Render）并记下其公共 URL（例如 `https://prompt-commit-webhook.onrender.com`）。**
+</Accordion>
+
+## 在 LangSmith 中配置 Webhook
+
+一旦你的 FastAPI 服务器部署完成并且你获得了其公共 URL，就可以在 LangSmith 中配置 Webhook 了：
+
+1. 导航到你的 LangSmith 工作区。
+
+2. 前往 **Prompts**（提示词）部分。你将在此处看到你的提示词列表。
+
+   ![LangSmith Prompts section](/langsmith/images/prompt-commit-main.png)
+
+3. 在“提示词页面”的右上角，点击 **+ Webhook** 按钮。
+
+4. 你将看到一个用于配置 Webhook 的表单：
+
+   ![LangSmith Webhook configuration modal](/langsmith/images/prompt-commit-webhook.png)
+
+   * **Webhook URL：** 输入你已部署的 FastAPI 服务器端点的完整公共 URL。对于我们示例服务器，这将是 `https://prompt-commit-webhook.onrender.com/webhook/commit`。
+   * **Headers (Optional)（头部信息（可选））：**
+     * 你可以添加 LangSmith 在发送每个 Webhook 请求时将包含的自定义头部。
+
+5. **测试 Webhook：** LangSmith 提供了一个“Send Test Notification”（发送测试通知）按钮。使用此按钮向你的服务器发送一个示例有效载荷。检查你的服务器日志（例如在 Render 上）以确保它收到了请求并成功处理（或用于调试任何问题）。
+
+6. **保存** Webhook 配置。
+
+## 工作流程示意
+
+![Workflow Diagram showing: User saves prompt in LangSmith, LangSmith sends webhook to FastAPI Server, which interacts with GitHub to update files](/langsmith/images/prompt-sequence-diagram.png)
+
+现在，一切设置完毕，实际发生的情况如下：
+
+1. **修改提示词：** 用户（开发人员或非技术团队成员）在 LangSmith UI 中修改了提示词并保存，创建了一个新的“提示词提交”。
+
+2. **触发 Webhook：** LangSmith 检测到这个新的提示词提交并触发配置的 Webhook。
+
+3. **HTTP 请求：** LangSmith 向你的 FastAPI 服务器的公共 URL 发送一个 HTTP POST 请求（例如 `https://prompt-commit-webhook.onrender.com/webhook/commit`）。此请求的主体包含整个工作区的 JSON 提示词清单。
+
+4. **服务器接收载荷：** 你的 FastAPI 服务器的端点接收到请求。
+
+5. **GitHub 提交：** 服务器解析请求主体中的 JSON 清单。然后，它使用配置的 GitHub 个人访问令牌、仓库所有者、仓库名称、文件路径和分支来：
+
+   * 检查清单文件是否已存在于指定分支的仓库中，以获取其 SHA（这是更新现有文件所必需的）。
+   * 使用最新的提示词清单创建一个新的提交，创建文件或更新现有文件。提交信息将表明它是来自 LangSmith 的更新。
+
+6. **确认：** 你应该会在你的 GitHub 仓库中看到新的提交出现。
+
+   ![Manifest commited to GitHub](/langsmith/images/prompt-commit-github.png)
+
+你已成功将 LangSmith 提示词与 GitHub 同步！
+
+## 超越简单的提交
+
+我们示例中的 FastAPI 服务器执行了对整个提示词清单的直接提交。然而，这仅仅是一个起点。你可以扩展服务器的功能以执行更复杂的动作：
+
+* **细粒度提交：** 解析清单并将更改提交到单独的提示词文件，如果你更喜欢在仓库中拥有更细致的结构。
+* **触发 CI/CD：** 服务器可以（或除提交外）触发 CI/CD 管道（例如 Jenkins、GitHub Actions、GitLab CI），以部署暂存环境、运行测试或构建新的应用程序版本。
+* **更新数据库/缓存：** 如果应用程序从数据库或缓存中加载提示词，则直接更新这些存储。
+* **通知：** 发送关于提示词更改的通知到 Slack、电子邮件或其他通信渠道。
+* **选择性处理：** 根据 LangSmith 有效载荷中的元数据（例如，哪个特定提示词发生了变化，或由谁更改），你可以应用不同的逻辑。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\prompt-commit.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

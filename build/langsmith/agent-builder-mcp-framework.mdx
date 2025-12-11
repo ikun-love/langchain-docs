@@ -1,0 +1,205 @@
+---
+title: LangSmith 工具服务器
+sidebarTitle: MCP 框架
+---
+
+LangSmith 工具服务器是我们 MCP（Model Context Protocol）框架，它支持 LangSmith Agent Builder 中可用的工具。该框架使您能够构建和部署可与您的智能体（Agent）集成的自定义工具。它提供了一种标准化的方式来创建、部署和管理工具，并内置了身份验证和授权功能。
+
+定义该框架的 PyPi 包可以在 [此处](https://pypi.org/project/langsmith-tool-server/) 获取。
+
+## 快速开始
+
+安装 LangSmith 工具服务器和 LangChain CLI：
+
+```bash
+pip install langsmith-tool-server
+pip install langchain-cli-v2
+```
+
+创建一个新的工具包（toolkit）：
+
+```bash
+langchain tools new my-toolkit
+cd my-toolkit
+```
+
+这会创建一个具有以下结构的工具包：
+
+```
+my-toolkit/
+├── pyproject.toml
+├── toolkit.toml
+└── my_toolkit/
+    ├── __init__.py
+    ├── auth.py
+    └── tools/
+        ├── __init__.py
+        └── ...
+```
+
+使用 `@tool` 装饰器定义您的工具：
+
+```python
+from langsmith_tool_server import tool
+
+@tool
+def hello(name: str) -> str:
+    """根据名字打个招呼。"""
+    return f"Hello, {name}!"
+
+@tool
+def add(x: int, y: int) -> int:
+    """将两个数字相加。"""
+    return x + y
+
+TOOLS = [hello, add]
+```
+
+运行服务器：
+
+```bash
+langchain tools serve
+```
+
+您的工具服务器将启动在 `http://localhost:8000`。
+
+## 简单客户端示例
+
+这是一个简单的示例，用于列出可用工具并调用 `add` 工具：
+
+```python
+import asyncio
+import aiohttp
+
+async def mcp_request(url: str, method: str, params: dict = None):
+    async with aiohttp.ClientSession() as session:
+        # 构造 JSON-RPC 请求的 payload
+        payload = {"jsonrpc": "2.0", "method": method, "params": params or {}, "id": 1}
+        async with session.post(f"{url}/mcp", json=payload) as response:
+            return await response.json()
+
+async def main():
+    url = "http://localhost:8000"
+
+    # 列出工具
+    tools = await mcp_request(url, "tools/list")
+    print(f"Tools: {tools}")
+
+    # 调用 add 工具
+    result = await mcp_request(url, "tools/call", {"name": "add", "arguments": {"a": 5, "b": 3}})
+    print(f"Result: {result}")
+
+asyncio.run(main())
+```
+
+## 添加 OAuth 身份验证
+
+对于需要访问第三方 API（如 Google、GitHub、Slack 等）的工具，您可以使用 OAuth 身份验证，参考 [Agent Auth](/langsmith/agent-auth) 文档。
+
+在使用工具中的 OAuth 之前，您需要在 LangSmith 工作区设置中配置一个 OAuth 提供商。有关设置说明，请参阅 [Agent Auth 文档](/langsmith/agent-auth)。
+
+配置完成后，在工具装饰器中指定 `auth_provider`：
+
+```python
+from langsmith_tool_server import tool, Context
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+@tool(
+    auth_provider="google",
+    scopes=["https://www.googleapis.com/auth/gmail.readonly"],
+    integration="gmail"
+)
+async def read_emails(context: Context, max_results: int = 10) -> str:
+    """从 Gmail 中读取最近的邮件。"""
+    credentials = Credentials(token=context.token)
+    service = build('gmail', 'v1', credentials=credentials)
+    # ... Gmail API 调用
+    return f"Retrieved {max_results} emails"
+```
+
+带有 `auth_provider` 的工具必须：
+- 将 `context: Context` 作为第一个参数
+- 指定至少一个 `scope`
+- 使用 `context.token` 来进行经过身份验证的 API 调用
+
+## 用作 MCP 网关
+
+LangSmith 工具服务器可以作为 MCP 网关，将来自多个 MCP 服务器的工具聚合到一个单一的端点下。在您的 `toolkit.toml` 中配置 MCP 服务器：
+
+```toml
+[toolkit]
+name = "my-toolkit"
+tools = "./my_toolkit/__init__.py:TOOLS"
+
+[[mcp_servers]]
+name = "weather"
+transport = "streamable_http"
+url = "http://localhost:8001/mcp/"
+
+[[mcp_servers]]
+name = "math"
+transport = "stdio"
+command = "python"
+args = ["-m", "mcp_server_math"]
+```
+
+所有来自已连接 MCP 服务器的工具都通过您的服务器的 `/mcp` 端点暴露出来。MCP 工具会带有其服务器名称作为前缀，以避免冲突（例如：`weather.get_forecast`、`math.add`）。
+
+## 自定义身份验证
+
+自定义身份验证允许您验证请求并与您的身份提供商集成。在 `auth.py` 文件中定义一个身份验证处理程序：
+
+```python
+from langsmith_tool_server import Auth
+
+auth = Auth()
+
+@auth.authenticate
+async def authenticate(authorization: str = None) -> dict:
+    """验证请求并返回用户身份。"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise auth.exceptions.HTTPException(
+            status_code=401,
+            detail="Unauthorized"
+        )
+
+    token = authorization.replace("Bearer ", "")
+    # 使用您的身份提供商验证令牌
+    user = await verify_token_with_idp(token)
+
+    return {"identity": user.id}
+```
+
+该处理程序在每个请求上运行，并且必须返回一个包含 `identity`（以及可选的 `permissions`）的字典。
+
+## 使用远程 MCP 服务器
+
+Agent Builder 可以发现并使用来自远程 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器的工具。这使您可以连接到外部 MCP 服务器，并在智能体中使用它们的工具。
+
+### 配置
+
+在您的 LangSmith [工作区](/langsmith/administration-overview#workspaces) 中配置远程 MCP 服务器：
+
+1. 在 [LangSmith UI](https://smith.langchain.com) 中导航到您的工作区设置。
+2. 添加您的 MCP 服务器 URL 和任何必需的头部（例如：`Authorization: Bearer {{MCP_TOKEN}}`）。
+3. Agent Builder 会自动发现服务器上的工具，并在调用工具时应用配置的头部。
+
+<Note>
+在头部中使用工作区 Secret 占位符，如 `{{MCP_TOKEN}}`。平台会在运行时从您的工作区 Secret 中解析这些值。
+</Note>
+
+### 工作原理
+
+- Agent Builder 通过标准的 MCP 协议从远程 MCP 服务器发现工具。
+- 在工作区中配置的头部会在获取工具或调用工具时自动附加。
+- 来自远程服务器的工具可以与 Agent Builder 中的内置工具一起使用。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-builder-mcp-framework.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

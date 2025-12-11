@@ -1,0 +1,569 @@
+---
+title: 代码贡献
+sidebarTitle: 代码
+---
+
+我们非常欢迎代码贡献！无论您是修复错误（bug）、添加新功能，还是提高性能，您的贡献都将为成千上万的开发者带来更好的开发体验。
+
+## 入门指南
+
+<Note>
+    在提交大型**新功能或重构**之前，请先在 [论坛](https://forum.langchain.com/) 中讨论您的想法。这可以确保与项目目标保持一致，并避免重复劳动。
+
+    这不适用于错误修复或小型改进，这些可以直接通过 Pull Request (PR) 贡献。请参阅下面的快速入门指南。
+</Note>
+
+### 快速修复：提交 Bug 修复
+
+对于简单的错误修复，您可以立即开始：
+
+<Steps>
+    <Step title="复现问题">
+        创建一个最小化的测试用例来展示该错误。维护者和其他贡献者应该能够在无需额外设置或修改的情况下运行此测试并观察到失败。
+    </Step>
+
+    <Step title="Fork 仓库">
+        将 [LangChain](https://github.com/langchain-ai/langchain) 或 [LangGraph](https://github.com/langchain-ai/langgraph) 仓库 Fork 到您的 <Tooltip tip="如果 Fork 到组织 (organization) 账户，维护者将无法进行编辑。">个人 GitHub 账户</Tooltip>
+
+
+    </Step>
+
+    <Step title="克隆并设置环境">
+        ```bash
+        git clone https://github.com/your-username/name-of-forked-repo.git
+
+        # 例如，对于 LangChain:
+        git clone https://github.com/parrot123/langchain.git
+
+        # 对于 LangGraph:
+        git clone https://github.com/parrot123/langgraph.git
+        ```
+
+        ```bash
+        # 在您的仓库内部，安装依赖
+        uv sync --all-groups
+        ```
+
+        如果您之前没有安装过，您需要安装 [`uv`](https://docs.astral.sh/uv/)
+
+
+    </Step>
+
+    <Step title="创建分支">
+        为您的修复创建一个新分支。这有助于保持您的更改井井有条，并使后续提交 PR 更加容易。
+
+        ```bash
+        git checkout -b your-username/short-bugfix-name
+        ```
+    </Step>
+
+    <Step title="编写失败的测试">
+        添加 [单元测试](#test-writing-guidelines)，这些测试在没有修复的情况下应该会失败。这使我们能够验证错误是否已解决，并防止未来出现回归问题。
+    </Step>
+
+    <Step title="进行更改">
+        在修复错误时，请遵循我们的 [代码质量标准](#code-quality-standards)。进行**解决问题所需的最小更改**。
+    </Step>
+
+
+
+    <Step title="验证修复">
+        确保测试通过并且没有引入回归。在提交 PR 之前，请确保所有本地测试均已通过。
+
+        ```bash
+        make lint
+        make test
+
+        # 对于涉及集成的错误修复，也请运行：
+        make integration_tests
+        # (您可能需要设置 API 测试凭证)
+        ```
+
+
+    </Step>
+
+    <Step title="完善文档">
+        如果行为有所更改，请更新 docstrings（文档字符串）；对于复杂的逻辑，请添加注释。
+    </Step>
+
+    <Step title="提交 Pull Request">
+        遵循提供的 PR 模板。如果适用，请使用 [关闭关键字](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) (例如 `Fixes #ISSUE_NUMBER`) 来引用您正在修复的问题，以便在合并 PR 时自动关闭该问题。
+    </Step>
+</Steps>
+
+### 全面开发环境设置
+
+对于持续开发或大型贡献：
+
+1. 请查阅我们的 [贡献指南](#contribution-guidelines)，了解关于功能、错误修复和集成的具体要求。
+2. 按照下面的 [环境设置指南](#development-environment) 完成环境搭建。
+3. 理解 [仓库结构](#repository-structure) 和包的组织方式。
+4. 了解我们的 [开发工作流程](#development-workflow)，包括测试和代码规范检查。
+
+---
+
+## 贡献指南
+
+在开始为 LangChain 贡献代码之前，请花点时间思考一下您做出贡献的原因。如果您的唯一目标只是为简历添加“首次贡献”记录（或者您只是想快速获得一些成就），那么您可能更适合参加训练营或在线教程。
+
+为开源项目做贡献需要时间和精力，但它也可以帮助您成为更好的开发者并学习新技能。然而，重要的是要了解，这可能比遵循培训课程更困难、更慢。话虽如此，如果您愿意花时间把事情做好，为开源做贡献是值得的。
+
+### 向后兼容性
+
+<Warning>
+    除关键安全修复外，不允许对公共 API 进行破坏性更改。
+
+    有关主要版本发布的详细信息，请参阅我们的 [版本控制策略](/oss/python/versioning)。
+</Warning>
+
+通过以下方式保持兼容性：
+
+<AccordionGroup>
+    <Accordion title="稳定接口">
+        **必须保持**:
+        - 函数签名和参数名称
+        - 类接口和方法名称
+        - 返回值结构和类型
+        - 公共 API 的导入路径
+    </Accordion>
+
+    <Accordion title="安全更改">
+        **可接受的修改**:
+        - 添加新的可选参数
+
+
+        - 向类中添加新方法
+        - 在不改变行为的情况下提高性能
+        - 添加新的模块或函数
+    </Accordion>
+
+    <Accordion title="在进行更改之前">
+        - **这会破坏现有的用户代码吗？**
+        - 检查您的目标是否是公开的
+        - 如果需要，它是否在 `__init__.py` 中导出？
+
+        - 测试中是否存在现有的使用模式？
+    </Accordion>
+</AccordionGroup>
+
+### 新功能
+
+我们力求为新功能设定较高的标准。通常情况下，我们不会接受来自外部贡献者的新核心抽象，除非已经有一个问题证明了对此的迫切需求。这同样适用于基础设施和依赖项的更改。
+
+一般来说，功能贡献的要求包括：
+
+<Steps>
+    <Step title="设计讨论">
+        开一个 Issue 来说明：
+
+        - 您正在解决的问题
+        - 提议的 API 设计
+        - 预期的使用模式
+    </Step>
+
+    <Step title="实现">
+        - 遵循现有的代码模式
+        - 包含全面的测试和文档
+        - 考虑安全影响
+    </Step>
+
+    <Step title="集成考量">
+        - 此功能如何与现有功能交互？
+        - 有没有性能影响？
+        - 是否引入了新的依赖项？
+
+        我们将会拒绝那些可能导致安全漏洞或报告的功能请求。
+    </Step>
+</Steps>
+
+### 安全指南
+
+<Warning>
+    安全至关重要。切勿引入漏洞或不安全的模式。
+</Warning>
+
+安全检查清单：
+
+<AccordionGroup>
+    <Accordion title="输入验证">
+        - 验证和清理所有用户输入
+        - 在模板和查询中正确转义数据
+        - 切勿在用户数据上使用 `eval()`, `exec()`, 或 `pickle`，因为这可能导致任意代码执行漏洞
+
+
+    </Accordion>
+
+    <Accordion title="错误处理">
+        - 使用特定的异常类型
+        - 不要向错误消息中暴露敏感信息
+        - 实现适当的资源清理
+    </Accordion>
+
+    <Accordion title="依赖项">
+        - 避免添加硬性依赖项
+        - 保持可选依赖项的最小化
+        - 审查第三方包是否存在安全问题
+    </Accordion>
+</AccordionGroup>
+
+---
+
+## 开发环境
+
+<Warning>
+    我们的 Python 项目使用 [`uv`](https://docs.astral.sh/uv/getting-started/installation/) 进行依赖管理。请确保您安装了最新版本。
+</Warning>
+
+
+
+查看完 [贡献指南](#contribution-guidelines) 后，请为您要处理的包设置开发环境。
+
+<Tabs>
+    <Tab title="LangChain" icon="link">
+        <AccordionGroup>
+            <Accordion title="核心抽象" defaultOpen>
+                对于 `langchain-core` 的更改：
+
+                ```bash
+                cd libs/core
+                uv sync --all-groups
+                make test  # 在开始开发前确保测试通过
+                ```
+
+
+            </Accordion>
+
+            <Accordion title="主包">
+                对于 `langchain` 的更改：
+
+                ```bash
+                cd libs/langchain
+                uv sync --all-groups
+                make test  # 在开始开发前确保测试通过
+                ```
+
+
+            </Accordion>
+
+            <Accordion title="合作伙伴包">
+                对于 [合作伙伴集成](/oss/python/integrations/providers/overview) 的更改：
+
+                ```bash
+                cd libs/partners/langchain-{partner}
+                uv sync --all-groups
+                make test  # 在开始开发前确保测试通过
+                ```
+            </Accordion>
+
+
+            <Accordion title="社区包">
+                对于社区集成（位于 [单独的仓库](https://github.com/langchain-ai/langchain-community) 中）的更改：
+
+                ```bash
+                cd libs/community/langchain_community/path/to/integration
+                uv sync --all-groups
+                make test  # 在开始开发前确保测试通过
+                ```
+            </Accordion>
+
+
+        </AccordionGroup>
+    </Tab>
+    <Tab title="LangGraph" icon="circle-nodes">
+        待完成 - 稍后推出！同时，请遵循 LangChain 的相关说明。
+    </Tab>
+</Tabs>
+
+---
+
+## 仓库结构
+
+<Tabs>
+    <Tab title="LangChain" icon="link">
+        LangChain 被组织成一个包含多个包的单体仓库（monorepo）：
+
+        <AccordionGroup>
+            <Accordion title="核心包" defaultOpen>
+                - **[`langchain`](https://github.com/langchain-ai/langchain/tree/master/libs/langchain#readme)** (位于 `libs/langchain/`): 包含链、代理和检索逻辑的主包
+                - **[`langchain-core`](https://github.com/langchain-ai/langchain/tree/master/libs/core#readme)** (位于 `libs/core/`): 基础接口和核心抽象
+
+
+            </Accordion>
+
+            <Accordion title="合作伙伴包">
+                位于 `libs/partners/`，这些是针对特定集成的独立版本控制的包。例如：
+                - **[`langchain-openai`](https://github.com/langchain-ai/langchain/tree/master/libs/partners/openai#readme)**: [OpenAI](/oss/python/integrations/providers/openai) 集成
+                - **[`langchain-anthropic`](https://github.com/langchain-ai/langchain/tree/master/libs/partners/anthropic#readme)**: [Anthropic](/oss/python/integrations/providers/anthropic) 集成
+                - **[`langchain-google-genai`](https://github.com/langchain-ai/langchain-google/)**: [Google Generative AI](/oss/python/integrations/chat/google_generative_ai) 集成
+
+                许多合作伙伴包在外部代码库中。请查看[集成列表](/oss/python/integrations/providers/overview)以获取详细信息。
+
+
+
+            </Accordion>
+
+            <Accordion title="支持包">
+                - **[`langchain-text-splitters`](https://github.com/langchain-ai/langchain/tree/master/libs/text-splitters#readme)**: 文本分割工具
+                - **[`langchain-standard-tests`](https://github.com/langchain-ai/langchain/tree/master/libs/standard-tests#readme)**: 集成的标准测试套件
+                - **[`langchain-cli`](https://github.com/langchain-ai/langchain/tree/master/libs/cli#readme)**: 命令行界面
+                - **[`langchain-community`](https://github.com/langchain-ai/langchain-community)**: 社区维护的集成（位于单独的仓库）
+
+
+
+            </Accordion>
+        </AccordionGroup>
+    </Tab>
+    <Tab title="LangGraph" icon="circle-nodes">
+        待完成 - 稍后推出！同时，请遵循 LangChain 的相关说明。
+    </Tab>
+</Tabs>
+
+---
+
+## 开发工作流程
+
+### 测试要求
+
+<Info>
+    目录路径相对于您正在处理的包而言是相对的。
+</Info>
+
+所有代码更改都必须包含全面的测试。
+
+#### 单元测试
+
+**位置**: `tests/unit_tests/`
+
+
+
+**要求**:
+- 不允许进行网络调用
+- 测试所有代码路径，包括边缘情况
+- 对外部依赖使用模拟 (mocks)
+
+```bash
+make test
+
+# 或直接执行：
+uv run --group test pytest tests/unit_tests
+```
+
+
+
+#### 集成测试
+
+**位置**: `tests/integration_tests/`
+
+
+
+集成测试需要访问外部服务/提供者 API（这可能会产生费用），因此默认情况下不会运行它们。
+
+并非所有代码更改都需要集成测试，但请记住，在审查过程中，我们会单独要求/运行集成测试。
+
+**要求**:
+- 测试与外部服务的真实集成
+- 使用环境变量来存储 API 密钥
+- 如果凭证不可用，优雅地跳过
+
+```bash
+make integration_tests
+```
+
+
+
+### 代码质量标准
+
+贡献的代码必须遵守以下质量要求：
+
+<Tabs>
+    <Tab title="类型提示 (Type hints)">
+        **要求**: 为所有函数提供完整的类型注解
+
+        ```python
+        def process_documents(
+            docs: list[Document],
+            processor: DocumentProcessor,
+            *,
+            batch_size: int = 100
+        ) -> ProcessingResult:
+            """Process documents in batches.
+
+            Args:
+                docs: List of documents to process.
+                processor: Document processing instance.
+                batch_size: Number of documents per batch.
+
+            Returns:
+                Processing results with success/failure counts.
+            """
+        ```
+
+
+    </Tab>
+
+    <Tab title="文档">
+        **要求**: 所有公共函数使用 [Google 风格的文档字符串](https://google.github.io/styleguide/pyguide.html)
+
+
+
+        - 为所有参数和返回值添加文档说明
+        - 为复杂函数包含使用示例
+        - 文档化抛出的异常
+        - 重点关注“为什么”而不是“是什么”
+    </Tab>
+
+    <Tab title="代码风格">
+        **自动化**: 使用 [`ruff`](https://docs.astral.sh/ruff/) 进行格式化和代码检查
+
+        ```bash
+        make format  # 应用格式
+        make lint    # 检查风格和类型
+        ```
+
+
+
+        **标准**:
+        - 使用描述性的变量名
+        - 分解复杂的函数（目标是少于 20 行）
+        - 遵循代码库中现有的模式
+    </Tab>
+</Tabs>
+
+---
+
+## 测试和验证
+
+### 本地运行测试
+
+在提交 PR 之前，请确保您已完成以下步骤。请注意，LangChain 和 LangGraph 的要求略有不同。
+
+<Tabs>
+    <Tab title="LangChain" icon="link">
+        <Steps>
+            <Step title="单元测试">
+                ```bash
+                make test
+                ```
+
+
+                所有单元测试必须通过
+            </Step>
+
+            <Step title="集成测试">
+                ```bash
+                make integration_tests
+                ```
+
+
+                (如果您的更改影响了集成，则运行)
+            </Step>
+
+            <Step title="格式化">
+                ```bash
+                make format
+                make lint
+                ```
+
+
+                代码必须通过所有风格检查
+            </Step>
+
+            <Step title="类型检查">
+                ```bash
+                make type_check
+                ```
+                所有类型提示必须有效
+            </Step>
+
+
+            <Step title="提交 PR">
+                将您的分支推送到远程仓库并打开一个 Pull Request。使用提供的表单模板。使用[关闭关键字](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)来标记相关问题。提交后，请等待并确认 CI 检查通过。如果任何检查失败，请尽快解决问题 —— 维护者可能会关闭在合理时间内未通过 CI 的 PR。
+            </Step>
+        </Steps>
+    </Tab>
+    <Tab title="LangGraph" icon="circle-nodes">
+        待完成 - 稍后推出！同时，请遵循 LangChain 的相关说明。
+    </Tab>
+</Tabs>
+
+
+### 测试编写指南
+
+为了编写有效的测试，需要遵循一些良好的实践：
+
+- 在文档字符串中使用自然语言描述测试内容
+- 使用描述性的变量名
+- 确保断言详尽无遗
+
+
+
+<Tabs>
+    <Tab title="单元测试">
+        ```python
+        def test_document_processor_handles_empty_input():
+            """Test processor gracefully handles empty document list."""
+            processor = DocumentProcessor()
+
+            result = processor.process([])
+
+            assert result.success
+            assert result.processed_count == 0
+            assert len(result.errors) == 0
+        ```
+
+
+    </Tab>
+
+    <Tab title="集成测试">
+        ```python
+        @pytest.mark.requires("openai")
+        def test_openai_chat_integration():
+            """Test OpenAI chat integration with real API."""
+
+            chat = ChatOpenAI()
+            response = chat.invoke("Hello")
+
+            assert isinstance(response.content, str)
+            assert len(response.content) > 0
+        ```
+
+
+    </Tab>
+
+    <Tab title="Mock 用法">
+        ```python
+        def test_retry_mechanism(mocker):
+            """Test retry mechanism handles transient failures."""
+            mock_client = mocker.Mock()
+            mock_client.call.side_effect = [
+                ConnectionError("Temporary failure"),
+                {"result": "success"}
+            ]
+
+            service = APIService(client=mock_client)
+            result = service.call_with_retry()
+
+            assert result["result"] == "success"
+            assert mock_client.call.call_count == 2
+        ```
+
+
+    </Tab>
+</Tabs>
+
+## 寻求帮助
+
+我们的目标是提供尽可能易于访问的开发者环境。如果您在设置过程中遇到任何困难，请在 [社区 Slack](https://www.langchain.com/join-community) 中提问，或在 [论坛](https://forum.langchain.com/) 上发帖。
+
+<Check>
+    您现在已准备好向 LangChain 贡献高质量代码了！
+</Check>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\contributing\code.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

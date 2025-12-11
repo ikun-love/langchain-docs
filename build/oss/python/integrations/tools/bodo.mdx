@@ -1,0 +1,249 @@
+---
+title: Bodo 数据帧
+---
+
+本指南概述了如何使用集成了 [Bodo DataFrames](https://github.com/bodo-ai/Bodo) 的 `langchain-bodo` 包来创建智能体（Agent）并对大型数据集执行问答操作。该集成包的底层依赖于 Bodo DataFrames 和 `Python` 智能体。
+
+Bodo DataFrames 是一个高性能的数据帧库，它可以通过简单的导入更改来自动加速和扩展 Pandas 代码（如下文示例所示）。由于其强大的 Pandas 兼容性，Bodo DataFrames 使得那些擅长生成 Pandas 代码的大型语言模型（LLMs）能够更有效地回答关于更大数据集的问题，并将生成的代码扩展到 Pandas 本身的限制之外。
+
+**注意：`Python` 智能体执行由 LLM 生成的 Python 代码——如果生成的代码有害，这可能会带来风险。请谨慎使用。**
+
+## 设置
+
+在运行示例之前，请复制 [泰坦尼克数据集](https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv)，并在本地保存为 `titanic.csv`。
+
+安装 `langchain-bodo` 也会同时安装其依赖项 Bodo 和 Pandas：
+
+```bash pip
+pip install --quiet -U langchain-bodo langchain-openai
+```
+
+### 凭证
+
+Bodo DataFrames 是免费的，不需要额外的凭证。
+示例使用了 OpenAI 模型，如果尚未配置，请设置您的 `OPENAI_API_KEY`：
+
+```python
+import getpass
+import os
+
+if not os.environ.get("OPENAI_API_KEY"):
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:\n")
+```
+
+## 创建和调用智能体
+
+以下示例借鉴自 [Pandas 数据帧智能体笔记本](/oss/python/integrations/tools/pandas)，并进行了一些修改以突出关键区别。
+
+第一个示例展示了如何直接将 Bodo DataFrame 传递给 `create_bodo_dataframes_agent` 并提出一个简单的问题。
+
+```python
+from langchain.agents.agent_types import AgentType
+from langchain_bodo import create_bodo_dataframes_agent
+from langchain_openai import ChatOpenAI
+
+# 本地 titanic 数据的路径
+datapath = "titanic.csv"
+```
+
+```python
+import bodo.pandas as pd
+from langchain_openai import OpenAI
+
+df = pd.read_csv(datapath)
+```
+
+## 使用 `ZERO_SHOT_REACT_DESCRIPTION`
+
+这展示了如何使用 `ZERO_SHOT_REACT_DESCRIPTION` 智能体类型来初始化智能体。
+
+```python
+agent = create_bodo_dataframes_agent(
+    OpenAI(temperature=0), df, verbose=True, allow_dangerous_code=True
+)
+```
+
+## 使用 OpenAI Functions
+
+这展示了如何使用 `OPENAI_FUNCTIONS` 智能体类型来初始化智能体。请注意，这是上述方法的替代方案。
+
+```python
+agent = create_bodo_dataframes_agent(
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106"),
+    df,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    allow_dangerous_code=True,
+)
+```
+
+```python
+agent.invoke("有多少行数据？")
+```
+
+```output
+> Entering new AgentExecutor chain...
+
+Invoking: `python_repl_ast` with `{'query': 'len(df)'}`
+
+891数据帧中有 891 行。
+
+> Finished chain.
+```
+
+```output
+{'input': 'how many rows are there?', 'output': 'There are 891 rows in the dataframe.'}
+```
+
+## 使用 Bodo DataFrames 和预处理创建和调用智能体
+
+此示例展示了一个稍微复杂的使用场景：向 `create_bodo_dataframes_agent` 传递一个 Bodo DataFrame 并进行一些额外的预处理。由于 Bodo DataFrames 是惰性求值的（lazily evaluated），如果不需要所有列来回答问题，您可以节省计算资源。请注意，传递给智能体的 DataFrame 也可以比可用内存更大。
+
+```python
+df2 = df[["Age", "Pclass", "Survived", "Fare"]]
+
+# 使用 df.apply 进行潜在的昂贵计算：
+df2["Age"] = df2.apply(lambda x: x["Age"] if x["Pclass"] == 3 else 0, axis=1)
+
+agent = create_bodo_dataframes_agent(
+    OpenAI(temperature=0), df2, verbose=True, allow_dangerous_code=True
+)
+```
+
+```python
+# bdf["Age"] 列是惰性的，除非被智能体明确使用，否则不会求值。
+agent.invoke("在成功存活的人中，他们的平均票价是多少？")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: 我们需要过滤数据帧，只包含 Survived 等于 1 的行，然后计算 Fare 列的平均值。
+Action: python_repl_ast
+Action Input: df[df["Survived"] == 1]["Fare"].mean()48.3954076023391748.39540760233917 是成功存活者的平均票价。
+Final Answer: 48.39540760233917
+
+> Finished chain.
+```
+
+```output
+{'input': 'Out of the people who survived, what was their average fare?', 'output': '48.39540760233917'}
+```
+
+## 多数据帧示例
+
+您也可以向智能体传递多个数据帧。
+请注意，虽然 Bodo DataFrames 支持 Pandas 中大多数常见的计算密集型操作，但如果智能体生成的代码当前不受支持（请参阅下文的警告），数据帧将转换回 Pandas 以防止错误。
+
+有关当前支持的功能的更多详细信息，请参阅 [Bodo DataFrames API 文档](https://docs.bodo.ai/latest/api_docs/dataframe_lib/)。
+
+```python
+agent = create_bodo_dataframes_agent(
+    OpenAI(temperature=0), [df, df2], verbose=True, allow_dangerous_code=True
+)
+agent.invoke("年龄列中有多少行的值不同？")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: 我需要比较两个数据帧，并计算年龄值不同的行数。
+Action: python_repl_ast
+Action Input: len(df1[df1["Age"] != df2["Age"]])
+
+... BodoLibFallbackWarning: Series._cmp_method is not implemented in Bodo DataFrames for the specified arguments yet. Falling back to Pandas (may be slow or run out of memory).
+Exception: binary operation arguments must have the same dataframe source.
+    warnings.warn(BodoLibFallbackWarning(msg))
+... BodoLibFallbackWarning: DataFrame.__getitem__ is not implemented in Bodo DataFrames for the specified arguments yet. Falling back to Pandas (may be slow or run out of memory).
+Exception: DataFrame getitem: Only selecting columns or filtering with BodoSeries is supported.
+    warnings.warn(BodoLibFallbackWarning(msg))
+
+359年龄值不同的行数为 359 行。
+Final Answer: 359
+
+> Finished chain.
+```
+
+```output
+{'input': 'how many rows in the age column are different?', 'output': '359'}
+```
+
+## 使用 `number_of_head_rows` 优化智能体调用
+
+默认情况下，数据帧的头部（head）内容会作为 Markdown 表格嵌入到提示（prompt）中。由于 Bodo DataFrames 是惰性求值的，这种头部操作可以被优化，但在某些情况下可能仍然很慢。作为一种优化措施，您可以将头部行数设置为 0，这样在提示生成期间就不会发生任何求值。
+
+```python
+agent = create_bodo_dataframes_agent(
+    OpenAI(temperature=0),
+    df,
+    verbose=True,
+    number_of_head_rows=0,
+    allow_dangerous_code=True,
+)
+agent.invoke("所有女性乘客的平均年龄是多少？")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: 我们需要过滤数据帧以仅包含女性乘客，然后计算平均年龄。
+Action: python_repl_ast
+Action Input: df[df["Sex"] == "female"]["Age"].mean()27.91570881226053727.915708812260537 似乎是女性乘客的一个合理的平均年龄。
+Final Answer: 27.915708812260537
+
+> Finished chain.
+```
+
+```output
+{'input': 'What is the average age of all female passengers?', 'output': '27.915708812260537'}
+```
+
+## 传递 Pandas 数据帧
+
+您也可以向 `create_bodo_dataframes_agent` 传递一个或多个 Pandas 数据帧。这些数据帧在传递给智能体之前将被转换为 Bodo 格式。
+
+```python
+import pandas
+
+pdf = pandas.read_csv(datapath)
+
+agent = create_bodo_dataframes_agent(
+    OpenAI(temperature=0), pdf, verbose=True, allow_dangerous_code=True
+)
+```
+
+```python
+agent.invoke("平均年龄的平方根是多少？")
+```
+
+```output
+> Entering new AgentExecutor chain...
+Thought: 我们需要先计算平均年龄，然后求平方根。
+Action: python_repl_ast
+Action Input: df["Age"].mean()29.69911764705882 现在我们有了平均年龄，我们可以求平方根。
+Action: python_repl_ast
+Action Input: math.sqrt(df["Age"].mean())NameError: name 'math' is not defined 我们需要导入 math 库才能使用 sqrt 函数。
+Action: python_repl_ast
+Action Input: import math 现在我们可以求平方根了。
+Action: python_repl_ast
+Action Input: math.sqrt(df["Age"].mean())5.449689683556195 我现在知道最终答案了。
+Final Answer: 5.449689683556195
+
+> Finished chain.
+```
+
+```output
+{'input': 'What is the square root of the average age?', 'output': '5.449689683556195'}
+```
+
+---
+
+## API 参考
+
+[Bodo DataFrames API 文档](https://docs.bodo.ai/latest/api_docs/dataframe_lib/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\bodo.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

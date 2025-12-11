@@ -1,0 +1,56 @@
+---
+title: Upstage 基础事实核查
+---
+
+本指南介绍了如何开始使用 Upstage 的基础事实核查（Groundedness Check）模型。
+
+## 安装
+
+安装 `langchain-upstage` 软件包。
+
+```bash
+pip install -U langchain-upstage
+```
+
+## 环境设置
+
+请确保设置以下环境变量：
+
+- `UPSTAGE_API_KEY`: 您的 Upstage API 密钥，可从 [Upstage 开发者文档](https://developers.upstage.ai/docs/getting-started/quick-start) 获取。
+
+```python
+import os
+
+os.environ["UPSTAGE_API_KEY"] = "YOUR_API_KEY"
+```
+
+## 使用方法
+
+初始化 `UpstageGroundednessCheck` 类。
+
+```python
+from langchain_upstage import UpstageGroundednessCheck
+
+groundedness_check = UpstageGroundednessCheck()
+```
+
+使用 `invoke` 方法来核查输入文本的事实基础是否充分（即可靠性）。
+
+```python
+request_input = {
+    "context": "Mauna Kea is an inactive volcano on the island of Hawai'i. Its peak is 4,207.3 m above sea level, making it the highest point in Hawaii and second-highest peak of an island on Earth.",
+    "answer": "Mauna Kea is 5,207.3 meters tall.",
+}
+
+response = groundedness_check.invoke(request_input)
+print(response)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\upstage_groundedness_check.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

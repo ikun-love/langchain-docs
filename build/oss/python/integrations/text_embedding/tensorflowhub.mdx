@@ -1,0 +1,52 @@
+---
+title: TensorFlow Hub
+---
+
+> [TensorFlow Hub](https://www.tensorflow.org/hub) 是一个预训练机器学习模型的仓库，这些模型可以随时针对您的特定任务进行微调（fine-tuning）并在任何地方部署。您只需几行代码即可复用像 `BERT` 和 `Faster R-CNN` 这样的已训练模型。
+>
+>
+我们来加载 TensorflowHub 嵌入（Embedding）类。
+
+```python
+from langchain_community.embeddings import TensorflowHubEmbeddings
+```
+
+```python
+embeddings = TensorflowHubEmbeddings()
+```
+
+```output
+2023-01-30 23:53:01.652176: I tensorflow/core/platform/cpu_feature_guard.cc:193] 此 TensorFlow 二进制文件已使用 oneAPI Deep Neural Network Library (oneDNN) 进行了优化，可在性能关键操作中使用以下 CPU 指令： AVX2 FMA
+要在其他操作中启用它们，请使用适当的编译器标志重新构建 TensorFlow。
+2023-01-30 23:53:34.362802: I tensorflow/core/platform/cpu_feature_guard.cc:193] 此 TensorFlow 二进制文件已使用 oneAPI Deep Neural Network Library (oneDNN) 进行了优化，可在性能关键操作中使用以下 CPU 指令： AVX2 FMA
+要在其他操作中启用它们，请使用适当的编译器标志重新构建 TensorFlow。
+```
+
+```python
+text = "This is a test document."
+```
+
+```python
+query_result = embeddings.embed_query(text)
+```
+
+```python
+doc_results = embeddings.embed_documents(["foo"])
+```
+
+```python
+doc_results
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\tensorflowhub.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

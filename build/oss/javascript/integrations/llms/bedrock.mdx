@@ -1,0 +1,246 @@
+---
+title: Bedrock
+---
+
+<Warning>
+**您当前正在浏览记录 Amazon Bedrock 模型用作文本补全模型的页面。Bedrock 上许多流行的模型都是[聊天补全模型](/oss/javascript/langchain/models)。**
+
+您可能正在寻找[此页面](/oss/javascript/integrations/chat/bedrock/)。
+</Warning>
+
+> [Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，通过 API 提供了来自领先 AI 初创公司和亚马逊的基础模型 (FM)。您可以从各种 FM 中进行选择，以找到最适合您使用场景的模型。
+
+这将帮助您使用 LangChain 开始使用 Bedrock 补全模型 (LLM)。有关 `Bedrock` 功能和配置选项的详细文档，请参阅[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html)。
+
+## 概述
+
+### 集成详情
+
+| 类名 | 包名 | 本地 | 可序列化 | [PY 支持](https://python.langchain.com/docs/integrations/llms/bedrock) | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [Bedrock](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html) | [@langchain/community](https://api.js.langchain.com/modules/langchain_community_llms_bedrock.html) | ❌ | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+
+## 设置
+
+要访问 Bedrock 模型，您需要创建一个 AWS 账户，获取一个 API 密钥，并安装 `@langchain/community` 集成以及一些对等依赖项。
+
+### 凭证
+
+请访问 [aws.amazon.com](https://aws.amazon.com) 注册 AWS Bedrock 并生成 API 密钥。完成此操作后，请设置以下环境变量：
+
+```bash
+export BEDROCK_AWS_REGION="您的-区域-url"
+export BEDROCK_AWS_ACCESS_KEY_ID="您的-访问密钥-id"
+export BEDROCK_AWS_SECRET_ACCESS_KEY="您的-密钥-access-key"
+```
+
+如果您想对模型的调用进行自动追踪，您也可以取消注释以下行来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="您的-api-密钥"
+```
+
+### 安装
+
+LangChain Bedrock 集成位于 `@langchain/community` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+然后安装对等依赖项：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+</CodeGroup>
+
+您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+然后安装对等依赖项：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+</CodeGroup>
+
+您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @langchain/community @langchain/core
+```
+</CodeGroup>
+
+然后安装对等依赖项：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+</CodeGroup>
+
+您也可以通过省略 `@aws-sdk/credential-provider-node` 依赖项并使用 `web` 入口点，在 Web 环境（如 Edge 函数或 Cloudflare Workers）中使用 Bedrock：
+
+<CodeGroup>
+```bash npm
+npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash yarn
+yarn add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+```bash pnpm
+pnpm add @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
+```
+</CodeGroup>
+
+
+## 实例化
+
+现在我们可以实例化模型对象并生成聊天补全：
+
+```typescript
+// @lc-docs-hide-cell
+// Deno 需要这些导入以及加载环境变量的方式。
+// 我们不希望在文档中暴露它们。
+// 在下面的单元格中，我们有一个带有 node 代码的 typescript markdown 代码块。
+import "@aws-sdk/credential-provider-node";
+import "@smithy/protocol-http";
+import "@aws-crypto/sha256-js";
+import "@smithy/protocol-http";
+import "@smithy/signature-v4";
+import "@smithy/eventstream-codec";
+import "@smithy/util-utf8";
+import "@aws-sdk/types";
+import { Bedrock } from "@langchain/community/llms/bedrock"
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
+const llm = new Bedrock({
+  model: "anthropic.claude-v2",
+  region: "us-east-1",
+  // endpointUrl: "custom.amazonaws.com",
+  credentials: {
+    accessKeyId: getEnvironmentVariable("BEDROCK_AWS_ACCESS_KEY_ID"),
+    secretAccessKey: getEnvironmentVariable("BEDROCK_AWS_SECRET_ACCESS_KEY"),
+  },
+  temperature: 0,
+  maxTokens: undefined,
+  maxRetries: 2,
+  // 其他参数...
+})
+```
+
+```typescript
+import { Bedrock } from "@langchain/community/llms/bedrock"
+
+const llm = new Bedrock({
+  model: "anthropic.claude-v2",
+  region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+  // endpointUrl: "custom.amazonaws.com",
+  credentials: {
+    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
+  },
+  temperature: 0,
+  maxTokens: undefined,
+  maxRetries: 2,
+  // 其他参数...
+})
+```
+
+## 调用
+
+请注意，某些模型需要特定的提示技术。例如，如果提示不以 `Human:` 开头，Anthropic 的 Claude-v2 模型将抛出错误。
+
+```typescript
+const inputText = "Human: Bedrock 是一家人工智能公司，它\nAssistant: "
+
+const completion = await llm.invoke(inputText)
+completion
+```
+
+```output
+" 以下是关于 Bedrock AI 的几个要点：\n" +
+  "\n" +
+  "- Bedrock 成立于 2021 年，总部位于旧金山"... 116 more characters
+```
+
+---
+
+## API 参考
+
+有关所有 Bedrock 功能和配置的详细文档，请访问[API 参考](https://api.js.langchain.com/classes/langchain_community_llms_bedrock.Bedrock.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\bedrock.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

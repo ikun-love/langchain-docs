@@ -1,0 +1,63 @@
+---
+title: YandexGPT
+---
+
+本指南将介绍如何将 LangChain 与 [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) 配合使用。
+
+要开始使用，您需要安装 `yandexcloud` Python 包。
+
+```python
+pip install -qU  yandexcloud
+```
+
+首先，您需要创建一个具有 `ai.languageModels.user` 角色的 [服务账户](https://cloud.yandex.com/en/docs/iam/operations/sa/create)。
+
+接下来，您有两种认证方式可供选择：
+
+- [IAM 令牌](https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa)。
+    您可以在构造函数参数 `iam_token` 中指定令牌，或者在环境变量 `YC_IAM_TOKEN` 中设置。
+
+- [API 密钥](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
+    您可以在构造函数参数 `api_key` 中指定密钥，或者在环境变量 `YC_API_KEY` 中设置。
+
+要指定使用的模型，可以使用 `model_uri` 参数。有关更多详细信息，请参阅[文档](https://cloud.yandex.com/en/docs/yandexgpt/concepts/models#yandexgpt-generation)。
+
+默认情况下，将使用 `folder_id` 参数（或环境变量 `YC_FOLDER_ID` 中指定的文件夹）中的最新版本的 `yandexgpt-lite` 模型。
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms import YandexGPT
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+template = "What is the capital of {country}?"
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+llm = YandexGPT()
+```
+
+```python
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+```python
+country = "Russia"
+
+llm_chain.invoke(country)
+```
+
+```output
+'The capital of Russia is Moscow.'
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\yandex.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

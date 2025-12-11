@@ -1,0 +1,595 @@
+---
+title: "嵌入模型"
+---
+
+## 概述
+
+<Note>
+本概述涵盖**基于文本的嵌入模型**。LangChain 目前不支持多模态嵌入。
+</Note>
+
+嵌入模型可以将原始文本（如句子、段落或推文）转换成一个固定长度的数字向量，该向量捕获了文本的**语义含义**。这些向量使得机器能够基于含义而非精确的词语进行文本比较和搜索。
+
+在实践中，这意味着想法相似的文本在向量空间中会彼此靠近。例如，嵌入模型不仅能匹配短语 *"machine learning"*，还能在使用了不同措辞的情况下，检索出讨论相关概念的文档。
+
+### 工作原理
+
+1. **向量化 (Vectorization)** — 模型将每个输入字符串编码为一个高维向量。
+2. **相似度评分 (Similarity scoring)** — 使用数学指标比较向量，以衡量底层文本的相关程度。
+
+### 相似度度量标准 (Similarity metrics)
+
+比较嵌入时，通常使用以下几种度量标准：
+
+* **余弦相似度 (Cosine similarity)** — 测量两个向量之间的夹角。
+* **欧几里得距离 (Euclidean distance)** — 测量两点之间的直线距离。
+* **点积 (Dot product)** — 测量一个向量在另一个向量上的投影程度。
+
+## 接口 (Interface)
+
+LangChain 通过 [Embeddings](https://reference.langchain.com/javascript/classes/_langchain_core.embeddings.Embeddings.html) 接口为文本嵌入模型（例如 OpenAI, Cohere, Hugging Face）提供了一个标准的接口。
+
+提供两种主要方法：
+
+* `embedDocuments(documents: string[]) → number[][]`: 对一组文档进行嵌入。
+* `embedQuery(text: string) → number[]`: 对单个查询进行嵌入。
+
+<Note>
+该接口允许使用不同的策略对查询和文档进行嵌入，尽管在实践中大多数服务提供商处理方式相同。
+</Note>
+
+## 安装和使用
+
+<AccordionGroup>
+<Accordion title="OpenAI">
+
+安装依赖项：
+
+<CodeGroup>
+
+```bash npm
+npm i @langchain/openai
+```
+```bash yarn
+yarn add @langchain/openai
+```
+```bash pnpm
+pnpm add @langchain/openai
+```
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+OPENAI_API_KEY=your-api-key
+```
+
+实例化模型：
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-large"
+});
+```
+
+</Accordion>
+<Accordion title="Azure">
+
+安装依赖项
+
+<CodeGroup>
+
+```bash npm
+npm i @langchain/openai
+```
+```bash yarn
+yarn add @langchain/openai
+```
+
+```bash pnpm
+pnpm add @langchain/openai
+```
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+AZURE_OPENAI_API_INSTANCE_NAME=<YOUR_INSTANCE_NAME>
+AZURE_OPENAI_API_KEY=<YOUR_KEY>
+AZURE_OPENAI_API_VERSION="2024-02-01"
+```
+
+实例化模型：
+
+```typescript
+import { AzureOpenAIEmbeddings } from "@langchain/openai";
+
+const embeddings = new AzureOpenAIEmbeddings({
+  azureOpenAIApiEmbeddingsDeploymentName: "text-embedding-ada-002"
+});
+```
+
+</Accordion>
+
+<Accordion title="AWS">
+
+安装依赖项：
+
+<CodeGroup>
+
+```bash npm
+npm i @langchain/aws
+```
+
+```bash yarn
+yarn add @langchain/aws
+```
+
+```bash pnpm
+pnpm add @langchain/aws
+```
+
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+BEDROCK_AWS_REGION=your-region
+```
+
+实例化模型：
+
+```typescript
+import { BedrockEmbeddings } from "@langchain/aws";
+
+const embeddings = new BedrockEmbeddings({
+  model: "amazon.titan-embed-text-v1"
+});
+```
+
+</Accordion>
+<Accordion title="Google Gemini">
+
+安装依赖项：
+
+<CodeGroup>
+```bash npm
+npm i @langchain/google-genai
+```
+
+```bash yarn
+yarn add @langchain/google-genai
+```
+
+```bash pnpm
+pnpm add @langchain/google-genai
+```
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+GOOGLE_API_KEY=your-api-key
+```
+
+实例化模型：
+
+```typescript
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+
+const embeddings = new GoogleGenerativeAIEmbeddings({
+  model: "text-embedding-004"
+});
+```
+
+</Accordion>
+<Accordion title="Google Vertex">
+
+安装依赖项：
+
+<CodeGroup>
+
+```bash npm
+npm i @langchain/google-vertexai
+```
+
+```bash yarn
+yarn add @langchain/google-vertexai
+```
+
+```bash pnpm
+pnpm add @langchain/google-vertexai
+```
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=credentials.json
+```
+
+实例化模型：
+
+```typescript
+import { VertexAIEmbeddings } from "@langchain/google-vertexai";
+
+const embeddings = new VertexAIEmbeddings({
+  model: "gemini-embedding-001"
+});
+```
+
+</Accordion>
+<Accordion title="MistralAI">
+
+安装依赖项：
+
+<CodeGroup>
+```bash npm
+npm i @langchain/mistralai
+```
+
+```bash yarn
+yarn add @langchain/mistralai
+```
+
+```bash pnpm
+pnpm add @langchain/mistralai
+```
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+MISTRAL_API_KEY=your-api-key
+```
+
+实例化模型：
+
+```typescript
+import { MistralAIEmbeddings } from "@langchain/mistralai";
+
+const embeddings = new MistralAIEmbeddings({
+  model: "mistral-embed"
+});
+```
+
+</Accordion>
+<Accordion title="Cohere">
+
+安装依赖项：
+
+<CodeGroup>
+```bash npm
+npm i @langchain/cohere
+```
+
+```bash yarn
+yarn add @langchain/cohere
+```
+
+```bash pnpm
+pnpm add @langchain/cohere
+```
+
+</CodeGroup>
+
+添加环境变量：
+
+```bash
+COHERE_API_KEY=your-api-key
+```
+
+实例化模型：
+
+```typescript
+import { CohereEmbeddings } from "@langchain/cohere";
+
+const embeddings = new CohereEmbeddings({
+  model: "embed-english-v3.0"
+});
+```
+
+</Accordion>
+<Accordion title="Ollama">
+
+安装依赖项：
+
+<CodeGroup>
+```bash npm
+npm i @langchain/ollama
+```
+
+```bash yarn
+yarn add @langchain/ollama
+```
+
+```bash pnpm
+pnpm add @langchain/ollama
+```
+</CodeGroup>
+
+实例化模型：
+
+```typescript
+import { OllamaEmbeddings } from "@langchain/ollama";
+
+const embeddings = new OllamaEmbeddings({
+  model: "llama2",
+  baseUrl: "http://localhost:11434", // 默认值
+});
+```
+
+</Accordion>
+</AccordionGroup>
+
+## 缓存 (Caching)
+
+嵌入模型的结果可以存储或临时缓存，以避免重复计算。
+
+可以使用 `CacheBackedEmbeddings` 来缓存嵌入。这个包装器会将嵌入存储在一个键值存储中，其中文本被哈希化，哈希值用作缓存中的键。
+
+初始化 `CacheBackedEmbeddings` 的主要受支持方式是 `fromBytesStore`。它接受以下参数：
+
+- **underlyingEmbeddings**: 用于嵌入的底层嵌入器。
+- **documentEmbeddingStore**: 用于缓存文档嵌入的任何 [`BaseStore`](/oss/javascript/integrations/stores/) 实例。
+- **options.namespace**: (可选，默认为 `""`) 用于文档缓存的命名空间。有助于避免冲突（例如，可以将其设置为嵌入模型的名称）。
+
+<Important>
+- 使用不同的嵌入模型时，务必设置 `namespace` 参数以避免冲突。
+- 默认情况下，`CacheBackedEmbeddings` 不会缓存查询嵌入。要启用此功能，请指定 `query_embedding_store`。
+</Important>
+
+```typescript
+import { CacheBackedEmbeddings } from "@langchain/classic/embeddings/cache_backed";
+import { InMemoryStore } from "@langchain/core/stores";
+
+const underlyingEmbeddings = new OpenAIEmbeddings();
+
+const inMemoryStore = new InMemoryStore();
+
+const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
+  underlyingEmbeddings,
+  inMemoryStore,
+  {
+    namespace: underlyingEmbeddings.model,
+  }
+);
+
+// 示例：缓存查询嵌入
+const tic = Date.now();
+const queryEmbedding = cacheBackedEmbeddings.embedQuery("Hello, world!");
+console.log(`第一次调用耗时: ${Date.now() - tic}ms`);
+
+// 示例：缓存文档嵌入
+const tic = Date.now();
+const documentEmbedding = cacheBackedEmbeddings.embedDocuments(["Hello, world!"]);
+console.log(`缓存创建时间: ${Date.now() - tic}ms`);
+```
+
+在生产环境中，您通常会使用更健壮的持久化存储，例如数据库或云存储。请参阅 [stores 集成](/oss/javascript/integrations/stores/) 查看可用选项。
+
+## 所有集成
+
+<Columns cols={3}>
+  <Card
+    title="阿里云通义"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/alibaba_tongyi"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Azure OpenAI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/azure_openai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="百度千帆"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/baidu_qianfan"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Amazon Bedrock"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/bedrock"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="字节跳动豆包"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/bytedance_doubao"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Cloudflare Workers AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/cloudflare_ai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Cohere"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/cohere"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="DeepInfra"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/deepinfra"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Fireworks"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/fireworks"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Google Generative AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/google_generative_ai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Google Vertex AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/google_vertex_ai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Gradient AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/gradient_ai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="HuggingFace 推理"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/hugging_face_inference"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="IBM watsonx.ai"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/ibm"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Jina"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/jina"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Llama CPP"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/llama_cpp"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Minimax"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/minimax"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="MistralAI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/mistralai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Mixedbread AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/mixedbread_ai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Nomic"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/nomic"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Ollama"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/ollama"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="OpenAI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/openai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Pinecone"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/pinecone"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Prem AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/premai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="腾讯混元"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/tencent_hunyuan"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="TensorFlow"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/tensorflow"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="TogetherAI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/togetherai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="HuggingFace Transformers"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/transformers"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="Voyage AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/voyageai"
+    arrow="true"
+    cta="查看指南"
+  />
+  <Card
+    title="智谱AI"
+    icon="link"
+    href="/oss/javascript/integrations/text_embedding/zhipuai"
+    arrow="true"
+    cta="查看指南"
+  />
+</Columns>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\text_embedding\index.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

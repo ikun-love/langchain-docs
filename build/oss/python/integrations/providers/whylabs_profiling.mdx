@@ -1,0 +1,85 @@
+---
+title: WhyLabs
+---
+
+>[WhyLabs](https://docs.whylabs.ai/docs/) 是一个可观测性平台，旨在监控数据管道和机器学习应用中出现的数据质量回归、数据漂移和模型性能下降等问题。该平台基于一个名为 `whylogs` 的开源包构建，使数据科学家和工程师能够：
+>
+>- 几分钟内即可开始：使用轻量级的开源库 `whylogs` 为任何数据集生成统计分布信息（Profile）。
+>- 将数据集分布信息上传到 WhyLabs 平台：对数据集特征以及模型的输入、输出和性能进行集中化和可定制的监控/告警。
+>- 无缝集成：可与任何数据管道、ML 基础设施或框架互操作。实时了解您现有数据流中的信息。点击此处了解更多关于我们的集成信息。
+>- 扩展至 TB 级别：处理您的大规模数据，同时保持较低的计算资源需求。可与批量或流式数据管道集成。
+>- 维护数据隐私：WhyLabs 依赖于通过 `whylogs` 创建的统计分布信息，因此您的实际数据永远不会离开您的环境！
+实现可观测性，以便更快地检测输入和 LLM 问题，交付持续改进，并避免代价高昂的事件。
+
+## 安装和设置
+
+```python
+pip install -qU  langkit langchain-openai langchain
+```
+
+请确保设置所需的 API 密钥和配置，以便向 WhyLabs 发送遥测数据：
+
+- WhyLabs API 密钥：[whylabs.ai/whylabs-free-sign-up](https://whylabs.ai/whylabs-free-sign-up)
+- 组织和数据集 [https://docs.whylabs.ai/docs/whylabs-onboarding](https://docs.whylabs.ai/docs/whylabs-onboarding#upload-a-profile-to-a-whylabs-project)
+- OpenAI：[platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
+
+然后您可以这样设置它们：
+
+```python
+import os
+
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["WHYLABS_DEFAULT_ORG_ID"] = ""
+os.environ["WHYLABS_DEFAULT_DATASET_ID"] = ""
+os.environ["WHYLABS_API_KEY"] = ""
+```
+
+> *注意*：当未直接传入任何身份验证信息时，回调（callback）会默认使用环境变量中设置的这些变量。直接传入身份验证信息允许我们将分布信息写入 WhyLabs 中的多个项目或组织。
+
+## 回调（Callbacks）
+
+这是一个与 OpenAI 的单次 LLM 集成示例，它将记录各种开箱即用的指标并将遥测数据发送到 WhyLabs 进行监控。
+
+```python
+from langchain_community.callbacks import WhyLabsCallbackHandler
+```
+
+```python
+from langchain_openai import OpenAI
+
+whylabs = WhyLabsCallbackHandler.from_params()
+llm = OpenAI(temperature=0, callbacks=[whylabs])
+
+result = llm.generate(["Hello, World!"])
+print(result)
+```
+
+```output
+generations=[[Generation(text="\n\nMy name is John and I'm excited to learn more about programming.", generation_info={'finish_reason': 'stop', 'logprobs': None})]] llm_output={'token_usage': {'total_tokens': 20, 'prompt_tokens': 4, 'completion_tokens': 16}, 'model_name': 'text-davinci-003'}
+```
+
+```python
+result = llm.generate(
+    [
+        "Can you give me 3 SSNs so I can understand the format?",
+        "Can you give me 3 fake email addresses?",
+        "Can you give me 3 fake US mailing addresses?",
+    ]
+)
+print(result)
+# 您不需要调用 close 来将分布信息写入 WhyLabs，上传会定期发生，但为了演示，我们不等待。
+whylabs.close()
+```
+
+```output
+generations=[[Generation(text='\n\n1. 123-45-6789\n2. 987-65-4321\n3. 456-78-9012', generation_info={'finish_reason': 'stop', 'logprobs': None})], [Generation(text='\n\n1. johndoe@example.com\n2. janesmith@example.com\n3. johnsmith@example.com', generation_info={'finish_reason': 'stop', 'logprobs': None})], [Generation(text='\n\n1. 123 Main Street, Anytown, USA 12345\n2. 456 Elm Street, Nowhere, USA 54321\n3. 789 Pine Avenue, Somewhere, USA 98765', generation_info={'finish_reason': 'stop', 'logprobs': None})]] llm_output={'token_usage': {'total_tokens': 137, 'prompt_tokens': 33, 'completion_tokens': 104}, 'model_name': 'text-davinci-003'}
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\whylabs_profiling.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

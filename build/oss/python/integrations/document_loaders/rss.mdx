@@ -1,0 +1,130 @@
+---
+title: RSS 源
+---
+
+本篇内容涵盖了如何从一系列 RSS 源 URL 中加载 HTML 新闻文章，并将它们转换为我们下游可以使用的文档格式。
+
+```python
+pip install -qU  feedparser newspaper3k listparser
+```
+
+```python
+from langchain_community.document_loaders import RSSFeedLoader
+```
+
+```python
+urls = ["https://news.ycombinator.com/rss"]
+```
+
+将 `urls` 传入以下代码以将它们加载到 `Document` 对象中：
+
+```python
+loader = RSSFeedLoader(urls=urls)
+data = loader.load()
+print(len(data))
+```
+
+```python
+print(data[0].page_content)
+```
+
+```output
+(下一篇 Rich)
+
+2023 年 8 月 4 日
+
+Rich Hickey
+
+怀着无比的失落和乐观的心情，我在此宣布我（经过深思熟虑的）退出商业软件开发，并结束我在 Nubank 的工作。看到 Clojure 和 Datomic 在大规模应用中取得成功，这真是令人振奋。
+
+我期待着我将继续作为一名独立开发者，与 Alex、Stu、Fogus 以及许多其他人一起，维护和增强 Clojure 的持续工作。我们为 1.12 及更高版本规划了许多有用的功能。这个社区依然友好、成熟且富有成效，并将 Clojure 带入了许多令人兴奋的新领域。
+
+我想重点感谢 Nubank 对 Alex、Fogus 和核心团队以及整个 Clojure 社区的持续赞助。
+
+Stu 将继续在 Nubank 领导 Datomic 的开发工作，Datomic 团队在那里不断发展壮大。我对 Datomic 新的免费可用性将把项目带向何方感到特别兴奋。
+
+我在 Cognitect 的时光是我的职业生涯亮点。我从我们团队的每一个人身上都学到了东西，并永远感激我们之间所有的互动。要感谢的人太多了，但我必须向 Stu 和 Justin 表示我最诚挚的谢意和爱意，感谢他们（一再）对我和我的想法冒险，并感谢他们始终如一地体现了诚信的理念，成为最好的伙伴和朋友。当然，还有 Alex Miller——他拥有我所缺乏的丰富技能，没有他坚不可摧的精神、积极性和友谊，Clojure 就不可能发展成今天的样子。
+
+我通过 Clojure 和 Cognitect 结交了许多朋友，我希望在未来能继续培养这些友谊。
+
+退休让我回到了最初开发 Clojure 时所拥有的自由和独立性。旅程仍在继续！
+```
+
+您可以将参数传递给 `NewsURLLoader`，后者将使用这些参数来加载文章。
+
+```python
+loader = RSSFeedLoader(urls=urls, nlp=True)
+data = loader.load()
+print(len(data))
+```
+
+```output
+Error fetching or processing https://twitter.com/andrewmccalip/status/1687405505604734978, exception: You must `parse()` an article first!
+Error processing entry https://twitter.com/andrewmccalip/status/1687405505604734978, exception: list index out of range
+```
+```output
+13
+```
+
+```python
+data[0].metadata["keywords"]
+```
+
+```output
+['nubank',
+ 'alex',
+ 'stu',
+ 'taking',
+ 'team',
+ 'remains',
+ 'rich',
+ 'clojure',
+ 'thank',
+ 'planned',
+ 'datomic']
+```
+
+```python
+data[0].metadata["summary"]
+```
+
+```output
+'It’s been thrilling to see Clojure and Datomic successfully applied at scale.\nI look forward to continuing to lead ongoing work maintaining and enhancing Clojure with Alex, Stu, Fogus and many others, as an independent developer once again.\nThe community remains friendly, mature and productive, and is taking Clojure into many interesting new domains.\nI want to highlight and thank Nubank for their ongoing sponsorship of Alex, Fogus and the core team, as well as the Clojure community at large.\nStu will continue to lead the development of Datomic at Nubank, where the Datomic team grows and thrives.'
+```
+
+您也可以使用 OPML 文件，例如 Feedly 导出的文件。传入 URL 或 OPML 内容。
+
+```python
+with open("example_data/sample_rss_feeds.opml", "r") as f:
+        loader = RSSFeedLoader(opml=f.read())
+data = loader.load()
+print(len(data))
+```
+
+```output
+Error fetching http://www.engadget.com/rss-full.xml, exception: Error fetching http://www.engadget.com/rss-full.xml, exception: document declared as us-ascii, but parsed as utf-8
+```
+```output
+20
+```
+
+```python
+data[0].page_content
+```
+
+```output
+'The electric vehicle startup Fisker made a splash in Huntington Beach last night, showing off a range of new EVs it plans to build alongside the Fisker Ocean, which is slowly beginning deliveries in Europe and the US. With shades of Lotus circa 2010, it seems there\'s something for most tastes, with a powerful four-door GT, a versatile pickup truck, and an affordable electric city car.\n\n"We want the world to know that we have big plans and intend to move into several different segments, redefining each with our unique blend of design, innovation, and sustainability," said CEO Henrik Fisker.\n\nStarting with the cheapest, the Fisker PEAR—a cutesy acronym for "Personal Electric Automotive Revolution"—is said to use 35 percent fewer parts than other small EVs. Although it\'s a smaller car, the PEAR seats six thanks to front and rear bench seats. Oh, and it has a frunk, which the company is calling the "froot," something that will satisfy some British English speakers like Ars\' friend and motoring journalist Jonny Smith.\n\nBut most exciting is the price—starting at $29,900 and scheduled for 2025. Fisker plans to contract with Foxconn to build the PEAR in Lordstown, Ohio, meaning it would be eligible for federal tax incentives.\n\nAdvertisement\n\nThe Fisker Alaska is the company\'s pickup truck, built on a modified version of the platform used by the Ocean. It has an extendable cargo bed, which can be as little as 4.5 feet (1,371 mm) or as much as 9.2 feet (2,804 mm) long. Fisker claims it will be both the lightest EV pickup on sale and the most sustainable pickup truck in the world. Range will be an estimated 230–240 miles (370–386 km).\n\nThis, too, is slated for 2025, and also at a relatively affordable price, starting at $45,400. Fisker hopes to build this car in North America as well, although it isn\'t saying where that might take place.\n\nFinally, there\'s the Ronin, a four-door GT that bears more than a passing resemblance to the Fisker Karma, Henrik Fisker\'s 2012 creation. There\'s no price for this one, but Fisker says its all-wheel drive powertrain will boast 1,000 hp (745 kW) and will hit 60 mph from a standing start in two seconds—just about as fast as modern tires will allow. Expect a massive battery in this one, as Fisker says it\'s targeting a 600-mile (956 km) range.\n\n"Innovation and sustainability, along with design, are our three brand values. By 2027, we intend to produce the world’s first climate-neutral vehicle, and as our customers reinvent their relationships with mobility, we want to be a leader in software-defined transportation," Fisker said.'
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\rss.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

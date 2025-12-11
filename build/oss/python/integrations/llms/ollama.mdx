@@ -1,0 +1,146 @@
+---
+title: Ollama
+description: 使用 LangChain 和 Ollama 模型进行文本补全。
+---
+
+<Warning>
+**您当前正在浏览记录 Ollama 模型作为文本补全模型用法的页面。许多流行的 Ollama 模型是 [聊天补全模型](/oss/python/langchain/models)。**
+
+您可能正在寻找 [此页面](/oss/python/integrations/chat/ollama/)。
+</Warning>
+
+本页面将介绍如何使用 LangChain 与 `Ollama` 模型进行交互。
+
+## 安装
+
+```python
+# 安装 package
+pip install -U langchain-ollama
+```
+
+## 设置
+
+首先，请按照[这些说明](https://github.com/ollama/ollama?tab=readme-ov-file#ollama)来设置并运行本地 Ollama 实例：
+
+* 在可用的支持平台上（包括 Windows Subsystem for Linux，即 WSL、macOS 和 Linux）[下载](https://ollama.ai/download)并安装 Ollama
+  * macOS 用户可以使用 Homebrew 进行安装，命令为 `brew install ollama`，然后使用 `brew services start ollama` 启动
+* 通过 `ollama pull <模型名称>` 获取可用的 LLM 模型
+  * 通过[模型库](https://ollama.ai/library)查看可用模型的列表
+  * 例如：`ollama pull llama3`
+* 这将下载模型的默认标记版本。通常，默认指向最新的、参数量最小的模型。
+
+> 在 Mac 上，模型将下载到 `~/.ollama/models`
+>
+> 在 Linux（或 WSL）上，模型将存储在 `/usr/share/ollama/.ollama/models`
+
+* 如下所示，指定您感兴趣的模型的确切版本：`ollama pull vicuna:13b-v1.5-16k-q4_0`（在此示例中，查看 [`Vicuna`](https://ollama.ai/library/vicuna/tags) 模型的[各种标签](https://ollama.ai/library/vicuna/tags)）
+* 要查看所有已下载的模型，请使用 `ollama list`
+* 要直接从命令行与模型聊天，请使用 `ollama run <模型名称>`
+* 查看 [Ollama 文档](https://github.com/ollama/ollama/tree/main/docs)以获取更多命令。您可以在终端中使用 `ollama help` 查看可用命令。
+
+## 用法
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama.llms import OllamaLLM
+
+template = """Question: {question}
+
+Answer: 让我们一步一步来思考。"""
+
+prompt = ChatPromptTemplate.from_template(template)
+
+model = OllamaLLM(model="llama3.1")
+
+chain = prompt | model
+
+chain.invoke({"question": "什么是 LangChain？"})
+```
+
+```output
+'要分解 LangChain 是什么，让我们一步一步地分析：\n\n1. **分解名称**："Lang" 很可能代表 "Language"（语言），暗示 LangChain 与语言处理或涉及人类语言的人工智能 (AI) 相关任务有关。\n\n2. **理解此处的“链” (chain) 术语**：在技术和计算领域，特别是在人工智能 (AI) 和机器学习 (ML) 中，"chain" 通常指的是一系列链接在一起的过程。这可能意味着 LangChain 涉及按顺序执行多个任务或函数。\n\n3. **与 AI/ML 技术的关联**：鉴于其名称和上下文，可以合理地推断 LangChain 涉及自然语言处理 (NLP) 领域，或更广泛的人工智能领域。NLP 是计算机科学的一个领域，关注计算机与人类之间使用人类语言的交互。\n\n4. **可能的功能或服务**：考虑到对语言的关注以及多个链接过程的可能性，LangChain 可能提供各种 AI 驱动的功能，例如：\n    - 文本分析（如情感分析或文本分类）。\n    - 语言翻译。\n    - 聊天机器人或会话界面。\n    - 内容生成（例如文章、摘要）。\n    - 对话管理系统。\n\n5. **结论**：基于名称及其组件的分析，LangChain 很可能是一个用于开发涉及通过 AI 和 ML 技术与人类语言进行复杂交互的应用程序的工具或框架。它可能能够创建自定义聊天机器人、自然语言界面、文本生成器或其他需要复杂语言理解和处理能力的应用。\n\n这个分步分解表明，LangChain 专注于利用 AI 来理解、处理和以复杂的方式与人类语言交互，这很可能是通过多个链接过程（即“链”的部分）实现的。'
+```
+
+## 多模态
+
+Ollama 支持多模态 LLM，例如 [bakllava](https://ollama.com/library/bakllava) 和 [llava](https://ollama.com/library/llava)。
+
+    ollama pull bakllava
+
+请确保更新您的 Ollama 以获得对多模态的支持。
+
+```python
+pip install pillow
+```
+
+```python
+import base64
+from io import BytesIO
+
+from IPython.display import HTML, display
+from PIL import Image
+
+
+def convert_to_base64(pil_image):
+    """
+    将 PIL 图像转换为 Base64 编码的字符串
+
+    :param pil_image: PIL 图像
+    :return: 调整大小后的 Base64 字符串
+    """
+
+    buffered = BytesIO()
+    pil_image.save(buffered, format="JPEG")  # 如果需要，可以更改格式
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+
+def plt_img_base64(img_base64):
+    """
+    将 Base64 编码的字符串显示为图像
+
+    :param img_base64: Base64 字符串
+    """
+    # 创建一个带有 base64 字符串作为源的 HTML img 标签
+    image_html = f'<img src="data:image/jpeg;base64,{img_base64}" />'
+    # 通过渲染 HTML 来显示图像
+    display(HTML(image_html))
+
+
+file_path = "../../../static/img/ollama_example_img.jpg"
+pil_image = Image.open(file_path)
+image_b64 = convert_to_base64(pil_image)
+plt_img_base64(image_b64)
+```
+
+```html
+<img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAIcA8ADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3eilpK0ICiiigAooooASilpKACiiigAooooAMUlLRTASilpKACkpaKAEooooEFJS0UDEopcUlMBKKWigBKKMUUCCiiigYUUUUAFFFFABSUtFACUUuKSgAooooASilpKYBRRRQAUUUUAFFFFAwopKWgQlFLSUDEopaKYCUUUUAFFFFABRRRQAUUUUAJRS0UAJRRRTASiloxQAlFFFACd6WiigYYpKWigBKKWkpgJRS0lABRRRQMSiloxTASiiigApKWigBKKWkoAKSlopgJRRRQMKSlooASiiigBMUUtFAxKQilxRTEJRS0lAwxSUtFACUUUUAFJS0UxiUYpaSgBKKWkoASjFLRTGNopaKAEopaSgAxSUtFMDZoooriMBKKWkpgFFFFABRRRQAUlLRQAlFLijFACUUUUAFFFFACUUtFMBKSlooEJRS4pKACiiigYlJmnUlMAoNFFACUtFGKAEooooAKKKKACiiigooooASig0uKAEooooAKSlooASilpKYBRRRQAUUUUAFFFFABRiiigYlGKWjFACYpKWimAlFFFABRRRQAUd6KKACijvRQAlFLSUAFFFFMBKKWkoAKKKKBhRRRQAlFLRQAlJS0UwEopcUlABRiiigYlFLSUwCiiigApKWigBKKKKAEopaKYxKMUUUAJRS0YoASiiigBKKWjFAxKKKKACkpaKYCYpKWigBKKMUUDEopcUlMBKKWkoA2aKWkrjMAooopgJRS0lABXzp4m+NHifXvETaT4LjMUJkMUDRQiWa4x/FhgQBxngZA6n0+imUOpVuhGDXyPc2PiL4O+O0vBbB1hdxbzSoTFcxkEdexweQOQf1ljRu3Pj74reCbqCXXvOMMh+WO9t0McnqAyjIPsDXtOn/EG11T4aXHjC0tixt7eR5bRpMFZEHKFsdO4OOhBx2rhIfiv4F+INlDo/jHTZLNfNWRfMlYw7wCAd6FWXqeoA560/4k/DeC08EpN4TuE0/SLKO4vLqAXMri53LHggknPEfc459zQM6j4afE5viFcajE+krY/Y1jbIuPM37i3+yMdK9Dr5J+FXhPWPE+sTyaVqi2S2Lwyzgu6+au48fL16Hr61b+JGu65Y/F3U10zUL1JIrqIwRRyMRu2oQAnQ89sc0X0Cx9VUV4P4H0nxZ8P5Nc8X+Lkma3XTXIWa7EjvKXQqp5OCcYz2zXF6Vb+OfjFrd466oVjgAd/NmaOCEMTtVVXPPB7Z4yTTuB9U0V8w6F4u8U/C7xt/YuvXcs9ksircwPKZE2MOJIyeRwc9s9CAelj446vqVl8RBHa6hdQRiziYLFMyjOW5wDRzaBY+lqK+XvGPg/wCIFjon/CXa5q3mksrSRpdP5kG8gDjAUDJAwp4r1L4QeMrrVvh/eXOs3DzyaU7q8zHLtEEDgk9yORnvgU0wseoV86fHvVdRsvHVlFaX91bxnTY2KRTMgz5svOAevArnY77xh8XfGMtva3rxghpViaZkgtogeMgd+QM4JJP5YnjvR/EWga7DpviS6N1cQ2yiCXzTIGhLMRgnnG4uOeR9MVLlcaPrnRWZ9B05mJZmtYiSTkk7RV6qGhj/in9N/69Yv/AEEV5h+0BfXdj4b0lrS6nt2a7IYxSFCRsPXFXeyuI9eorg/g/cT3Xwu0yb4npJ5v2qU75pCztkkdzXOfGj/kkHh7/r6tv/SeSt34E/8AJNYv+vqX+Ypr4gPS6KKKsQUUUUAFFFFAAaSlooASiiimAYpKWigBKKWkoAKKKKBgUUUUAFJS0UxiUYpaSgBKKWkoASjFLRTGNopaKAEopaSgAxSUtFMDZoooriMBKKWkpgFFFFABRRRQAUlLRQAlFLijFACUUUUAFFFFACUUtFMBKSlooEJRS4pKACiiigYlJmnUlMAoNFFACUtFGKAEooooAKSlooASilpKYBRRRQAUUUUAFFFFABRiiigYlGKWjFACYpKWimAlFFFABRRRQAUd6KKACijvRQAlFLSUAFFFFMBKKWkoAKKKKBhRRRQAlFLRQAlJS0UwEopcUlABRiiigYlFLSUwCiiigApKWigBKKKKAEopaKYxKMUUUAJRS0YoASiiigBKKWjFAxKKKKACkpaKYCYpKWigBKKMUUDEopcUlMBKKWkoA2aKWkrjMAooopgJRS0lOpaAIg444opcUxCUUtJQAUUUUAFJS0UAJRRRQAUUUUAFJS0UAJRRRQAUUUUAJRS0UwEooooAKKKKALlJS0ViaCUUUUAFFFFMQUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFRQpYKoLE+wrxvxH488M+E9Mlvda1W1hjXhLcqfMk/3V4JJ9vX0rMj/hr/AP9l/wCgqwUaWJqOM4yvJpW763CyFw0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUlLRQAlFFFABRRRTEFFFFABRRRQAUUUUAFFFFABRRRQAUlLSUAFFFFMQUUUUAFFFFABRRRQAlFLSUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUCCkpaKBiUUUUwCiiigQlFLSUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAHFJR3paAEopaSgAooopgFFJS0CCiiigBKKWkoAKKKKACiiigBKKWkoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACkpaSgAooopiCiiigAooooAKKKKAEopaSgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiioIFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV//Z" />
+```
+
+```python
+from langchain_ollama import OllamaLLM
+
+llm = OllamaLLM(model="bakllava")
+
+llm_with_image_context = llm.bind(images=[image_b64])
+llm_with_image_context.invoke("What is the dollar based gross retention rate:")
+```
+
+```output
+'90%'
+```
+
+---
+
+## API 参考
+
+有关所有 `ChatOllama` 功能和配置的详细文档，请参阅[API 参考](https://python.langchain.com/api_reference/ollama/llms/langchain_ollama.llms.OllamaLLM.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\ollama.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

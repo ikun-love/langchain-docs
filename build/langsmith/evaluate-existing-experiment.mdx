@@ -1,0 +1,28 @@
+---
+title: "如何评估现有实验（仅限 Python）"
+sidebarTitle: 评估现有实验（Python）
+---
+
+目前，评估现有实验仅在 Python SDK 中受支持。
+
+如果您已经运行了一个实验，并希望添加额外的评估指标，您可以像以前一样，使用 `evaluate()` 或 `aevaluate()` 方法将任何评估器（evaluators）应用于该实验。只需传入实验的名称或 ID，而不是目标函数：
+
+```python
+from langsmith import evaluate
+
+def always_half(inputs: dict, outputs: dict) -> float:
+    return 0.5
+
+experiment_name = "my-experiment:abc"  # 请替换为实际的实验名称或 ID
+
+evaluate(experiment_name, evaluators=[always_half])
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\evaluate-existing-experiment.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

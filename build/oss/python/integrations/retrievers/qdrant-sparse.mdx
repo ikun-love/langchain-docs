@@ -1,0 +1,144 @@
+---
+title: Qdrant 稀疏向量
+---
+
+>[Qdrant](https://qdrant.tech/) 是一个开源的高性能向量搜索引擎/数据库。
+
+>`QdrantSparseVectorRetriever` 使用 `Qdrant` [v1.7.0](https://qdrant.tech/articles/qdrant-1.7.x/) 中引入的[稀疏向量](https://qdrant.tech/articles/sparse-vectors/)来进行文档检索。
+
+安装 'qdrant\_client' 包：
+
+```python
+pip install -qU  qdrant_client
+```
+
+```python
+from qdrant_client import QdrantClient, models
+
+client = QdrantClient(location=":memory:")
+collection_name = "sparse_collection"
+vector_name = "sparse_vector"
+
+client.create_collection(
+    collection_name,
+    vectors_config={},
+    sparse_vectors_config={
+        vector_name: models.SparseVectorParams(
+            index=models.SparseIndexParams(
+                on_disk=False,
+            )
+        )
+    },
+)
+```
+
+```output
+True
+```
+
+```python
+from langchain_community.retrievers import (
+    QdrantSparseVectorRetriever,
+)
+from langchain_core.documents import Document
+```
+
+创建一个演示编码器函数：
+
+```python
+import random
+
+
+def demo_encoder(_: str) -> tuple[list[int], list[float]]:
+    return (
+        sorted(random.sample(range(100), 100)),
+        [random.uniform(0.1, 1.0) for _ in range(100)],
+    )
+
+
+# 使用演示编码器创建一个检索器
+retriever = QdrantSparseVectorRetriever(
+    client=client,
+    collection_name=collection_name,
+    sparse_vector_name=vector_name,
+    sparse_encoder=demo_encoder,
+)
+```
+
+添加一些文档：
+
+```python
+docs = [
+    Document(
+        metadata={
+            "title": "超越地平线：AI 编年史",
+            "author": "Cassandra Mitchell 博士",
+        },
+        page_content="Mitchell 博士叙述的关于人工智能迷人旅程的深度探索。这本引人入胜的记述涵盖了 AI 的历史根源、当前进展和推测的未来，提供了一个交织着技术、伦理和社会影响的引人入胜的故事。",
+    ),
+    Document(
+        metadata={
+            "title": "协同中枢：人机心智融合",
+            "author": "Benjamin S. Anderson 教授",
+        },
+        page_content="Anderson 教授在《协同中枢》中深入探讨了人机协作的协同可能性。本书阐述了一种愿景，即人类和 AI 无缝融合，创造出新的生产力、创造力和共享智能维度。",
+    ),
+    Document(
+        metadata={
+            "title": "AI 困境：导航未知领域",
+            "author": "Elena Rodriguez 博士",
+        },
+        page_content="Rodriguez 博士在《AI 困境》中撰写了一篇引人入胜的叙述，探讨了 AI 进步带来的伦理困境的未知领域。本书充当指南针，引导读者了解随着 AI 的发展，开发者、政策制定者和全社会面临的复杂道德决策领域。",
+    ),
+    Document(
+        metadata={
+            "title": "感知之线：编织 AI 意识",
+            "author": "Alexander J. Bennett 教授",
+        },
+        page_content="在《感知之线》中，Bennett 教授揭开了 AI 意识的谜团，呈现了一系列论点，审视了机器感知力的本质。本书引发了人们对寻求真正 AI 觉醒所围绕的伦理和哲学维度的思考。",
+    ),
+    Document(
+        metadata={
+            "title": "静默炼金术：无处不在的 AI 缓解",
+            "author": "Emily Foster 博士",
+        },
+        page_content="Dr. Foster 在她之前的作品基础上，揭示了《静默炼金术》，这是一项对 AI 在我们日常生活中隐秘存在的深刻考察。这篇富有启发性的文章揭示了 AI 在不知不觉中塑造我们日常规范的微妙而重要的影响，强调了在我们这个技术驱动的世界中需要提高警惕。",
+    ),
+]
+```
+
+执行检索：
+
+```python
+retriever.add_documents(docs)
+```
+
+```output
+['1a3e0d292e6444d39451d0588ce746dc',
+ '19b180dd31e749359d49967e5d5dcab7',
+ '8de69e56086f47748e32c9e379e6865b',
+ 'f528fac385954e46b89cf8607bf0ee5a',
+ 'c1a6249d005d4abd9192b1d0b829cebe']
+```
+
+```python
+retriever.invoke(
+    "人工智能的生命与伦理困境",
+)
+```
+
+```output
+[Document(page_content="在《感知之线》中，Bennett 教授揭开了 AI 意识的谜团，呈现了一系列论点，审视了机器感知力的本质。本书引发了人们对寻求真正 AI 觉醒所围绕的伦理和哲学维度的思考。", metadata={'title': '感知之线：编织 AI 意识', 'author': 'Alexander J. Bennett 教授'}),
+ Document(page_content="Rodriguez 博士在《AI 困境》中撰写了一篇引人入胜的叙述，探讨了 AI 进步带来的伦理困境的未知领域。本书充当指南针，引导读者了解随着 AI 的发展，开发者、政策制定者和全社会面临的复杂道德决策领域。", metadata={'title': 'AI 困境：导航未知领域', 'author': 'Elena Rodriguez 博士'}),
+ Document(page_content="Anderson 教授在《协同中枢》中深入探讨了人机协作的协同可能性。本书阐述了一种愿景，即人类和 AI 无缝融合，创造出新的生产力、创造力和共享智能维度。", metadata={'title': '协同中枢：人机心智融合', 'author': 'Benjamin S. Anderson 教授'}),
+ Document(page_content='Mitchell 博士叙述的关于人工智能迷人旅程的深度探索。这本引人入胜的记述涵盖了 AI 的历史根源、当前进展和推测的未来，提供了一个交织着技术、伦理和社会影响的引人入胜的故事。', metadata={'title': '超越地平线：AI 编年史', 'author': 'Cassandra Mitchell 博士'})]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\qdrant-sparse.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

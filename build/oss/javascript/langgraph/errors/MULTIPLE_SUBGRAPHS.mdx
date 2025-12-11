@@ -1,0 +1,27 @@
+---
+title: MULTIPLE_SUBGRAPHS
+---
+
+您正在一个启用了检查点（checkpointing）的 LangGraph 节点中多次调用子图（subgraphs）。
+
+由于关于子图的检查点命名空间（namespacing）的内部限制，目前不允许这样做。
+
+## 故障排除
+
+以下方法可能有助于解决此错误：
+
+
+
+* 如果您不需要从子图中中断/恢复执行，请在编译子图时传入 `checkpointer: false`，如下所示：`.compile({ checkpointer: false })`
+
+
+* 不要以命令式（imperative）的方式在同一个节点中多次调用图，而应使用 [`Send`](/oss/javascript/langgraph/graph-api#send) API。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\errors\MULTIPLE_SUBGRAPHS.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

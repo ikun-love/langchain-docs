@@ -1,0 +1,134 @@
+---
+title: 应用程序结构
+---
+
+一个 LangGraph 应用程序由一个或多个图（graphs）、一个配置文件（`langgraph.json`）、一个指定依赖项的文件，以及一个可选的用于指定环境变量的 `.env` 文件组成。
+
+本指南将展示一个典型的应用程序结构，并说明如何提供所需的配置以使用 [LangSmith 部署](/langsmith/deployments) 来部署应用程序。
+
+<Info>
+LangSmith 部署是一个托管服务平台，用于部署和扩展 LangGraph 代理。它负责处理基础设施、扩展和操作问题，因此您可以直接从代码仓库部署有状态、长期运行的代理。请在 [部署文档](/langsmith/deployments) 中了解更多信息。
+</Info>
+
+## 关键概念
+
+要使用 LangSmith 进行部署，应提供以下信息：
+
+1. 一个 [LangGraph 配置文件](#configuration-file-concepts)（`langgraph.json`），用于指定应用程序所依赖的依赖项、图以及要使用的环境变量。
+2. 实现应用程序逻辑的 [图（graphs）](#graphs)。
+3. 一个指定运行应用程序所需 [依赖项](#dependencies) 的文件。
+4. 应用程序运行所需的 [环境变量](#environment-variables)。
+
+## 文件结构
+
+以下是应用程序目录结构的示例：
+
+<Tabs>
+    <Tab title="Python (requirements.txt)">
+    ```plaintext
+    my-app/
+    ├── my_agent # 所有项目代码位于此处
+    │   ├── utils # 图的工具类/函数
+    │   │   ├── __init__.py
+    │   │   ├── tools.py # 图的工具定义
+    │   │   ├── nodes.py # 图的节点函数
+    │   │   └── state.py # 图的状态定义
+    │   ├── __init__.py
+    │   └── agent.py # 用于构建图的代码
+    ├── .env # 环境变量
+    ├── requirements.txt # 包依赖项
+    └── langgraph.json # LangGraph 配置文件
+    ```
+    </Tab>
+    <Tab title="Python (pyproject.toml)">
+    ```plaintext
+    my-app/
+    ├── my_agent # 所有项目代码位于此处
+    │   ├── utils # 图的工具类/函数
+    │   │   ├── __init__.py
+    │   │   ├── tools.py # 图的工具定义
+    │   │   ├── nodes.py # 图的节点函数
+    │   │   └── state.py # 图的状态定义
+    │   ├── __init__.py
+    │   └── agent.py # 用于构建图的代码
+    ├── .env # 环境变量
+    ├── langgraph.json  # LangGraph 配置文件
+    └── pyproject.toml # 项目的依赖项
+    ```
+    </Tab>
+</Tabs>
+
+
+
+
+<Note>
+LangGraph 应用程序的目录结构可能因所使用的编程语言和包管理器而异。
+</Note>
+
+<a id="configuration-file-concepts"></a>
+## 配置文件
+
+`langgraph.json` 文件是一个 JSON 文件，用于指定部署 LangGraph 应用程序所需的依赖项、图、环境变量和其他设置。
+
+有关 JSON 文件中所有受支持键的详细信息，请参阅 [LangGraph 配置文件参考](/langsmith/cli#configuration-file)。
+
+<Tip>
+[LangGraph CLI](/langsmith/cli) 默认使用当前目录中的配置文件 `langgraph.json`。
+</Tip>
+
+### 示例
+
+* 依赖项涉及一个自定义的本地包和 `langchain_openai` 包。
+* 将从文件 `./your_package/your_file.py` 中加载一个图，变量名为 `variable`。
+* 环境变量将从 `.env` 文件中加载。
+
+```json
+{
+  "dependencies": ["langchain_openai", "./your_package"],
+  "graphs": {
+    "my_agent": "./your_package/your_file.py:agent"
+  },
+  "env": "./.env"
+}
+```
+
+
+
+
+## 依赖项 (Dependencies)
+
+LangGraph 应用程序可能依赖于其他 Python 包。
+
+
+
+
+您通常需要为依赖项的正确设置指定以下信息：
+
+1. 目录中用于指定依赖项的文件（例如 `requirements.txt`、`pyproject.toml` 或 `package.json`）。
+
+
+
+
+1. [LangGraph 配置文件](#configuration-file-concepts) 中用于指定运行 LangGraph 应用程序所需依赖项的 `dependencies` 键。
+2. 可以使用 [LangGraph 配置文件](#configuration-file-concepts) 中的 `dockerfile_lines` 键来指定任何额外的二进制文件或系统库。
+
+## 图 (Graphs)
+
+使用 [LangGraph 配置文件](#configuration-file-concepts) 中的 `graphs` 键来指定将哪些图提供给已部署的 LangGraph 应用程序。
+
+您可以在配置文件中指定一个或多个图。每个图由一个唯一的名称（用于标识）和一个路径来指定，该路径指向 (1) 编译后的图或 (2) 定义图的函数。
+
+## 环境变量 (Environment variables)
+
+如果您正在本地使用已部署的 LangGraph 应用程序，您可以在 [LangGraph 配置文件](#configuration-file-concepts) 的 `env` 键中配置环境变量。
+
+对于生产部署，您通常希望在部署环境中配置环境变量。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\application-structure.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

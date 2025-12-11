@@ -1,0 +1,61 @@
+---
+title: 生成查询统计信息
+sidebarTitle: 生成查询统计信息
+---
+
+作为对您自托管 LangSmith 实例进行故障排除的一部分，LangChain 团队可能会要求您生成 LangSmith 查询统计信息。这些统计信息将帮助我们了解驱动 LangSmith 产品体验的各种查询的性能情况。
+
+此命令将生成一个 CSV 文件，您可以与 LangChain 团队共享该文件。
+
+### 前提条件
+
+请确保您已准备好以下工具/项目。
+
+1. kubectl
+
+   * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+
+2. Clickhouse 数据库凭据
+
+   * 主机 (Host)
+   * 端口 (Port)
+   * 用户名 (Username)
+     * 如果使用捆绑版本，则为 `default`
+   * 密码 (Password)
+     * 如果使用捆绑版本，则为 `password`
+   * 数据库名称 (Database name)
+     * 如果使用捆绑版本，则为 `default`
+
+3. 从您将运行 `get_query_stats` 脚本的机器到 Clickhouse 数据库的网络连通性。
+
+   * 如果您使用的是捆绑版本，您可能需要将 clickhouse 服务进行端口转发 (port-forward) 到您的本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-clickhouse 8123:8123` 将 clickhouse 服务端口转发到本地机器。
+
+4. 用于生成查询统计信息的脚本
+
+   * 您可以从 [此处](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/get_query_stats.sh) 下载该脚本
+
+### 运行查询统计信息生成脚本
+
+运行以下命令来执行统计信息生成脚本：
+
+```bash
+sh get_query_stats.sh <clickhouse_url> --output path/to/file.csv
+```
+
+例如，如果您正在使用端口转发的捆绑版本，该命令应如下所示：
+
+```bash
+sh get_query_stats.sh "clickhouse://default:password@localhost:8123/default" --output query_stats.csv
+```
+
+运行此命令后，您应该会看到一个新的文件 `query_stats.csv` 已被创建，其中包含了 LangSmith 的查询统计信息。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\script-generate-query-stats.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

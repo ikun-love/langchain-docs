@@ -1,0 +1,221 @@
+```markdown
+---
+title: 工具
+---
+
+许多 AI 应用通过自然语言与用户交互。然而，某些用例要求模型使用结构化输入直接与外部系统（如 API、数据库或文件系统）进行交互。
+
+工具是 [智能体 (agents)](/oss/javascript/langchain/agents) 调用的组件，用于执行操作。它们通过允许模型通过明确定义的输入和输出来与世界进行交互，从而扩展了模型的 [能力](/oss/javascript/langchain/agents)。
+
+工具封装了一个可调用的函数及其输入 schema（模式）。这些工具可以传递给兼容的 [聊天模型](/oss/javascript/langchain/models)，使模型能够决定是否调用工具以及使用哪些参数。在这些场景中，工具调用允许模型生成符合指定输入模式的请求。
+
+<Note>
+**服务端工具使用**
+
+一些聊天模型（例如 [OpenAI](/oss/javascript/integrations/chat/openai)、[Anthropic](/oss/javascript/integrations/chat/anthropic) 和 [Gemini](/oss/javascript/integrations/chat/google_generative_ai)）具有在服务端执行的[内置工具](/oss/javascript/langchain/models#server-side-tool-use)，例如网络搜索和代码解释器。请参阅[提供商概览](/oss/javascript/integrations/providers/overview)，了解如何使用特定聊天模型访问这些工具。
+</Note>
+
+## 创建工具
+
+### 基础工具定义
+
+
+
+创建工具最简单的方法是从 `langchain` 包中导入 `tool` 函数。您可以使用 [zod](https://zod.dev/) 来定义工具的输入 schema：
+
+```ts
+import * as z from "zod"
+import { tool } from "langchain"
+
+const searchDatabase = tool(
+  ({ query, limit }) => `Found ${limit} results for '${query}'`,
+  {
+    name: "search_database",
+    description: "Search the customer database for records matching the query.",
+    schema: z.object({
+      query: z.string().describe("Search terms to look for"),
+      limit: z.number().describe("Maximum number of results to return"),
+    }),
+  }
+);
+```
+
+
+
+
+## 访问上下文
+
+<Info>
+**重要原因**: 当工具可以访问智能体状态、运行时上下文和长期记忆时，它们才最为强大。这使得工具能够做出上下文感知的决策、个性化响应，并在对话中保持信息。
+
+
+
+运行时上下文提供了一种结构化的方式，用于向工具提供运行时数据，例如数据库连接、用户 ID 或配置。这避免了全局状态，并使工具可测试且可重用。
+
+</Info>
+
+
+
+#### Context（上下文）
+
+
+
+工具可以通过 `config` 参数访问智能体的运行时上下文：
+
+```ts
+import * as z from "zod"
+import { ChatOpenAI } from "@langchain/openai"
+import { createAgent } from "langchain"
+
+const getUserName = tool(
+  (_, config) => {
+    return config.context.user_name
+  },
+  {
+    name: "get_user_name",
+    description: "Get the user's name.",
+    schema: z.object({}),
+  }
+);
+
+const contextSchema = z.object({
+  user_name: z.string(),
+});
+
+const agent = createAgent({
+  model: new ChatOpenAI({ model: "gpt-4o" }),
+  tools: [getUserName],
+  contextSchema,
+});
+
+const result = await agent.invoke(
+  {
+    messages: [{ role: "user", content: "What is my name?" }]
+  },
+  {
+    context: { user_name: "John Smith" }
+  }
+);
+```
+
+
+#### Memory（存储）
+
+
+
+使用存储访问跨对话的持久化数据。通过 `config.store` 访问存储，它允许您保存和检索特定于用户或应用的数据。
+
+```ts expandable
+import * as z from "zod";
+import { createAgent, tool } from "langchain";
+import { InMemoryStore } from "@langchain/langgraph";
+import { ChatOpenAI } from "@langchain/openai";
+
+const store = new InMemoryStore();
+
+// 访问内存
+const getUserInfo = tool(
+  async ({ user_id }) => {
+    const value = await store.get(["users"], user_id);
+    console.log("get_user_info", user_id, value);
+    return value;
+  },
+  {
+    name: "get_user_info",
+    description: "Look up user info.",
+    schema: z.object({
+      user_id: z.string(),
+    }),
+  }
+);
+
+// 更新内存
+const saveUserInfo = tool(
+  async ({ user_id, name, age, email }) => {
+    console.log("save_user_info", user_id, name, age, email);
+    await store.put(["users"], user_id, { name, age, email });
+    return "Successfully saved user info.";
+  },
+  {
+    name: "save_user_info",
+    description: "Save user info.",
+    schema: z.object({
+      user_id: z.string(),
+      name: z.string(),
+      age: z.number(),
+      email: z.string(),
+    }),
+  }
+);
+
+const agent = createAgent({
+  model: new ChatOpenAI({ model: "gpt-4o" }),
+  tools: [getUserInfo, saveUserInfo],
+  store,
+});
+
+// 第一次会话：保存用户信息
+await agent.invoke({
+  messages: [
+    {
+      role: "user",
+      content: "Save the following user: userid: abc123, name: Foo, age: 25, email: foo@langchain.dev",
+    },
+  ],
+});
+
+// 第二次会话：获取用户信息
+const result = await agent.invoke({
+  messages: [
+    { role: "user", content: "Get user info for user with id 'abc123'" },
+  ],
+});
+
+console.log(result);
+// Here is the user info for user with ID "abc123":
+// - Name: Foo
+// - Age: 25
+// - Email: foo@langchain.dev
+```
+
+
+#### Stream Writer（流写入器）
+
+
+
+使用 `config.streamWriter` 在工具执行时流式传输自定义更新。这有助于向用户提供有关工具正在做什么的实时反馈。
+
+```ts
+import * as z from "zod";
+import { tool } from "langchain";
+
+const getWeather = tool(
+  ({ city }, config) => {
+    const writer = config.streamWriter;
+
+    // 在工具执行时流式传输自定义更新
+    writer(`Looking up data for city: ${city}`);
+    writer(`Acquired data for city: ${city}`);
+
+    return `It's always sunny in ${city}!`;
+  },
+  {
+    name: "get_weather",
+    description: "Get weather for a given city.",
+    schema: z.object({
+      city: z.string(),
+    }),
+  }
+);
+```
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\tools.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

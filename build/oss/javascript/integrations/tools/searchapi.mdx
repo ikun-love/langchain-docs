@@ -1,0 +1,71 @@
+---
+title: SearchApi 工具
+---
+
+`SearchApi` 工具将您的代理（agents）和链（chains）连接到互联网。
+
+它是 Search API 的一个包装器。当您需要回答关于当前事件的问题时，这个工具非常方便。
+
+## 用法
+
+输入应该是一个搜索查询。
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { AgentExecutor } from "@langchain/classic/agents";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentFinish, AgentAction } from "@langchain/core/agents";
+import { BaseMessageChunk } from "@langchain/core/messages";
+import { SearchApi } from "@langchain/community/tools/searchapi";
+
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0,
+});
+const tools = [
+  new SearchApi(process.env.SEARCHAPI_API_KEY, {
+    engine: "google_news",
+  }),
+];
+const prefix = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    "请尽最大努力回答以下问题。在您的最终答案中，请使用项目符号（bulleted list）的 Markdown 格式。",
+  ],
+  ["human", "{input}"],
+]);
+// 请用您实际的输出解析器替换此处的实现。
+const customOutputParser = (
+  input: BaseMessageChunk
+): AgentAction | AgentFinish => ({
+  log: "test",
+  returnValues: {
+    output: input,
+  },
+});
+// 请用您的实际代理实现替换此处的占位符代理。
+const agent = RunnableSequence.from([prefix, model, customOutputParser]);
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
+  tools,
+});
+const res = await executor.invoke({
+  input: "今天乌克兰发生了什么？",
+});
+console.log(res);
+```
+
+## 相关内容
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\searchapi.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,102 @@
+---
+title: LangSmith 中的告警
+sidebarTitle: 告警
+---
+
+<Note>
+**自托管版本要求**
+
+访问告警功能需要 Helm chart 版本 **0.10.3** 或更高版本。
+</Note>
+
+## 概览
+
+LLM 应用中有效的可观测性 (Observability) 需要主动检测故障、性能下降和回归问题。LangSmith 的告警功能有助于识别关键问题，例如：
+
+- 模型提供商的 API 速率限制违规
+- 应用延迟的增加
+- 影响反映最终用户体验的反馈得分的应用变更
+
+LangSmith 中的告警是按项目范围划分的，要求对每个被监控的项目单独进行配置。
+
+## 配置告警
+
+### 步骤 1: 导航到创建告警
+
+首先，导航到您希望配置告警的 Tracing 项目。点击页面右上角的 "Alerts" (告警) 图标，以查看该项目的现有告警并设置新的告警。
+
+### 步骤 2: 选择指标类型
+
+<br />
+<div style={{ textAlign: 'center' }}>
+
+![Alert Metrics](/langsmith/images/alert-metric.png)
+
+</div>
+
+LangSmith 在三个核心指标上提供基于阈值的告警：
+
+| 指标类型 | 描述 | 使用场景 |
+| :--- | :--- | :--- |
+| **出错的运行 (Errored Runs)** | 跟踪具有错误状态的运行 | 监控应用中的失败情况。 |
+| **反馈得分 (Feedback Score)** | 衡量平均反馈得分 | 跟踪[最终用户的反馈](/langsmith/attach-user-feedback) 或[在线评估结果](/langsmith/online-evaluations) 以便在出现回归时发出告警。 |
+| **延迟 (Latency)** | 衡量平均运行执行时间 | 跟踪应用的延迟情况，以便在出现峰值和性能瓶颈时发出告警。 |
+
+此外，对于 **Errored Runs** (出错的运行) 和 **Run Latency** (运行延迟)，您可以定义过滤器来缩小触发告警的运行范围。例如，您可以创建一个错误告警过滤器，专门针对所有标记了 `support_agent` 并遇到 `RateLimitExceeded` 错误的 `llm` 运行。
+
+<div style={{ textAlign: 'center' }}>
+
+![Alert Metrics](/langsmith/images/alerts-filter.png)
+
+</div>
+
+### 步骤 2: 定义告警条件
+
+告警条件由几个组件构成：
+
+- **聚合方法 (Aggregation Method)**: 平均值 (Average)、百分比 (Percentage) 或计数 (Count)
+- **比较运算符 (Comparison Operator)**: `>=`, `<=`，或超过阈值 (exceeds threshold)
+- **阈值 (Threshold Value)**: 触发告警的数值
+- **聚合窗口 (Aggregation Window)**: 用于指标计算的时间周期（当前可在 5 分钟或 15 分钟之间选择）
+- **反馈键 (Feedback Key)** (仅限反馈得分告警): 需要监控的具体反馈指标
+
+<br />
+<div style={{ textAlign: 'center' }}>
+
+![Alert Condition Configuration](/langsmith/images/define-conditions.png)
+
+</div>
+
+**示例：** 上图中所示的配置将在过去 5 分钟内超过 5% 的运行导致错误时生成告警。
+
+您可以预览告警在历史时间窗口内的行为，以了解在所选阈值下，有多少数据点（以及哪些数据点）会触发告警（如下图中红色标记所示）。例如，为项目设置 60 秒的平均延迟阈值，您可以直观地看到潜在的告警情况，如下面的图像所示。
+
+<div style={{ textAlign: 'center' }}>
+
+![Alert Metrics](/langsmith/images/alert-preview.png)
+
+</div>
+
+### 步骤 3: 配置通知渠道
+
+LangSmith 支持以下通知渠道：
+
+1. [PagerDuty 集成](/langsmith/alerts-pagerduty)
+2. [Webhook 通知](/langsmith/alerts-webhook)
+
+选择适当的渠道，以确保通知能够送达负责团队的成员。
+
+## 最佳实践
+
+- 根据应用的临界程度调整告警的灵敏度
+- 从更宽泛的阈值开始，然后根据观察到的模式进行精细调整
+- 确保告警路由能够送达合适的待命人员 (on-call personnel)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\alerts.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

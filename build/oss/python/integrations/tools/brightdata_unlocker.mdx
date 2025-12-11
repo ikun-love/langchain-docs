@@ -1,0 +1,161 @@
+---
+title: BrightDataUnlocker
+---
+
+[Bright Data](https://brightdata.com/) 提供了一个强大的 Web Unlocker API，它允许您访问可能受到反机器人措施、地理限制或其他访问限制保护的网站。这使得它对于需要可靠网络内容抓取的 AI 代理特别有用。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 可序列化 (Serializable) | JS 支持 (JS support) | 版本 (Version) |
+| :-- | :-- | :-: | :-: | :--- |
+|[BrightDataUnlocker](https://pypi.org/project/langchain-brightdata/)|[langchain-brightdata](https://pypi.org/project/langchain-brightdata/)|✅|❌|![PyPI - Version](https://img.shields.io/pypi/v/langchain-brightdata?style=flat-square&label=%20)|
+
+### 工具功能
+
+| 原生异步 (Native async) | 返回工件 (Returns artifact) | 返回数据 (Return data) | 定价 (Pricing) |
+| :-: | :-: | :--- | :-: |
+|❌|❌|网页的 HTML、Markdown 或截图 | 需要 Bright Data 账户 |
+
+## 设置
+
+该集成包含在 `langchain-brightdata` 包中。
+
+```python
+pip install langchain-brightdata
+```
+
+您需要一个 Bright Data API 密钥才能使用此工具。您可以将其设置为环境变量：
+
+```python
+import os
+
+os.environ["BRIGHT_DATA_API_KEY"] = "your-api-key"
+```
+
+或者在初始化工具时直接传入：
+
+```python
+from langchain_brightdata import BrightDataUnlocker
+
+unlocker_tool = BrightDataUnlocker(bright_data_api_key="your-api-key")
+```
+
+## 实例化
+
+这里展示了如何实例化 `BrightDataUnlocker` 工具的一个实例。此工具允许您使用 Bright Data 的 Web Unlocker 服务来访问可能受到反机器人措施、地理限制或其他访问限制保护的网站。
+
+该工具在实例化时接受多种参数：
+
+- `bright_data_api_key` (必需, str): 您的 Bright Data API 密钥，用于身份验证。
+- `format` (可选, Literal["raw"]): 响应内容的格式。默认为 "raw"。
+- `country` (可选, str): 用于地理特定访问的两位国家代码（例如 "us", "gb", "de", "jp"）。当您需要像从特定国家/地区访问一样查看网站时，请设置此项。默认为 None。
+- `zone` (可选, str): 用于请求的 Bright Data 区域（Zone）。"unlocker" 区域经过优化，可用于访问可能阻止常规请求的网站。默认为 "unlocker"。
+- `data_format` (可选, Literal["html", "markdown", "screenshot"]): 检索内容的输出格式。选项包括：
+  - "html" - 返回标准的 HTML 内容（默认）
+  - "markdown" - 返回转换为 Markdown 格式的内容
+  - "screenshot" - 返回渲染页面的 PNG 截图
+
+## 调用
+
+### 基本用法
+
+```python
+from langchain_brightdata import BrightDataUnlocker
+
+# 初始化工具
+unlocker_tool = BrightDataUnlocker(
+    bright_data_api_key="your-api-key"  # 如果已在环境变量中设置，则此项可选
+)
+
+# 访问一个网页
+result = unlocker_tool.invoke("https://example.com")
+
+print(result)
+```
+
+### 高级用法（带参数）
+
+```python
+from langchain_brightdata import BrightDataUnlocker
+
+unlocker_tool = BrightDataUnlocker(
+    bright_data_api_key="your-api-key",
+)
+
+# 访问一个网页并使用特定参数
+result = unlocker_tool.invoke(
+    {
+        "url": "https://example.com/region-restricted-content",
+        "country": "gb",  # 像从英国访问一样
+        "data_format": "html",  # 获取 Markdown 格式的内容 (注意：原示例中 data_format 设置为 "html"，但注释写 "markdown"，这里为保持与参数描述一致，以参数配置为准：此例应获取 HTML)
+        "zone": "unlocker",  # 使用 unlocker 区域
+    }
+)
+
+print(result)
+```
+
+## 自定义选项
+
+`BrightDataUnlocker` 工具接受多个参数用于自定义：
+
+| 参数 (Parameter) | 类型 (Type) | 描述 (Description) |
+| :-- | :-- | :-- |
+|`url`|str|要访问的 URL |
+|`format`|str|响应内容的格式 (默认: "raw") |
+|`country`|str|用于地理特定访问的两位国家代码 (例如: "us", "gb") |
+|`zone`|str|要使用的 Bright Data 区域 (默认: "unlocker") |
+|`data_format`|str|输出格式: None (HTML), "markdown", 或 "screenshot" |
+
+## 数据格式选项
+
+`data_format` 参数允许您指定内容的返回方式：
+
+- `None` 或 `"html"` (默认): 返回页面的标准 HTML 内容
+- `"markdown"`: 返回转换为 Markdown 格式的内容，这对于直接输入给 LLM 非常有用
+- `"screenshot"`: 返回渲染页面的 PNG 截图，对视觉分析很有用
+
+## 在 Agent 中使用
+
+```python
+from langchain_brightdata import BrightDataUnlocker
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import create_agent
+
+
+# 初始化 LLM
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key="your-api-key")
+
+# 初始化工具
+bright_data_tool = BrightDataUnlocker(bright_data_api_key="your-api-key")
+
+# 创建 Agent
+agent = create_agent(llm, [bright_data_tool])
+
+# 输入 URL 或提示
+user_input = "Get the content from https://example.com/region-restricted-page - access it from GB"
+
+# 流式传输 Agent 的输出步骤
+for step in agent.stream(
+    {"messages": user_input},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
+```
+
+---
+
+## API 参考
+
+- [Bright Data API 文档](https://docs.brightdata.com/scraping-automation/web-unlocker/introduction)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\brightdata_unlocker.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

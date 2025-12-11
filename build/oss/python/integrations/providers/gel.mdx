@@ -1,0 +1,73 @@
+---
+title: Gel
+---
+
+[Gel](https://www.geldata.com/) 是一个强大的数据平台，它构建在 PostgreSQL 之上。
+
+- 以对象和图（Graphs）而非表（Tables）和 JOINs 的方式进行思考。
+- 使用先进的 Python SDK、集成的 GUI、迁移引擎（migrations engine）、身份验证（Auth）和 AI 层等更多功能。
+- 可以本地运行、远程运行，或者在[完全托管的云服务](https://www.geldata.com/cloud)上运行。
+
+## 安装
+
+<CodeGroup>
+```bash pip
+pip install langchain-gel
+```
+
+```bash uv
+uv add langchain-gel
+```
+</CodeGroup>
+
+## 设置
+
+1. 运行 `gel project init`。
+2. 编辑 schema（模式定义）。要使用 LangChain 的向量存储（Vectorstore），您需要定义以下类型：
+
+```gel
+using extension pgvector;
+
+module default {
+    scalar type EmbeddingVector extending ext::pgvector::vector<1536>;
+
+    type Record {
+        required collection: str;
+        text: str;
+        embedding: EmbeddingVector;
+        external_id: str {
+            constraint exclusive;
+        };
+        metadata: json;
+
+        index ext::pgvector::hnsw_cosine(m := 16, ef_construction := 128)
+            on (.embedding)
+    }
+}
+```
+
+> 注意：这是最小化设置。您可以随意添加任意数量的类型、属性和链接！
+> 要了解利用 Gel schema 的更多信息，请阅读[文档](https://docs.geldata.com/learn/schema)。
+
+3. 运行迁移：`gel migration create && gel migrate`。
+
+## 用法
+
+```python
+from langchain_gel import GelVectorStore
+
+vector_store = GelVectorStore(
+    embeddings=embeddings,
+)
+```
+
+完整的用法示例请参见[此处](/oss/python/integrations/vectorstores/gel)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\gel.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

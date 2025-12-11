@@ -1,0 +1,144 @@
+---
+title: Databricks
+---
+
+> [Databricks](https://www.databricks.com/) Lakehouse 平台在一个统一的平台上整合了数据、分析和 AI 能力。
+
+本指南提供了有关使用 Databricks [LLM 模型](https://python.langchain.com/docs/concepts/text_llms)的快速上手概览。有关所有特性和配置的详细文档，请查阅 [API 参考](https://python.langchain.com/api_reference/community/llms/langchain_community.llms.databricks.Databricks.html)。
+
+## 概览
+
+`Databricks` LLM 类封装了一个部署为以下两种端点类型的完成（completion）端点：
+
+* [Databricks 模型服务 (Model Serving)](https://docs.databricks.com/en/machine-learning/model-serving/index.html)，推荐用于生产和开发环境，
+* 集群驱动代理应用 (Cluster driver proxy app)，推荐用于交互式开发。
+
+以下示例 Notebook 展示了如何封装您的 LLM 端点并将其作为 LLM 在 LangChain 应用程序中使用。
+
+## 局限性
+
+`Databricks` LLM 类是*旧版*（legacy）实现，在特性兼容性方面存在一些限制：
+
+* 只支持同步调用。不支持流式传输（Streaming）或异步（async） API。
+* 不支持 `batch` API。
+
+如需使用这些特性，请改用新的 [ChatDatabricks](https://python.langchain.com/docs/integrations/chat/databricks) 类。`ChatDatabricks` 支持 `ChatModel` 的所有 API，包括流式传输、异步、批量处理等。
+
+## 设置
+
+要访问 Databricks 模型，您需要创建一个 Databricks 账户，设置凭证（仅当您在 Databricks 工作区外部运行时），并安装所需的包。
+
+### 凭证（仅当您在 Databricks 外部时）
+
+如果您在 Databricks 内部运行 LangChain 应用，可以跳过此步骤。
+
+否则，您需要手动将 Databricks 工作区主机名和个人访问令牌分别设置为 `DATABRICKS_HOST` 和 `DATABRICKS_TOKEN` 环境变量。有关如何获取访问令牌的详细信息，请参阅 [身份验证文档](https://docs.databricks.com/en/dev-tools/auth/index.html#databricks-personal-access-tokens)。
+
+```python
+import getpass
+import os
+
+os.environ["DATABRICKS_HOST"] = "https://your-workspace.cloud.databricks.com"
+if "DATABRICKS_TOKEN" not in os.environ:
+    os.environ["DATABRICKS_TOKEN"] = getpass.getpass(
+        "Enter your Databricks access token: "
+    )
+```
+
+或者，您可以在初始化 `Databricks` 类时传递这些参数。
+
+```python
+from langchain_community.llms import Databricks
+
+databricks = Databricks(
+    host="https://your-workspace.cloud.databricks.com",
+    # 我们强烈建议不要将您的访问令牌硬编码到代码中，而是使用密钥管理工具
+    # 或环境变量来安全地存储您的访问令牌。以下示例使用 Databricks Secrets
+    # 来检索在 Databricks Notebook 中可用的访问令牌。
+    token=dbutils.secrets.get(scope="YOUR_SECRET_SCOPE", key="databricks-token"),
+)
+```
+
+### 安装
+
+LangChain 的 Databricks 集成位于 `langchain-community` 包中。此外，运行此 Notebook 中的代码还需要 `mlflow >=2.9`。
+
+```python
+pip install -qU langchain-community mlflow>=2.9.0
+```
+
+## 封装模型服务（Model Serving）端点
+
+### 前提条件
+
+* 已经注册并部署了一个 LLM 到 [Databricks 服务端点](https://docs.databricks.com/machine-learning/model-serving/index.html)。
+* 您对该端点拥有（"Can Query" 权限](https://docs.databricks.com/security/auth-authz/access-control/serving-endpoint-acl.html)。
+
+预期的 MLflow 模型签名如下：
+
+* inputs: `[{"name": "prompt", "type": "string"}, {"name": "stop", "type": "list[string]"}]`
+* outputs: `[{"type": "string"}]`
+
+### 调用
+
+```python
+from langchain_community.llms import Databricks
+
+llm = Databricks(endpoint_name="YOUR_ENDPOINT_NAME")
+llm.invoke("How are you?")
+```
+
+```output
+'I am happy to hear that you are in good health and as always, you are appreciated.'
+```
+
+```python
+llm.invoke("How are you?", stop=["."])
+```
+
+```output
+'Good'
+```
+
+### 转换输入和输出
+
+有时您可能希望封装一个具有不兼容模型签名的服务（serving）端点，或者您想插入额外的配置。您可以使用 `transform_input_fn` 和 `transform_output_fn` 参数来定义额外的预处理/后处理逻辑。
+
+```python
+# 如果服务（serving）端点需要不同的输入 Schema，或者它不返回 JSON 字符串，
+# 则使用 `transform_input_fn` 和 `transform_output_fn`，或者您想在提示前面应用提示模板（prompt template）。
+
+
+def transform_input(**request):
+    full_prompt = f"""{request["prompt"]}
+    Be Concise.
+    """
+    request["prompt"] = full_prompt
+    return request
+
+
+def transform_output(response):
+    return response.upper()
+
+
+llm = Databricks(
+    endpoint_name="YOUR_ENDPOINT_NAME",
+    transform_input_fn=transform_input,
+    transform_output_fn=transform_output,
+)
+
+llm.invoke("How are you?")
+```
+
+```output
+'I AM DOING GREAT THANK YOU.'
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\databricks.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

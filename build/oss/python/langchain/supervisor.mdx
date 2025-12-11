@@ -1,0 +1,677 @@
+---
+title: 构建主管代理
+sidebarTitle: 主管代理
+---
+
+import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
+import ChatModelTabsJs from '/snippets/chat-model-tabs-js.mdx';
+
+## 概述
+
+**主管模式**（Supervisor Pattern）是一种多代理（[multi-agent](/oss/python/langchain/multi-agent)）架构，其中一个中心化的主管代理协调专门的工人代理。当任务需要不同类型的专业知识时，这种方法表现出色。与其构建一个必须在所有领域管理工具选择的单一代理，不如创建聚焦的专家，由一个理解整体工作流程的主管来协调。
+
+在本教程中，您将构建一个个人助理系统，通过一个实际的工作流程来演示这种模式的优势。该系统将协调两个职责本质上不同的专家：
+
+- **日历代理**：处理日程安排、可用性检查和事件管理。
+- **邮件代理**：管理通信、起草消息和发送通知。
+
+我们还将整合[人工干预审核](/oss/python/langchain/human-in-the-loop)机制，允许用户根据需要批准、编辑和拒绝操作（例如传出的电子邮件）。
+
+### 为什么要使用主管？
+
+多代理架构允许您将[工具](/oss/python/langchain/tools)划分给不同的工作代理，每个代理都有自己独立的提示词或指令。想象一个可以直接访问所有日历和电子邮件 API 的代理：它必须从许多相似的工具中进行选择，理解每个 API 的确切格式，并同时处理多个领域。如果性能下降，将相关工具和关联的提示词分离到逻辑组中可能是有益的（部分是为了管理迭代改进）。
+
+### 概念
+
+我们将介绍以下概念：
+
+- [多代理系统](/oss/python/langchain/multi-agent)
+- [人工干预审核](/oss/python/langchain/human-in-the-loop)
+
+## 设置
+
+### 安装
+
+本教程需要 `langchain` 包：
+
+<CodeGroup>
+```bash pip
+pip install langchain
+```
+```bash conda
+conda install langchain -c conda-forge
+```
+</CodeGroup>
+
+
+
+
+有关更多详细信息，请参阅我们的[安装指南](/oss/python/langchain/install)。
+
+### LangSmith
+
+设置 [LangSmith](https://smith.langchain.com) 来检查代理内部正在发生的事情。然后设置以下环境变量：
+
+<CodeGroup>
+```bash bash
+export LANGSMITH_TRACING="true"
+export LANGSMITH_API_KEY="..."
+```
+```python python
+import getpass
+import os
+
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass()
+```
+</CodeGroup>
+
+
+
+
+### 组件
+
+我们需要从 LangChain 的集成套件中选择一个聊天模型：
+
+<ChatModelTabsPy />
+
+
+
+
+## 1. 定义工具
+
+首先定义那些需要结构化输入（Structured Inputs）的工具。在实际应用中，这些将调用实际的 API（如 Google Calendar、SendGrid 等）。在本教程中，我们将使用存根（stubs）来演示这种模式。
+
+```python
+from langchain.tools import tool
+
+@tool
+def create_calendar_event(
+    title: str,
+    start_time: str,       # ISO 格式: "2024-01-15T14:00:00"
+    end_time: str,         # ISO 格式: "2024-01-15T15:00:00"
+    attendees: list[str],  # 电子邮件地址
+    location: str = ""
+) -> str:
+    """创建日历事件。需要精确的 ISO 日期时间格式。"""
+    # 存根：在实践中，这将调用 Google Calendar API, Outlook API 等。
+    return f"事件已创建: {title} 从 {start_time} 到 {end_time} 共有 {len(attendees)} 位参与者"
+
+
+@tool
+def send_email(
+    to: list[str],  # 电子邮件地址
+    subject: str,
+    body: str,
+    cc: list[str] = []
+) -> str:
+    """通过电子邮件 API 发送电子邮件。需要格式正确的地址。"""
+    # 存根：在实践中，这将调用 SendGrid, Gmail API 等。
+    return f"电子邮件已发送至 {', '.join(to)} - 主题: {subject}"
+
+
+@tool
+def get_available_time_slots(
+    attendees: list[str],
+    date: str,  # ISO 格式: "2024-01-15"
+    duration_minutes: int
+) -> list[str]:
+    """检查给定参与者在特定日期的日历可用时间段。"""
+    return ["09:00", "14:00", "16:00"]
+```
+
+
+
+
+## 2. 创建专用的子代理
+
+接下来，我们将创建处理每个领域的专用子代理。
+
+### 创建一个日历代理
+
+日历代理理解自然语言的日程安排请求，并将其转换为精确的 API 调用。它负责日期解析、可用性检查和事件创建。
+
+```python
+from langchain.agents import create_agent
+
+
+CALENDAR_AGENT_PROMPT = (
+    "你是一个日历调度助手。 "
+    "将自然语言调度请求（例如，“下周二下午 2 点”）解析为正确的 ISO 日期时间格式。 "
+    "在需要时使用 get_available_time_slots 检查可用性。 "
+    "使用 create_calendar_event 来安排事件。 "
+    "在你的最终回复中始终确认已调度的内容。"
+)
+
+calendar_agent = create_agent(
+    model,
+    tools=[create_calendar_event, get_available_time_slots],
+    system_prompt=CALENDAR_AGENT_PROMPT,
+)
+```
+
+
+
+
+测试日历代理，查看它如何处理自然语言调度：
+
+```python
+query = "安排一个团队会议，时间是下周二下午 2 点"
+
+for step in calendar_agent.stream(
+    {"messages": [{"role": "user", "content": query}]}
+):
+    for update in step.values():
+        for message in update.get("messages", []):
+            message.pretty_print()
+```
+
+
+
+```
+================================== Ai Message ==================================
+Tool Calls:
+  get_available_time_slots (call_EIeoeIi1hE2VmwZSfHStGmXp)
+ Call ID: call_EIeoeIi1hE2VmwZSfHStGmXp
+  Args:
+    attendees: []
+    date: 2024-06-18
+    duration_minutes: 60
+================================= Tool Message =================================
+Name: get_available_time_slots
+
+["09:00", "14:00", "16:00"]
+================================== Ai Message ==================================
+Tool Calls:
+  create_calendar_event (call_zgx3iJA66Ut0W8S3NpT93kEB)
+ Call ID: call_zgx3iJA66Ut0W8S3NpT93kEB
+  Args:
+    title: Team Meeting
+    start_time: 2024-06-18T14:00:00
+    end_time: 2024-06-18T15:00:00
+    attendees: []
+================================= Tool Message =================================
+Name: create_calendar_event
+
+事件已创建: Team Meeting 从 2024-06-18T14:00:00 到 2024-06-18T15:00:00 共有 0 位参与者
+================================== Ai Message ==================================
+
+团队会议已安排在下周二，6 月 18 日下午 2 点，持续 1 小时。如果您需要添加参与者或地点，请告诉我！
+```
+
+代理将“下周二下午 2 点”解析为 ISO 格式（"2024-01-16T14:00:00"），计算结束时间，调用 `create_calendar_event`，并返回自然语言确认。
+
+### 创建邮件代理
+
+邮件代理负责撰写和发送消息。它专注于提取收件人信息、起草适当的主题行和正文，并管理电子邮件通信。
+
+```python
+EMAIL_AGENT_PROMPT = (
+    "你是一个电子邮件助手。 "
+    "根据自然语言请求撰写专业邮件。 "
+    "提取收件人信息并起草适当的主题行和正文。 "
+    "使用 send_email 发送消息。 "
+    "在你的最终回复中始终确认已发送的内容。"
+)
+
+email_agent = create_agent(
+    model,
+    tools=[send_email],
+    system_prompt=EMAIL_AGENT_PROMPT,
+)
+```
+
+用自然语言请求测试邮件代理：
+
+```python
+query = "提醒设计团队审查新的模型图"
+
+for step in email_agent.stream(
+    {"messages": [{"role": "user", "content": query}]}
+):
+    for update in step.values():
+        for message in update.get("messages", []):
+            message.pretty_print()
+```
+
+
+
+```
+================================== Ai Message ==================================
+Tool Calls:
+  send_email (call_OMl51FziTVY6CRZvzYfjYOZr)
+ Call ID: call_OMl51FziTVY6CRZvzYfjYOZr
+  Args:
+    to: ['design-team@example.com']
+    subject: Reminder: Please Review the New Mockups
+    body: Hi Design Team,
+
+This is a friendly reminder to review the new mockups at your earliest convenience. Your feedback is important to ensure that we stay on track with our project timeline.
+
+Please let me know if you have any questions or need additional information.
+
+Thank you!
+
+Best regards,
+================================= Tool Message =================================
+Name: send_email
+
+电子邮件已发送至 design-team@example.com - 主题: Reminder: Please Review the New Mockups
+================================== Ai Message ==================================
+
+我已向设计团队发送了提醒，请他们审查新的模型图。如果您需要在此主题上进行进一步沟通，请告诉我！
+```
+
+代理从非正式请求中推断出收件人，起草了专业的主题行和正文，调用了 `send_email`，并返回确认信息。每个子代理都有一个狭窄的焦点，配备了特定领域的工具和提示词，使其能够在特定任务上表现出色。
+
+## 3. 将子代理包装为工具
+
+现在将每个子代理包装成一个主管可以调用的工具。这是创建分层系统的关键架构步骤。主管将看到“`schedule_event`”这样的高级工具，而不是“`create_calendar_event`”这样的低级工具。
+
+```python
+@tool
+def schedule_event(request: str) -> str:
+    """使用自然语言安排日历事件。
+
+    当用户想要创建、修改或检查日历约会*时*使用此工具。
+    处理日期/时间解析、可用性检查和事件创建。
+
+    输入：自然语言调度请求（例如，“与设计团队开会，下周二下午 2 点”）
+    """
+    result = calendar_agent.invoke({
+        "messages": [{"role": "user", "content": request}]
+    })
+    return result["messages"][-1].text
+
+
+@tool
+def manage_email(request: str) -> str:
+    """使用自然语言发送电子邮件。
+
+    当用户想要发送通知、提醒或任何电子邮件通信*时*使用此工具。
+    处理收件人提取、主题生成和电子邮件撰写。
+
+    输入：自然语言电子邮件请求（例如，“给他们发送一个关于会议的提醒”）
+    """
+    result = email_agent.invoke({
+        "messages": [{"role": "user", "content": request}]
+    })
+    return result["messages"][-1].text
+```
+
+
+
+
+工具描述帮助主管决定何时使用每个工具，因此请确保它们清晰明确。我们只返回子代理的最终响应，因为主管不需要看到中间的推理过程或工具调用。
+
+## 4. 创建主管代理
+
+现在创建主管，它协调子代理。主管只能看到高级工具，并在领域级别而不是单个 API 级别上做出路由决策。
+
+```python
+SUPERVISOR_PROMPT = (
+    "你是一位乐于助人的个人助理。 "
+    "你可以安排日历事件和发送电子邮件。 "
+    "将用户请求分解为适当的工具调用并协调结果。 "
+    "当请求涉及多个操作时，按顺序使用多个工具。"
+)
+
+supervisor_agent = create_agent(
+    model,
+    tools=[schedule_event, manage_email],
+    system_prompt=SUPERVISOR_PROMPT,
+)
+```
+
+
+
+
+## 5. 使用主管
+
+现在使用复杂的请求来测试您完整的系统，这些请求需要跨多个领域的协调：
+
+### 示例 1：简单的单领域请求
+
+```python
+query = "安排一个明天的团队站会，时间是早上 9 点"
+
+for step in supervisor_agent.stream(
+    {"messages": [{"role": "user", "content": query}]}
+):
+    for update in step.values():
+        for message in update.get("messages", []):
+            message.pretty_print()
+```
+
+
+
+```
+================================== Ai Message ==================================
+Tool Calls:
+  schedule_event (call_mXFJJDU8bKZadNUZPaag8Lct)
+ Call ID: call_mXFJJDU8bKZadNUZPaag8Lct
+  Args:
+    request: Schedule a team standup for tomorrow at 9am with Alice and Bob.
+================================= Tool Message =================================
+Name: schedule_event
+
+您的团队站会已安排在明天上午 9:00，参与者为 Alice 和 Bob。如果您需要进行任何更改或添加更多详细信息，请告诉我！
+================================== Ai Message ==================================
+
+与 Alice 和 Bob 的团队站会已安排在明天上午 9:00。如果您需要任何进一步的安排或调整，请告诉我！
+```
+
+主管识别出这是一个日历任务，调用 `schedule_event`，日历代理处理日期解析和事件创建。
+
+<Tip>
+要查看信息流的完整透明度，包括每次聊天模型调用的提示词和响应，请查看上述运行的[LangSmith 跟踪](https://smith.langchain.com/public/91a9a95f-fba9-4e84-aff0-371861ad2f4a/r)。
+</Tip>
+
+### 示例 2：复杂的跨领域请求
+
+```python
+query = (
+    "安排一个会议与设计团队在下周二下午 2 点持续 1 小时， "
+    "并发送一封电子邮件提醒他们审查新的模型图。"
+)
+
+for step in supervisor_agent.stream(
+    {"messages": [{"role": "user", "content": query}]}
+):
+    for update in step.values():
+        for message in update.get("messages", []):
+            message.pretty_print()
+```
+
+
+
+```
+================================== Ai Message ==================================
+Tool Calls:
+  schedule_event (call_YA68mqF0koZItCFPx0kGQfZi)
+ Call ID: call_YA68mqF0koZItCFPx0kGQfZi
+  Args:
+    request: meeting with the design team next Tuesday at 2pm for 1 hour
+  manage_email (call_XxqcJBvVIuKuRK794ZIzlLxx)
+ Call ID: call_XxqcJBvVIuKuRK794ZIzlLxx
+  Args:
+    request: send the design team an email reminder about reviewing the new mockups
+================================= Tool Message =================================
+Name: schedule_event
+
+您与设计团队的会议已安排在下周二，6 月 18 日下午 2:00 至 3:00。如果您需要添加更多详情或进行任何更改，请告诉我！
+================================= Tool Message =================================
+Name: manage_email
+
+我已向设计团队发送了提醒邮件，要求他们审查新的模型图。如果您需要包含更多信息或收件人，请告诉我！
+================================== Ai Message ==================================
+
+您与设计团队的会议已安排在下周二，6 月 18 日下午 2:00 至 3:00。
+
+我还已向设计团队发送了电子邮件提醒，请他们审查新的模型图。
+
+如果您需要为会议添加更多详情或在电子邮件中包含附加信息，请告诉我！
+```
+
+主管识别出这需要日历和电子邮件操作，首先调用 `schedule_event` 处理会议，然后调用 `manage_email` 处理提醒。每个子代理完成其任务，主管将两个结果综合成一个连贯的回复。
+
+<Tip>
+请参阅[LangSmith 跟踪](https://smith.langchain.com/public/95cd00a3-d1f9-4dba-9731-7bf733fb6a3c/r)以查看上述运行的详细信息流，包括各个聊天模型提示词和响应。
+</Tip>
+
+### 完整的可运行示例
+
+所有内容都在一个可运行的脚本中：
+
+<Expandable title="查看完整代码" defaultOpen={false}>
+
+```python
+"""
+个人助理主管示例
+
+此示例演示了用于多代理系统的工具调用模式。
+主管代理协调那些被包装成工具的专门子代理（日历和电子邮件）。
+"""
+
+from langchain.tools import tool
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+
+# ============================================================================
+# 步骤 1: 定义低级 API 工具（存根）
+# ============================================================================
+
+@tool
+def create_calendar_event(
+    title: str,
+    start_time: str,  # ISO 格式: "2024-01-15T14:00:00"
+    end_time: str,    # ISO 格式: "2024-01-15T15:00:00"
+    attendees: list[str],  # 电子邮件地址
+    location: str = ""
+) -> str:
+    """创建日历事件。需要精确的 ISO 日期时间格式。"""
+    return f"事件已创建: {title} 从 {start_time} 到 {end_time} 共有 {len(attendees)} 位参与者"
+
+
+@tool
+def send_email(
+    to: list[str],      # 电子邮件地址
+    subject: str,
+    body: str,
+    cc: list[str] = []
+) -> str:
+    """通过电子邮件 API 发送电子邮件。需要格式正确的地址。"""
+    return f"电子邮件已发送至 {', '.join(to)} - 主题: {subject}"
+
+
+@tool
+def get_available_time_slots(
+    attendees: list[str],
+    date: str,  # ISO 格式: "2024-01-15"
+    duration_minutes: int
+) -> list[str]:
+    """检查给定参与者在特定日期的日历可用时间段。"""
+    return ["09:00", "14:00", "16:00"]
+
+
+# ============================================================================
+# 步骤 2: 创建专用的子代理
+# ============================================================================
+
+model = init_chat_model("claude-haiku-4-5-20251001")  # 示例模型
+
+calendar_agent = create_agent(
+    model,
+    tools=[create_calendar_event, get_available_time_slots],
+    system_prompt=(
+        "你是一个日历调度助手。 "
+        "将自然语言调度请求（例如，“下周二下午 2 点”）解析为正确的 ISO 日期时间格式。 "
+        "在需要时使用 get_available_time_slots 检查可用性。 "
+        "使用 create_calendar_event 来安排事件。 "
+        "在你的最终回复中始终确认已调度的内容。"
+    )
+)
+
+email_agent = create_agent(
+    model,
+    tools=[send_email],
+    system_prompt=(
+        "你是一个电子邮件助手。 "
+        "根据自然语言请求撰写专业邮件。 "
+        "提取收件人信息并起草适当的主题行和正文。 "
+        "使用 send_email 发送消息。 "
+        "在你的最终回复中始终确认已发送的内容。"
+    )
+)
+
+# ============================================================================
+# 步骤 3: 将子代理包装为主管的工具
+# ============================================================================
+
+@tool
+def schedule_event(request: str) -> str:
+    """使用自然语言安排日历事件。
+
+    当用户想要创建、修改或检查日历约会*时*使用此工具。
+    处理日期/时间解析、可用性检查和事件创建。
+
+    输入：自然语言调度请求（例如，“与设计团队开会，下周二下午 2 点”）
+    """
+    result = calendar_agent.invoke({
+        "messages": [{"role": "user", "content": request}]
+    })
+    return result["messages"][-1].text
+
+
+@tool
+def manage_email(request: str) -> str:
+    """使用自然语言发送电子邮件。
+
+    当用户想要发送通知、提醒或任何电子邮件通信*时*使用此工具。
+    处理收件人提取、主题生成和电子邮件撰写。
+
+    输入：自然语言电子邮件请求（例如，“给他们发送一个关于会议的提醒”）
+    """
+    result = email_agent.invoke({
+        "messages": [{"role": "user", "content": request}]
+    })
+    return result["messages"][-1].text
+
+
+# ============================================================================
+# 步骤 4: 创建主管代理
+# ============================================================================
+
+supervisor_agent = create_agent(
+    model,
+    tools=[schedule_event, manage_email],
+    system_prompt=(
+        "你是一位乐于助人的个人助理。 "
+        "你可以安排日历事件和发送电子邮件。 "
+        "将用户请求分解为适当的工具调用并协调结果。 "
+        "当请求涉及多个操作时，按顺序使用多个工具。"
+    )
+)
+
+# ============================================================================
+# 步骤 5: 使用主管
+# ============================================================================
+
+if __name__ == "__main__":
+    # 示例：需要跨多个领域协调的用户请求
+    user_request = (
+        "安排一个会议与设计团队在下周二下午 2 点持续 1 小时， "
+        "并发送一封电子邮件提醒他们审查新的模型图。"
+    )
+
+    print("用户请求:", user_request)
+    print("\n" + "="*80 + "\n")
+
+    for step in supervisor_agent.stream(
+        {"messages": [{"role": "user", "content": user_request}]}
+    ):
+        for update in step.values():
+            for message in update.get("messages", []):
+                message.pretty_print()
+```
+
+
+
+
+</Expandable>
+
+## 7. 高级功能：控制信息流
+
+### 将附加的对话上下文传递给子代理
+
+```python
+from langchain.tools import tool, ToolRuntime
+
+@tool
+def schedule_event(
+    request: str,
+    runtime: ToolRuntime
+) -> str:
+    """使用自然语言安排日历事件。"""
+    # 自定义子代理收到的上下文
+    original_user_message = next(
+        message for message in runtime.state["messages"]
+        if message.type == "human"
+    )
+    prompt = (
+        "你正在协助以下用户查询：\n\n"
+        f"{original_user_message.text}\n\n"
+        "你的任务是以下子请求：\n\n"
+        f"{request}"
+    )
+    result = calendar_agent.invoke({
+        "messages": [{"role": "user", "content": prompt}],
+    })
+    return result["messages"][-1].text
+```
+
+
+
+
+这允许子代理查看完整的对话历史记录，这在解决像“明天同一时间安排”这样的模糊引用时非常有用（引用之前的对话）。
+
+<Tip>
+您可以在 LangSmith 跟踪中[聊天模型调用](https://smith.langchain.com/public/c7d54882-afb8-4039-9c5a-4112d0f458b0/r)中查看子代理收到的完整上下文。
+</Tip>
+
+### 控制主管收到的信息
+
+您也可以自定义流回主管的信息：
+
+```python
+import json
+
+@tool
+def schedule_event(request: str) -> str:
+    """使用自然语言安排日历事件。"""
+    result = calendar_agent.invoke({
+        "messages": [{"role": "user", "content": request}]
+    })
+
+    # 选项 1：仅返回确认消息
+    return result["messages"][-1].text
+
+    # 选项 2：返回结构化数据
+    # return json.dumps({
+    #     "status": "success",
+    #     "event_id": "evt_123",
+    #     "summary": result["messages"][-1].text
+    # })
+```
+
+
+
+
+**重要提示：** 确保子代理的提示词强调他们的最终消息应包含所有相关信息。常见的失败模式是子代理执行了工具调用但没有在最终响应中包含结果。
+
+
+
+## 8. 关键要点
+
+主管模式创建了抽象层，每一层都有明确的职责。在设计主管系统时，应从清晰的领域边界开始，并为每个子代理提供聚焦的工具和提示词。为主管编写清晰的工具描述，在集成之前独立测试每一层，并根据您的具体需求控制信息流。
+
+<Tip>
+**何时使用主管模式**
+
+当您有多个不同的领域（日历、电子邮件、CRM、数据库）时，每个领域都有多个工具或复杂的逻辑，您希望集中控制工作流程，并且子代理不需要直接与用户对话时，请使用主管模式。
+
+对于只有少量工具的简单情况，请使用单个代理。当代理需要与用户进行对话时，请使用[交接（handoffs）](/oss/python/langchain/multi-agent#handoffs)代替。对于代理之间的点对点协作，请考虑其他多代理模式。
+</Tip>
+
+## 后续步骤
+
+了解[交接（handoffs）](/oss/python/langchain/multi-agent#handoffs)以实现代理间的对话，探索[上下文工程](/oss/python/langchain/context-engineering)以微调信息流，阅读[多代理概述](/oss/python/langchain/multi-agent)以比较不同模式，并使用 [LangSmith](https://smith.langchain.com) 来调试和监控您的多代理系统。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\supervisor.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

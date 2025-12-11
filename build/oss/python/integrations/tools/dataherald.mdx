@@ -1,0 +1,53 @@
+---
+title: Dataherald
+---
+
+本教程将介绍如何使用 `dataherald` 组件。
+
+首先，您需要设置您的 Dataherald 账户并获取 API 密钥：
+
+1. 访问 [Dataherald 官网](https://www.dataherald.com/) 并 [在此处](https://www.dataherald.com/) 注册
+2. 登录您的管理员控制台（Admin Console）后，创建一个 API 密钥
+3. 安装 Dataherald 库：`pip install dataherald`
+
+接下来，我们需要设置一些环境变量：
+
+1. 将您的 API 密钥保存到名为 `DATAHERALD_API_KEY` 的环境变量中
+
+```python
+pip install dataherald
+pip install -qU langchain-community
+```
+
+```python
+import os
+
+os.environ["DATAHERALD_API_KEY"] = ""
+```
+
+```python
+from langchain_community.utilities.dataherald import DataheraldAPIWrapper
+```
+
+```python
+# dataherald 实例化的同时需要传入数据库连接 ID
+dataherald = DataheraldAPIWrapper(db_connection_id="65fb766367dd22c99ce1a12d")
+```
+
+```python
+# 运行自然语言查询
+dataherald.run("How many employees are in the company?")
+```
+
+```output
+'select COUNT(*) from employees'
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\dataherald.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

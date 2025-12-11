@@ -1,0 +1,126 @@
+---
+title: 分析实验
+sidebarTitle: 分析实验
+---
+
+本页面将介绍使用 LangSmith 处理 [_实验_](/langsmith/evaluation-concepts#experiment) 时所需的一些基本任务：
+
+- **[分析单个实验](#analyze-a-single-experiment)**：查看和解释实验结果，自定义列，过滤数据以及比较运行（runs）。
+- **[将实验结果下载为 CSV](#how-to-download-experiment-results-as-a-csv)**：将实验数据导出，用于外部分析和共享。
+- **[重命名实验](#how-to-rename-an-experiment)**：在 Playground 和实验视图中更新实验名称。
+
+## 分析单个实验
+
+运行实验后，您可以使用 LangSmith 的实验视图来分析结果，并从中得出关于实验性能的见解。
+
+### 打开实验视图
+
+要打开实验视图，请从 **Dataset & Experiments**（数据集与实验）页面选择相关的 [_数据集_](/langsmith/evaluation-concepts#datasets)，然后选择您想要查看的实验。
+
+![Open experiment view](/langsmith/images/select-experiment.png)
+
+### 查看实验结果
+
+#### 自定义列
+
+默认情况下，实验视图会为数据集中每个 [示例](/langsmith/evaluation-concepts#examples) 显示输入、输出和参考输出，以及评估反馈分数、成本、Token 计数、延迟和状态等实验指标。
+
+您可以使用 **Display**（显示）按钮自定义列，以便更轻松地解释实验结果：
+
+- **将输入、输出和参考输出中的字段拆分**到它们各自的列中。如果您有很长的输入/输出/参考输出，并希望突出显示重要字段时，这一点尤其有用。
+- **隐藏和重新排序列**，以创建专注于分析的视图。
+- **控制反馈分数的十进制精度**。默认情况下，LangSmith 会显示十进制精度为 2 的数值反馈分数，但您可以将此设置自定义为最多 6 位小数。
+- **为数值反馈分数设置热力图阈值**（高、中、低）。这会影响分数标签渲染为红色或绿色时的阈值：
+
+![Column heatmap configuration](/langsmith/images/column-heat-map.png)
+
+<Tip>
+您可以为整个数据集设置默认配置，或者暂时只为您自己保存设置。
+</Tip>
+
+#### 排序和过滤
+
+要对反馈分数进行排序或过滤，您可以使用列标题中的操作。
+
+![Sort and filter](/langsmith/images/sort-filter.png)
+
+#### 表格视图
+
+根据分析所需的视图，您可以通过切换紧凑视图（compact view）、完整视图（full view）和差异视图（diff view）来更改表的格式。
+
+- **Compact**（紧凑）视图将每次运行显示为单行，便于快速比较分数。
+- **Full**（完整）视图显示每次运行的完整输出，以便深入了解单个运行的详细信息。
+- **Diff**（差异）视图显示参考输出与每次运行的输出之间的文本差异。
+
+![Diff view](/langsmith/images/diff-mode.png)
+
+#### 查看追踪（Traces）
+
+将鼠标悬停在任何输出单元格上，然后单击追踪图标即可查看该运行的追踪。这将会在侧边栏中打开一个追踪。
+
+要查看完整的追踪项目，请单击标题右上角的 **View Project**（查看项目）按钮。
+
+![View trace](/langsmith/images/view-trace.png)
+
+#### 查看评估器运行（Evaluator Runs）
+
+对于评估器分数，您可以将鼠标悬停在评估器分数单元格上并单击箭头图标来查看源运行（source run）。这将在侧边栏中打开一个追踪。如果您正在运行 [LLM-as-a-judge 评估器](/langsmith/llm-as-judge)，您可以在此运行中查看评估器所使用的提示（prompt）。如果您的实验包含 [重复项](/langsmith/evaluation-concepts#repetitions)，您可以单击聚合平均分数以查找所有单个运行的链接。
+
+![View evaluator runs](/langsmith/images/evaluator-run.png)
+
+### 按元数据分组结果
+
+您可以向示例添加元数据以对其进行分类和组织。例如，如果您正在对问答数据集评估事实准确性，元数据可能包括每个问题所属的主题领域。元数据可以通过 [UI](/langsmith/manage-datasets-in-application#edit-example-metadata) 或 [SDK](/langsmith/manage-datasets-programmatically#update-single-example) 添加。
+
+要按元数据分析结果，请使用实验视图右上角的 **Group by**（分组依据）下拉菜单，并选择您想要的元数据键。这将显示每个元数据组的平均反馈分数、延迟、总 Tokens 数和成本。
+
+<Info>
+您只能按 2025 年 2 月 20 日之后创建的实验的示例元数据进行分组。对于早于该日期的任何实验，虽然仍可以按元数据分组，但前提是该元数据已应用于实验追踪本身。
+</Info>
+
+### 重复项（Repetitions）
+
+如果您使用 [_重复项_](/langsmith/evaluation-concepts#repetitions) 运行实验，输出结果列中将会有箭头，以便您可以在表中查看这些输出。要查看重复项中的每次运行，请将鼠标悬停在输出单元格上并单击展开视图。
+
+当您运行带重复项的实验时，LangSmith 会在表中显示每个反馈分数的平均值。单击反馈分数可以查看单个运行的反馈分数，或查看重复项之间的标准差。
+
+![Repetitions](/langsmith/images/repetitions.png)
+
+### 与另一个实验进行比较
+
+在实验视图的右上角，您可以选择另一个实验进行比较。这将打开一个比较视图，您可以在其中查看两个实验的对比情况。要了解有关比较视图的更多信息，请参阅 [如何比较实验结果](/langsmith/compare-experiment-results)。
+
+## 将实验结果下载为 CSV
+
+LangSmith 允许您将实验结果下载为 CSV 文件，以便您分析和共享结果。
+
+要下载为 CSV，请单击实验视图顶部的下载图标。该图标位于 [Compact toggle](/langsmith/compare-experiment-results#adjust-the-table-display)（紧凑切换按钮）的左侧。
+
+![Download CSV](/langsmith/images/download-experiment-results-as-csv.png)
+
+## 重命名实验
+
+<Note>
+实验名称在每个工作区内必须是唯一的。
+</Note>
+
+您可以在 LangSmith UI 的以下位置重命名实验：
+
+- [Playground（在 Playground 中重命名实验）](#renaming-an-experiment-in-the-playground)。在 Playground 中运行实验时，会自动分配一个默认名称，格式为 `pg::prompt-name::model::uuid`（例如 `pg::gpt-4o-mini::897ee630`）。
+
+  您可以在运行实验后立即通过编辑 Playground 表格标题中的名称来重命名该实验。
+
+  ![Edit name in playground](/langsmith/images/rename-in-playground.png)
+
+- [Experiments view（在实验视图中重命名实验）](#renaming-an-experiment-in-the-experiments-view)。在实验视图中查看结果时，您可以通过使用实验名称旁边的铅笔图标来重命名实验。
+
+  ![Edit name in experiments view](/langsmith/images/rename-in-experiments-view.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\analyze-an-experiment.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

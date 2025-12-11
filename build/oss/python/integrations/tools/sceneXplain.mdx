@@ -1,0 +1,78 @@
+---
+title: SceneXplain
+---
+
+[SceneXplain](https://scenex.jina.ai/) 是一个可通过 SceneXplain 工具访问的图像描述（Image Captioning）服务。
+
+要使用此工具，您需要在其网站上创建一个账户并获取您的 API 令牌 [从网站获取](https://scenex.jina.ai/api)。然后您就可以实例化该工具。
+
+```python
+import os
+
+os.environ["SCENEX_API_KEY"] = "<YOUR_API_KEY>"
+```
+
+```python
+from langchain.agents import load_tools
+
+tools = load_tools(["sceneXplain"])
+```
+
+或者直接实例化该工具。
+
+```python
+from langchain_community.tools import SceneXplainTool
+
+tool = SceneXplainTool()
+```
+
+## 在 Agent 中的使用
+
+该工具可以在任何 LangChain Agent 中按如下方式使用：
+
+```python
+from langchain.agents import initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain_openai import OpenAI
+
+llm = OpenAI(temperature=0)
+memory = ConversationBufferMemory(memory_key="chat_history")
+agent = initialize_agent(
+    tools, llm, memory=memory, agent="conversational-react-description", verbose=True
+)
+output = agent.run(
+    input=(
+        "这张图片 https://storage.googleapis.com/causal-diffusion.appspot.com/imagePrompts%2F0rw369i5h9t%2Foriginal.png 中有什么？"
+        "它是一个电影还是一个游戏？如果它是一部电影，电影叫什么名字？"
+    )
+)
+
+print(output)
+```
+
+```output
+> 进入 AgentExecutor 链...
+
+Thought: 我需要使用工具吗？ 是的
+Action: Image Explainer
+Action Input: https://storage.googleapis.com/causal-diffusion.appspot.com/imagePrompts%2F0rw369i5h9t%2Foriginal.png
+Observation: 在一个迷人而奇特的场景中，一个小女孩正和她毛茸茸的伙伴——深受喜爱的龙猫——一起冒雨前行。两人站在一个熙熙攘攘的街角，用一把亮黄色的雨伞为他们遮挡风雨。小女孩身穿一件活泼的黄色连衣裙，双手握着雨伞，带着惊奇和喜悦的表情仰望着龙猫。
+
+与此同时，龙猫自豪地挺立在年轻朋友身边，举着自己的雨伞来保护他们俩免受倾盆大雨的侵袭。它毛茸茸的身体呈现出丰富的灰色和白色调，它的大耳朵和睁大的眼睛赋予了它一种惹人喜爱的魅力。
+
+在场景的背景中，可以看到一个街道标志从人行道上伸出，周围是飞溅的雨滴。标志的表面装饰着中文字符，增添了一种文化多样性和神秘感。尽管天气阴沉，这幅温馨的图像中仍然洋溢着一种不可否认的喜悦和友爱之情。
+Thought: 我需要使用工具吗？ 不需要
+AI: 这张图片似乎是 1988 年日本动画奇幻电影《龙猫》（My Neighbor Totoro）中的一个剧照。这部电影讲述了两个小女孩，小月（Satsuki）和梅（Mei），探索乡村并与神奇的森林精灵（包括同名角色龙猫）交朋友的故事。
+
+> 链结束。
+这张图片似乎是 1988 年日本动画奇幻电影《龙猫》（My Neighbor Totoro）中的一个剧照。这部电影讲述了两个小女孩，小月（Satsuki）和梅（Mei），探索乡村并与神奇的森林精灵（包括同名角色龙猫）交朋友的故事。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\sceneXplain.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

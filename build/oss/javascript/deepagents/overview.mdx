@@ -1,0 +1,72 @@
+---
+title: Deep Agents 概述
+sidebarTitle: 概述
+description: 构建能够规划、使用子代理并利用文件系统的智能体，以完成复杂的任务
+---
+
+
+
+[`deepagents`](https://www.npmjs.com/package/deepagents) 是一个独立的库，用于构建能够处理复杂、多步骤任务的智能体。它基于 LangGraph 构建，并受到 Claude Code、Deep Research 和 Manus 等应用的启发。Deep Agents 具备规划能力、用于上下文管理的文件系统，以及创建子代理的能力。
+
+
+## 何时使用 Deep Agents
+
+当您需要具备以下能力的智能体时，请使用 Deep Agents：
+- **处理需要规划和分解的复杂多步骤任务**
+- **通过文件系统工具管理大量的上下文信息**
+- **将工作委派给专门的子代理以实现上下文隔离**
+- **在对话和线程之间持久化记忆**
+
+
+
+对于更简单的用例，可以考虑使用 LangChain 的 [`createAgent`](/oss/javascript/langchain/agents) 或构建自定义的 [LangGraph](/oss/javascript/langgraph/overview) 工作流。
+
+
+## 核心能力
+
+<Card title="规划和任务分解" icon="timeline">
+    Deep Agents 内置了 `write_todos` 工具，使智能体能够将复杂任务分解为离散的步骤，跟踪进度，并在出现新信息时调整计划。
+</Card>
+<Card title="上下文管理" icon="scissors">
+    文件系统工具（`ls`、`read_file`、`write_file`、`edit_file`）允许智能体将大段上下文卸载到内存中，从而防止上下文窗口溢出，并支持处理可变长度的工具输出。
+</Card>
+<Card title="子代理创建" icon="people-group">
+    内置的 `task` 工具使智能体能够创建专门的子代理以实现上下文隔离。这可以在深入处理特定子任务的同时，保持主智能体的上下文清晰。
+</Card>
+<Card title="长期记忆" icon="database">
+    使用 LangGraph 的 Store 扩展智能体，使其能够在线程之间保持持久记忆。智能体可以保存和检索先前对话中的信息。
+</Card>
+
+## 与 LangChain 生态系统的关系
+
+Deep Agents 建立在以下技术之上：
+- [LangGraph](/oss/javascript/langgraph/overview) - 提供底层图执行和状态管理功能
+- [LangChain](/oss/javascript/langchain/overview) - 工具和模型集成与 Deep Agents 无缝协作
+- [LangSmith](/langsmith/home) - 用于可观察性、评估和部署
+
+Deep Agents 应用程序可以通过 [LangSmith 部署](/langsmith/deployments) 进行部署，并使用 [LangSmith 可观察性](/langsmith/observability) 进行监控。
+
+## 开始使用
+
+
+
+<CardGroup cols={2}>
+    <Card title="快速入门" icon="rocket" href="/oss/javascript/deepagents/quickstart">
+        构建您的第一个 Deep Agent
+    </Card>
+    <Card title="定制化" icon="sliders" href="/oss/javascript/deepagents/customization">
+        了解定制化选项
+    </Card>
+    <Card title="中间件" icon="layer-group" href="/oss/javascript/deepagents/middleware">
+        理解中间件架构
+    </Card>
+</CardGroup>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\deepagents\overview.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

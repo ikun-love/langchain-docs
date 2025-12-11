@@ -1,0 +1,51 @@
+---
+title: 查看追踪的服务器日志
+sidebarTitle: 查看追踪的服务器日志
+---
+
+当您查看由 LangSmith 中的一次运行生成的追踪时，您可以直接从追踪视图访问相关的服务器日志。
+
+<Note>
+查看追踪的服务器日志仅适用于 [LangSmith 云 SaaS 版](https://langchain-ai.github.io/langgra/langsmith/observability-concepts/deployment_options/#cloud-saas) 和 [完全自托管版](https://langchain-ai.github.io/langgra/langsmith/observability-concepts/deployment_options/#self-hosted-control-plane) 部署选项。
+</Note>
+
+## 从追踪视图访问服务器日志
+
+在追踪视图中，请在右上角，紧邻 **在 Studio 中运行（Run in Studio）** 按钮的旁边，使用 **查看日志（See Logs）** 按钮。
+
+![](/langsmith/images/view-server-logs-button.png)
+
+点击此按钮后，您将被导航到 LangSmith 中对应部署的服务器日志视图。
+
+## 服务器日志视图
+
+服务器日志视图会显示来自以下两方的日志：
+
+- **Agent 服务器自身的操作日志** - 内部服务器操作、API 调用和系统事件
+- **用户应用程序日志** - 在您的流程（graph）中通过以下方式写入的日志：
+  - Python：使用 `logging` 或 `structlog` 库
+  - JavaScript：使用从 `@langchain/langgraph-sdk/logging` 中重新导出的 Winston 日志记录器：
+
+```javascript
+import { getLogger } from "@langchain/langgraph-sdk/logging";
+
+const logger = getLogger();
+logger.info("Your log message");
+```
+
+## 按追踪 ID 过滤日志
+
+当您从追踪视图导航时，**过滤器（Filters）** 框会自动预先填入您刚刚查看的追踪的 Trace ID（追踪 ID）。
+
+这使您可以快速过滤日志，只查看与您的特定追踪执行相关的日志。
+
+![](/langsmith/images/lgp-server-logs-filters.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\platform-logs.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

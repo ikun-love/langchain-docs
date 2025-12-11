@@ -1,0 +1,297 @@
+```markdown
+---
+title: Weights & Biases 追踪
+---
+
+本 Notebook 将指导你如何将 LangChain 实验追踪到统一的 `Weights and Biases` (W&B) 控制面板中。
+
+要了解有关提示工程 (prompt engineering) 和回调 (callback) 的更多信息，请参阅此 Notebook，它解释了这两者以及你可以预期的结果仪表板：
+
+<a href="https://colab.research.google.com/drive/1DXH4beT4HFaRKy_Vm4PoxhXVDRf7Ym8L?usp=sharing" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="在 Colab 中打开"/></a>
+
+在 [W&B 文章](https://wandb.ai/a-sh0ts/langchain_callback_demo/reports/Prompt-Engineering-LLMs-with-LangChain-and-W-B--VmlldzozNjk1NTUw#👋-how-to-build-a-callback-in-langchain-for-better-prompt-engineering) 中查看详细描述和示例。
+
+**注意**：`WandbCallbackHandler` 正在被弃用，推荐使用 `WandbTracer`。将来请使用 `WandbTracer`，因为它更灵活，并支持更精细化的日志记录。
+
+要了解有关 `WandbTracer` 的更多信息，请参阅 [agent_with_wandb_tracing](/oss/python/integrations/providers/wandb_tracing) Notebook 或使用以下 [colab Notebook](http://wandb.me/prompts-quickstart)。
+
+要了解有关 Weights & Biases Prompts 的更多信息，请参阅以下 [prompts 文档](https://docs.wandb.ai/guides/prompts)。
+
+```python
+pip install -qU  wandb
+pip install -qU  pandas
+pip install -qU  textstat
+pip install -qU  spacy
+!python -m spacy download en_core_web_sm
+```
+
+```python
+import os
+
+os.environ["WANDB_API_KEY"] = ""
+# os.environ["OPENAI_API_KEY"] = ""
+# os.environ["SERPAPI_API_KEY"] = ""
+```
+
+```python
+from datetime import datetime
+
+from langchain_community.callbacks import WandbCallbackHandler
+from langchain_core.callbacks import StdOutCallbackHandler
+from langchain_openai import OpenAI
+```
+
+```
+将回调到 Weights and Biases 的回调处理程序。
+
+参数：
+    job_type (str)：作业的类型。
+    project (str)：要记录到的项目。
+    entity (str)：要记录到的实体（用户或团队）。
+    tags (list)：要记录的标签。
+    group (str)：要记录到的组。
+    name (str)：运行的名称。
+    notes (str)：要记录的备注。
+    visualize (bool)：是否可视化运行。
+    complexity_metrics (bool)：是否记录复杂度指标。
+    stream_logs (bool)：是否将回调操作流式传输到 W&B
+```
+
+```
+WandbCallbackHandler(...) 的默认值
+
+visualize: bool = False,
+complexity_metrics: bool = False,
+stream_logs: bool = False,
+```
+
+注意：对于 Beta 工作流，我们基于 textstat 进行了默认分析，并基于 spacy 进行了可视化。
+
+```python
+"""主函数。
+
+此函数用于尝试回调处理程序。
+场景：
+1. OpenAI LLM
+2. 具有多个子链 (SubChains) 且有多次生成的链 (Chain)
+3. 带有工具 (Tools) 的智能体 (Agent)
+"""
+session_group = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+wandb_callback = WandbCallbackHandler(
+    job_type="inference",
+    project="langchain_callback_demo",
+    group=f"minimal_{session_group}",
+    name="llm",
+    tags=["test"],
+)
+callbacks = [StdOutCallbackHandler(), wandb_callback]
+llm = OpenAI(temperature=0, callbacks=callbacks)
+```
+
+```output
+wandb: 当前已登录用户: harrison-chase。使用 `wandb login --relogin` 强制重新登录
+```
+
+```html
+正在使用 wandb 版本 0.14.0 追踪运行
+```
+
+```html
+运行数据已本地保存在 <code>/Users/harrisonchase/workplace/langchain/docs/ecosystem/wandb/run-20230318_150408-e47j1914</code>
+```
+
+```html
+将运行 <strong><a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/e47j1914' target="_blank">llm</a></strong> 同步到 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">Weights & Biases</a> (<a href='https://wandb.me/run' target="_blank">文档</a>)<br/>
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo</a> 查看项目
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/e47j1914' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/e47j1914</a> 查看运行
+```
+
+```output
+wandb: 警告 wandb 回调目前处于 Beta 阶段，可能会根据 `langchain` 的更新而发生变化。请在 GitHub 问题页面 https://github.com/wandb/wandb/issues 报告任何问题，并附上标签 `langchain`。
+```
+
+```
+# WandbCallbackHandler.flush_tracker(...) 的默认值
+
+reset: bool = True,
+finish: bool = False,
+```
+
+`flush_tracker` 函数用于将 LangChain 会话日志记录到 Weights & Biases。它接受 LangChain 模块或智能体，并至少记录提示和生成的内容，以及 LangChain 模块的序列化形式到指定的 Weights & Biases 项目中。默认情况下，我们重置会话而不是直接结束会话。
+
+## 使用场景
+
+### 配合 LLM
+
+```python
+# 场景 1 - LLM
+llm_result = llm.generate(["给我讲个笑话", "写首诗"] * 3)
+wandb_callback.flush_tracker(llm, name="simple_sequential")
+```
+
+```html
+等待 W&B 进程完成... <strong style="color:green">(成功).</strong>
+```
+
+```html
+查看位于 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/e47j1914' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/e47j1914</a> 的运行 <strong style="color:#cdcd00">llm</strong><br/>同步了 5 个 W&B 文件、2 个媒体文件、5 个工件文件和 0 个其他文件
+```
+
+```html
+在 <code>./wandb/run-20230318_150408-e47j1914/logs</code> 查找日志
+```
+
+```output
+VBox(children=(Label(value='正在等待 wandb.init()...\r'), FloatProgress(value=0.016745895149999985, max=1.0…
+```
+
+```html
+正在使用 wandb 版本 0.14.0 追踪运行
+```
+
+```html
+运行数据已本地保存在 <code>/Users/harrisonchase/workplace/langchain/docs/ecosystem/wandb/run-20230318_150534-jyxma7hu</code>
+```
+
+```html
+将运行 <strong><a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/jyxma7hu' target="_blank">simple_sequential</a></strong> 同步到 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">Weights & Biases</a> (<a href='https://wandb.me/run' target="_blank">文档</a>)<br/>
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo</a> 查看项目
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/jyxma7hu' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/jyxma7hu</a> 查看运行
+```
+
+### 在链 (Chains) 中使用
+
+```python
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+# 场景 2 - 链
+template = """你是一位剧作家。给定一部戏剧的标题，你的工作是为该标题撰写剧情简介。
+标题: {title}
+剧作家: 这是上述剧作的简介:"""
+prompt_template = PromptTemplate(input_variables=["title"], template=template)
+synopsis_chain = LLMChain(llm=llm, prompt=prompt_template, callbacks=callbacks)
+
+test_prompts = [
+    {
+        "title": "关于优秀的视频游戏如何推动游戏设计的界限的纪录片"
+    },
+    {"title": "可卡因熊大战海洛因狼"},
+    {"title": "一流的 MLOps 工具"},
+]
+synopsis_chain.apply(test_prompts)
+wandb_callback.flush_tracker(synopsis_chain, name="agent")
+```
+
+```html
+等待 W&B 进程完成... <strong style="color:green">(成功).</strong>
+```
+
+```html
+查看位于 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/jyxma7hu' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/jyxma7hu</a> 的运行 <strong style="color:#cdcd00">simple_sequential</strong><br/>同步了 4 个 W&B 文件、2 个媒体文件、6 个工件文件和 0 个其他文件
+```
+
+```html
+在 <code>./wandb/run-20230318_150534-jyxma7hu/logs</code> 查找日志
+```
+
+```output
+VBox(children=(Label(value='正在等待 wandb.init()...\r'), FloatProgress(value=0.016736786816666675, max=1.0…
+```
+
+```html
+正在使用 wandb 版本 0.14.0 追踪运行
+```
+
+```html
+运行数据已本地保存在 <code>/Users/harrisonchase/workplace/langchain/docs/ecosystem/wandb/run-20230318_150550-wzy59zjq</code>
+```
+
+```html
+将运行 <strong><a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/wzy59zjq' target="_blank">agent</a></strong> 同步到 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">Weights & Biases</a> (<a href='https://wandb.me/run' target="_blank">文档</a>)<br/>
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo</a> 查看项目
+```
+
+```html
+在 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/wzy59zjq' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/wzy59zjq</a> 查看运行
+```
+
+### 配合智能体 (Agents) 使用
+
+```python
+from langchain.agents import AgentType, initialize_agent, load_tools
+```
+
+```python
+# 场景 3 - 带有工具的智能体
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+agent = initialize_agent(
+    tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+)
+agent.run(
+    "莱昂纳多·迪卡普里奥的女友是谁？她现在的年龄的 0.43 次方是多少？",
+    callbacks=callbacks,
+)
+wandb_callback.flush_tracker(agent, reset=False, finish=True)
+```
+
+```output
+> 开始执行 AgentExecutor 链...
+ 我需要找出莱昂纳多·迪卡普里奥的女友是谁，然后计算她年龄的 0.43 次方。
+操作: 搜索 (Search)
+操作输入: "Leo DiCaprio girlfriend"
+观察结果: DiCaprio had a steady girlfriend in Camila Morrone. He had been with the model turned actress for nearly five years, as they were first said to be dating at the end of 2017. And the now 26-year-old Morrone is no stranger to Hollywood. (迪卡普里奥有一个稳定的女友卡米拉·莫罗内。他与这位模特兼演员在一起将近五年了，据称他们在 2017 年底开始约会。现在 26 岁的莫罗内对好莱坞并不陌生。)
+思考: 我需要计算她年龄的 0.43 次方。
+操作: 计算器 (Calculator)
+操作输入: 26^0.43
+观察结果: 答案: 4.059182145592686
+
+思考: 我现在知道了最终答案。
+最终答案: 莱昂纳多·迪卡普里奥的女友是卡米拉·莫罗内，她目前的年龄的 0.43 次方是 4.059182145592686。
+
+> 链执行完毕。
+```
+
+```html
+等待 W&B 进程完成... <strong style="color:green">(成功).</strong>
+```
+
+```html
+查看位于 <a href='https://wandb.ai/harrison-chase/langchain_callback_demo/runs/wzy59zjq' target="_blank">https://wandb.ai/harrison-chase/langchain_callback_demo/runs/wzy59zjq</a> 的运行 <strong style="color:#cdcd00">agent</strong><br/>同步了 5 个 W&B 文件、2 个媒体文件、7 个工件文件和 0 个其他文件
+```
+
+```html
+在 <code>./wandb/run-20230318_150550-wzy59zjq/logs</code> 查找日志
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\wandb_tracking.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

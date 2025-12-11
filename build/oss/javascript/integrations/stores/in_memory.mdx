@@ -1,0 +1,150 @@
+---
+title: InMemoryStore
+---
+
+这将帮助您开始使用 [InMemoryStore](/oss/javascript/integrations/stores)。有关 `InMemoryStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html)。
+
+`InMemoryStore` 允许为存储中的值分配一个通用类型（generic type）。我们将类型 `BaseMessage` 分配给我们的值类型，以保持聊天历史存储的主题一致性。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | [Python 支持](https://python.langchain.com/docs/integrations/stores/in_memory/) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: |
+| [InMemoryStore](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html) | [@langchain/core](https://api.js.langchain.com/modules/langchain_core.stores.html) | ✅ | ✅ | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/core?style=flat-square&label=%20&) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/core?style=flat-square&label=%20&) |
+
+## 设置
+
+### 安装
+
+LangChain `InMemoryStore` 集成位于 `@langchain/core` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/core
+```
+```bash yarn
+yarn add @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/core
+```
+</CodeGroup>
+
+## 实例化
+
+现在我们可以实例化我们的字节存储（byte store）：
+
+```typescript
+import { InMemoryStore } from "@langchain/core/stores"
+import { BaseMessage } from "@langchain/core/messages";
+
+const kvStore = new InMemoryStore<BaseMessage>();
+```
+
+## 用法
+
+您可以使用 `mset` 方法，如下所示，在键下设置数据：
+
+```typescript
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+
+await kvStore.mset(
+  [
+    ["key1", new HumanMessage("value1")],
+    ["key2", new AIMessage("value2")],
+  ]
+)
+
+await kvStore.mget(
+  [
+    "key1",
+    "key2",
+  ]
+)
+```
+
+```output
+[
+  HumanMessage {
+    "content": "value1",
+    "additional_kwargs": {},
+    "response_metadata": {}
+  },
+  AIMessage {
+    "content": "value2",
+    "additional_kwargs": {},
+    "response_metadata": {},
+    "tool_calls": [],
+    "invalid_tool_calls": []
+  }
+]
+```
+
+您可以使用 `mdelete` 方法删除数据：
+
+```typescript
+await kvStore.mdelete(
+  [
+    "key1",
+    "key2",
+  ]
+)
+
+await kvStore.mget(
+  [
+    "key1",
+    "key2",
+  ]
+)
+```
+
+```output
+[ undefined, undefined ]
+```
+
+## 产生值 (Yielding values)
+
+如果您想获取所有键，可以调用 `yieldKeys` 方法。可选地，您可以传入一个键前缀 (`key prefix`)，只获取与该前缀匹配的键。
+
+```typescript
+import { InMemoryStore } from "@langchain/core/stores"
+import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+
+const kvStoreForYield = new InMemoryStore<BaseMessage>();
+
+// 向存储中添加一些数据
+await kvStoreForYield.mset(
+  [
+    ["message:id:key1", new HumanMessage("value1")],
+    ["message:id:key2", new AIMessage("value2")],
+  ]
+)
+
+const yieldedKeys = [];
+for await (const key of kvStoreForYield.yieldKeys("message:id:")) {
+  yieldedKeys.push(key);
+}
+
+console.log(yieldedKeys);
+```
+
+```output
+[ 'message:id:key1', 'message:id:key2' ]
+```
+
+---
+
+## API 参考
+
+有关 `InMemoryStore` 所有功能和配置的详细文档，请访问 [API 参考](https://api.js.langchain.com/classes/langchain_core.stores.InMemoryStore.html)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\stores\in_memory.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

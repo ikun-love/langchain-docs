@@ -1,0 +1,81 @@
+---
+title: Valyu 深度搜索
+---
+
+>[Valyu](https://www.valyu.network/) 允许 AI 应用程序和智能体（agents）在互联网和专有数据源中搜索与 LLM（大型语言模型）准备就绪的相关信息。
+
+本示例 Notebook 将介绍如何在 LangChain 中使用 Valyu。
+
+首先，获取一个 Valyu API 密钥，并将其设置为环境变量。您可以通过[在此处注册](https://platform.valyu.network/)获得 $10 免费额度。
+
+## 设置 (Setup)
+
+该集成位于 `langchain-valyu` 包中。
+
+```python
+pip install -qU langchain-valyu
+```
+
+为了使用该包，您还需要将环境变量 `VALYU_API_KEY` 设置为您获得的 Valyu API 密钥。
+
+## 上下文检索器 (Context Retriever)
+
+您可以在标准的检索管道中使用 [`ValyuContextRetriever`](https://pypi.org/project/langchain-valyu/)。
+
+```python
+from langchain_valyu import ValyuRetriever
+
+valyu_api_key = "YOUR API KEY"
+
+# 创建 ValyuRetriever 的新实例
+valyu_retriever = ValyuRetriever(
+    k=5,
+    search_type="all",
+    relevance_threshold=0.5,
+    max_price=20.0,
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+    valyu_api_key=valyu_api_key,
+)
+
+# 搜索查询并保存结果
+docs = valyu_retriever.invoke("可再生能源的好处是什么？")
+
+# 打印结果
+for doc in docs:
+    print(doc.page_content)
+    print(doc.metadata)
+```
+
+## 上下文搜索工具 (Context Search Tool)
+
+您可以使用 `ValyuSearchTool` 执行更高级的搜索查询。
+
+```python
+from langchain_valyu import ValyuSearchTool
+
+# 初始化 ValyuSearchTool
+search_tool = ValyuSearchTool(valyu_api_key="YOUR API KEY")
+
+# 执行搜索查询
+search_results = search_tool._run(
+    query="什么是增强了智能体搜索能力的大型推理模型？",
+    search_type="all",
+    max_num_results=5,
+    relevance_threshold=0.5,
+    max_price=20.0,
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+)
+
+print("搜索结果:", search_results)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\valyu.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

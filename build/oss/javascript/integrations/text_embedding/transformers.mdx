@@ -1,0 +1,65 @@
+---
+title: HuggingFace Transformers
+---
+
+`TransformerEmbeddings` 类使用 [Transformers.js](https://huggingface.co/docs/transformers.js/index) 包来为给定文本生成嵌入（embeddings）。
+
+它在本地运行，甚至可以直接在浏览器中工作，使您能够创建具有内置嵌入功能的 Web 应用。
+
+## 设置 (Setup)
+
+您需要将 `@huggingface/transformers` 包作为对等依赖项（peer dependency）安装：
+
+<Tip>
+**兼容性 (Compatibility)**
+
+如果您使用的社区版本早于 0.3.21，请安装旧的 `@xenova/transformers` 包，并从下方的 `"@langchain/community/embeddings/hf_transformers"` 导入嵌入。
+</Tip>
+
+```bash npm
+npm install @huggingface/transformers
+```
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/community @langchain/core
+```
+
+## 示例 (Example)
+
+请注意，如果您在浏览器环境中使用，您很可能希望将所有推理相关的代码放在 Web Worker 中，以避免阻塞主线程。
+
+请参阅[本指南](https://huggingface.co/docs/transformers.js/tutorials/next)以及 Transformers.js 文档中的其他资源，了解如何设置项目的思路。
+
+```typescript
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
+
+const model = new HuggingFaceTransformersEmbeddings({
+  model: "Xenova/all-MiniLM-L6-v2",
+});
+
+/* 嵌入查询 (Embed queries) */
+const res = await model.embedQuery(
+  "What would be a good company name for a company that makes colorful socks?"
+);
+console.log({ res });
+/* 嵌入文档 (Embed documents) */
+const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
+console.log({ documentRes });
+```
+
+## 相关 (Related)
+
+- 嵌入模型[概念指南](/oss/javascript/integrations/text_embedding)
+- 嵌入模型[操作指南](/oss/javascript/integrations/text_embedding)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\text_embedding\transformers.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

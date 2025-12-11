@@ -1,0 +1,78 @@
+---
+title: JinaChat
+---
+
+本指南将介绍如何开始使用 JinaChat 聊天模型。
+
+```python
+from langchain_community.chat_models import JinaChat
+from langchain.messages import HumanMessage, SystemMessage
+from langchain_core.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
+```
+
+```python
+chat = JinaChat(temperature=0)
+```
+
+```python
+messages = [
+    SystemMessage(
+        content="You are a helpful assistant that translates English to French."
+    ),
+    HumanMessage(
+        content="Translate this sentence from English to French. I love programming."
+    ),
+]
+chat(messages)
+```
+
+```output
+AIMessage(content="J'aime programmer.", additional_kwargs={}, example=False)
+```
+
+您可以通过使用 `MessagePromptTemplate` 来利用模板功能。您可以从一个或多个 `MessagePromptTemplates` 构建一个 `ChatPromptTemplate`。您可以使用 `ChatPromptTemplate` 的 `format_prompt` 方法——它会返回一个 `PromptValue`，您可以根据需要将其转换为字符串或 Message 对象，以便将其格式化后的值用作 LLM（大型语言模型）或聊天模型的输入。
+
+为了方便起见，模板上暴露了一个 `from_template` 方法。如果您使用此模板，它看起来会是这样：
+
+```python
+template = (
+    "You are a helpful assistant that translates {input_language} to {output_language}."
+)
+system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+human_template = "{text}"
+human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+```
+
+```python
+chat_prompt = ChatPromptTemplate.from_messages(
+    [system_message_prompt, human_message_prompt]
+)
+
+# 从格式化后的消息中获取聊天补全
+chat(
+    chat_prompt.format_prompt(
+        input_language="English", output_language="French", text="I love programming."
+    ).to_messages()
+)
+```
+
+```output
+AIMessage(content="J'aime programmer.", additional_kwargs={}, example=False)
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\jinachat.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

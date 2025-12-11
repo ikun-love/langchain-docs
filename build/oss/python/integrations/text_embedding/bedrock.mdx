@@ -1,0 +1,48 @@
+---
+title: BedrockEmbeddings
+---
+
+>[Amazon Bedrock](https://aws.amazon.com/bedrock/) 是一项全托管服务，它通过一个统一的 API 提供了来自领先 AI 公司（如 `AI21 Labs`、`Anthropic`、`Cohere`、`Meta`、`Stability AI` 和 `Amazon`）高性能的基础模型（Foundation Models, FMs）选择。同时，它还提供了一套广泛的功能，帮助您以安全、私密和负责任的方式构建生成式 AI 应用程序。通过使用 `Amazon Bedrock`，您可以轻松地为您的用例试验和评估顶级 FM，使用微调（fine-tuning）和`检索增强生成`（`Retrieval Augmented Generation`，简称 `RAG`）等技术，利用您自己的数据对其进行私有定制，并构建能够利用企业系统和数据源执行任务的智能体（Agents）。由于 `Amazon Bedrock` 是无服务器（serverless）的，您无需管理任何基础设施，并且可以使用您熟悉的 AWS 服务来安全地集成和部署生成式 AI 功能到您的应用程序中。
+
+```python
+pip install -qU  boto3
+```
+
+```python
+from langchain_aws import BedrockEmbeddings
+
+embeddings = BedrockEmbeddings(
+    credentials_profile_name="bedrock-admin", region_name="us-east-1"
+)
+```
+
+```python
+embeddings.embed_query("This is a content of the document")
+```
+
+```python
+embeddings.embed_documents(
+    ["This is a content of the document", "This is another document"]
+)
+```
+
+```python
+# 异步嵌入查询
+await embeddings.aembed_query("This is a content of the document")
+```
+
+```python
+# 异步嵌入文档
+await embeddings.aembed_documents(
+    ["This is a content of the document", "This is another document"]
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\bedrock.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

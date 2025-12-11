@@ -1,0 +1,1130 @@
+根据输入文本的结构（包含 `---` 分隔的 Frontmatter、Markdown 标题 `##` 和代码块 ````python`/````js`），我判断输入格式为 **Markdown (.md)**。
+
+我将执行翻译，同时严格遵循 Markdown 格式和技术文档翻译规范。
+
+---
+title: 工作流与智能体
+sidebarTitle: 工作流 + 智能体
+---
+
+本指南回顾了常见的工作流（Workflow）和智能体（Agent）模式。
+
+- 工作流具有预先确定的代码路径，并被设计为按特定顺序运行。
+- 智能体是动态的，它们定义了自己的流程和工具使用方式。
+
+![Agent Workflow](/oss/images/agent_workflow.png)
+
+LangGraph 在构建智能体和工作流时提供了多项优势，包括 [持久化（persistence）](/oss/python/langgraph/persistence)、[流式传输（streaming）](/oss/python/langgraph/streaming)，以及对调试和 [部署（deployment）](/oss/python/langgraph/deploy) 的支持。
+
+## 设置 (Setup)
+
+要构建工作流或智能体，您可以使用任何支持结构化输出和工具调用的 [聊天模型](/oss/python/integrations/chat)。以下示例使用了 Anthropic：
+
+1. 安装依赖项:
+```bash
+pip install langchain_core langchain-anthropic langgraph
+```
+
+2. 初始化 LLM:
+
+```python
+import os
+import getpass
+
+from langchain_anthropic import ChatAnthropic
+
+def _set_env(var: str):
+    if not os.environ.get(var):
+        os.environ[var] = getpass.getpass(f"{var}: ")
+
+
+_set_env("ANTHROPIC_API_KEY")
+
+llm = ChatAnthropic(model="claude-sonnet-4-5-20250929")
+```
+
+
+
+
+## LLM 与增强
+
+工作流和智能体系统基于 LLM 以及您为其添加的各种增强功能。[工具调用](/oss/python/langchain/tools)、[结构化输出](/oss/python/langchain/structured-output) 和 [短期记忆（short term memory）](/oss/python/langchain/short-term-memory) 是根据您的需求定制 LLM 的一些选项。
+
+![LLM augmentations](/oss/images/augmented_llm.png)
+
+```python
+# 结构化输出的 Schema
+from pydantic import BaseModel, Field
+
+
+class SearchQuery(BaseModel):
+    search_query: str = Field(None, description="针对用户请求进行优化的网络搜索查询。")
+    justification: str = Field(
+        None, description="此查询与用户请求相关的原因。"
+    )
+
+
+# 使用 schema 增强 LLM 以支持结构化输出
+structured_llm = llm.with_structured_output(SearchQuery)
+
+# 调用增强后的 LLM
+output = structured_llm.invoke("钙化积分评分 (Calcium CT score) 与高胆固醇有何关系?")
+
+# 定义一个工具
+def multiply(a: int, b: int) -> int:
+    return a * b
+
+# 使用工具增强 LLM
+llm_with_tools = llm.bind_tools([multiply])
+
+# 调用 LLM 以触发工具调用
+msg = llm_with_tools.invoke("2 乘以 3 等于多少?")
+
+# 获取工具调用
+msg.tool_calls
+```
+
+
+
+## 提示链 (Prompt chaining)
+
+提示链是指每次 LLM 调用都处理前一次调用的输出。这常用于执行明确定义的、可分解为更小、可验证步骤的任务。一些示例包括：
+
+- 将文档翻译成不同的语言
+- 验证生成内容的一致性
+
+![Prompt chaining](/oss/images/prompt_chain.png)
+
+<CodeGroup>
+```python Graph API
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from IPython.display import Image, display
+
+
+# 图状态
+class State(TypedDict):
+    topic: str
+    joke: str
+    improved_joke: str
+    final_joke: str
+
+
+# 节点
+def generate_joke(state: State):
+    """第一次 LLM 调用，生成初始笑话"""
+
+    msg = llm.invoke(f"围绕 {state['topic']} 写一个简短的笑话")
+    return {"joke": msg.content}
+
+
+def check_punchline(state: State):
+    """检查笑话是否包含笑点（punchline）的门控函数"""
+
+    # 简单检查——笑话中是否包含 "?" 或 "!"
+    if "?" in state["joke"] or "!" in state["joke"]:
+        return "Pass"
+    return "Fail"
+
+
+def improve_joke(state: State):
+    """第二次 LLM 调用，改进笑话"""
+
+    msg = llm.invoke(f"通过增加文字游戏来让这个笑话更有趣: {state['joke']}")
+    return {"improved_joke": msg.content}
+
+
+def polish_joke(state: State):
+    """第三次 LLM 调用，进行最终润色"""
+    msg = llm.invoke(f"为这个笑话增加一个令人惊讶的转折: {state['improved_joke']}")
+    return {"final_joke": msg.content}
+
+
+# 构建工作流
+workflow = StateGraph(State)
+
+# 添加节点
+workflow.add_node("generate_joke", generate_joke)
+workflow.add_node("improve_joke", improve_joke)
+workflow.add_node("polish_joke", polish_joke)
+
+# 添加边连接节点
+workflow.add_edge(START, "generate_joke")
+workflow.add_conditional_edges(
+    "generate_joke", check_punchline, {"Fail": "improve_joke", "Pass": END}
+)
+workflow.add_edge("improve_joke", "polish_joke")
+workflow.add_edge("polish_joke", END)
+
+# 编译
+chain = workflow.compile()
+
+# 显示工作流
+display(Image(chain.get_graph().draw_mermaid_png()))
+
+# 调用
+state = chain.invoke({"topic": "猫 (cats)"})
+print("初始笑话:")
+print(state["joke"])
+print("\n--- --- ---\n")
+if "improved_joke" in state:
+    print("改进后的笑话:")
+    print(state["improved_joke"])
+    print("\n--- --- ---\n")
+
+    print("最终笑话:")
+    print(state["final_joke"])
+else:
+    print("最终笑话:")
+    print(state["joke"])
+```
+```python Functional API
+from langgraph.func import entrypoint, task
+
+
+# 任务
+@task
+def generate_joke(topic: str):
+    """第一次 LLM 调用，生成初始笑话"""
+    msg = llm.invoke(f"围绕 {topic} 写一个简短的笑话")
+    return msg.content
+
+
+def check_punchline(joke: str):
+    """检查笑话是否包含笑点的门控函数"""
+    # 简单检查——笑话中是否包含 "?" 或 "!"
+    if "?" in joke or "!" in joke:
+        return "Fail"
+
+    return "Pass"
+
+
+@task
+def improve_joke(joke: str):
+    """第二次 LLM 调用，改进笑话"""
+    msg = llm.invoke(f"通过增加文字游戏来让这个笑话更有趣: {joke}")
+    return msg.content
+
+
+@task
+def polish_joke(joke: str):
+    """第三次 LLM 调用，进行最终润色"""
+    msg = llm.invoke(f"为这个笑话增加一个令人惊讶的转折: {joke}")
+    return msg.content
+
+
+@entrypoint()
+def prompt_chaining_workflow(topic: str):
+    original_joke = generate_joke(topic).result()
+    if check_punchline(original_joke) == "Pass":
+        return original_joke
+
+    improved_joke = improve_joke(original_joke).result()
+    return polish_joke(improved_joke).result()
+
+# 调用
+for step in prompt_chaining_workflow.stream("cats", stream_mode="updates"):
+    print(step)
+    print("\n")
+```
+</CodeGroup>
+
+
+
+
+## 并行化 (Parallelization)
+
+在并行化中，LLM 同时处理一个任务。这可以通过同时运行多个独立的子任务，或者多次运行相同的任务以检查不同的输出来实现。并行化通常用于：
+
+- 同时运行子任务并提高速度
+- 多次运行任务以检查不同输出，从而提高置信度
+
+一些示例包括：
+
+- 运行一个子任务来处理文档中的关键词，另一个子任务来检查格式错误
+- 多次运行一个任务，根据不同标准（如引用数量、使用的源数量、源质量）对文档的准确性进行评分
+
+![parallelization.png](/oss/images/parallelization.png)
+
+<CodeGroup>
+```python Graph API
+# 图状态
+class State(TypedDict):
+    topic: str
+    joke: str
+    story: str
+    poem: str
+    combined_output: str
+
+
+# 节点
+def call_llm_1(state: State):
+    """第一次 LLM 调用，生成初始笑话"""
+
+    msg = llm.invoke(f"写一个关于 {state['topic']} 的笑话")
+    return {"joke": msg.content}
+
+
+def call_llm_2(state: State):
+    """第二次 LLM 调用，生成故事"""
+
+    msg = llm.invoke(f"写一个关于 {state['topic']} 的故事")
+    return {"story": msg.content}
+
+
+def call_llm_3(state: State):
+    """第三次 LLM 调用，生成诗歌"""
+
+    msg = llm.invoke(f"写一首关于 {state['topic']} 的诗")
+    return {"poem": msg.content}
+
+
+def aggregator(state: State):
+    """将笑话和故事组合成一个单一的输出"""
+
+    combined = f"这里有一个关于 {state['topic']} 的故事、笑话和诗歌！\n\n"
+    combined += f"故事:\n{state['story']}\n\n"
+    combined += f"笑话:\n{state['joke']}\n\n"
+    combined += f"诗歌:\n{state['poem']}"
+    return {"combined_output": combined}
+
+
+# 构建工作流
+parallel_builder = StateGraph(State)
+
+# 添加节点
+parallel_builder.add_node("call_llm_1", call_llm_1)
+parallel_builder.add_node("call_llm_2", call_llm_2)
+parallel_builder.add_node("call_llm_3", call_llm_3)
+parallel_builder.add_node("aggregator", aggregator)
+
+# 添加边连接节点
+parallel_builder.add_edge(START, "call_llm_1")
+parallel_builder.add_edge(START, "call_llm_2")
+parallel_builder.add_edge(START, "call_llm_3")
+parallel_builder.add_edge("call_llm_1", "aggregator")
+parallel_builder.add_edge("call_llm_2", "aggregator")
+parallel_builder.add_edge("call_llm_3", "aggregator")
+parallel_builder.add_edge("aggregator", END)
+parallel_workflow = parallel_builder.compile()
+
+# 显示工作流
+display(Image(parallel_workflow.get_graph().draw_mermaid_png()))
+
+# 调用
+state = parallel_workflow.invoke({"topic": "cats"})
+print(state["combined_output"])
+```
+```python Functional API
+@task
+def call_llm_1(topic: str):
+    """第一次 LLM 调用，生成初始笑话"""
+    msg = llm.invoke(f"写一个关于 {topic} 的笑话")
+    return msg.content
+
+
+@task
+def call_llm_2(topic: str):
+    """第二次 LLM 调用，生成故事"""
+    msg = llm.invoke(f"写一个关于 {topic} 的故事")
+    return msg.content
+
+
+@task
+def call_llm_3(topic):
+    """第三次 LLM 调用，生成诗歌"""
+    msg = llm.invoke(f"写一首关于 {topic} 的诗")
+    return msg.content
+
+
+@task
+def aggregator(topic, joke, story, poem):
+    """将笑话和故事组合成一个单一的输出"""
+
+    combined = f"这里有一个关于 {topic} 的故事、笑话和诗歌！\n\n"
+    combined += f"故事:\n{story}\n\n"
+    combined += f"笑话:\n{joke}\n\n"
+    combined += f"诗歌:\n{poem}"
+    return combined
+
+
+# 构建工作流
+@entrypoint()
+def parallel_workflow(topic: str):
+    joke_fut = call_llm_1(topic)
+    story_fut = call_llm_2(topic)
+    poem_fut = call_llm_3(topic)
+    return aggregator(
+        topic, joke_fut.result(), story_fut.result(), poem_fut.result()
+    ).result()
+
+# 调用
+for step in parallel_workflow.stream("cats", stream_mode="updates"):
+    print(step)
+    print("\n")
+```
+</CodeGroup>
+
+
+
+
+## 路由 (Routing)
+
+路由工作流处理输入，然后将其引导至特定于上下文的任务。这使您能够为复杂任务定义专门的流程。例如，一个旨在回答产品相关问题的流程可能会首先处理问题类型，然后将请求路由到特定的流程中处理定价、退款、退货等事宜。
+
+![routing.png](/oss/images/routing.png)
+
+<CodeGroup>
+```python Graph API
+from typing_extensions import Literal
+from langchain.messages import HumanMessage, SystemMessage
+
+
+# 用于作为路由逻辑的结构化输出的 Schema
+class Route(BaseModel):
+    step: Literal["poem", "story", "joke"] = Field(
+        None, description="路由过程的下一步"
+    )
+
+
+# 使用 schema 增强 LLM
+router = llm.with_structured_output(Route)
+
+
+# 状态
+class State(TypedDict):
+    input: str
+    decision: str
+    output: str
+
+
+# 节点
+def llm_call_1(state: State):
+    """写一个故事"""
+
+    result = llm.invoke(state["input"])
+    return {"output": result.content}
+
+
+def llm_call_2(state: State):
+    """写一个笑话"""
+
+    result = llm.invoke(state["input"])
+    return {"output": result.content}
+
+
+def llm_call_3(state: State):
+    """写一首诗"""
+
+    result = llm.invoke(state["input"])
+    return {"output": result.content}
+
+
+def llm_call_router(state: State):
+    """将输入路由到适当的节点"""
+
+    # 运行增强后的 LLM 并提供结构化输出来作为路由逻辑
+    decision = router.invoke(
+        [
+            SystemMessage(
+                content="根据用户的请求，将输入路由到 'story' (故事)、'joke' (笑话) 或 'poem' (诗歌)。"
+            ),
+            HumanMessage(content=state["input"]),
+        ]
+    )
+
+    return {"decision": decision.step}
+
+
+# 条件边函数，用于路由到适当的节点
+def route_decision(state: State):
+    # 返回您想访问的下一个节点的名称
+    if state["decision"] == "story":
+        return "llm_call_1"
+    elif state["decision"] == "joke":
+        return "llm_call_2"
+    elif state["decision"] == "poem":
+        return "llm_call_3"
+
+
+# 构建工作流
+router_builder = StateGraph(State)
+
+# 添加节点
+router_builder.add_node("llm_call_1", llm_call_1)
+router_builder.add_node("llm_call_2", llm_call_2)
+router_builder.add_node("llm_call_3", llm_call_3)
+router_builder.add_node("llm_call_router", llm_call_router)
+
+# 添加边连接节点
+router_builder.add_edge(START, "llm_call_router")
+router_builder.add_conditional_edges(
+    "llm_call_router",
+    route_decision,
+    {  # route_decision 返回的名称 : 要访问的下一个节点名称
+        "llm_call_1": "llm_call_1",
+        "llm_call_2": "llm_call_2",
+        "llm_call_3": "llm_call_3",
+    },
+)
+router_builder.add_edge("llm_call_1", END)
+router_builder.add_edge("llm_call_2", END)
+router_builder.add_edge("llm_call_3", END)
+
+# 编译工作流
+router_workflow = router_builder.compile()
+
+# 显示工作流
+display(Image(router_workflow.get_graph().draw_mermaid_png()))
+
+# 调用
+state = router_workflow.invoke({"input": "给我写一个关于猫的笑话"})
+print(state["output"])
+```
+```python Functional API
+from typing_extensions import Literal
+from pydantic import BaseModel
+from langchain.messages import HumanMessage, SystemMessage
+
+
+# 用于作为路由逻辑的结构化输出的 Schema
+class Route(BaseModel):
+    step: Literal["poem", "story", "joke"] = Field(
+        None, description="路由过程的下一步"
+    )
+
+
+# 使用 schema 增强 LLM
+router = llm.with_structured_output(Route)
+
+
+@task
+def llm_call_1(input_: str):
+    """写一个故事"""
+    result = llm.invoke(input_)
+    return result.content
+
+
+@task
+def llm_call_2(input_: str):
+    """写一个笑话"""
+    result = llm.invoke(input_)
+    return result.content
+
+
+@task
+def llm_call_3(input_: str):
+    """写一首诗"""
+    result = llm.invoke(input_)
+    return result.content
+
+
+def llm_call_router(input_: str):
+    """将输入路由到适当的节点"""
+    # 运行增强后的 LLM 并提供结构化输出来作为路由逻辑
+    decision = router.invoke(
+        [
+            SystemMessage(
+                content="根据用户的请求，将输入路由到 'story' (故事)、'joke' (笑话) 或 'poem' (诗歌)。"
+            ),
+            HumanMessage(content=input_),
+        ]
+    )
+    return decision.step
+
+
+# 创建工作流
+@entrypoint()
+def router_workflow(input_: str):
+    next_step = llm_call_router(input_)
+    if next_step == "story":
+        llm_call = llm_call_1
+    elif next_step == "joke":
+        llm_call = llm_call_2
+    elif next_step == "poem":
+        llm_call = llm_call_3
+
+    return llm_call(input_).result()
+
+# 调用
+for step in router_workflow.stream("Write me a joke about cats", stream_mode="updates"):
+    print(step)
+    print("\n")
+```
+</CodeGroup>
+
+
+
+
+## 编排器-工作器 (Orchestrator-worker)
+
+在编排器-工作器配置中，编排器执行以下操作：
+
+- 将任务分解为子任务
+- 将子任务委托给工作器
+- 将工作器的输出综合成最终结果
+
+![worker.png](/oss/images/worker.png)
+
+编排器-工作器工作流提供了比 [并行化](#parallelization) 更大的灵活性，后者子任务是预定义的。当子任务无法预定义时（例如写入代码或需要跨多个文件更新内容），通常会使用此模式。例如，一个需要更新多个 Python 库在未知数量的文档中的安装说明的工作流可能会使用此模式。
+
+<CodeGroup>
+```python Graph API
+from typing import Annotated, List
+import operator
+
+
+# 用于规划的结构化输出的 Schema
+class Section(BaseModel):
+    name: str = Field(
+        description="报告此部分（Section）的名称。",
+    )
+    description: str = Field(
+        description="将要涵盖的.主要主题和概念的简要概述。",
+    )
+
+
+class Sections(BaseModel):
+    sections: List[Section] = Field(
+        description="报告的各个部分。",
+    )
+
+
+# 使用 schema 增强 LLM
+planner = llm.with_structured_output(Sections)
+```
+```python Functional API
+from typing import List
+
+
+# 用于规划的结构化输出的 Schema
+class Section(BaseModel):
+    name: str = Field(
+        description="报告此部分（Section）的名称。",
+    )
+    description: str = Field(
+        description="将要涵盖的主要主题和概念的简要概述。",
+    )
+
+
+class Sections(BaseModel):
+    sections: List[Section] = Field(
+        description="报告的各个部分。",
+    )
+
+
+# 使用 schema 增强 LLM
+planner = llm.with_structured_output(Sections)
+
+
+@task
+def orchestrator(topic: str):
+    """编排器，生成报告计划"""
+    # 生成查询
+    report_sections = planner.invoke(
+        [
+            SystemMessage(content="为报告生成计划。"),
+            HumanMessage(content=f"报告主题是: {topic}"),
+        ]
+    )
+
+    return report_sections.sections
+
+
+@task
+def llm_call(section: Section):
+    """工作器负责编写报告的一部分"""
+
+    # 生成部分内容
+    result = llm.invoke(
+        [
+            SystemMessage(content="撰写报告部分内容。"),
+            HumanMessage(
+                content=f"这是部分名称: {section.name} 和描述: {section.description}"
+            ),
+        ]
+    )
+
+    # 将更新后的部分写入已完成的部分
+    return result.content
+
+
+@task
+def synthesizer(completed_sections: list[str]):
+    """从各部分综合完整的报告"""
+    final_report = "\n\n---\n\n".join(completed_sections)
+    return final_report
+
+
+@entrypoint()
+def orchestrator_worker(topic: str):
+    sections = orchestrator(topic).result()
+    section_futures = [llm_call(section) for section in sections]
+    final_report = synthesizer(
+        [section_fut.result() for section_fut in section_futures]
+    ).result()
+    return final_report
+
+# 调用
+report = orchestrator_worker.invoke("创建一份关于 LLM 扩展定律的报告")
+from IPython.display import Markdown
+Markdown(report)
+```
+</CodeGroup>
+
+
+
+
+### 在 LangGraph 中创建工作器 (Creating workers in LangGraph)
+
+编排器-工作器工作流很常见，LangGraph 内建了对它们的支持。 `Send` API 允许您动态创建工作器节点并将特定输入发送给它们。每个工作器都有自己的状态，所有工作器的输出都写入一个共享的状态键中，编排器可以访问该键。这使得编排器可以访问所有工作器输出，并能将它们综合成最终输出。下面的示例迭代了一系列部分（sections），并使用 `Send` API 将一个部分发送给每个工作器。
+
+```python
+from langgraph.types import Send
+
+
+# 图状态
+class State(TypedDict):
+    topic: str  # 报告主题
+    sections: list[Section]  # 报告部分的列表
+    completed_sections: Annotated[
+        list, operator.add
+    ]  # 所有工作器并行写入此键
+    final_report: str  # 最终报告
+
+
+# 工作器状态
+class WorkerState(TypedDict):
+    section: Section
+    completed_sections: Annotated[list, operator.add]
+
+
+# 节点
+def orchestrator(state: State):
+    """编排器，生成报告计划"""
+
+    # 生成查询
+    report_sections = planner.invoke(
+        [
+            SystemMessage(content="为报告生成计划。"),
+            HumanMessage(content=f"报告主题是: {state['topic']}"),
+        ]
+    )
+
+    return {"sections": report_sections.sections}
+
+
+def llm_call(state: WorkerState):
+    """工作器负责编写报告的一部分"""
+
+    # 生成部分内容
+    section = llm.invoke(
+        [
+            SystemMessage(
+                content="请根据提供的名称和描述撰写报告部分。每个部分都不要有前言。使用 Markdown 格式。"
+            ),
+            HumanMessage(
+                content=f"这是部分名称: {state['section'].name} 和描述: {state['section'].description}"
+            ),
+        ]
+    )
+
+    # 将更新后的部分写入已完成的部分
+    return {"completed_sections": [section.content]}
+
+
+def synthesizer(state: State):
+    """从各部分综合完整的报告"""
+
+    # 已完成的部分列表
+    completed_sections = state["completed_sections"]
+
+    # 格式化已完成的部分为字符串，作为最终部分的上下文
+    completed_report_sections = "\n\n---\n\n".join(completed_sections)
+
+    return {"final_report": completed_report_sections}
+
+
+# 条件边函数，用于创建 llm_call 工作器，每个工作器都会写入报告的一个部分
+def assign_workers(state: State):
+    """为计划中的每个部分分配一个工作器"""
+
+    # 通过 Send() API 启动并行部分写入
+    return [Send("llm_call", {"section": s}) for s in state["sections"]]
+
+
+# 构建工作流
+orchestrator_worker_builder = StateGraph(State)
+
+# 添加节点
+orchestrator_worker_builder.add_node("orchestrator", orchestrator)
+orchestrator_worker_builder.add_node("llm_call", llm_call)
+orchestrator_worker_builder.add_node("synthesizer", synthesizer)
+
+# 添加边连接节点
+orchestrator_worker_builder.add_edge(START, "orchestrator")
+orchestrator_worker_builder.add_conditional_edges(
+    "orchestrator", assign_workers, ["llm_call"]
+)
+orchestrator_worker_builder.add_edge("llm_call", "synthesizer")
+orchestrator_worker_builder.add_edge("synthesizer", END)
+
+# 编译工作流
+orchestrator_worker = orchestrator_worker_builder.compile()
+
+# 显示工作流
+display(Image(orchestrator_worker.get_graph().draw_mermaid_png()))
+
+# 调用
+state = orchestrator_worker.invoke({"topic": "Create a report on LLM scaling laws"})
+
+from IPython.display import Markdown
+Markdown(state["final_report"])
+```
+
+
+
+## 评估器-优化器 (Evaluator-optimizer)
+
+在评估器-优化器工作流中，一个 LLM 调用生成一个响应，另一个 LLM 评估该响应。如果评估器或 [人工干预（human-in-the-loop）](/oss/python/langgraph/interrupts) 确定响应需要改进，则会提供反馈，然后重新生成响应。此循环持续进行，直到生成可接受的响应。
+
+评估器-优化器工作流常用于任务有特定成功标准，但需要迭代才能满足该标准的情况。例如，在两种语言之间翻译文本时，并不总能完美匹配。可能需要几次迭代才能生成在两种语言中含义相同的译文。
+
+![evaluator_optimizer.png](/oss/images/evaluator_optimizer.png)
+
+<CodeGroup>
+```python Graph API
+# 图状态
+class State(TypedDict):
+    joke: str
+    topic: str
+    feedback: str
+    funny_or_not: str
+
+
+# 用于评估的结构化输出的 Schema
+class Feedback(BaseModel):
+    grade: Literal["funny", "not funny"] = Field(
+        description="决定笑话是好笑还是不好笑。",
+    )
+    feedback: str = Field(
+        description="如果笑话不好笑，请提供改进的反馈。",
+    )
+
+
+# 使用 schema 增强 LLM
+evaluator = llm.with_structured_output(Feedback)
+
+
+# 节点
+def llm_call_generator(state: State):
+    """LLM 生成一个笑话"""
+
+    if state.get("feedback"):
+        msg = llm.invoke(
+            f"写一个关于 {state['topic']} 的笑话，但要考虑到反馈: {state['feedback']}"
+        )
+    else:
+        msg = llm.invoke(f"写一个关于 {state['topic']} 的笑话")
+    return {"joke": msg.content}
+
+
+def llm_call_evaluator(state: State):
+    """LLM 评估笑话"""
+
+    grade = evaluator.invoke(f"给笑话 {state['joke']} 打分")
+    return {"funny_or_not": grade.grade, "feedback": grade.feedback}
+
+
+# 条件边函数，根据评估器的反馈，路由回笑话生成器或结束
+def route_joke(state: State):
+    """根据评估器的反馈决定路由回笑话生成器还是结束"""
+
+    if state["funny_or_not"] == "funny":
+        return "Accepted"
+    elif state["funny_or_not"] == "not funny":
+        return "Rejected + Feedback"
+
+
+# 构建工作流
+optimizer_builder = StateGraph(State)
+
+# 添加节点
+optimizer_builder.add_node("llm_call_generator", llm_call_generator)
+optimizer_builder.add_node("llm_call_evaluator", llm_call_evaluator)
+
+# 添加边连接节点
+optimizer_builder.add_edge(START, "llm_call_generator")
+optimizer_builder.add_edge("llm_call_generator", "llm_call_evaluator")
+optimizer_builder.add_conditional_edges(
+    "llm_call_evaluator",
+    route_joke,
+    {  # route_joke 返回的名称 : 要访问的下一个节点名称
+        "Accepted": END,
+        "Rejected + Feedback": "llm_call_generator",
+    },
+)
+
+# 编译工作流
+optimizer_workflow = optimizer_builder.compile()
+
+# 显示工作流
+display(Image(optimizer_workflow.get_graph().draw_mermaid_png()))
+
+# 调用
+state = optimizer_workflow.invoke({"topic": "猫 (Cats)"})
+print(state["joke"])
+```
+```python Functional API
+# 用于评估的结构化输出的 Schema
+class Feedback(BaseModel):
+    grade: Literal["funny", "not funny"] = Field(
+        description="决定笑话是好笑还是不好笑。",
+    )
+    feedback: str = Field(
+        description="如果笑话不好笑，请提供改进的反馈。",
+    )
+
+
+# 使用 schema 增强 LLM
+evaluator = llm.with_structured_output(Feedback)
+
+
+# 节点
+@task
+def llm_call_generator(topic: str, feedback: Feedback):
+    """LLM 生成一个笑话"""
+    if feedback:
+        msg = llm.invoke(
+            f"写一个关于 {topic} 的笑话，但要考虑到反馈: {feedback}"
+        )
+    else:
+        msg = llm.invoke(f"写一个关于 {topic} 的笑话")
+    return msg.content
+
+
+@task
+def llm_call_evaluator(joke: str):
+    """LLM 评估笑话"""
+    feedback = evaluator.invoke(f"给笑话 {joke} 打分")
+    return feedback
+
+
+@entrypoint()
+def optimizer_workflow(topic: str):
+    feedback = None
+    while True:
+        joke = llm_call_generator(topic, feedback).result()
+        feedback = llm_call_evaluator(joke).result()
+        if feedback.grade == "funny":
+            break
+
+    return joke
+
+# 调用
+for step in optimizer_workflow.stream("Cats", stream_mode="updates"):
+    print(step)
+    print("\n")
+```
+</CodeGroup>
+
+
+
+
+## 智能体 (Agents)
+
+智能体通常通过 LLM 使用 [工具（tools）](/oss/python/langchain/tools) 来实现。它们在持续的反馈循环中运行，适用于问题和解决方案不可预测的情况。智能体比工作流具有更高的自主性，可以决定使用哪些工具以及如何解决问题。您仍然可以定义可用工具集以及智能体的行为准则。
+
+![agent.png](/oss/images/agent.png)
+
+<Note>
+要开始使用智能体，请参阅 [快速入门](/oss/python/langchain/quickstart) 或阅读更多关于 LangChain 中 [它们的工作原理](/oss/python/langchain/agents) 的信息。
+</Note>
+
+```python 使用工具
+from langchain.tools import tool
+
+
+# 定义工具
+@tool
+def multiply(a: int, b: int) -> int:
+    """将 `a` 和 `b` 相乘。
+
+    Args:
+        a: 第一个整数
+        b: 第二个整数
+    """
+    return a * b
+
+
+@tool
+def add(a: int, b: int) -> int:
+    """将 `a` 和 `b` 相加。
+
+    Args:
+        a: 第一个整数
+        b: 第二个整数
+    """
+    return a + b
+
+
+@tool
+def divide(a: int, b: int) -> float:
+    """将 `a` 除以 `b`。
+
+    Args:
+        a: 第一个整数
+        b: 第二个整数
+    """
+    return a / b
+
+
+# 使用工具增强 LLM
+tools = [add, multiply, divide]
+tools_by_name = {tool.name: tool for tool in tools}
+llm_with_tools = llm.bind_tools(tools)
+```
+
+<CodeGroup>
+```python Graph API
+from langgraph.graph import MessagesState
+from langchain.messages import SystemMessage, HumanMessage, ToolMessage
+
+
+# 节点
+def llm_call(state: MessagesState):
+    """LLM 决定是调用工具还是不调用工具"""
+
+    return {
+        "messages": [
+            llm_with_tools.invoke(
+                [
+                    SystemMessage(
+                        content="你是一个乐于助人的助手，任务是对一组输入执行算术运算。"
+                    )
+                ]
+                + state["messages"]
+            )
+        ]
+    }
+
+
+def tool_node(state: dict):
+    """执行工具调用"""
+
+    result = []
+    for tool_call in state["messages"][-1].tool_calls:
+        tool = tools_by_name[tool_call["name"]]
+        observation = tool.invoke(tool_call["args"])
+        result.append(ToolMessage(content=observation, tool_call_id=tool_call["id"]))
+    return {"messages": result}
+
+
+# 条件边函数，根据 LLM 是否进行了工具调用，路由到工具节点或结束
+def should_continue(state: MessagesState) -> Literal["tool_node", END]:
+    """决定是继续循环 (tool_node) 还是停止 (回复用户)"""
+
+    messages = state["messages"]
+    last_message = messages[-1]
+
+    # 如果 LLM 发出工具调用，则执行操作
+    if last_message.tool_calls:
+        return "tool_node"
+
+    # 否则，我们停止 (回复用户)
+    return END
+
+
+# 构建工作流
+agent_builder = StateGraph(MessagesState)
+
+# 添加节点
+agent_builder.add_node("llm_call", llm_call)
+agent_builder.add_node("tool_node", tool_node)
+
+# 添加边连接节点
+agent_builder.add_edge(START, "llm_call")
+agent_builder.add_conditional_edges(
+    "llm_call",
+    should_continue,
+    ["tool_node", END]
+)
+agent_builder.add_edge("tool_node", "llm_call")
+
+# 编译智能体
+agent = agent_builder.compile()
+
+# 显示智能体
+display(Image(agent.get_graph(xray=True).draw_mermaid_png()))
+
+# 调用
+messages = [HumanMessage(content="3 加 4 等于多少?")]
+messages = agent.invoke({"messages": messages})
+for m in messages["messages"]:
+    m.pretty_print()
+```
+```python Functional API
+from langgraph.graph import add_messages
+from langchain.messages import (
+    SystemMessage,
+    HumanMessage,
+    ToolCall,
+)
+from langchain_core.messages import BaseMessage
+
+
+@task
+def call_llm(messages: list[BaseMessage]):
+    """LLM 决定是调用工具还是不调用工具"""
+    return llm_with_tools.invoke(
+        [
+            SystemMessage(
+                content="你是一个乐于助人的助手，任务是对一组输入执行算术运算。"
+            )
+        ]
+        + messages
+    )
+
+
+@task
+def call_tool(tool_call: ToolCall):
+    """执行工具调用"""
+    tool = tools_by_name[tool_call["name"]]
+    return tool.invoke(tool_call)
+
+
+@entrypoint()
+def agent(messages: list[BaseMessage]):
+    llm_response = call_llm(messages).result()
+
+    while True:
+        if not llm_response.tool_calls:
+            break
+
+        # 执行工具
+        tool_result_futures = [
+            call_tool(tool_call) for tool_call in llm_response.tool_calls
+        ]
+        tool_results = [fut.result() for fut in tool_result_futures]
+        messages = add_messages(messages, [llm_response, *tool_results])
+        llm_response = call_llm(messages).result()
+
+    messages = add_messages(messages, llm_response)
+    return messages
+
+# 调用
+messages = [HumanMessage(content="3 加 4 等于多少?")]
+for chunk in agent.stream(messages, stream_mode="updates"):
+    print(chunk)
+    print("\n")
+```
+</CodeGroup>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langgraph\workflows-agents.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,401 @@
+```markdown
+---
+title: 快速入门追踪
+sidebarTitle: 快速入门
+---
+
+[_可观测性_](/langsmith/observability-concepts) (Observability) 是使用大型语言模型 (LLM) 构建应用程序的关键要求。LLM 是非确定性的，这意味着相同的提示可能会产生不同的响应。这种行为使得调试和监控比传统软件更具挑战性。
+
+LangSmith 通过提供对应用程序如何处理请求的端到端可见性来解决此问题。每个请求都会生成一个 [_追踪_](/langsmith/observability-concepts#traces) (trace)，其中捕获了发生的完整记录。在追踪内部是个别的 [_运行_](/langsmith/observability-concepts#runs) (runs)，即应用程序执行的具体操作，例如 LLM 调用或检索步骤。追踪运行后，您可以检查、调试和验证应用程序的行为。
+
+在本快速入门中，您将设置一个最小的 [_检索增强生成 (RAG)_](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-retrieval-augmented-generation-rag) 应用程序，并使用 LangSmith 添加追踪。您将：
+
+1. 配置您的环境。
+1. 创建一个检索上下文并调用 LLM 的应用程序。
+1. 启用追踪以捕获检索步骤和 LLM 调用。
+1. 在 LangSmith UI 中查看生成的追踪。
+
+<Tip>
+如果您更喜欢观看关于追踪入门的视频，请参阅快速入门 [视频指南](#video-guide)。
+</Tip>
+
+## 前提条件
+
+在开始之前，请确保您拥有：
+
+- **LangSmith 账户**: 在 [smith.langchain.com](https://smith.langchain.com) 注册或登录。
+- **LangSmith API 密钥**: 按照 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南操作。
+- **OpenAI API 密钥**: 从 [OpenAI 仪表板](https://platform.openai.com/account/api-keys) 生成。
+
+本快速入门中的示例应用将使用 OpenAI 作为 LLM 提供商。您可以将此示例适配到您应用程序所使用的 LLM 提供商。
+
+<Tip>
+如果您正在使用 [LangChain](https://python.langchain.com/docs/introduction/) 或 [LangGraph](https://langchain-ai.github.io/langgraph/) 构建应用程序，只需一个环境变量即可启用 LangSmith 追踪。请阅读 [使用 LangChain 进行追踪](/langsmith/trace-with-langchain) 或 [使用 LangGraph 进行追踪](/langsmith/trace-with-langgraph) 指南，了解如何开始。
+</Tip>
+
+## 1. 创建目录并安装依赖项
+
+在您的终端中，为您的项目创建一个目录并在环境中安装所需的依赖项：
+
+<CodeGroup>
+
+```bash Python
+mkdir ls-observability-quickstart && cd ls-observability-quickstart
+python -m venv .venv && source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -U langsmith openai
+```
+
+```bash TypeScript
+mkdir ls-observability-quickstart-ts && cd ls-observability-quickstart-ts
+npm init -y
+npm install langsmith openai typescript ts-node
+npx tsc --init
+```
+
+</CodeGroup>
+
+## 2. 设置环境变量
+
+设置以下环境变量：
+
+- `LANGSMITH_TRACING`
+- `LANGSMITH_API_KEY`
+- `OPENAI_API_KEY`（或您的 LLM 提供商的 API 密钥）
+- (可选) `LANGSMITH_WORKSPACE_ID`: 如果您的 LangSmith API 密钥链接到多个工作区，请设置此变量以指定要使用的工作区。
+
+``` bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY="<your-langsmith-api-key>"
+export OPENAI_API_KEY="<your-openai-api-key>"
+export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
+```
+
+如果您使用 Anthropic，请使用 [Anthropic 包装器](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) 来追踪您的调用。对于其他提供商，请使用 [可追踪包装器](/langsmith/annotate-code#use-%40traceable-%2F-traceable)。
+
+## 3. 定义您的应用程序
+
+您可以使用本步骤中概述的示例应用代码来工具化一个 RAG 应用程序。或者，您可以使用自己的应用程序代码，只要其中包含 LLM 调用即可。
+
+这是一个最小的 RAG 应用，它直接使用 OpenAI SDK，尚未添加任何 LangSmith 追踪。它包含三个主要部分：
+
+- **检索器函数 (Retriever function)**: 模拟文档检索，总是返回相同的字符串。
+- **OpenAI 客户端 (OpenAI client)**: 实例化一个普通的 OpenAI 客户端以发送聊天补全请求。
+- **RAG 函数 (RAG function)**: 将检索到的文档与用户的问题组合成一个系统提示，使用 `gpt-4o-mini` 调用 `chat.completions.create()` 端点，并返回助手的响应。
+
+将以下代码添加到您的应用文件（例如 `app.py` 或 `app.ts`）：
+
+<CodeGroup>
+
+```python Python
+from openai import OpenAI
+
+def retriever(query: str):
+    # Minimal example retriever
+    return ["Harrison worked at Kensho"]
+
+# OpenAI client call (no wrapping yet)
+client = OpenAI()
+
+def rag(question: str) -> str:
+    docs = retriever(question)
+    system_message = (
+        "Answer the user's question using only the provided information below:\n"
+        + "\n".join(docs)
+    )
+
+    # This call is not traced yet
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": question},
+        ],
+    )
+    return resp.choices[0].message.content
+
+if __name__ == "__main__":
+    print(rag("Where did Harrison work?"))
+```
+
+```typescript TypeScript
+import "dotenv/config";
+import OpenAI from "openai";
+
+// Minimal example retriever
+function retriever(query: string): string[] {
+    return ["Harrison worked at Kensho"];
+}
+
+// OpenAI client call (no wrapping yet)
+const client = new OpenAI();
+
+async function rag(question: string) {
+    const docs = retriever(question);
+    const systemMessage =
+        "Answer the user's question using only the provided information below:\n" +
+        docs.join("\n");
+
+    // This call is not traced yet
+    const resp = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            { role: "system", content: systemMessage },
+            { role: "user", content: question },
+        ],
+    });
+
+    return resp.choices[0].message?.content;
+}
+
+(async () => {
+  console.log(await rag("Where did Harrison work?"));
+})();
+```
+
+</CodeGroup>
+
+## 4. 追踪 LLM 调用
+
+首先，您将追踪所有的 OpenAI 调用。LangSmith 提供了包装器：
+
+- Python: [`wrap_openai`](https://docs.smith.langchain.com/reference/python/wrappers/langsmith.wrappers._openai.wrap_openai)
+- TypeScript: [`wrapOpenAI`](https://docs.smith.langchain.com/reference/js/functions/wrappers_openai.wrapOpenAI)
+
+此代码片段包装了 OpenAI 客户端，以便所有后续的模型调用都会自动记录在 LangSmith 中，成为一个被追踪的子运行 (child run)。
+
+1. 在您的应用文件中包含高亮显示的行：
+
+    <CodeGroup>
+
+    ```python Python highlight={2,7}
+    from openai import OpenAI
+    from langsmith.wrappers import wrap_openai  # traces openai calls
+
+    def retriever(query: str):
+        return ["Harrison worked at Kensho"]
+
+    client = wrap_openai(OpenAI())  # log traces by wrapping the model calls
+
+    def rag(question: str) -> str:
+        docs = retriever(question)
+        system_message = (
+            "Answer the user's question using only the provided information below:\n"
+            + "\n".join(docs)
+        )
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": question},
+            ],
+        )
+        return resp.choices[0].message.content
+
+    if __name__ == "__main__":
+        print(rag("Where did Harrison work?"))
+    ```
+
+    ```typescript TypeScript highlight={3,9}
+    import "dotenv/config";
+    import OpenAI from "openai";
+    import { wrapOpenAI } from "langsmith/wrappers"; // traces openai calls
+
+    function retriever(query: string): string[] {
+        return ["Harrison worked at Kensho"];
+    }
+
+    const client = wrapOpenAI(new OpenAI()); // log traces by wrapping the model calls
+
+    async function rag(question: string) {
+        const docs = retriever(question);
+        const systemMessage =
+            "Answer the user's question using only the provided information below:\n" +
+            docs.join("\n");
+
+        const resp = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemMessage },
+                { role: "user", content: question },
+            ],
+        });
+
+        return resp.choices[0].message?.content;
+    }
+
+    (async () => {
+        console.log(await rag("Where did Harrison work?"));
+    })();
+    ```
+
+    </CodeGroup>
+
+1. 调用您的应用程序：
+
+    <CodeGroup>
+
+    ```bash Python
+    python app.py
+    ```
+
+    ```bash TypeScript
+    npx ts-node app.ts
+    ```
+
+    </CodeGroup>
+
+
+    您将收到以下输出：
+
+    ```
+    Harrison worked at Kensho.
+    ```
+
+1. 在 [LangSmith UI](https://smith.langchain.com) 中，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的workspace）。您将看到刚刚注入追踪的 OpenAI 调用。
+
+<div style={{ textAlign: 'center' }}>
+<img
+    className="block dark:hidden"
+    src="/langsmith/images/trace-quickstart-llm-call.png"
+    alt="LangSmith UI showing an LLM call trace called ChatOpenAI with a system and human input followed by an AI Output."
+/>
+
+<img
+    className="hidden dark:block"
+    src="/langsmith/images/trace-quickstart-llm-call-dark.png"
+    alt="LangSmith UI showing an LLM call trace called ChatOpenAI with a system and human input followed by an AI Output."
+/>
+</div>
+
+## 5. 追踪整个应用程序
+
+您也可以使用 `traceable` 装饰器（适用于 [Python](https://docs.smith.langchain.com/reference/python/run_helpers/langsmith.run_helpers.traceable) 或 [TypeScript](https://langsmith-docs-bdk0fivr6-langchain.vercel.app/reference/js/functions/traceable.traceable)）来追踪整个应用程序，而不是仅追踪 LLM 调用。
+
+1. 将高亮显示的代码包含在您的应用文件中：
+
+    <CodeGroup>
+
+    ```python Python highlight={3,10}
+    from openai import OpenAI
+    from langsmith.wrappers import wrap_openai
+    from langsmith import traceable
+
+    def retriever(query: str):
+        return ["Harrison worked at Kensho"]
+
+    client = wrap_openai(OpenAI())  # keep this to capture the prompt and response from the LLM
+
+    @traceable
+    def rag(question: str) -> str:
+        docs = retriever(question)
+        system_message = (
+            "Answer the user's question using only the provided information below:\n"
+            + "\n".join(docs)
+        )
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": question},
+            ],
+        )
+        return resp.choices[0].message.content
+
+    if __name__ == "__main__":
+        print(rag("Where did Harrison work?"))
+    ```
+
+    ```typescript TypeScript highlight={3,11}
+    import "dotenv/config";
+    import OpenAI from "openai";
+    import { wrapOpenAI, traceable } from "langsmith/wrappers";
+
+    function retriever(query: string): string[] {
+        return ["Harrison worked at Kensho"];
+    }
+
+    const client = wrapOpenAI(new OpenAI()); // keep this to capture the prompt and response from the LLM
+
+    const rag = traceable(async (question: string) => {
+        const docs = retriever(question);
+        const systemMessage =
+            "Answer the user's question using only the provided information below:\n" +
+            docs.join("\n");
+
+        const resp = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemMessage },
+                { role: "user", content: question },
+            ],
+        });
+
+        return resp.choices[0].message?.content;
+    });
+
+    (async () => {
+        console.log(await rag("Where did Harrison work?"));
+    })();
+    ```
+
+    </CodeGroup>
+
+1. 再次调用应用程序以创建一次运行：
+
+    <CodeGroup>
+
+    ```bash Python
+    python app.py
+    ```
+
+    ```bash TypeScript
+    npx ts-node app.ts
+    ```
+
+    </CodeGroup>
+
+1. 返回 [LangSmith UI](https://smith.langchain.com)，导航到您工作区的**默认**追踪项目（或您在 [步骤 2](#2-set-up-environment-variables) 中指定的 workspace）。您将找到整个应用管道的追踪，其中包含 **rag** 步骤和 **ChatOpenAI** LLM 调用。
+
+<div style={{ textAlign: 'center' }}>
+<img
+    className="block dark:hidden"
+    src="/langsmith/images/trace-quickstart-app.png"
+    alt="LangSmith UI showing a trace of the entire application called rag with an input followed by an output."
+/>
+
+<img
+    className="hidden dark:block"
+    src="/langsmith/images/trace-quickstart-app-dark.png"
+    alt="LangSmith UI showing a trace of the entire application called rag with an input followed by an output."
+/>
+</div>
+
+## 后续步骤
+
+以下是一些您可能希望接下来探索的主题：
+
+- [追踪集成](/langsmith/trace-with-langchain) 为各种 LLM 提供商和智能体框架提供支持。
+- [过滤追踪](/langsmith/filter-traces-in-application) 可以帮助您有效地浏览和分析包含大量数据的追踪项目中。
+- [追踪 RAG 应用程序](/langsmith/observability-llm-tutorial) 是一个完整的教程，它从开发到生产为应用程序添加可观测性。
+- [将追踪发送到特定项目](/langsmith/log-traces-to-project) 将更改追踪的目的地项目。
+
+## 视频指南
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/fA9b4D8IsPQ?si=0eBb1vzw5AxUtplS"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\observability-quickstart.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

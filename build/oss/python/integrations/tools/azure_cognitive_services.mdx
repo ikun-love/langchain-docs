@@ -1,0 +1,207 @@
+---
+title: Azure 认知服务工具包
+---
+
+此工具包用于与 `Azure Cognitive Services API` 交互，以实现某些多模态能力。
+
+当前此工具包捆绑了四个工具：
+
+- AzureCogsImageAnalysisTool：用于从图像中提取标题、对象、标签和文本。（注意：由于依赖的 `azure-ai-vision` 包目前仅支持 Windows 和 Linux，因此此工具在 Mac OS 上尚不可用。）
+- AzureCogsFormRecognizerTool：用于从文档中提取文本、表格和键值对。
+- AzureCogsSpeech2TextTool：用于将语音转录为文本。
+- AzureCogsText2SpeechTool：用于将文本合成为语音。
+- AzureCogsTextAnalyticsHealthTool：用于提取医疗保健实体。
+
+首先，您需要设置一个 Azure 账户并创建一个认知服务资源。您可以按照 [此处](https://docs.microsoft.com/en-us/azure/cognitive-services/cognitive-services-apis-create-account?tabs=multiservice%2Cwindows) 的说明来创建资源。
+
+然后，您需要获取资源的终结点（endpoint）、密钥（key）和区域（region），并将它们设置为环境变量。您可以在资源页面的“密钥和终结点”部分找到它们。
+
+```python
+pip install -qU  azure-ai-formrecognizer > /dev/null
+pip install -qU  azure-cognitiveservices-speech > /dev/null
+pip install -qU  azure-ai-textanalytics > /dev/null
+
+# 适用于 Windows/Linux
+pip install -qU  azure-ai-vision > /dev/null
+```
+
+```python
+pip install -qU langchain-community
+```
+
+```python
+import os
+
+os.environ["OPENAI_API_KEY"] = "sk-"
+os.environ["AZURE_COGS_KEY"] = ""
+os.environ["AZURE_COGS_ENDPOINT"] = ""
+os.environ["AZURE_COGS_REGION"] = ""
+```
+
+## 创建工具包
+
+```python
+from langchain_community.agent_toolkits import AzureCognitiveServicesToolkit
+
+toolkit = AzureCognitiveServicesToolkit()
+```
+
+```python
+[tool.name for tool in toolkit.get_tools()]
+```
+
+```output
+['Azure Cognitive Services Image Analysis',
+ 'Azure Cognitive Services Form Recognizer',
+ 'Azure Cognitive Services Speech2Text',
+ 'Azure Cognitive Services Text2Speech']
+```
+
+## 在 Agent 中使用
+
+```python
+from langchain.agents import AgentType, initialize_agent
+from langchain_openai import OpenAI
+```
+
+```python
+llm = OpenAI(temperature=0)
+agent = initialize_agent(
+    tools=toolkit.get_tools(),
+    llm=llm,
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+)
+```
+
+```python
+agent.run(
+    "用这些食材我能做什么？"
+    "https://images.openai.com/blob/9ad5a2ab-041f-475f-ad6a-b51899c50182/ingredients.png"
+)
+```
+
+```output
+> 正在进入 AgentExecutor 链...
+
+Action:
+```json
+{
+  "action": "Azure Cognitive Services Image Analysis",
+  "action_input": "https://images.openai.com/blob/9ad5a2ab-041f-475f-ad6a-b51899c50182/ingredients.png"
+}
+```
+
+
+Observation: Caption: 一碗中的鸡蛋和面粉的集合
+Objects: 蛋, 蛋, 食物
+Tags: 乳制品, 配料, 室内, 增稠剂, 食物, 搅拌碗, 粉末, 面粉, 鸡蛋, 碗
+Thought: 我可以使用这些对象和标签来推荐食谱
+Action:
+```json
+{
+  "action": "Final Answer",
+  "action_input": "您可以用这些食材制作煎饼、煎蛋卷或意式乳蛋饼！"
+}
+```
+
+> 链条完成。
+```
+
+```output
+'您可以用这些食材制作煎饼、煎蛋卷或意式乳蛋饼！'
+```
+
+```python
+audio_file = agent.run("给我讲个笑话并大声读出来。")
+```
+
+```output
+> 正在进入 AgentExecutor 链...
+Action:
+```json
+{
+  "action": "Azure Cognitive Services Text2Speech",
+  "action_input": "Why did the chicken cross the playground? To get to the other slide!（鸡为什么要穿过游乐场？为了滑到另一边去！）"
+}
+```
+
+
+Observation: /tmp/tmpa3uu_j6b.wav
+Thought: 我获得了笑话的音频文件
+Action:
+```json
+{
+  "action": "Final Answer",
+  "action_input": "/tmp/tmpa3uu_j6b.wav"
+}
+```
+
+> 链条完成。
+```
+
+```output
+'/tmp/tmpa3uu_j6b.wav'
+```
+
+```python
+from IPython import display
+
+audio = display.Audio(audio_file)
+display.display(audio)
+```
+
+```python
+agent.run(
+    """患者是一名 54 岁的男士，过去几个月进行性加剧性心绞痛。
+患者今年七月接受了心脏导管检查，显示 RCA（右冠状动脉）完全闭塞，左主干存在 50% 的病变，
+并且有强烈的冠状动脉疾病家族史：一位兄弟在 52 岁死于心肌梗塞，
+另一位兄弟接受了冠状动脉旁路移植术（CABG）。患者于 2001 年 7 月进行了负荷超声心动图检查，
+显示无壁运动异常，但由于体型原因，这次检查很困难。患者坚持了六分钟，
+在前后侧导联中出现轻微的 ST 段压低，这被认为是疲劳和手腕疼痛（功能等同于心绞痛）造成的。
+由于患者症状加重、家族史以及左主干病变和 RCA 完全闭塞，他被转诊接受开胸搭桥手术进行血运重建。
+
+请列出所有诊断。
+"""
+)
+```
+
+```output
+> 正在进入 AgentExecutor 链...
+Action:
+```json
+{
+  "action": "azure_cognitive_services_text_analyics_health",
+  "action_input": "The patient is a 54-year-old gentleman with a history of progressive angina over the past several months. The patient had a cardiac catheterization in July of this year revealing total occlusion of the RCA and 50% left main disease, with a strong family history of coronary artery disease with a brother dying at the age of 52 from a myocardial infarction and another brother who is status post coronary artery bypass grafting. The patient had a stress echocardiogram done on July, 2001, which showed no wall motion abnormalities, but this was a difficult study due to body habitus. The patient went for six minutes with minimal ST depressions in the anterior lateral leads, thought due to fatigue and wrist pain, his anginal equivalent. Due to the patient's increased symptoms and family history and history left main disease with total occasional of his RCA was referred for revascularization with open heart surgery."
+}
+```
+
+Observation: 文本包含以下医疗实体：54-year-old 是年龄（Age）类型的医疗实体，gentleman 是性别（Gender）类型的医疗实体，progressive angina 是诊断（Diagnosis）类型的医疗实体，past several months 是时间（Time）类型的医疗实体，cardiac catheterization 是检查名称（ExaminationName）类型的医疗实体，July of this year 是时间（Time）类型的医疗实体，total 是条件限定词（ConditionQualifier）类型的医疗实体，occlusion 是症状或体征（SymptomOrSign）类型的医疗实体，RCA 是身体结构（BodyStructure）类型的医疗实体，50 是测量值（MeasurementValue）类型的医疗实体，% 是测量单位（MeasurementUnit）类型的医疗实体，left main 是身体结构（BodyStructure）类型的医疗实体，disease 是诊断（Diagnosis）类型的医疗实体，family 是家庭关系（FamilyRelation）类型的医疗实体，coronary artery disease 是诊断（Diagnosis）类型的医疗实体，brother 是家庭关系（FamilyRelation）类型的医疗实体，dying 是诊断（Diagnosis）类型的医疗实体，52 是年龄（Age）类型的医疗实体，myocardial infarction 是诊断（Diagnosis）类型的医疗实体，brother 是家庭关系（FamilyRelation）类型的医疗实体，coronary artery bypass grafting 是治疗名称（TreatmentName）类型的医疗实体，stress echocardiogram 是检查名称（ExaminationName）类型的医疗实体，July, 2001 是时间（Time）类型的医疗实体，wall motion abnormalities 是症状或体征（SymptomOrSign）类型的医疗实体，body habitus 是症状或体征（SymptomOrSign）类型的医疗实体，six minutes 是时间（Time）类型的医疗实体，minimal 是条件限定词（ConditionQualifier）类型的医疗实体，ST depressions in the anterior lateral leads 是症状或体征（SymptomOrSign）类型的医疗实体，fatigue 是症状或体征（SymptomOrSign）类型的医疗实体，wrist pain 是症状或体征（SymptomOrSign）类型的医疗实体，anginal equivalent 是症状或体征（SymptomOrSign）类型的医疗实体，increased 是病程（Course）类型的医疗实体，symptoms 是症状或体征（SymptomOrSign）类型的医疗实体，family 是家庭关系（FamilyRelation）类型的医疗实体，left 是方向（Direction）类型的医疗实体，main 是身体结构（BodyStructure）类型的医疗实体，disease 是诊断（Diagnosis）类型的医疗实体，occasional 是病程（Course）类型的医疗实体，RCA 是身体结构（BodyStructure）类型的医疗实体，revascularization 是治疗名称（TreatmentName）类型的医疗实体，open heart surgery 是治疗名称（TreatmentName）类型的医疗实体
+Thought: 我知道该如何回应
+Action:
+```json
+{
+  "action": "Final Answer",
+  "action_input": "文本中包含以下诊断：进行性心绞痛（progressive angina）、冠状动脉疾病（coronary artery disease）、心肌梗塞（myocardial infarction）以及冠状动脉旁路移植术（coronary artery bypass grafting）。"
+}
+```
+
+> 链条完成。
+```
+
+```output
+'文本中包含以下诊断：进行性心绞痛（progressive angina）、冠状动脉疾病（coronary artery disease）、心肌梗塞（myocardial infarction）以及冠状动脉旁路移植术（coronary artery bypass grafting）。'
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\azure_cognitive_services.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

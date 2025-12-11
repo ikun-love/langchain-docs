@@ -1,0 +1,170 @@
+---
+title: FalkorDBVectorStore
+---
+
+<a href="https://docs.falkordb.com/" target="_blank">FalkorDB</a> 是一个开源的图数据库，内置了对向量相似性搜索的支持。
+
+它支持：
+
+- 近似最近邻搜索（Approximate Nearest Neighbor search）
+- 欧几里得相似度（Euclidean similarity）和余弦相似度（Cosine Similarity）
+- 结合向量搜索和关键字搜索的混合搜索（Hybrid search）
+
+本示例 Notebook 展示了如何使用 FalkorDB 向量索引（`FalkorDB`）。
+
+请参阅<a href="https://docs.falkordb.com/" target="_blank">安装说明</a>。
+
+## 设置 (Setup)
+
+```python
+# 安装必要的包
+pip install -U  falkordb
+pip install -U  tiktoken
+pip install -U  langchain langchain_huggingface
+```
+
+### 凭证 (Credentials)
+
+我们希望使用 `HuggingFace`，因此需要获取 HuggingFace API 密钥。
+
+```python
+import getpass
+import os
+
+if "HUGGINGFACE_API_KEY" not in os.environ:
+    os.environ["HUGGINGFACE_API_KEY"] = getpass.getpass("HuggingFace API Key:")
+```
+
+如果你想对模型的调用进行自动化跟踪（tracing），可以取消注释以下代码行来设置 LangSmith API 密钥：
+
+```python
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+os.environ["LANGSMITH_TRACING"] = "true"
+```
+
+## 初始化 (Initialization)
+
+```python
+from langchain_community.vectorstores.falkordb_vector import FalkorDBVector
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
+```
+
+你可以使用 Docker 在本地运行 FalkorDBVector。请参阅<a href="https://docs.falkordb.com/" target="_blank">安装说明</a>。
+
+```python
+host = "localhost"
+port = 6379
+```
+
+或者，你可以使用<a href="https://app.falkordb.cloud">FalkorDB Cloud</a>来使用 FalkorDBVector：
+
+```python
+# 示例
+# host = "r-6jissuruar.instance-zwb082gpf.hc-v8noonp0c.europe-west1.gcp.f2e0a955bb84.cloud"
+# port = 62471
+# username = "falkordb" # 在 FALKORDB CLOUD 上设置
+# password = "password" # 在 FALKORDB CLOUD 上设置
+```
+
+```python
+vector_store = FalkorDBVector(host=host, port=port, embedding=HuggingFaceEmbeddings())
+```
+
+## 管理向量存储 (Manage vector store)
+
+### 向向量存储添加条目 (Add items to vector store)
+
+```python
+from langchain_core.documents import Document
+
+document_1 = Document(page_content="foo", metadata={"source": "https://example.com"})
+
+document_2 = Document(page_content="bar", metadata={"source": "https://example.com"})
+
+document_3 = Document(page_content="baz", metadata={"source": "https://example.com"})
+
+documents = [document_1, document_2, document_3]
+
+vector_store.add_documents(documents=documents, ids=["1", "2", "3"])
+```
+
+```output
+['1', '2', '3']
+```
+
+### 更新向量存储中的条目 (Update items in vector store)
+
+```python
+updated_document = Document(
+    page_content="qux", metadata={"source": "https://another-example.com"}
+)
+
+vector_store.update_documents(document_id="1", document=updated_document)
+```
+
+### 从向量存储中删除条目 (Delete items from vector store)
+
+```python
+vector_store.delete(ids=["3"])
+```
+
+## 查询向量存储 (Query vector store)
+
+一旦向量存储创建完成并且相关的文档已添加，你很可能希望在链或代理运行时查询它。
+
+### 直接查询 (Query directly)
+
+执行简单的相似性搜索可以按如下方式进行：
+
+```python
+results = vector_store.similarity_search(
+    query="thud", k=1, filter={"source": "https://another-example.com"}
+)
+for doc in results:
+    print(f"* {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* qux [{'text': 'qux', 'id': '1', 'source': 'https://another-example.com'}]
+```
+
+如果你想执行相似性搜索并接收对应的分数，可以运行：
+
+```python
+results = vector_store.similarity_search_with_score(query="bar")
+for doc, score in results:
+    print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* [SIM=0.000001] bar [{'text': 'bar', 'id': '2', 'source': 'https://example.com'}]
+```
+
+### 通过转换为检索器进行查询 (Query by turning into retriever)
+
+你也可以将向量存储转换为检索器（retriever），以便在链中使用时更方便。
+
+```python
+retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 1})
+retriever.invoke("thud")
+```
+
+```output
+[Document(metadata={'text': 'qux', 'id': '1', 'source': 'https://another-example.com'}, page_content='qux')]
+```
+
+---
+
+## API 参考 (API reference)
+
+有关所有 `FalkorDBVector` 功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.falkordb_vector.FalkorDBVector.html](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.falkordb_vector.FalkorDBVector.html)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\falkordbvector.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

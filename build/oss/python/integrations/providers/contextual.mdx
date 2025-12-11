@@ -1,0 +1,162 @@
+---
+title: 上下文感知 AI (Contextual AI)
+---
+
+Contextual AI 提供最先进的 RAG（检索增强生成）组件，专为准确可靠的企业级 AI 应用而设计。我们的 LangChain 集成将我们专业模型的独立 API 端点暴露出来：
+
+- **Grounded Language Model (GLM，基础语言模型)**：世界上最具“基础性”（Grounded）的语言模型，通过优先考虑对检索到的知识的忠实度来最小化“幻觉”（hallucinations）。GLM 提供了卓越的事实准确性，并附带行内归因（inline attributions），使其非常适合对可靠性要求极高的企业 RAG 和智能体（agentic）应用。
+
+- **Instruction-Following Reranker（指令遵循重排序器）**：全球首个能够遵循自定义指令的重排序器，可根据新近度、来源或文档类型等特定标准智能地优先排序文档。我们的重排序器在行业基准测试中表现优于竞争对手，解决了企业知识库中信息冲突的难题。
+
+Contextual AI 由 RAG 技术的发明者创立，其专业组件可帮助创新团队加速开发可投入生产的 RAG 智能体，从而交付具有卓越准确性的响应。
+
+## Grounded Language Model (GLM)
+
+Grounded Language Model (GLM) 经过专门设计，旨在最小化企业级 RAG 和智能体应用中的幻觉现象。GLM 提供了以下优势：
+
+- 在 FACTS 基准测试中表现强劲，事实准确率达到 88%（[查看基准测试结果](https://venturebeat.com/ai/contextual-ais-new-ai-model-crushes-gpt-4o-in-accuracy-heres-why-it-matters/)）
+- 响应严格基于提供的知识来源，并带有行内归因（[阅读产品详情](https://contextual.ai/blog/introducing-grounded-language-model/)）
+- 精确的来源引用直接集成在生成的响应中
+- 检索到的上下文优先于参数知识（[查看技术概述](https://contextual.ai/blog/platform-benchmarks-2025/)）
+- 当信息不可用时，能清晰地表示不确定性
+
+GLM 可作为 RAG 流水线中通用大型语言模型（LLM）的即插即用替代品，极大地提高了任务关键型企业应用的可靠性。
+
+## Instruction-Following Reranker
+
+全球首款指令遵循重排序器以空前的控制力和准确性彻底改变了文档排序。其关键能力包括：
+
+- 使用自然语言指令，根据新近度、来源、元数据等指标优先排序文档（[了解其工作原理](https://contextual.ai/blog/introducing-instruction-following-reranker/)）
+- 在 BEIR 基准测试中表现卓越，得分为 61.2，大幅超越竞争对手（[查看基准测试数据](https://contextual.ai/blog/platform-benchmarks-2025/)）
+- 智能地解决来自多个知识源的冲突信息
+- 可作为现有重排序器的即插即用替代品，实现无缝集成
+- 通过自然语言命令动态控制文档排序
+
+该重排序器擅长处理可能包含矛盾信息的企业知识库，允许您确切指定在各种场景下应优先考虑哪些来源。
+
+## 在 LangChain 中使用 Contextual AI
+
+[点击此处](/oss/python/integrations/chat/contextual) 查看详细信息。
+
+此集成允许您轻松地将 Contextual AI 的 GLM 和指令遵循重排序器集成到您的 LangChain 工作流中。GLM 确保您的应用程序提供严格“基础化”（grounded）的响应，而重排序器通过智能地优先处理最相关的文档，显著提高了检索质量。
+
+无论您是为受监管行业还是注重安全的环境构建应用程序，Contextual AI 都能为您提供企业级用例所需的准确性、控制力和可靠性。
+
+立即开始免费试用，体验专为企业 AI 应用打造的最具“基础性”的语言模型和指令遵循重排序器。
+
+### Grounded Language Model
+
+```python
+# Integrating the Grounded Language Model
+import getpass
+import os
+
+from langchain_contextual import ChatContextual
+
+# 设置凭证
+if not os.getenv("CONTEXTUAL_AI_API_KEY"):
+    os.environ["CONTEXTUAL_AI_API_KEY"] = getpass.getpass(
+        "请输入您的 Contextual API 密钥: "
+    )
+
+# 初始化 Contextual LLM
+llm = ChatContextual(
+    model="v1",
+    api_key="",
+)
+# 包含一个系统提示（可选）
+system_prompt = "你是一个乐于助人的助手，会尽力利用所有提供的知识来回答用户的问题。"
+
+# 在此处的字符串数组中提供您自己的知识，来自您的知识库
+knowledge = [
+    "世界上有两种狗：好狗和最好的狗。",
+    "世界上有两种猫：好猫和最好的猫。",
+]
+
+# 创建您的消息
+messages = [
+    ("human", "世界上有什么类型的猫，它们有哪些类型?"),
+]
+
+# 通过提供知识字符串、可选的系统提示来调用 GLM
+# 如果您想关闭 GLM 的评论，请将 True 传递给 `avoid_commentary` 参数
+ai_msg = llm.invoke(
+    messages, knowledge=knowledge, system_prompt=system_prompt, avoid_commentary=True
+)
+
+print(ai_msg.content)
+```
+
+```output
+根据现有信息，世界上有两种猫：
+
+1. 好猫 (Good cats)
+2. 最好的猫 (Best cats)
+```
+
+### Instruction-Following Reranker
+
+```python
+import getpass
+import os
+
+from langchain_contextual import ContextualRerank
+
+if not os.getenv("CONTEXTUAL_AI_API_KEY"):
+    os.environ["CONTEXTUAL_AI_API_KEY"] = getpass.getpass(
+        "请输入您的 Contextual API 密钥: "
+    )
+
+
+api_key = ""
+model = "ctxl-rerank-en-v1-instruct"
+
+compressor = ContextualRerank(
+    model=model,
+    api_key=api_key,
+)
+
+from langchain_core.documents import Document
+
+query = "RTX 5090 GPU 的企业大宗订单当前企业定价是多少?"
+instruction = "优先考虑内部销售文档而非市场分析报告。新近发布的文档应获得更高的权重。企业门户内容应取代分销商的沟通信息。"
+
+document_contents = [
+    "在详细的成本分析和市场研究之后，我们实施了以下变更：AI 训练集群的原始计算性能将提升 15%，企业支持套餐正在重组，RTX 5090 企业系列的批量采购计划（100+ 台）将以 2,899 美元为基准价。",
+    "RTX 5090 GPU 企业大宗订单（100+ 台）的企业定价目前设定在每台 3,100 至 3,300 美元。所有主要分销渠道均已确认 RTX 5090 企业大宗订单的此定价。",
+    "RTX 5090 企业 GPU 需要 450W 的 TDP 和 20% 的散热开销。",
+]
+
+metadata = [
+    {
+        "Date": "2025 年 1 月 15 日",
+        "Source": "NVIDIA 企业销售门户",
+        "Classification": "仅限内部使用",
+    },
+    {"Date": "2023/11/30", "Source": "TechAnalytics 研究小组"},
+    {
+        "Date": "2025 年 1 月 25 日",
+        "Source": "NVIDIA 企业销售门户",
+        "Classification": "仅限内部使用",
+    },
+]
+
+documents = [
+    Document(page_content=content, metadata=metadata[i])
+    for i, content in enumerate(document_contents)
+]
+reranked_documents = compressor.compress_documents(
+    query=query,
+    instruction=instruction,
+    documents=documents,
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\contextual.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

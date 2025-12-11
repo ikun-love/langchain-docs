@@ -1,0 +1,63 @@
+---
+title: 如何审计评估者的分数
+sidebarTitle: 审计评估者分数
+---
+
+基于 LLM 的“裁判”评估器（LLM-as-a-judge evaluators）并非总是能给出正确结果。因此，通常情况下，让人工审核评估者给出的分数并根据需要进行更正是非常有用的。LangSmith 允许您在 UI 或 SDK 中对评估者的分数进行修改。
+
+## 在比较视图中
+
+在比较视图中，您可以点击任何反馈标签（feedback tag）以调出反馈详情。然后，点击右侧的“编辑”图标（edit icon）以打开更正视图（corrections view）。接着，您可以在“进行更正”（Make correction）下方的文本框中输入您期望的分数。如果需要，您还可以为您的更正附加一个解释说明。如果您使用的是[少样本评估器](/langsmith/create-few-shot-evaluators)，这会非常有用，并且该解释会自动插入到您的少样本示例中，替换掉 `few_shot_explanation` 提示变量。
+
+![Audit Evaluator Comparison View](/langsmith/images/corrections-comparison-view.png)
+
+## 在运行表（Runs Table）中
+
+在运行表中，找到“反馈”（Feedback）列，然后点击反馈标签以调出反馈详情。同样，点击右侧的“编辑”图标以打开更正视图。
+
+![Audit Evaluator Runs Table](/langsmith/images/corrections-runs-table.png)
+
+## 在 SDK 中
+
+可以通过 SDK 的 `update_feedback` 函数并使用 `correction` 字典来进行更正。您必须指定一个 `score` 键，其对应的值是一个数字，这样它才能在 UI 中正确显示。
+
+<CodeGroup>
+
+```python Python
+import langsmith
+
+client = langsmith.Client()
+
+client.update_feedback(
+    my_feedback_id,
+    correction={
+        "score": 1,
+    },
+)
+```
+
+```typescript TypeScript
+import { Client } from 'langsmith';
+
+const client = new Client();
+
+await client.updateFeedback(
+    myFeedbackId,
+    {
+        correction: {
+            score: 1,
+        }
+    }
+)
+```
+
+</CodeGroup>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\audit-evaluator-scores.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,90 @@
+---
+title: AWSKendraRetriever
+---
+
+## 概述
+
+[Amazon Kendra](https://aws.amazon.com/kendra/) 是由亚马逊云计算服务（AWS）提供的一种智能搜索服务。
+它利用先进的自然语言处理（NLP）和机器学习算法，实现在组织内部各种数据源上构建强大的搜索能力。
+Kendra 旨在帮助用户快速、准确地找到所需信息，从而提高生产力和决策效率。
+
+借助 Kendra，用户可以跨越多种内容类型进行搜索，包括文档、常见问题解答（FAQ）、知识库、手册和网站。
+它支持多种语言，并能理解复杂的查询、同义词和上下文含义，从而提供高度相关的搜索结果。
+
+本文将帮助您开始使用 Amazon Kendra 的 [`retriever`](/oss/javascript/langchain/retrieval)（检索器）。有关 `AWSKendraRetriever` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_aws.AmazonKendraRetriever.html)。
+
+### 集成详情
+
+| 检索器 | 来源 | 包 |
+| :--- | :--- | :---: |
+[AWSKendraRetriever](https://api.js.langchain.com/classes/langchain_aws.AmazonKendraRetriever.html) | 各种 AWS 资源 | [`@langchain/aws`](https://www.npmjs.com/package/@langchain/aws) |
+
+## 设置
+
+要开始使用，您需要拥有一个 AWS 账户和一个 Amazon Kendra 实例。有关更多信息，请参阅 AWS 的[教程](https://docs.aws.amazon.com/kendra/latest/dg/getting-started.html)。
+
+如果您希望为单个查询启用自动追踪（tracing），您还可以取消注释下方的代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```typescript
+// process.env.LANGSMITH_API_KEY = "<YOUR API KEY HERE>";
+// process.env.LANGSMITH_TRACING = "true";
+```
+
+### 安装
+
+此检索器位于 `@langchain/aws` 包中：
+
+<CodeGroup>
+```bash npm
+npm install @langchain/aws @langchain/core
+```
+```bash yarn
+yarn add @langchain/aws @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/aws @langchain/core
+```
+</CodeGroup>
+
+## 实例化
+
+现在我们可以实例化我们的检索器：
+
+```typescript
+import { AmazonKendraRetriever } from "@langchain/aws";
+
+const retriever = new AmazonKendraRetriever({
+  topK: 10,
+  indexId: "YOUR_INDEX_ID",
+  region: "us-east-2", // 您的区域
+  clientOptions: {
+    credentials: {
+      accessKeyId: "YOUR_ACCESS_KEY_ID",
+      secretAccessKey: "YOUR_SECRET_ACCESS_KEY",
+    },
+  },
+});
+```
+
+## 用法
+
+```typescript
+const query = "..."
+
+await retriever.invoke(query);
+```
+
+---
+
+## API 参考
+
+有关 `AmazonKendraRetriever` 所有功能和配置的详细文档，请参阅 [API 参考](https://api.js.langchain.com/classes/langchain_aws.AmazonKendraRetriever.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\retrievers\kendra-retriever.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

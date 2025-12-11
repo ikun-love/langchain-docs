@@ -1,0 +1,152 @@
+---
+title: Azure Blob Storage 加载器
+---
+
+>[Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) 是微软面向云端的对象存储解决方案。Blob Storage 经过优化，用于存储海量的非结构化数据。非结构化数据是指不遵循特定数据模型或定义的（如文本或二进制数据）。
+
+`Azure Blob Storage` 的设计目标包括：
+
+- 直接向浏览器提供图片或文档。
+- 存储文件以实现分布式访问。
+- 流式传输视频和音频。
+- 写入日志文件。
+- 存储数据用于备份和恢复、灾难恢复和归档。
+- 存储数据供本地部署或 Azure 托管的服务进行分析。
+
+本 Notebook 介绍如何从 Azure Blob Storage 中的容器加载文档对象。有关文档加载器的更多详细文档，请参阅 [Azure Blob Storage 加载器 API 参考](https://reference.langchain.com/python/integrations/langchain_azure/storage/)。
+
+<Note>
+推荐使用这个新的加载器来替代 `langchain_community` 中之前提供的 [`AzureBlobStorageFileLoader`](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.azure_blob_storage_file.AzureBlobStorageFileLoader.html) 和 [`AzureBlobStorageContainerLoader`](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.azure_blob_storage_container.AzureBlobStorageContainerLoader.html)。有关迁移到新加载器的详细说明，请参阅[迁移指南](https://github.com/langchain-ai/langchain-azure/blob/main/libs/azure-storage/README.md#migrating-from-langchain-community-azure-storage-document-loaders)。
+</Note>
+
+
+## 设置 (Setup)
+
+```python
+pip install -qU langchain-azure-storage
+```
+
+```python
+from langchain_azure_storage.document_loaders import AzureBlobStorageLoader
+```
+
+## 从容器加载 (Load from container)
+
+`AzureBlobStorageLoader` 会加载 Azure Blob Storage 中给定容器内的所有 Blob，它需要一个[帐户 URL 和容器名称](https://learn.microsoft.com/en-us/rest/api/storageservices/Naming-and-Referencing-Containers--Blobs--and-Metadata#resource-uri-syntax)。加载器会返回包含 Blob 内容（默认为 UTF-8 编码）和元数据的 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 对象，元数据中包含 Blob 的 URL，如下面的示例所示。
+
+不需要显式配置凭据，因为它使用 [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains?tabs=dac#defaultazurecredential-overview)，该凭证会自动根据您当前的环境检索 [Microsoft Entra ID 令牌](https://learn.microsoft.com/en-us/azure/storage/blobs/authorize-access-azure-active-directory)。
+
+```python
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+)
+
+for doc in loader.load():
+    print(doc)
+```
+
+```output
+page_content='Lorem ipsum dolor sit amet.' metadata={'source': 'https://<storage-account-name>.blob.core.windows.net/<container-name>/<blob-name>'}
+```
+
+您也可以指定一个前缀（`prefix`），以便仅返回以该前缀开头的所有 Blob。
+
+```python
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    prefix="<prefix>",
+)
+```
+
+## 按 Blob 名称从容器加载 (Load from container by blob name)
+
+您可以从一系列 Blob 名称中加载文档，这只会加载您提供的 Blob，而不是通过 API 调用来列出所有 Blob。
+
+```python
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    blob_names=["blob-1", "blob-2", "blob-3"],
+)
+```
+
+## 覆盖默认凭据 (Override default credentials)
+
+默认情况下，文档加载器使用 [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains?tabs=dac#defaultazurecredential-overview)。以下示例展示了如何覆盖此设置：
+
+```python
+from azure.core.credentials import AzureSasCredential
+from azure.identity import ManagedIdentityCredential
+from langchain_azure_storage.document_loaders import AzureBlobStorageLoader
+
+# 使用 SAS 令牌覆盖
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    credential=AzureSasCredential("<sas-token>")
+)
+
+# 使用比整个默认凭据链更具体的令牌凭据（例如系统分配的托管身份）进行覆盖
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    credential=ManagedIdentityCredential()
+)
+```
+
+## 自定义 Blob 内容解析 (Customize blob content parsing)
+
+目前，解析每个 Blob 的默认设置是返回一个单独的 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 对象，使用 UTF-8 编码，而不管文件类型如何。对于需要特定解析的文件类型（例如 PDF、CSV 等），或者当您希望控制文档内容格式时，可以通过 `loader_factory` 参数传入一个已存在的文档加载器（例如 PyPDFLoader, CSVLoader 等）或自定义加载器。
+
+其工作原理是：将 Blob 内容下载到临时文件中。然后调用 `loader_factory`，传入文件路径，使其使用指定的文档加载器来加载/解析文件并返回 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 对象。
+
+下面的示例展示了如何使用 [PyPDFLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html#pypdfloader) 覆盖默认加载器，用于将 Blob 解析为 PDF：
+
+```python
+from langchain_azure_storage.document_loaders import AzureBlobStorageLoader
+from langchain_community.document_loaders import PyPDFLoader  # 此示例需要安装 `langchain-community` 和 `pypdf`
+
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    blob_names="<pdf-file.pdf>",
+    loader_factory=PyPDFLoader,
+)
+
+for doc in loader.lazy_load():
+    print(doc.page_content)  # 打印每个页面的内容，每个页面作为单独的文档
+```
+
+要提供额外的配置，您可以定义一个可调用对象（callable），该对象返回一个已实例化的文档加载器，如下所示：
+
+```python
+from langchain_azure_storage.document_loaders import AzureBlobStorageLoader
+from langchain_community.document_loaders import PyPDFLoader  # 此示例需要安装 `langchain-community` 和 `pypdf`
+
+def loader_factory(file_path: str) -> PyPDFLoader:
+    return PyPDFLoader(
+        file_path,
+        mode="single",  # 设置为 "single"，表示将整个 PDF 返回为单个文档，而不是按页提取文档
+    )
+
+loader = AzureBlobStorageLoader(
+    "https://<storage-account-name>.blob.core.windows.net",
+    "<container-name>",
+    blob_names="<pdf-file.pdf>",
+    loader_factory=loader_factory,
+)
+
+for doc in loader.lazy_load():
+    print(doc.page_content)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\azure_blob_storage.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

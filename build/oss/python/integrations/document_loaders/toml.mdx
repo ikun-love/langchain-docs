@@ -1,0 +1,40 @@
+---
+title: TOML
+---
+
+> [TOML](https://en.wikipedia.org/wiki/TOML) 是一种用于配置文件（configuration files）的文件格式。它的设计目标是易于人类阅读和编写，并且旨在可以被清晰无歧义地映射到字典（dictionary）结构中。其规范是开源的。`TOML` 已经被许多编程语言实现。`TOML` 这个名字是 "Tom's Obvious, Minimal Language"（Tom 的直观、最小化语言）的首字母缩写，用以纪念其创建者 Tom Preston-Werner。
+
+如果您需要加载 `Toml` 文件，请使用 `TomlLoader`。
+
+```python
+from langchain_community.document_loaders import TomlLoader
+```
+
+```python
+loader = TomlLoader("example_data/fake_rule.toml")
+```
+
+```python
+rule = loader.load()
+```
+
+```python
+rule
+```
+
+```output
+[Document(page_content='{"internal": {"creation_date": "2023-05-01", "updated_date": "2022-05-01", "release": ["release_type"], "min_endpoint_version": "some_semantic_version", "os_list": ["operating_system_list"]}, "rule": {"uuid": "some_uuid", "name": "Fake Rule Name", "description": "Fake description of rule", "query": "process where process.name : \\"somequery\\"\\n", "threat": [{"framework": "MITRE ATT&CK", "tactic": {"name": "Execution", "id": "TA0002", "reference": "https://attack.mitre.org/tactics/TA0002/"}}]}}', metadata={'source': 'example_data/fake_rule.toml'})]
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\toml.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

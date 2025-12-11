@@ -1,0 +1,48 @@
+---
+title: YandexGPT
+---
+
+LangChain.js 支持调用 [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) 大型语言模型（LLMs）。
+
+## 设置 (Setup)
+
+首先，您需要创建一个服务账户（service account），并为其授予 `ai.languageModels.user` 角色。
+
+接下来，您有两种认证方式可选：
+
+- [IAM 令牌](https://cloud.yandex.com/en/docs/iam/operations/sa/create-for-sa) (IAM token)。
+  您可以在构造函数参数 `iam_token` 中指定令牌，或者在环境变量 `YC_IAM_TOKEN` 中指定。
+- [API 密钥](https://cloud.yandex.com/en/docs/iam/operations/api-key/create) (API key)。
+  您可以在构造函数参数 `api_key` 中指定密钥，或者在环境变量 `YC_API_KEY` 中指定。
+
+## 用法 (Usage)
+
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[本节](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/yandex @langchain/core
+```
+
+```typescript
+import { YandexGPT } from "@langchain/yandex/llms";
+
+const model = new YandexGPT();
+const res = await model.invoke(['Translate "I love programming" into French.']);
+console.log({ res });
+```
+
+## 相关链接 (Related)
+
+
+- [模型指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\yandex.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,76 @@
+---
+title: 华为 OBS 目录加载器
+---
+
+以下代码演示了如何从华为 OBS（对象存储服务 Object Storage Service）加载对象作为文档。
+
+```python
+# 安装所需的包
+# pip install esdk-obs-python
+```
+
+```python
+from langchain_community.document_loaders import OBSDirectoryLoader
+```
+
+```python
+endpoint = "您的-endpoint"
+```
+
+```python
+# 配置您的访问凭证
+config = {"ak": "您的-access-key", "sk": "您的-secret-key"}
+loader = OBSDirectoryLoader("您的-bucket-名称", endpoint=endpoint, config=config)
+```
+
+```python
+loader.load()
+```
+
+## 指定前缀进行加载
+
+如果您想加载存储桶中具有特定前缀的对象，可以使用以下代码：
+
+```python
+loader = OBSDirectoryLoader(
+    "您的-bucket-名称", endpoint=endpoint, config=config, prefix="test_prefix"
+)
+```
+
+```python
+loader.load()
+```
+
+## 从 ECS 获取认证信息
+
+如果您的 langchain 部署在华为云 ECS 上，并且已经设置了 [代理（Agency）](https://support.huaweicloud.com/intl/en-us/usermanual-ecs/ecs_03_0166.html#section7)，加载器可以直接从 ECS 获取安全令牌（security token），无需提供访问密钥（access key）和密钥（secret key）。
+
+```python
+config = {"get_token_from_ecs": True}
+loader = OBSDirectoryLoader("您的-bucket-名称", endpoint=endpoint, config=config)
+```
+
+```python
+loader.load()
+```
+
+## 使用公共存储桶
+
+如果您的存储桶（bucket）策略允许匿名访问（即匿名用户拥有 `listBucket` 和 `GetObject` 权限），您可以直接加载对象，而无需配置 `config` 参数。
+
+```python
+loader = OBSDirectoryLoader("您的-bucket-名称", endpoint=endpoint)
+```
+
+```python
+loader.load()
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\huawei_obs_directory.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

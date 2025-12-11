@@ -1,0 +1,82 @@
+---
+title: 删除组织
+sidebarTitle: 删除组织
+---
+
+LangSmith UI 目前不支持从自托管的 LangSmith 实例中删除单个组织。但是，可以通过直接从 ClickHouse 中所有物化视图（`runs_history` 视图除外）以及 `runs` 和 `feedbacks` 表中移除所有痕迹，然后从 Postgres 的 `tenants` 表中删除该组织来实现。
+
+此操作需要提供组织 ID 作为参数。
+
+### 先决条件
+
+确保您已准备好以下工具/项目。
+
+1. kubectl
+
+   * [https://kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/)
+
+2. PostgreSQL 客户端
+
+   * [https://www.postgresql.org/download/](https://www.postgresql.org/download/)
+
+3. PostgreSQL 数据库连接信息：
+
+   * 主机 (Host)
+   * 端口 (Port)
+   * 用户名 (Username)
+     * 如果使用捆绑版本，则为 `postgres`
+   * 密码 (Password)
+     * 如果使用捆绑版本，则为 `postgres`
+   * 数据库名称 (Database name)
+     * 如果使用捆绑版本，则为 `postgres`
+
+4. ClickHouse 数据库凭证：
+
+   * 主机 (Host)
+   * 端口 (Port)
+   * 用户名 (Username)
+     * 如果使用捆绑版本，则为 `default`
+   * 密码 (Password)
+     * 如果使用捆绑版本，则为 `password`
+   * 数据库名称 (Database name)
+     * 如果使用捆绑版本，则为 `default`
+
+5. 从您将要运行迁移脚本的机器到 PostgreSQL 数据库的网络连通性。
+
+   * 如果您使用的是捆绑版本，您可能需要将 postgresql 服务端口转发到本地机器。
+   * 运行 `kubectl port-forward svc/langsmith-postgres 5432:5432` 将 postgresql 服务端口转发到您的本地机器。
+
+6. 从您将要运行迁移脚本的机器到 Clickhouse 数据库的网络连通性。
+
+   * 如果您使用的是捆绑版本，您可能需要将 clickhouse 服务端口转发到本地机器。
+     * 运行 `kubectl port-forward svc/langsmith-clickhouse 8123:8123` 将 clickhouse 服务端口转发到您的本地机器。
+   * 如果您使用的是 Clickhouse Cloud，您需要指定 `--ssl` 标志并使用端口 `8443`。
+
+7. 用于删除组织的脚本
+
+   * 您可以从 [这里](https://github.com/langchain-ai/helm/blob/main/charts/langsmith/scripts/delete_organization_sh) 下载该脚本。
+
+### 运行单个组织的删除脚本
+
+运行以下命令来执行组织移除脚本：
+
+```bash
+sh delete_organization.sh <postgres_url> <clickhouse_url> --organization_id <organization_id>
+```
+
+例如，如果您正在使用捆绑版本并进行了端口转发，该命令应如下所示：
+
+```bash
+sh delete_organization.sh "postgres://postgres:postgres@localhost:5432/postgres" "clickhouse://default:password@localhost:8123/default" --organization_id 4ec70ec7-0808-416a-b836-7100aeec934b
+```
+
+如果您访问 LangSmith UI，现在应该看不到该组织了。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\script-delete-an-organization.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

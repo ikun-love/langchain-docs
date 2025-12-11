@@ -1,0 +1,110 @@
+---
+title: RELLM
+---
+
+[RELLM](https://github.com/r2d4/rellm) 是一个库，用于将本地的 Hugging Face pipeline 模型封装起来，以实现结构化解码。
+
+它的工作原理是**逐个**生成 token。在每一步中，它会屏蔽掉不符合所提供的部分正则表达式的 token。
+
+**警告 - 此模块仍处于实验阶段**
+
+```python
+pip install -qU  rellm langchain-huggingface > /dev/null
+```
+
+### Hugging Face 基线测试
+
+首先，我们通过检查模型在没有结构化解码情况下的输出，来建立一个定性的基线。
+
+```python
+import logging
+
+logging.basicConfig(level=logging.ERROR)
+prompt = """Human: "What's the capital of the United States?"
+AI Assistant:{
+  "action": "Final Answer",
+  "action_input": "The capital of the United States is Washington D.C."
+}
+Human: "What's the capital of Pennsylvania?"
+AI Assistant:{
+  "action": "Final Answer",
+  "action_input": "The capital of Pennsylvania is Harrisburg."
+}
+Human: "What 2 + 5?"
+AI Assistant:{
+  "action": "Final Answer",
+  "action_input": "2 + 5 = 7."
+}
+Human: 'What's the capital of Maryland?'
+AI Assistant:"""
+```
+
+```python
+from langchain_huggingface import HuggingFacePipeline
+from transformers import pipeline
+
+hf_model = pipeline(
+    "text-generation", model="cerebras/Cerebras-GPT-590M", max_new_tokens=200
+)
+
+original_model = HuggingFacePipeline(pipeline=hf_model)
+
+generated = original_model.generate([prompt], stop=["Human:"])
+print(generated)
+```
+
+```output
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
+```
+```output
+generations=[[Generation(text=' "What\'s the capital of Maryland?"\n', generation_info=None)]] llm_output=None
+```
+
+***这看起来并不令人印象深刻，对吗？模型没有回答问题，而且完全没有遵循 JSON 格式！让我们尝试使用结构化解码器。***
+
+## RELLM LLM 包装器
+
+我们再试一次，这次我们提供一个正则表达式来匹配如下所示的 JSON 结构格式：
+
+```python
+import regex  # 注意这里使用的是 regex 库，而不是 Python 的 re 标准库模块
+
+# 我们选择一个正则表达式，用于匹配如下结构的 JSON 字符串：
+# {
+#  "action": "Final Answer",
+# "action_input": string or dict
+# }
+pattern = regex.compile(
+    r'\{\s*"action":\s*"Final Answer",\s*"action_input":\s*(\{.*\}|"[^"]*")\s*\}\nHuman:'
+)
+```
+
+```python
+from langchain_experimental.llms import RELLM
+
+model = RELLM(pipeline=hf_model, regex=pattern, max_new_tokens=200)
+
+generated = model.predict(prompt, stop=["Human:"])
+print(generated)
+```
+
+```output
+{"action": "Final Answer",
+  "action_input": "The capital of Maryland is Baltimore."
+}
+```
+
+**太棒了！没有解析错误。**
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\rellm_experimental.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

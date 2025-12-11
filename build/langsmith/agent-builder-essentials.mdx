@@ -1,0 +1,114 @@
+---
+title: 基础要点
+description: 工具、触发器、记忆、子代理和审批——您所需的一切都集中在一个地方。
+sidebarTitle: 基础要点
+---
+
+## 工具 (Tools)
+
+工具使您的代理能够与您的应用程序和服务进行交互。您的代理可以发送电子邮件、创建日历事件、发布消息、搜索网络等等。您可以从内置工具中进行选择，这些工具支持 Gmail、Slack、Google Calendar、GitHub 等，以及许多其他工具。
+
+请参阅 [支持的工具](/langsmith/agent-builder-tools) 以获取完整列表。
+
+## 触发器 (Triggers)
+
+触发器定义了代理应何时开始运行。您可以将代理连接到外部工具或基于时间的计划，使其能够自动响应消息、电子邮件或定期事件。
+
+以下是一些触发代理的流行方式：
+
+<CardGroup cols={3}>
+  <Card title="Slack" icon="slack">
+    当在特定的 Slack 频道中收到消息时激活您的代理。
+  </Card>
+  <Card title="Gmail" icon="envelope">
+    当收到电子邮件时触发您的代理。
+  </Card>
+  <Card title="Cron 计划" icon="clock">
+    根据时间表运行您的代理，以处理重复性任务。
+  </Card>
+</CardGroup>
+
+## 记忆与更新 (Memory and updates)
+
+您的代理会随着时间的推移变得更聪明。它们会记住先前对话中的重要信息，并且可以自我更新以提高工作效率。
+
+- **记忆 (Memory)**：代理会记住过去交互中的相关详细信息，以便在未来的对话中做出更好的决策。
+- **自我更新 (Self-updates)**：代理可以添加新工具、删除不再需要的工具，或调整其指令以改进其工作方式。
+- **保持不变的 (What stays the same)**：代理无法更改其名称、描述或启动它们的触发器。
+
+## 自定义模型 (Custom models)
+
+Agent Builder 支持自定义模型。您可以通过编辑代理的设置来覆盖特定代理默认使用的 Anthropic 或 OpenAI 模型：
+
+1. 在 [LangSmith UI](https://smith.langchain.com) 中，导航到您想要编辑的代理。
+2. 点击右上角的 <Icon icon="gear" /> 设置图标。
+3. 在 **模型 (Model)** 部分，选择 **+ 添加自定义模型 (+ Add custom model)**。
+4. 输入模型 ID、显示名称、基础 URL 以及 API 密钥的名称和值。
+5. 点击 **保存 (Save)**。
+
+<Note>
+  自定义模型的性能可能不如内置模型。请在生产环境中使用自定义模型之前对其进行测试。
+</Note>
+
+## 子代理 (Sub-agents)
+
+通过将大任务分解成更小、更专业的助手来构建复杂的代理。将子代理视为专家团队——每个子代理处理工作的一个特定部分，同时与主代理协同工作。
+
+这种方法使构建复杂的系统变得更加容易。与其让一个代理尝试做所有事情，不如让专业的助手各自擅长任务的特定部分。
+
+以下是您可能使用子代理的一些方式：
+
+- **拆分为子任务**：让一个代理获取数据，另一个代理总结数据，第三个代理格式化结果。
+- **专业化工具**：根据需要向不同代理授予访问不同工具的权限。
+- **独立工作**：允许子代理自行工作，然后将它们的结果返回给主代理。
+
+## 人机协同 (Human in the loop)
+
+在重要决策上保持控制权。您可以设置代理，使其在执行某些操作之前暂停并请求您的批准。这确保了代理可以自动处理大部分任务，而您则保留了监督权。
+
+### 设置审批步骤
+
+<Steps>
+  <Step title="选择一个工具">
+    在设置代理时，选择您希望在运行前进行审核的工具或操作。
+  </Step>
+  <Step title="开启批准">
+    找到该工具的批准选项并将其打开。
+  </Step>
+  <Step title="代理等待您">
+    当代理到达该步骤时，它将暂停并等待您的批准，然后才能继续执行。
+  </Step>
+</Steps>
+
+### 代理暂停时您可以做什么
+
+当代理停止以请求批准时，您有三种选择：
+
+<CardGroup cols={3}>
+  <Card title="接受 (Accept)" icon="check">
+    给予绿灯，让您的代理继续执行其计划。
+  </Card>
+  <Card title="编辑 (Edit)" icon="pen-to-square">
+    在允许代理继续之前，修改代理的消息或参数。
+  </Card>
+  <Card title="发送反馈 (Send feedback)" icon="comment">
+    分享反馈以帮助您的代理学习和改进。
+  </Card>
+</CardGroup>
+
+## 后续步骤 (Next steps)
+
+- [设置您的工作区](/langsmith/agent-builder-setup)
+- [连接应用程序和服务](/langsmith/agent-builder-tools)
+- [使用远程连接](/langsmith/agent-builder-mcp-framework)
+- [在工作区代理和私有代理之间进行选择](/langsmith/agent-builder-workspace-vs-private)
+- [从您的应用程序调用代理](/langsmith/agent-builder-code)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-builder-essentials.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

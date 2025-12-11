@@ -1,0 +1,87 @@
+---
+title: Anthropic 中间件
+---
+
+专为 Anthropic 的 Claude 模型设计的中间件。了解更多关于 [中间件](/oss/javascript/langchain/middleware/overview) 的信息。
+
+| 中间件 | 描述 |
+|------------|-------------|
+| [提示词缓存](#prompt-caching) | 通过缓存重复的提示词前缀来降低成本 |
+
+## 提示词缓存 (Prompt caching)
+
+通过在 Anthropic 的服务器上缓存静态或重复的提示词内容（如系统提示词、工具定义和对话历史记录），可以降低成本并减少延迟。此中间件实现了一种**对话式缓存策略**，它在最新消息之后设置缓存断点，允许缓存和重用整个对话历史记录（包括最新的用户消息）于后续的 API 调用中。提示词缓存适用于以下场景：
+
+- 具有较长、在请求之间不改变的静态系统提示词的应用
+- 具有大量在调用间保持不变的工具定义的代理
+- 跨多轮对话复用早期消息历史记录的场景
+- 需要降低 API 成本和延迟的高流量部署
+
+<Info>
+    了解更多关于 [Anthropic 提示词缓存](https://platform.claude.com/docs/en/build-with-claude/prompt-caching#cache-limitations) 策略和限制。
+</Info>
+
+```typescript
+import { createAgent, anthropicPromptCachingMiddleware } from "langchain";
+
+const agent = createAgent({
+  model: "claude-sonnet-4-5-20250929",
+  prompt: "<在此处放入你的长系统提示词>",
+  middleware: [anthropicPromptCachingMiddleware({ ttl: "5m" })],
+});
+```
+
+<Accordion title="配置选项">
+
+<ParamField body="ttl" type="string" default="5m">
+    缓存内容的存活时间（Time to live）。有效值：`'5m'` (5分钟) 或 `'1h'` (1小时)
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+此中间件会在每个请求中缓存内容，直到并包含最新的一条消息。在 TTL 窗口期内（5分钟或1小时）的后续请求中，系统会从缓存中检索先前看到的内容而非重新处理，从而显著降低成本和延迟。
+
+**工作原理：**
+1. 第一次请求：系统提示词、工具和用户消息 "Hi, my name is Bob" 被发送到 API 并缓存。
+2. 第二次请求：缓存的内容（系统提示词、工具和第一条消息）从缓存中检索。只需要处理新消息 "What's my name?"，以及模型对第一条消息的响应。
+3. 之后每一轮对话都遵循此模式，每个请求都复用被缓存的对话历史记录。
+
+```typescript
+import { createAgent, HumanMessage, anthropicPromptCachingMiddleware } from "langchain";
+
+const LONG_PROMPT = `
+请成为一个乐于助人的助手。
+
+<更多上下文信息 ...>
+`;
+
+const agent = createAgent({
+  model: "claude-sonnet-4-5-20250929",
+  prompt: LONG_PROMPT,
+  middleware: [anthropicPromptCachingMiddleware({ ttl: "5m" })],
+});
+
+// 第一次调用：使用系统提示词、工具和 "Hi, my name is Bob" 创建缓存
+await agent.invoke({
+  messages: [new HumanMessage("Hi, my name is Bob")]
+});
+
+// 第二次调用：复用被缓存的系统提示词、工具和之前的消息
+// 只处理新消息 "What's my name?" 和上一次的 AI 响应
+const result = await agent.invoke({
+  messages: [new HumanMessage("What's my name?")]
+});
+```
+
+</Accordion>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\middleware\anthropic.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

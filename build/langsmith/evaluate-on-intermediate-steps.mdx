@@ -1,0 +1,435 @@
+---
+title: 如何评估应用程序的中间步骤
+sidebarTitle: 评估中间步骤
+---
+
+虽然在许多场景下，评估任务的最终输出就足够了，但在某些情况下，您可能希望评估管道（pipeline）的中间步骤。
+
+例如，对于检索增强生成（RAG）任务，您可能希望：
+
+1. 评估检索（retrieval）步骤，以确保相对于输入查询检索到了正确的文档。
+2. 评估生成（generation）步骤，以确保相对于检索到的文档生成了正确的答案。
+
+在本指南中，我们将使用一个简单的、完全自定义的评估器来评估标准 1，并使用一个基于 LLM 的评估器来评估标准 2，以突出这两种场景。
+
+为了评估管道的中间步骤，您的评估函数需要遍历并处理 `[run](https://docs.smith.langsmith.com/docs/concepts/run) / rootRun` 参数。该参数是一个 `Run` 对象，其中包含了管道的中间步骤信息。
+
+## 1. 定义您的 LLM 管道
+
+下面的 RAG 管道包括 1) 根据输入问题生成维基百科查询，2) 从维基百科检索相关文档，以及 3) 根据检索到的文档生成答案。
+
+<CodeGroup>
+
+```bash Python
+pip install -U langsmith langchain[openai] wikipedia
+```
+
+```bash TypeScript
+yarn add langsmith langchain @langchain/openai wikipedia
+```
+
+</CodeGroup>
+
+需要 `langsmith>=0.3.13`
+
+<CodeGroup>
+
+```python Python
+import wikipedia as wp
+from openai import OpenAI
+from langsmith import traceable, wrappers
+
+oai_client = wrappers.wrap_openai(OpenAI())
+
+@traceable
+def generate_wiki_search(question: str) -> str:
+    """根据问题生成要在维基百科中搜索的查询。"""
+    instructions = (
+        "请生成一个搜索查询以传递给维基百科来回答用户的问题。 "
+        "只返回搜索查询，不要返回任何其他内容。 "
+        "这将直接传递给维基百科搜索引擎。"
+    )
+    messages = [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": question}
+    ]
+    result = oai_client.chat.completions.create(
+        messages=messages,
+        model="gpt-4o-mini",
+        temperature=0,
+    )
+    return result.choices[0].message.content
+
+@traceable(run_type="retriever")
+def retrieve(query: str) -> list:
+    """获取最多两个维基百科搜索结果。"""
+    results = []
+    for term in wp.search(query, results = 10):
+        try:
+            page = wp.page(term, auto_suggest=False)
+            results.append({
+                "page_content": page.summary,
+                "type": "Document",
+                "metadata": {"url": page.url}
+            })
+        except wp.DisambiguationError:
+            pass
+        if len(results) >= 2:
+            return results
+
+@traceable
+def generate_answer(question: str, context: str) -> str:
+    """根据检索到的信息回答问题。"""
+    instructions = f"请仅根据以下内容回答用户的问题：\n\n{context}"
+    messages = [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": question}
+    ]
+    result = oai_client.chat.completions.create(
+        messages=messages,
+        model="gpt-4o-mini",
+        temperature=0
+    )
+    return result.choices[0].message.content
+
+@traceable
+def qa_pipeline(question: str) -> str:
+    """完整的管道流程。"""
+    query = generate_wiki_search(question)
+    context = "\n\n".join([doc["page_content"] for doc in retrieve(query)])
+    return generate_answer(question, context)
+```
+
+```typescript TypeScript
+import OpenAI from "openai";
+import wiki from "wikipedia";
+import { Client } from "langsmith";
+import { traceable } from "langsmith/traceable";
+import { wrapOpenAI } from "langsmith/wrappers";
+
+const openai = wrapOpenAI(new OpenAI());
+
+const generateWikiSearch = traceable(
+  async (input: { question: string }) => {
+    const messages = [
+      {
+        role: "system" as const,
+        content:
+          "请生成一个搜索查询以传递给 Wikipedia 来回答用户的问题。只返回搜索查询，不要返回任何其他内容。这将直接传递给 Wikipedia 搜索引擎。",
+      },
+      { role: "user" as const, content: input.question },
+    ];
+    const chatCompletion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0,
+    });
+    return chatCompletion.choices[0].message.content ?? "";
+  },
+  { name: "generateWikiSearch" }
+);
+
+const retrieve = traceable(
+  async (input: { query: string; numDocuments: number }) => {
+    const { results } = await wiki.search(input.query, { limit: 10 });
+    const finalResults: Array<{
+      page_content: string;
+      type: "Document";
+      metadata: { url: string };
+    }> = [];
+    for (const result of results) {
+      if (finalResults.length >= input.numDocuments) {
+        // 目前只返回前 2 个页面
+        break;
+      }
+      const page = await wiki.page(result.title, { autoSuggest: false });
+      const summary = await page.summary();
+      finalResults.push({
+        page_content: summary.extract,
+        type: "Document",
+        metadata: { url: page.fullurl },
+      });
+    }
+    return finalResults;
+  },
+  { name: "retrieve", run_type: "retriever" }
+);
+
+const generateAnswer = traceable(
+  async (input: { question: string; context: string }) => {
+    const messages = [
+      {
+        role: "system" as const,
+        content: `请仅根据以下内容回答用户的问题：\n\n${input.context}`,
+      },
+      { role: "user" as const, content: input.question },
+    ];
+    const chatCompletion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0,
+    });
+    return chatCompletion.choices[0].message.content ?? "";
+  },
+  { name: "generateAnswer" }
+);
+
+const ragPipeline = traceable(
+  async ({ question }: { question: string }, numDocuments: number = 2) => {
+    const query = await generateWikiSearch({ question });
+    const retrieverResults = await retrieve({ query, numDocuments });
+    const context = retrieverResults
+      .map((result) => result.page_content)
+      .join("\n\n");
+    const answer = await generateAnswer({ question, context });
+    return answer;
+  },
+  { name: "ragPipeline" }
+);
+```
+
+</CodeGroup>
+
+此管道将产生一个执行追踪，其外观类似于：![evaluation\_intermediate\_trace.png](/langsmith/images/evaluation-intermediate-trace.png)
+
+## 2. 创建数据集和示例以评估管道
+
+我们正在构建一个非常简单的数据集，其中包含几个示例来评估此管道。
+
+需要 `langsmith>=0.3.13`
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+
+ls_client = Client()
+dataset_name = "Wikipedia RAG"
+
+if not ls_client.has_dataset(dataset_name=dataset_name):
+    dataset = ls_client.create_dataset(dataset_name=dataset_name)
+    examples = [
+      {"inputs": {"question": "What is LangChain?"}},
+      {"inputs": {"question": "What is LangSmith?"}},
+    ]
+    ls_client.create_examples(
+      dataset_id=dataset.id,
+      examples=examples,
+    )
+```
+
+```typescript TypeScript
+import { Client } from "langsmith";
+
+const client = new Client();
+const examples = [
+  [
+    "What is LangChain?",
+    "LangChain is an open-source framework for building applications using large language models.",
+  ],
+  [
+    "What is LangSmith?",
+    "LangSmith is an observability and evaluation tool for LLM products, built by LangChain Inc.",
+  ],
+];
+const datasetName = "Wikipedia RAG";
+const inputs = examples.map(([input, _]) => ({ input }));
+const outputs = examples.map(([_, expected]) => ({ expected }));
+const dataset = await client.createDataset(datasetName);
+await client.createExamples({ datasetId: dataset.id, inputs, outputs });
+```
+
+</CodeGroup>
+
+## 3. 定义您的自定义评估器
+
+如上所述，我们将定义两个评估器：一个评估检索文档相对于输入查询的相关性，另一个评估生成答案相对于检索文档的幻觉（hallucination）。我们将使用 LangChain LLM 包装器以及 [`with_structured_output`](https://python.langchain.com/v0.1/docs/modules/model_io/chat/structured_output/) 来定义幻觉评估器。
+
+这里的关键是评估函数应该遍历 `run` / `rootRun` 参数，以访问管道的中间步骤。然后，评估器可以根据所需的标准处理中间步骤的输入和输出。
+
+示例使用 `langchain` 方便起见，这不是必需的。
+
+<CodeGroup>
+
+```python Python
+from langchain.chat_models import init_chat_model
+from langsmith.schemas import Run
+from pydantic import BaseModel, Field
+
+def document_relevance(run: Run) -> bool:
+    """检查检索输入是否存在于检索到的文档中。"""
+    qa_pipeline_run = next(
+        r for run in run.child_runs if r.name == "qa_pipeline"
+    )
+    retrieve_run = next(
+        r for r in qa_pipeline_run.child_runs if r.name == "retrieve"
+    )
+    page_contents = "\n\n".join(
+        doc["page_content"] for doc in retrieve_run.outputs["output"]
+    )
+    return retrieve_run.inputs["query"] in page_contents
+
+# 数据模型
+class GradeHallucinations(BaseModel):
+    """关于生成答案中是否存在幻觉的二元评分。"""
+    is_grounded: bool = Field(..., description="如果答案基于事实，则为 True，否则为 False。")
+
+# 用于评估幻觉的结构化输出 LLM
+# 更多信息请参阅：https://python.langchain.com/docs/how_to/structured_output/
+grader_llm= init_chat_model("gpt-4o-mini", temperature=0).with_structured_output(
+    GradeHallucinations,
+    method="json_schema",
+    strict=True,
+)
+
+def no_hallucination(run: Run) -> bool:
+    """检查答案是否基于文档。
+    如果没有幻觉，则返回 True，否则返回 False。
+    """
+    # 获取文档和答案
+    qa_pipeline_run = next(
+        r for r in run.child_runs if r.name == "qa_pipeline"
+    )
+    retrieve_run = next(
+        r for r in qa_pipeline_run.child_runs if r.name == "retrieve"
+    )
+    retrieved_content = "\n\n".join(
+        doc["page_content"] for doc in retrieve_run.outputs["output"]
+    )
+
+    # 构建提示
+    instructions = (
+        "您是一名评估员，负责评估 LLM 生成的内容是否基于/得到一组检索到的事实的支持。 "
+        "给出二进制分数 1 或 0，其中 1 表示答案基于/得到事实集支持。"
+    )
+    messages = [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": f"事实集：\n{retrieved_content}\n\nLLM 生成内容：{run.outputs['answer']}"},
+    ]
+    grade = grader_llm.invoke(messages)
+    return grade.is_grounded
+```
+
+```typescript TypeScript
+import { EvaluationResult } from "langsmith/evaluation";
+import { Run, Example } from "langsmith/schemas";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import { z } from "zod";
+
+function findNestedRun(run: Run, search: (run: Run) => boolean): Run | null {
+  const queue: Run[] = [run];
+  while (queue.length > 0) {
+    const currentRun = queue.shift()!;
+    if (search(currentRun)) return currentRun;
+    queue.push(...currentRun.child_runs);
+  }
+  return null;
+}
+
+// 一个非常简单的评估器，用于检查检索步骤的输入是否存在于检索到的文档中。
+function documentRelevance(rootRun: Run, example: Example): EvaluationResult {
+  const retrieveRun = findNestedRun(rootRun, (run) => run.name === "retrieve");
+  const docs: Array<{ page_content: string }> | undefined =
+    retrieveRun.outputs?.outputs;
+  const pageContents = docs?.map((doc) => doc.page_content).join("\n\n");
+  const score = pageContents.includes(retrieveRun.inputs?.query);
+  return { key: "simple_document_relevance", score };
+}
+
+async function hallucination(
+  rootRun: Run,
+  example: Example
+): Promise<EvaluationResult> {
+  const rag = findNestedRun(rootRun, (run) => run.name === "ragPipeline");
+  const retrieve = findNestedRun(rootRun, (run) => run.name === "retrieve");
+  const docs: Array<{ page_content: string }> | undefined =
+    retrieve.outputs?.outputs;
+  const documents = docs?.map((doc) => doc.page_content).join("\n\n");
+
+  const prompt = ChatPromptTemplate.fromMessages<{
+    documents: string;
+    generation: string;
+  }>([
+    [
+      "system",
+      [
+        `您是一名评估员，负责评估 LLM 生成的内容是否基于/得到一组检索到的事实的支持。 \n`,
+        `给出二进制分数 1 或 0，其中 1 表示答案是基于/得到事实集支持的。`,
+      ].join("\n"),
+    ],
+    [
+      "human",
+      "事实集：\n\n {documents} \n\n LLM 生成内容：{generation}",
+    ],
+  ]);
+
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+  }).withStructuredOutput(
+    z
+      .object({
+        binary_score: z
+          .number()
+          .describe("答案基于事实，1 或 0"),
+      })
+      .describe("关于生成答案中是否存在幻觉的二元评分。")
+  );
+
+  const grader = prompt.pipe(llm);
+  const score = await grader.invoke({
+    documents,
+    generation: rag.outputs?.outputs,
+  });
+  return { key: "answer_hallucination", score: score.binary_score };
+}
+```
+
+</CodeGroup>
+
+## 4. 评估管道
+
+最后，我们将使用上面定义的自定义评估器运行 `evaluate`。
+
+<CodeGroup>
+
+```python Python
+def qa_wrapper(inputs: dict) -> dict:
+  """包装 qa_pipeline，使其可以接受 Example.inputs 字典作为输入。"""
+  return {"answer": qa_pipeline(inputs["question"])}
+
+experiment_results = ls_client.evaluate(
+    qa_wrapper,
+    data=dataset_name,
+    evaluators=[document_relevance, no_hallucination],
+    experiment_prefix="rag-wiki-oai"
+)
+```
+
+```typescript TypeScript
+import { evaluate } from "langsmith/evaluation";
+
+await evaluate((inputs) => ragPipeline({ question: inputs.input }), {
+  data: datasetName,
+  evaluators: [hallucination, documentRelevance],
+  experimentPrefix: "rag-wiki-oai",
+});
+```
+
+</CodeGroup>
+
+实验将包含评估结果，包括评估器的分数和评论：![evaluation\_intermediate\_experiment.png](/langsmith/images/evaluation-intermediate-experiment.png)
+
+## 相关
+
+* [评估 `langgraph` 图](/langsmith/evaluate-on-intermediate-steps)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\evaluate-on-intermediate-steps.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

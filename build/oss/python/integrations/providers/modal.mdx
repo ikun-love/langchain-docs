@@ -1,0 +1,104 @@
+---
+title: 模态窗口 (Modal)
+---
+
+本页面介绍如何使用 Modal 生态系统来运行 LangChain 自定义的大语言模型（LLM）。
+内容分为两部分：
+
+1. Modal 的安装和 Web 端点的部署
+2. 使用已部署的 Web 端点和 `LLM` 包装器类。
+
+## 安装和设置
+
+- 使用 `pip install modal` 进行安装
+- 运行 `modal token new`
+
+## 定义您的 Modal 函数和 Webhook
+
+您必须包含一个提示（prompt）。响应结构是严格固定的：
+
+```python
+class Item(BaseModel):
+    prompt: str
+
+@stub.function()
+@modal.web_endpoint(method="POST")
+def get_text(item: Item):
+    return {"prompt": run_gpt2.call(item.prompt)}
+```
+
+以下是使用 GPT2 模型的示例：
+
+```python
+from pydantic import BaseModel
+
+import modal
+
+CACHE_PATH = "/root/model_cache"
+
+class Item(BaseModel):
+    prompt: str
+
+stub = modal.Stub(name="example-get-started-with-langchain")
+
+def download_model():
+    from transformers import GPT2Tokenizer, GPT2LMHeadModel
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    tokenizer.save_pretrained(CACHE_PATH)
+    model.save_pretrained(CACHE_PATH)
+
+# 为下面的 LLM 函数（该函数负责下载和存储 GPT-2 模型）定义一个容器镜像。
+image = modal.Image.debian_slim().pip_install(
+    "tokenizers", "transformers", "torch", "accelerate"
+).run_function(download_model)
+
+@stub.function(
+    gpu="any",
+    image=image,
+    retries=3,
+)
+def run_gpt2(text: str):
+    from transformers import GPT2Tokenizer, GPT2LMHeadModel
+    tokenizer = GPT2Tokenizer.from_pretrained(CACHE_PATH)
+    model = GPT2LMHeadModel.from_pretrained(CACHE_PATH)
+    encoded_input = tokenizer(text, return_tensors='pt').input_ids
+    output = model.generate(encoded_input, max_length=50, do_sample=True)
+    return tokenizer.decode(output[0], skip_special_tokens=True)
+
+@stub.function()
+@modal.web_endpoint(method="POST")
+def get_text(item: Item):
+    return {"prompt": run_gpt2.call(item.prompt)}
+```
+
+### 部署 Web 端点
+
+使用 [`modal deploy`](https://modal.com/docs/reference/cli/deploy) CLI 命令将 Web 端点部署到 Modal 云端。
+您的 Web 端点将在 `modal.run` 域下获得一个持久化的 URL。
+
+## 围绕 Modal Web 端点的 LLM 包装器
+
+`Modal` LLM 包装器类将接受您已部署的 Web 端点的 URL。
+
+```python
+from langchain_community.llms import Modal
+
+endpoint_url = "https://ecorp--custom-llm-endpoint.modal.run"  # 请替换为您的已部署 Modal Web 端点的 URL
+
+llm = Modal(endpoint_url=endpoint_url)
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+
+question = "请问贾斯汀·比伯出生那年，哪支 NFL 球队赢得了超级碗？"
+
+llm_chain.run(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\modal.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

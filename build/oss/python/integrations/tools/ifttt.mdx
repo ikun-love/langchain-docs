@@ -1,0 +1,76 @@
+```markdown
+---
+title: IFTTT WebHooks
+---
+
+本指南展示了如何使用 IFTTT Webhooks 功能。
+
+资源来源：[github.com/SidU/teams-langchain-js/wiki/Connecting-IFTTT-Services](https://github.com/SidU/teams-langchain-js/wiki/Connecting-IFTTT-Services)。
+
+## 创建 Webhook
+
+- 访问 [ifttt.com/create](https://ifttt.com/create)。
+
+## 配置 "If This" (如果发生这个)
+
+- 在 IFTTT 界面中，点击 "If This" 按钮。
+- 在搜索栏中搜索 "Webhooks"。
+- 选择第一个选项："Receive a web request with a JSON payload." (接收带有 JSON 有效负载的网络请求)。
+- 选择一个针对你计划连接服务的特定“事件名称 (Event Name)”。
+    这样做可以让你更容易管理 Webhook URL。例如，如果你要连接 Spotify，你可以使用 "Spotify" 作为你的事件名称。
+- 点击 "Create Trigger" 按钮保存设置并创建 Webhook 触发器。
+
+## 配置 "Then That" (那么就做这个)
+
+- 在 IFTTT 界面中，点击 "Then That" 按钮。
+- 搜索你想连接的服务，例如 Spotify。
+- 从该服务中选择一个操作，例如 "Add track to a playlist"（将歌曲添加到播放列表）。
+- 配置操作，指定必要的详细信息，例如播放列表名称，例如 "Songs from AI"。
+- 在你的操作中引用 Webhook 接收到的 JSON 有效负载（Payload）。对于 Spotify 场景，请选择 `{{JsonPayload}}` 作为你的搜索查询项。
+- 点击 "Create Action" 按钮保存你的操作设置。
+- 完成操作配置后，点击 "Finish" 按钮完成设置。
+- 恭喜！你已成功将 Webhook 连接到所需的服务，现在你可以开始接收数据并触发操作了 🎉。
+
+## 收尾工作
+
+- 要获取你的 Webhook URL，请访问 [ifttt.com/maker_webhooks/settings](https://ifttt.com/maker_webhooks/settings)。
+- 从那里复制 IFTTT 的 Key 值。URL 的格式是 [maker.ifttt.com/use/YOUR_IFTTT_KEY](https://maker.ifttt.com/use/YOUR_IFTTT_KEY)。请获取 `YOUR_IFTTT_KEY` 的值。
+
+```python
+pip install -qU  langchain-community
+```
+
+```python
+from langchain_community.tools.ifttt import IFTTTWebhook
+```
+
+```python
+import os
+
+key = os.environ["IFTTTKey"]
+url = f"https://maker.ifttt.com/trigger/spotify/json/with/key/{key}"
+tool = IFTTTWebhook(
+    name="Spotify", description="Add a song to spotify playlist", url=url
+)
+```
+
+```python
+tool.run("taylor swift")
+```
+
+```output
+"Congratulations! You've fired the spotify JSON event"
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\ifttt.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,168 @@
+---
+title: Momento 向量索引 (MVI)
+---
+
+> [MVI](https://gomomento.com): 专为您的数据设计的最具效率、最易于使用的无服务器（serverless）向量索引。要开始使用 MVI，只需注册一个账户即可。您无需处理基础设施、管理服务器或担心扩展性问题。MVI 是一项服务，它会自动扩展以满足您的需求。
+
+要注册并访问 MVI，请访问 [Momento 控制台](https://console.gomomento.com)。
+
+# 设置
+
+## 安装先决条件
+
+您需要：
+
+- 用于与 MVI 交互的 [`momento`](https://pypi.org/project/momento/) 包，以及
+- 用于与 OpenAI API 交互的 `openai` 包。
+- 用于文本分词（tokenizing）的 `tiktoken` 包。
+
+```python
+pip install -qU  momento langchain-openai langchain-community tiktoken
+```
+
+## 输入 API 密钥
+
+```python
+import getpass
+import os
+```
+
+### Momento：用于数据索引
+
+请访问 [Momento 控制台](https://console.gomomento.com) 获取您的 API 密钥。
+
+```python
+if "MOMENTO_API_KEY" not in os.environ:
+    os.environ["MOMENTO_API_KEY"] = getpass.getpass("Momento API Key:")
+```
+
+### OpenAI：用于文本嵌入（Embeddings）
+
+```python
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API Key:")
+```
+
+# 加载数据
+
+在这里，我们使用 LangChain 提供的示例数据集——“国情咨文”（state of the union address）。
+
+首先加载相关模块：
+
+```python
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores import MomentoVectorIndex
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+```
+
+然后加载数据：
+
+```python
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+len(documents)
+```
+
+```output
+1
+```
+
+注意，数据是一个大文件，因此只有一个数据文档（document）：
+
+```python
+len(documents[0].page_content)
+```
+
+```output
+38539
+```
+
+由于这是一个大型文本文件，我们需要将其分割成块（chunks）以用于问答。这样，用户的问题就能从最相关的文本块中得到回答。
+
+```python
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+len(docs)
+```
+
+```output
+42
+```
+
+# 索引数据
+
+索引数据非常简单，只需实例化 `MomentoVectorIndex` 对象即可。我们在这里使用 `from_documents` 辅助函数来同时实例化并索引数据：
+
+```python
+vector_db = MomentoVectorIndex.from_documents(
+    docs, OpenAIEmbeddings(), index_name="sotu"
+)
+```
+
+这会使用您的 API 密钥连接到 Momento 向量索引服务并索引数据。如果该索引之前不存在，此过程会为您创建它。现在数据已可用于搜索。
+
+# 查询数据
+
+## 直接对索引提问
+
+查询数据的最直接方式是针对索引进行搜索。我们可以使用 [`VectorStore`](https://reference.langchain.com/python/langchain_core/vectorstores/?h=#langchain_core.vectorstores.base.VectorStore) API 如下所示执行此操作：
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+docs = vector_db.similarity_search(query)
+```
+
+```python
+docs[0].page_content
+```
+
+```output
+'Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. \n\nTonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. \n\nOne of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. \n\nAnd I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.'
+```
+
+虽然这包含有关 Ketanji Brown Jackson 的相关信息，但我们还没有一个简洁、易读的答案。我们将在下一节中解决这个问题。
+
+## 使用 LLM 生成流畅的答案
+
+有了数据在 MVI 中建立索引后，我们可以与任何利用向量相似性搜索的链（chain）进行集成。我们在这里使用 `RetrievalQA` 链来演示如何从已索引的数据中回答问题。
+
+首先加载相关模块：
+
+```python
+from langchain.chains import RetrievalQA
+from langchain_openai import ChatOpenAI
+```
+
+然后实例化检索问答链：
+
+```python
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+qa_chain = RetrievalQA.from_chain_type(llm, retriever=vector_db.as_retriever())
+```
+
+```python
+qa_chain({"query": "What did the president say about Ketanji Brown Jackson?"})
+```
+
+```output
+{'query': 'What did the president say about Ketanji Brown Jackson?',
+ 'result': "The President said that he nominated Circuit Court of Appeals Judge Ketanji Brown Jackson to serve on the United States Supreme Court. He described her as one of the nation's top legal minds and mentioned that she has received broad support from various groups, including the Fraternal Order of Police and former judges appointed by Democrats and Republicans."}
+```
+
+# 后续步骤
+
+就是这样！您现在已经索引了数据，并可以使用 Momento 向量索引进行查询。您可以使用相同的索引从任何支持向量相似性搜索的链中查询您的数据。
+
+通过 Momento，您不仅可以索引向量数据，还可以缓存 API 调用并存储聊天消息历史记录。请查看其他 Momento LangChain 集成以了解更多信息。
+
+要了解有关 Momento 向量索引的更多信息，请访问 [Momento 文档](https://docs.gomomento.com)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\momento_vector_index.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

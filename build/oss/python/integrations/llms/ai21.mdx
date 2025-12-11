@@ -1,0 +1,88 @@
+---
+title: AI21LLM
+---
+
+:::caution 此服务已弃用
+请参阅[此页面](https://python.langchain.com/docs/integrations/chat/ai21/)以获取更新后的 ChatAI21 对象。 :::
+
+本示例介绍了如何使用 LangChain 与 `AI21` Jurassic 模型进行交互。如需使用 Jamba 模型，请改用[ChatAI21 对象](https://python.langchain.com/docs/integrations/chat/ai21/)。
+
+[在 LangChain 上查看 AI21 模型和工具的完整列表。](https://pypi.org/project/langchain-ai21/)
+
+## 安装
+
+```python
+!pip install -qU langchain-ai21
+```
+
+## 环境设置
+
+我们需要获取一个 [AI21 API 密钥](https://docs.ai21.com/)，并设置 `AI21_API_KEY` 环境变量：
+
+```python
+import os
+from getpass import getpass
+
+if "AI21_API_KEY" not in os.environ:
+    os.environ["AI21_API_KEY"] = getpass()
+```
+
+## 用法
+
+```python
+from langchain_ai21 import AI21LLM
+from langchain_core.prompts import PromptTemplate
+
+template = """问题: {question}
+
+答案: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+
+model = AI21LLM(model="j2-ultra")
+
+chain = prompt | model
+
+chain.invoke({"question": "What is LangChain?"})
+```
+
+```output
+'\nLangChain is a (database)\nLangChain is a database for storing and processing documents'
+```
+
+# AI21 上下文问答
+
+您可以使用 AI21 的上下文问答模型来接收文本或文档作为上下文（Context），以及一个问题（Question），并根据该上下文返回答案。
+
+这意味着，如果问题的答案不在提供的文档中，模型会指明这一点（而不是提供一个错误的答案）。
+
+```python
+from langchain_ai21 import AI21ContextualAnswers
+
+tsm = AI21ContextualAnswers()
+
+response = tsm.invoke(input={"context": "Your context", "question": "Your question"})
+```
+
+您也可以将其与链（chains）、输出解析器（output parsers）和向量数据库（vector DBs）一起使用。
+
+```python
+from langchain_ai21 import AI21ContextualAnswers
+from langchain_core.output_parsers import StrOutputParser
+
+tsm = AI21ContextualAnswers()
+chain = tsm | StrOutputParser()
+
+response = chain.invoke(
+    {"context": "Your context", "question": "Your question"},
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\ai21.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

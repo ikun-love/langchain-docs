@@ -1,0 +1,144 @@
+---
+title: 自定义输出渲染
+sidebarTitle: 自定义输出渲染
+---
+
+自定义输出渲染允许您使用自己的自定义 HTML 页面来可视化运行输出（run outputs）和数据集引用输出（dataset reference outputs）。这在以下场景中特别有用：
+
+- **特定领域的格式化**：以其原生格式显示医疗记录、法律文件或其他专业数据类型。
+- **自定义可视化**：从数值或结构化的输出数据中创建图表、图形或示意图。
+
+在本页面中，您将学习如何：
+
+- 在 LangSmith UI 中**[配置自定义渲染](#configure-custom-output-rendering)**。
+- **[构建自定义渲染器](#build-a-custom-renderer)** 以显示输出数据。
+- **[了解自定义渲染出现的位置](#where-custom-rendering-appears)** 在 LangSmith 中。
+
+## 配置自定义输出渲染
+
+您可以在两个级别配置自定义渲染：
+
+- **针对数据集**：将自定义渲染应用于与该数据集关联的所有运行，无论它们出现在哪里——在实验、运行详情窗格还是标注队列中。
+- **针对标注队列**：将自定义渲染应用于特定标注队列中的所有运行，无论它们来自哪个数据集。这 **覆盖** 数据集级别的配置。
+
+### 针对数据集
+
+要为数据集配置自定义输出渲染：
+
+![Dataset page with three-dot menu showing Custom Output Rendering option](/langsmith/images/custom-output-rendering-menu.png)
+
+1. 在 **Datasets & Experiments** 页面中导航到您的数据集。
+2. 点击右上角的 **⋮**（三点菜单）。
+3. 选择 **Custom Output Rendering**（自定义输出渲染）。
+4. 切换 **Enable custom output rendering**（启用自定义输出渲染）。
+5. 在 **URL** 字段中输入网页 URL。
+6. 点击 **Save**（保存）。
+
+![Custom Output Rendering modal with fields filled in](/langsmith/images/custom-output-rendering-modal.png)
+
+### 针对标注队列
+
+要为标注队列配置自定义输出渲染：
+
+![Annotation queue settings showing custom output rendering configuration](/langsmith/images/annotation-queue-custom-output-rendering-settings.png)
+
+1. 导航到 **Annotation Queues**（标注队列）页面。
+2. 点击现有标注队列或创建一个新队列。
+3. 在标注队列设置窗格中，滚动到 **Custom Output Rendering**（自定义输出渲染）部分。
+4. 切换 **Enable custom output rendering**（启用自定义输出渲染）。
+5. 在 **URL** 字段中输入网页 URL。
+6. 点击 **Save**（保存）或 **Create**（创建）。
+
+<Info>
+当两个级别都配置了自定义渲染时，对于在特定队列中查看的运行，标注队列的配置将**优先**于数据集的配置。
+</Info>
+
+## 构建自定义渲染器
+
+### 理解消息格式
+
+您的 HTML 页面将通过 [postMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) 接收输出数据。LangSmith 发送的消息结构如下：
+
+```typescript
+{
+  type: "output" | "reference",
+  data: {
+    // 实际输出或引用输出
+    // 结构根据您的应用程序而变化
+  },
+  metadata: {
+    inputs: {
+      // 生成此输出的输入数据
+      // 结构根据您的应用程序而变化
+    }
+  }
+}
+```
+
+- `type`: 指示这是实际输出 (`"output"`) 还是引用输出 (`"reference"`)。
+- `data`: 输出数据本身。
+- `metadata.inputs`: 生成此输出的输入数据，用于提供上下文。
+
+<Note>
+**消息传递时机**：LangSmith 使用指数退避（exponential backoff）重试机制，以确保即使您的页面加载缓慢也能收到数据。消息最多发送 6 次，延迟时间递增（100ms, 200ms, 400ms, 800ms, 1600ms, 3200ms）。
+</Note>
+
+### 示例实现
+
+此示例监听传入的 postMessage 事件并在页面上显示它们。每条消息都会被编号并格式化为 JSON，方便检查 LangSmith 发送给渲染器的 `data` 结构。
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>PostMessage Echo</title>
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" />
+  </head>
+  <body>
+    <h1>PostMessage Messages</h1>
+    <div id="messages"></div>
+    <script>
+      let count = 0;
+      window.addEventListener("message", (event) => {
+        count++;
+        const header = document.createElement("h3");
+        header.appendChild(document.createTextNode(`Message ${count}`));
+        const code = document.createElement("code");
+        code.appendChild(
+          document.createTextNode(JSON.stringify(event.data, null, 2))
+        );
+        const pre = document.createElement("pre");
+        pre.appendChild(code);
+        document.getElementById("messages").appendChild(header);
+        document.getElementById("messages").appendChild(pre);
+      });
+    </script>
+  </body>
+</html>
+```
+
+## 自定义渲染出现的位置
+
+启用自定义渲染后，它将替换默认输出视图在以下位置显示：
+
+- **实验比较视图**：当比较多个实验的输出时：
+
+![Experiment comparison view showing custom rendering](/langsmith/images/custom-output-rendering-experiment-comparison.png)
+
+- **运行详情窗格**：当查看与数据集相关的运行时：
+
+![Run detail pane showing custom rendering](/langsmith/images/custom-output-rendering-run-details.png)
+
+- **标注队列**：当在标注队列中审查运行时：
+
+![Annotation queue showing custom rendering](/langsmith/images/custom-output-rendering-annotation-queue.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\custom-output-rendering.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

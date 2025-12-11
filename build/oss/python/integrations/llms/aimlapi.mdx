@@ -1,0 +1,109 @@
+---
+title: AimlapiLLM
+---
+
+<Warning>
+**您当前正在浏览的是记录如何将 AI/ML API 模型用作文本补全（text completion）模型的页面。许多最新且最流行的 AI/ML API 模型实际上是 [聊天补全模型](/oss/python/langchain/models)。**
+
+您可能需要查看 [这个页面](/oss/python/integrations/chat/aimlapi)。
+</Warning>
+
+本页面旨在帮助您开始使用 AI/ML API 文本补全模型。如需了解 `AimlapiLLM` 所有功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/aimlapi/llms/langchain_aimlapi.llms.AimlapiLLM.html)。
+
+## 概述 (Overview)
+
+### 集成详情 (Integration details)
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| [AimlapiLLM](https://python.langchain.com/api_reference/aimlapi/llms/langchain_aimlapi.llms.AimlapiLLM.html) | [langchain-aimlapi](https://python.langchain.com/api_reference/aimlapi/index.html) | ❌ | beta | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-aimlapi?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-aimlapi?style=flat-square&label=%20) |
+
+### 模型特性 (Model features)
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 (JSON mode) | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 (Audio input) | 视频输入 (Video input) | [逐词流式传输](/oss/python/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+## 设置 (Setup)
+
+要访问 AI/ML API 模型，您需要创建一个账户、获取 API 密钥，并安装 `langchain-aimlapi` 集成包。
+
+### 凭证 (Credentials)
+
+请访问 [aimlapi.com](https://aimlapi.com/app/?utm_source=langchain&utm_medium=github&utm_campaign=integration) 进行注册并生成 API 密钥。生成后，请设置 `AIMLAPI_API_KEY` 环境变量：
+
+```python
+import getpass
+import os
+
+if not os.getenv("AIMLAPI_API_KEY"):
+    os.environ["AIMLAPI_API_KEY"] = getpass.getpass("Enter your AI/ML API key: ")
+```
+
+要启用模型调用的自动化跟踪，请设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+```
+
+### 安装 (Installation)
+
+LangChain 的 AI/ML API 集成位于 `langchain-aimlapi` 包中：
+
+```python
+pip install -qU langchain-aimlapi
+```
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化模型对象并生成文本补全：
+
+```python
+from langchain_aimlapi import AimlapiLLM
+
+llm = AimlapiLLM(
+    model="gpt-3.5-turbo-instruct",
+    temperature=0.5,
+    max_tokens=256,
+)
+```
+
+## 调用 (Invocation)
+
+```python
+response = llm.invoke("Explain the bubble sort algorithm in Python.")
+print(response)
+```
+
+```output
+Bubble sort is a simple sorting algorithm that repeatedly steps through a list, compares adjacent items, and swaps them when they are out of order. The process repeats until the entire list is sorted. While easy to understand and implement, bubble sort is inefficient on large datasets because it has quadratic time complexity.
+```
+
+## 流式调用 (Streaming invocation)
+
+您也可以逐个 token 流式传输响应：
+
+```python
+llm = AimlapiLLM(
+    model="gpt-3.5-turbo-instruct",
+)
+
+for chunk in llm.stream("List top 5 programming languages in 2025 with reasons."):
+    print(chunk, end="", flush=True)
+```
+
+---
+
+## API 参考 (API reference)
+
+如需了解 `AimlapiLLM` 所有功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/aimlapi/llms/langchain_aimlapi.llms.AimlapiLLM.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\aimlapi.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

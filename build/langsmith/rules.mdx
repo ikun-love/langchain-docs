@@ -1,0 +1,93 @@
+---
+title: 设置自动化规则
+sidebarTitle: 设置自动化规则
+---
+
+虽然您可以手动筛选和处理来自 LLM 应用的生产日志，但随着应用用户量的增加，这通常会变得非常困难。
+LangSmith 提供了一个强大的功能，称为 **Automations**（自动化），它允许您对跟踪数据触发特定的操作。
+从宏观上看，自动化规则由**过滤器 (filter)**、**采样率 (sampling rate)** 和**操作 (action)** 来定义。
+
+自动化规则可以触发以下操作：将跟踪添加到数据集、添加到标注队列、触发 Webhook（例如用于远程评估）或延长数据保留期。您可以设置的一些自动化示例包括：
+
+- 将所有带有负面反馈的跟踪发送到标注队列供人工审查
+- 将所有跟踪的 10% 发送到标注队列供人工审查，以抽查是否存在问题
+- 升级所有带有错误的跟踪，以延长数据保留期
+
+<Info>
+要配置在线评估，请访问 [在线评估](/langsmith/online-evaluations) 页面。
+</Info>
+<Note>
+如果一条自动化规则匹配到跟踪中的任何一个运行 (run)，该跟踪将自动升级到 [扩展数据保留](/langsmith/administration-overview#data-retention-auto-upgrades)。这种升级会影响跟踪的定价，但它确保了符合您自动化标准的跟踪（通常是那些对分析最有价值的跟踪）得到保存以供调查。
+</Note>
+
+## 查看自动化规则
+
+转到 **Tracing Projects**（跟踪项目）选项卡，然后选择一个跟踪项目。要查看该跟踪项目的现有自动化规则，请单击 **Automations**（自动化）选项卡。
+
+![View automation rules](/langsmith/images/view-automation-rules.png)
+
+## 创建规则
+
+![](/langsmith/images/aq-spot-check-rule.gif)
+
+#### 1. 导航到规则创建
+
+转到 **Tracing Projects**（跟踪项目）选项卡，然后选择一个跟踪项目。单击跟踪项目页面右上角的 **+ New**（新建），然后单击 **New Automation**（新建自动化）。
+
+#### 2. 命名您的规则
+
+#### 3. 创建一个过滤器
+
+自动化规则过滤器的工作方式与应用于项目中的跟踪的过滤器相同。有关过滤器的更多信息，您可以参考 [本指南](./filter-traces-in-application)。
+
+#### 4. 配置采样率
+
+配置采样率，以控制触发自动化操作的符合条件的运行的百分比。
+
+您可以在 0 到 1 之间为自动化指定采样率。这将控制发送到自动化操作的符合过滤条件的运行的百分比。例如，如果您将采样率设置为 0.5，那么 50% 通过过滤的跟踪将被发送到指定的操作。
+
+#### 5.（可选）将规则应用于过去的运行
+
+通过切换 **Apply to past runs**（应用于过去的运行）并输入“Backfill from”（从…回填）日期，将规则应用于过去的运行。这仅在规则创建时才可能。注意：回填是作为后台作业处理的，因此您不会立即看到结果。为了跟踪回填的进度，您可以 [查看自动化日志](./rules#view-logs-for-your-automations)。
+
+#### 6. 选择规则应用时要触发的操作。
+
+您可以使用自动化规则执行四种操作：
+
+- **Add to dataset**（添加到数据集）：将跟踪的输入和输出添加到 [数据集](/langsmith/evaluation-concepts#datasets) 中。
+- **Add to annotation queue**（添加到标注队列）：将跟踪添加到 [标注队列](/langsmith/evaluation-concepts#annotation-queues) 中。
+- **Trigger webhook**（触发 Webhook）：使用跟踪数据触发 Webhook。有关 Webhooks 的更多信息，您可以参考 [本指南](./webhooks)。
+- **Extend data retention**（延长数据保留）：延长匹配使用基础保留策略的跟踪的数据保留期限 [(有关详细信息，请参阅数据保留文档)](/langsmith/administration-overview#data-retention)。
+  请注意，所有其他规则也会通过上述数据保留文档中描述的自动升级机制延长匹配跟踪的数据保留期，但此规则不执行任何额外操作。
+
+## 查看自动化日志
+
+日志可以帮助您确信规则正在按预期工作。您可以通过转到跟踪项目中的 **Automations**（自动化）选项卡，然后单击为您创建的规则的 **Logs**（日志）按钮来查看自动化日志。
+
+日志选项卡允许您：
+
+- 查看在所选时间段内由给定规则处理的所有运行
+- 如果特定规则执行触发了错误，您可以将鼠标悬停在错误图标上查看错误消息
+- 您可以通过筛选到规则的创建时间戳来监控回填作业的进度。这是因为回填从规则创建时开始。
+- 使用 **View run**（查看运行）按钮检查自动化规则所应用的运行。对于将运行添加为数据集示例的规则，您可以查看生成的示例。
+
+![Logs_Gif](/langsmith/images/rule-logs.gif)
+
+## 视频指南
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/z69cBXTJFZ0?si=GBKQ9_muHR1zllLl"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\rules.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

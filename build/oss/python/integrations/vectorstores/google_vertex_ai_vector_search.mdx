@@ -1,0 +1,497 @@
+```markdown
+---
+title: Google Vertex AI 向量搜索
+---
+
+这个 Notebook 展示了如何使用与 `Google Cloud Vertex AI Vector Search` 向量数据库相关的实用功能。
+
+> [Google Vertex AI Vector Search](https://cloud.google.com/vertex-ai/docs/vector-search/overview)，以前称为 Vertex AI Matching Engine，提供了业界领先的高扩展性、低延迟向量数据库。这些向量数据库通常被称为向量相似性匹配或近似最近邻（ANN）服务。
+
+**注意**: LangChain API 期望预先创建好端点（endpoint）和已部署的索引（index）。索引创建过程最长可能需要一个小时。
+
+> 要查看如何创建索引，请参阅 [创建索引并将其部署到端点](#create-index-and-deploy-it-to-an-endpoint) 部分。
+如果您已经部署了索引，请跳到 [从文本创建 VectorStore](#create-vector-store-from-texts)。
+
+## 创建索引并将其部署到端点 (Create Index and deploy it to an Endpoint)
+
+- 本节演示如何创建新索引并将其部署到端点。
+
+```python
+# TODO : 根据您的要求设置值
+# 项目和存储常量
+PROJECT_ID = "<my_project_id>"
+REGION = "<my_region>"
+BUCKET = "<my_gcs_bucket>"
+BUCKET_URI = f"gs://{BUCKET}"
+
+# textembedding-gecko@003 的维度数量是 768
+# 如果使用其他嵌入器，维度可能需要更改。
+DIMENSIONS = 768
+
+# 索引常量
+DISPLAY_NAME = "<my_matching_engine_index_id>"
+DEPLOYED_INDEX_ID = "<my_matching_engine_endpoint_id>"
+```
+
+```python
+# 创建一个存储桶（bucket）。
+! gsutil mb -l $REGION -p $PROJECT_ID $BUCKET_URI
+```
+
+### 使用 `VertexAIEmbeddings` 作为嵌入模型
+
+```python
+from google.cloud import aiplatform
+from langchain_google_vertexai import VertexAIEmbeddings
+```
+
+```python
+aiplatform.init(project=PROJECT_ID, location=REGION, staging_bucket=BUCKET_URI)
+```
+
+```python
+embedding_model = VertexAIEmbeddings(model_name="text-embedding-005")
+```
+
+### 创建一个空索引 (Create an empty Index)
+
+**注意：** 在创建索引时，您应该从 "BATCH\_UPDATE" 或 "STREAM\_UPDATE" 中指定一个 "index\_update\_method"。
+> 批处理索引（Batch Index）适用于您希望以批处理方式更新索引的场景，使用在一段时间内存储的数据进行更新，例如每周或每月处理的系统。流式索引（Streaming Index）适用于您希望索引数据在新数据添加到数据存储时立即更新的场景，例如，如果您经营一家书店，希望尽快在线展示新库存。您选择的类型很重要，因为设置和要求是不同的。
+
+有关配置索引的更多详细信息，请参阅 [官方文档](https://cloud.google.com/vertex-ai/docs/vector-search/create-manage-index#create-index-batch)。
+
+```python
+# 注意：此操作可能需要长达 30 秒
+my_index = aiplatform.MatchingEngineIndex.create_tree_ah_index(
+    display_name=DISPLAY_NAME,
+    dimensions=DIMENSIONS,
+    approximate_neighbors_count=150,
+    distance_measure_type="DOT_PRODUCT_DISTANCE",
+    index_update_method="STREAM_UPDATE",  # 允许的值为 BATCH_UPDATE, STREAM_UPDATE
+)
+```
+
+### 创建一个端点 (Create an Endpoint)
+
+```python
+# 创建一个端点
+my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint.create(
+    display_name=f"{DISPLAY_NAME}-endpoint", public_endpoint_enabled=True
+)
+```
+
+### 将索引部署到端点 (Deploy Index to the Endpoint)
+
+```python
+# 注意：此操作可能需要长达 20 分钟
+my_index_endpoint = my_index_endpoint.deploy_index(
+    index=my_index, deployed_index_id=DEPLOYED_INDEX_ID
+)
+
+my_index_endpoint.deployed_indexes
+```
+
+## 从文本创建 VectorStore (Create Vector Store from texts)
+
+注意：如果您已有索引和端点，您可以使用以下代码加载它们
+
+```python
+# TODO：将 1234567890123456789 替换为您实际的索引 ID
+my_index = aiplatform.MatchingEngineIndex("1234567890123456789")
+
+# TODO：将 1234567890123456789 替换为您实际的端点 ID
+my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint("1234567890123456789")
+```
+
+```python
+from langchain_google_vertexai import (
+    VectorSearchVectorStore,
+    VectorSearchVectorStoreDatastore,
+)
+```
+
+![Langchainassets.png](data:image/png;base64,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d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3fF4X6DFAwAAAAAElFTkSuQmCC)
+
+### 创建简单的向量存储 (Create simple vectorstore ( without filters))
+
+```python
+# 输入文本
+texts = [
+    "The cat sat on",
+    "the mat.",
+    "I like to",
+    "eat pizza for",
+    "dinner.",
+    "The sun sets",
+    "in the west.",
+]
+
+# 创建一个 Vector Store
+vector_store = VectorSearchVectorStore.from_components(
+    project_id=PROJECT_ID,
+    region=REGION,
+    gcs_bucket_name=BUCKET,
+    index_id=my_index.name,
+    endpoint_id=my_index_endpoint.name,
+    embedding=embedding_model,
+    stream_update=True,
+)
+
+# 将向量和映射的文本块添加到您的向量存储中
+vector_store.add_texts(texts=texts)
+```
+
+### 可选：您也可以在数据存储中创建向量和存储块 (OPTIONAL : You can also create vectore and store chunks in a Datastore)
+
+```python
+# 注意：此操作可能需要长达 20 分钟
+vector_store = VectorSearchVectorStoreDatastore.from_components(
+    project_id=PROJECT_ID,
+    region=REGION,
+    index_id=my_index.name,
+    endpoint_id=my_index_endpoint.name,
+    embedding=embedding_model,
+    stream_update=True,
+)
+
+vector_store.add_texts(texts=texts, is_complete_overwrite=True)
+```
+
+```python
+# 尝试运行相似性搜索
+vector_store.similarity_search("pizza")
+```
+
+### 使用元数据过滤器创建向量存储 (Create vectorstore with metadata filters)
+
+```python
+# 带元数据的输入文本
+record_data = [
+    {
+        "description": "A versatile pair of dark-wash denim jeans."
+        "Made from durable cotton with a classic straight-leg cut, these jeans"
+        " transition easily from casual days to dressier occasions.",
+        "price": 65.00,
+        "color": "blue",
+        "season": ["fall", "winter", "spring"],
+    },
+    {
+        "description": "A lightweight linen button-down shirt in a crisp white."
+        "Perfect for keeping cool with breathable fabric and a relaxed fit.",
+        "price": 34.99,
+        "color": "white",
+        "season": ["summer", "spring"],
+    },
+    {
+        "description": "A soft, chunky knit sweater in a vibrant forest green. "
+        "The oversized fit and cozy wool blend make this ideal for staying warm "
+        "when the temperature drops.",
+        "price": 89.99,
+        "color": "green",
+        "season": ["fall", "winter"],
+    },
+    {
+        "description": "A classic crewneck t-shirt in a soft, heathered blue. "
+        "Made from comfortable cotton jersey, this t-shirt is a wardrobe essential "
+        "that works for every season.",
+        "price": 19.99,
+        "color": "blue",
+        "season": ["fall", "winter", "summer", "spring"],
+    },
+    {
+        "description": "A flowing midi-skirt in a delicate floral print. "
+        "Lightweight and airy, this skirt adds a touch of feminine style "
+        "to warmer days.",
+        "price": 45.00,
+        "color": "white",
+        "season": ["spring", "summer"],
+    },
+]
+```
+
+```python
+# 解析和准备输入数据
+
+texts = []
+metadatas = []
+for record in record_data:
+    record = record.copy()
+    page_content = record.pop("description")
+    texts.append(page_content)
+    if isinstance(page_content, str):
+        metadata = {**record}
+        metadatas.append(metadata)
+```
+
+```python
+# 检查元数据
+metadatas
+```
+
+```python
+# 注意：此操作可能需要 20 多分钟
+vector_store = VectorSearchVectorStore.from_components(
+    project_id=PROJECT_ID,
+    region=REGION,
+    gcs_bucket_name=BUCKET,
+    index_id=my_index.name,
+    endpoint_id=my_index_endpoint.name,
+    embedding=embedding_model,
+)
+
+vector_store.add_texts(texts=texts, metadatas=metadatas, is_complete_overwrite=True)
+```
+
+```python
+from google.cloud.aiplatform.matching_engine.matching_engine_index_endpoint import (
+    Namespace,
+    NumericNamespace,
+)
+```
+
+```python
+# 尝试运行简单的相似性搜索
+
+# 以下代码应返回 5 条结果
+vector_store.similarity_search("shirt", k=5)
+```
+
+```python
+# 尝试运行带有文本过滤器的相似性搜索
+filters = [Namespace(name="season", allow_tokens=["spring"])]
+
+# 以下代码现在应返回 4 条结果
+vector_store.similarity_search("shirt", k=5, filter=filters)
+```
+
+```python
+# 尝试运行带有文本和数值过滤器组合的相似性搜索
+filters = [Namespace(name="season", allow_tokens=["spring"])]
+numeric_filters = [NumericNamespace(name="price", value_float=40.0, op="LESS")]
+
+# 以下代码现在应返回 2 条结果
+vector_store.similarity_search(
+    "shirt", k=5, filter=filters, numeric_filter=numeric_filters
+)
+```
+
+### 使用 Vector Store 作为检索器 (Use Vector Store as retriever)
+
+```python
+# 将 vectore_store 初始化为检索器
+retriever = vector_store.as_retriever()
+```
+
+```python
+# 在检索器上执行简单的相似性搜索
+retriever.invoke("What are my options in breathable fabric?")
+```
+
+```python
+# 尝试运行带有文本过滤器的相似性搜索
+filters = [Namespace(name="season", allow_tokens=["spring"])]
+
+retriever.search_kwargs = {"filter": filters}
+
+# 在检索器上执行带有过滤器的相似性搜索
+retriever.invoke("What are my options in breathable fabric?")
+```
+
+```python
+# 尝试运行带有文本和数值过滤器组合的相似性搜索
+filters = [Namespace(name="season", allow_tokens=["spring"])]
+numeric_filters = [NumericNamespace(name="price", value_float=40.0, op="LESS")]
+
+
+retriever.search_kwargs = {"filter": filters, "numeric_filter": numeric_filters}
+
+retriever.invoke("What are my options in breathable fabric?")
+```
+
+### 在问答链中使用过滤器 (Use filters with retriever in Question Answering Chains)
+
+```python
+from langchain_google_vertexai import VertexAI
+
+llm = VertexAI(model_name="gemini-pro")
+```
+
+```python
+from langchain.chains import RetrievalQA
+
+filters = [Namespace(name="season", allow_tokens=["spring"])]
+numeric_filters = [NumericNamespace(name="price", value_float=40.0, op="LESS")]
+
+retriever.search_kwargs = {"k": 2, "filter": filters, "numeric_filter": numeric_filters}
+
+retrieval_qa = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=retriever,
+    return_source_documents=True,
+)
+
+question = "What are my options in breathable fabric?"
+response = retrieval_qa({"query": question})
+print(f"{response['result']}")
+print("REFERENCES")
+print(f"{response['source_documents']}")
+```
+
+## 读取、分块、向量化和索引 PDF (Read , Chunk , Vectorise and Index PDFs)
+
+```python
+!pip install pypdf
+```
+
+```python
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+```
+
+```python
+loader = PyPDFLoader("https://arxiv.org/pdf/1706.03762.pdf")
+pages = loader.load()
+```
+
+```python
+text_splitter = RecursiveCharacterTextSplitter(
+    # 设置一个非常小的块大小，仅作演示。
+    chunk_size=1000,
+    chunk_overlap=20,
+    length_function=len,
+    is_separator_regex=False,
+)
+doc_splits = text_splitter.split_documents(pages)
+```
+
+```python
+texts = [doc.page_content for doc in doc_splits]
+metadatas = [doc.metadata for doc in doc_splits]
+```
+
+```python
+texts[0]
+```
+
+```python
+# 检查第一页的元数据
+metadatas[0]
+```
+
+```python
+vector_store = VectorSearchVectorStore.from_components(
+    project_id=PROJECT_ID,
+    region=REGION,
+    gcs_bucket_name=BUCKET,
+    index_id=my_index.name,
+    endpoint_id=my_index_endpoint.name,
+    embedding=embedding_model,
+)
+
+vector_store.add_texts(texts=texts, metadatas=metadatas, is_complete_overwrite=True)
+```
+
+```python
+vector_store = VectorSearchVectorStore.from_components(
+    project_id=PROJECT_ID,
+    region=REGION,
+    gcs_bucket_name=BUCKET,
+    index_id=my_index.name,
+    endpoint_id=my_index_endpoint.name,
+    embedding=embedding_model,
+)
+```
+
+## 混合搜索 (Hybrid Search)
+
+向量搜索支持混合搜索，这是一种流行的信息检索（IR）架构模式，它结合了语义搜索和关键词搜索（也称为基于令牌的搜索）。通过混合搜索，开发人员可以利用这两种方法的优势，从而有效地提供更高的搜索质量。
+点击 [此处](https://cloud.google.com/vertex-ai/docs/vector-search/about-hybrid-search) 了解更多信息。
+
+为了使用混合搜索，我们需要拟合一个稀疏嵌入向量化器（sparse embedding vectorizer），并在 Vector Search 集成之外处理嵌入。
+稀疏嵌入向量化器的一个示例是 sklearn 的 TfidfVectorizer，但也可以使用其他技术，例如 BM25。
+
+```python
+# 定义一些示例数据
+texts = [
+    "The cat sat on",
+    "the mat.",
+    "I like to",
+    "eat pizza for",
+    "dinner.",
+    "The sun sets",
+    "in the west.",
+]
+
+# 可选的 ID
+ids = ["i_" + str(i + 1) for i in range(len(texts))]
+
+# 可选的元数据
+metadatas = [{"my_metadata": i} for i in range(len(texts))]
+```
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# 拟合 TFIDF 向量化器（这通常在一个非常大的语料库上完成，以确保词汇统计数据在新数据上具有良好的泛化性）
+vectorizer = TfidfVectorizer()
+vectorizer.fit(texts)
+```
+
+```python
+# 实用函数：将文本转换为 TF-IDF 稀疏向量
+def get_sparse_embedding(tfidf_vectorizer, text):
+    tfidf_vector = tfidf_vectorizer.transform([text])
+    values = []
+    dims = []
+    for i, tfidf_value in enumerate(tfidf_vector.data):
+        values.append(float(tfidf_value))
+        dims.append(int(tfidf_vector.indices[i]))
+    return {"values": values, "dimensions": dims}
+```
+
+```python
+# 语义（稠密）嵌入
+embeddings = embedding_model.embed_documents(texts)
+# tfidf（稀疏）嵌入
+sparse_embeddings = [get_sparse_embedding(vectorizer, x) for x in texts]
+```
+
+```python
+sparse_embeddings[0]
+```
+
+```python
+# 将稠密和稀疏嵌入添加到向量搜索中
+
+vector_store.add_texts_with_embeddings(
+    texts=texts,
+    embeddings=embeddings,
+    sparse_embeddings=sparse_embeddings,
+    ids=ids,
+    metadatas=metadatas,
+)
+```
+
+```python
+# 运行混合搜索
+query = "the cat"
+embedding = embedding_model.embed_query(query)
+sparse_embedding = get_sparse_embedding(vectorizer, query)
+
+vector_store.similarity_search_by_vector_with_score(
+    embedding=embedding,
+    sparse_embedding=sparse_embedding,
+    k=5,
+    rrf_ranking_alpha=0.7,  # 对稠密部分赋予 0.7 权重，对稀疏部分赋予 0.3 权重
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\google_vertex_ai_vector_search.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

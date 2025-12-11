@@ -1,0 +1,67 @@
+---
+title: OpenWeatherMap（开放天气地图）
+---
+
+>[OpenWeatherMap](https://openweathermap.org/api/)（开放天气地图）为指定地点提供了所有必需的天气数据，包括：
+>- 当前天气
+>- 1 小时的分钟级预报
+>- 48 小时的逐小时预报
+>- 8 天的每日预报
+>- 国家级天气警报
+>- 超过 40 年的历史天气数据
+
+本页面介绍如何在 LangChain 中使用 `OpenWeatherMap API`。
+
+## 安装与设置
+
+- 使用以下命令安装所需依赖：
+
+<CodeGroup>
+```bash pip
+pip install pyowm
+```
+
+```bash uv
+uv add pyowm
+```
+</CodeGroup>
+
+- 访问 OpenWeatherMap 网站并注册账号以获取您的 API 密钥 [此处](https://openweathermap.org/api/)
+- 将您的 API 密钥设置为 `OPENWEATHERMAP_API_KEY` 环境变量
+
+## 封装器 (Wrappers)
+
+### 实用工具 (Utility)
+
+存在一个 `OpenWeatherMapAPIWrapper` 实用工具类，用于封装此 API。要导入此实用工具：
+
+```python
+from langchain_community.utilities.openweathermap import OpenWeatherMapAPIWrapper
+```
+
+有关此封装器的更详细的步**骤说明，请参阅[此笔记本](/oss/python/integrations/tools/openweathermap)**。
+
+### 工具 (Tool)
+
+您也可以轻松地将此封装器加载为一个 Tool（以便与 Agent 一起使用）。
+您可以通过以下方式实现：
+
+```python
+import os
+from langchain_community.utilities import OpenWeatherMapAPIWrapper
+
+os.environ["OPENWEATHERMAP_API_KEY"] = ""
+weather = OpenWeatherMapAPIWrapper()
+tools = [weather.run]
+```
+
+有关工具的更多信息，请参阅[此页面](/oss/python/integrations/tools)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\openweathermap.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

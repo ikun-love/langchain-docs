@@ -1,0 +1,76 @@
+---
+title: LangSmith 可观测性
+sidebarTitle: 可观测性
+---
+
+import observability from '/snippets/oss/observability.mdx';
+
+
+当您使用 LangChain 构建和运行智能体（Agent）时，您需要了解它们的具体行为：它们调用了哪些 [工具](/oss/javascript/langchain/tools)、生成了哪些提示（Prompts）以及如何做出决策。使用 [`createAgent`](https://reference.langchain.com/javascript/functions/langchain.index.createAgent.html) 构建的 LangChain Agents 自动支持通过 [LangSmith](/langsmith/home) 进行追踪（Tracing）。LangSmith 是一个用于捕获、调试、评估和监控 LLM 应用行为的平台。
+
+
+
+[_追踪（Traces）_](/langsmith/observability-concepts#traces) 会记录智能体执行的每一步，从最初的用户输入到最终的响应，包括所有的工具调用、模型交互和决策点。这些执行数据可以帮助您调试问题、评估不同输入的性能，并在生产环境中监控使用模式。
+
+本指南将向您展示如何为您的 LangChain 智能体启用追踪功能，并使用 LangSmith 分析它们的执行过程。
+
+## 先决条件
+
+在开始之前，请确保您已具备以下条件：
+
+- **一个 LangSmith 账户**: 访问 [smith.langchain.com](https://smith.langchain.com) 免费注册或登录。
+- **一个 LangSmith API 密钥**: 请按照 [创建 API 密钥](/langsmith/create-account-api-key#create-an-api-key) 指南进行操作。
+
+## 启用追踪
+
+所有 LangChain 智能体都自动支持 LangSmith 追踪。要启用此功能，请设置以下环境变量：
+
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=<your-api-key>
+```
+
+## 快速入门
+
+无需额外的代码即可将追踪日志记录到 LangSmith。只需像平常一样运行您的智能体代码即可：
+
+
+
+```ts
+import { createAgent } from "@langchain/agents";
+
+function sendEmail(to: string, subject: string, body: string): string {
+    // ... email sending logic
+    return `Email sent to ${to}`;
+}
+
+function searchWeb(query: string): string {
+    // ... web search logic
+    return `Search results for: ${query}`;
+}
+
+const agent = createAgent({
+    model: "gpt-4o",
+    tools: [sendEmail, searchWeb],
+    systemPrompt: "You are a helpful assistant that can send emails and search the web."
+});
+
+// 运行智能体 - 所有步骤都将自动被追踪
+const response = await agent.invoke({
+    messages: [{ role: "user", content: "Search for the latest AI news and email a summary to john@example.com" }]
+});
+```
+
+
+默认情况下，追踪将被记录到名为 `default` 的项目中。要配置自定义项目名称，请参阅 [记录到项目](#log-to-a-project)。
+
+<observability />
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\observability.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

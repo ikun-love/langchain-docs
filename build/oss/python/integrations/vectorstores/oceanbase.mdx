@@ -1,0 +1,171 @@
+```markdown
+---
+title: OceanbaseVectorStore
+---
+
+本笔记本介绍如何开始使用 Oceanbase 向量存储（Vector Store）。
+
+## 设置 (Setup)
+
+要访问 Oceanbase 向量存储，您需要部署一个独立的 OceanBase 服务器：
+%docker run --name=ob433 -e MODE=mini -e OB_SERVER_IP=127.0.0.1 -p 2881:2881 -d quay.io/oceanbase/oceanbase-ce:4.3.3.1-101000012024102216
+然后安装 `langchain-oceanbase` 集成包。
+pip install -qU "langchain-oceanbase"
+检查到 OceanBase 的连接，并设置向量数据的内存使用率：
+
+```python
+from pyobvector import ObVecClient
+
+tmp_client = ObVecClient()
+tmp_client.perform_raw_text_sql("ALTER SYSTEM ob_vector_memory_limit_percentage = 30")
+```
+
+```output
+<sqlalchemy.engine.cursor.CursorResult at 0x12696f2a0>
+```
+
+## 初始化 (Initialization)
+
+配置嵌入式模型的 API 密钥。这里我们以 `DashScopeEmbeddings` 为例。当如上所述使用 Docker 镜像部署 `Oceanbase` 时，只需按照下面的脚本设置 `host`, `port`, `user`, `password` 和 `database name`（主机、端口、用户、密码和数据库名称）。对于其他部署方式，请根据实际情况设置这些参数。
+pip install dashscope
+
+```python
+import os
+
+from langchain_community.embeddings import DashScopeEmbeddings
+from langchain_oceanbase.vectorstores import OceanbaseVectorStore
+
+DASHSCOPE_API = os.environ.get("DASHSCOPE_API_KEY", "")
+connection_args = {
+    "host": "127.0.0.1",
+    "port": "2881",
+    "user": "root@test",
+    "password": "",
+    "db_name": "test",
+}
+
+embeddings = DashScopeEmbeddings(
+    model="text-embedding-v1", dashscope_api_key=DASHSCOPE_API
+)
+
+vector_store = OceanbaseVectorStore(
+    embedding_function=embeddings,
+    table_name="langchain_vector",
+    connection_args=connection_args,
+    vidx_metric_type="l2",
+    drop_old=True,
+)
+```
+
+## 管理向量存储 (Manage vector store)
+
+### 向向量存储添加条目 (Add items to vector store)
+
+- 待办 (TODO): 编辑并运行代码单元格以生成输出
+
+```python
+from langchain_core.documents import Document
+
+document_1 = Document(page_content="foo", metadata={"source": "https://foo.com"})
+document_2 = Document(page_content="bar", metadata={"source": "https://bar.com"})
+document_3 = Document(page_content="baz", metadata={"source": "https://baz.com"})
+
+documents = [document_1, document_2, document_3]
+
+vector_store.add_documents(documents=documents, ids=["1", "2", "3"])
+```
+
+```output
+['1', '2', '3']
+```
+
+### 更新向量存储中的条目 (Update items in vector store)
+
+```python
+updated_document = Document(
+    page_content="qux", metadata={"source": "https://another-example.com"}
+)
+
+vector_store.add_documents(documents=[updated_document], ids=["1"])
+```
+
+```output
+['1']
+```
+
+### 删除向量存储中的条目 (Delete items from vector store)
+
+```python
+vector_store.delete(ids=["3"])
+```
+
+## 查询向量存储 (Query vector store)
+
+一旦您的向量存储被创建并且相关的文档已被添加，在运行您的链或代理 (chain or agent) 过程中，您很可能希望对其进行查询。
+
+### 直接查询 (Query directly)
+
+可以按如下方式执行简单的相似性搜索：
+
+```python
+results = vector_store.similarity_search(
+    query="thud", k=1, filter={"source": "https://another-example.com"}
+)
+for doc in results:
+    print(f"* {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* bar [{'source': 'https://bar.com'}]
+```
+
+如果您想执行相似性搜索并接收相应的分数，可以运行：
+
+```python
+results = vector_store.similarity_search_with_score(
+    query="thud", k=1, filter={"source": "https://example.com"}
+)
+for doc, score in results:
+    print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
+```
+
+```output
+* [SIM=133.452299] bar [{'source': 'https://bar.com'}]
+```
+
+### 通过转换为检索器进行查询 (Query by turning into retriever)
+
+您也可以将向量存储转换为检索器（retriever），以便在链中使用时更方便。
+
+```python
+retriever = vector_store.as_retriever(search_kwargs={"k": 1})
+retriever.invoke("thud")
+```
+
+```output
+[Document(metadata={'source': 'https://bar.com'}, page_content='bar')]
+```
+
+## 用于检索增强生成 (RAG) 的用法 (Usage for retrieval-augmented generation)
+
+有关如何将此向量存储用于检索增强生成 (RAG) 的指南，请参阅以下部分：
+
+- [使用 LangChain 构建 RAG 应用](/oss/python/langchain/rag)
+- [Agentic RAG](/oss/python/langgraph/agentic-rag)
+- [检索文档](/oss/python/langchain/retrieval)
+
+---
+
+## API 参考 (API reference)
+
+有关所有 OceanbaseVectorStore 功能和配置的详细文档，请访问 API 参考：[python.langchain.com/docs/integrations/vectorstores/oceanbase](https://python.langchain.com/docs/integrations/vectorstores/oceanbase)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\oceanbase.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

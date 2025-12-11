@@ -1,0 +1,201 @@
+```markdown
+---
+title: 管理您的账户账单
+sidebarTitle: 管理账单
+---
+
+本页面介绍了如何为您在 LangSmith 的组织管理账单事宜：
+
+- [设置您的账户账单](#set-up-billing-for-your-account)：完成开发者版（Developer）和增强版（Plus）的账单设置流程，包括对老账户的特殊说明。
+- [更新您的信息](#update-your-information)：修改组织的账单接收邮箱、商业信息和税号。
+- [实施支出限制](#enforce-spend-limits)：了解如何通过使用量限制和数据保留策略管理您的支出。
+
+## 设置您的账户账单
+
+<Note>
+在开始使用本指南之前，请注意以下事项：
+
+- 如果您对 [企业版（Enterprise）](https://www.langchain.com/pricing) 感兴趣，请 [联系销售团队](https://www.langchain.com/contact-sales)。本指南仅适用于我们的自助服务计费套餐。
+</Note>
+
+要为您在 LangSmith 的组织设置账单，请导航至 **Settings**（设置）下的 [Billing and Usage（账单和使用量）](https://smith.langchain.com/settings/payments) 页面。根据您组织的设置情况，有不同的设置指南可供参考：
+
+- [开发者版](#developer-plan%3A-set-up-billing-on-your-personal-organization)
+- [增强版](#plus-plan%3A-set-up-billing-on-a-shared-organization)
+
+### 开发者版：在您的个人组织中设置账单
+
+个人组织每月限制为 5,000 条追踪（traces），直到添加信用卡为止。要添加卡片：
+
+1. 点击 **Add card to remove trace limit**（添加卡片以移除追踪限制）。
+1. 添加您的信用卡信息。
+1. 完成后，您将不再受限于 5,000 条追踪的速率限制，超出部分将按照 [定价页面](https://www.langchain.com/pricing-langsmith) 上注明的费率收费。
+
+### 增强版：在共享组织中设置账单
+
+团队组织默认每月享有 10,000 条追踪的额度。超出部分的追踪将按照 [定价页面](https://www.langchain.com/pricing-langsmith) 上注明的费率收费。
+
+<Note>
+您手动创建的新组织**必须**使用增强版（Plus Plan）。如果您看到了需要升级到增强版才能使用此组织的提示，请遵循以下步骤。
+</Note>
+
+1. 点击 **Upgrade to Plus**（升级到增强版）。
+1. 根据需要，邀请成员加入您的组织。
+1. 输入您的信用卡信息。然后，输入商业信息、发票接收邮箱和税号。如果此组织属于一个企业实体，请勾选 **This is a business**（这是一个企业）复选框，并相应地输入信息。有关更多信息，请参阅 [更新您的信息](#update-your-information) 部分。
+
+## 更新您的信息（仅限付费套餐）
+
+要为您在 LangSmith 的组织更新商业信息，请前往 **Settings**（设置）下的 [Billing and Usage（账单和使用量）](https://smith.langchain.com/settings/payments) 页面。
+
+### 发票接收邮箱
+
+要更新发票的接收邮箱地址，请遵循以下步骤：
+
+1. 导航至 **Plans and Billing**（套餐和账单） 选项卡。
+1. 找到显示当前发票接收邮箱的付款方式下方的部分。
+1. 在提供的字段中输入新的发票接收邮箱地址。
+1. 新的邮箱地址将自动保存。
+
+您未来收到的所有发票都将发送到更新后的邮箱地址。
+
+### 商业信息和税号
+
+<Note>
+在某些司法管辖区，LangSmith 需要收取销售税。如果您是企业实体，提供您的税号可能会使您有资格享受销售税豁免。
+</Note>
+
+要更新您组织的商业信息，请遵循以下步骤：
+
+1. 导航至 **Plans and Billing**（套餐和账单） 选项卡。
+2. 在发票接收邮箱部分下方，您会找到一个标记为 **Business**（企业）的复选框。
+3. 如果您的组织属于一个企业实体，请勾选 **Business** 复选框。
+4. 将出现一个商业信息部分，允许您输入或更新以下详细信息：
+   - Business Name（企业名称）
+   - Address（地址）
+   - Tax ID for applicable jurisdictions（适用于相应司法管辖区的税号）
+5. 在选择国家/地区后，将出现一个税号（Tax ID）字段，用于适用的司法管辖区。
+6. 输入必要信息后，点击 **Save**（保存） 按钮以保存您的更改。
+
+这确保了您的商业信息对于计费和税务目的保持最新和准确。
+
+## 实施支出限制
+
+<Check>
+在继续本节关于优化追踪支出之前，您可能希望阅读以下页面：
+
+- [数据保留概念文档](/langsmith/administration-overview#data-retention)
+- [使用量限制概念文档](/langsmith/administration-overview#usage-limits)
+</Check>
+
+<Note>
+本指南中提到的一些功能由于企业版的定制化计费特性，目前在企业版上不可用。如果您使用的是企业版并且对成本优化有疑问，请通过 [support.langchain.com](https://support.langchain.com) 联系您的销售代表或支持人员。
+</Note>
+
+
+### 了解您当前的用量
+
+任何优化过程的第一步是了解当前的用量。LangSmith 提供两种了解用量的方式：[使用量图表（Usage graph）](#usage-graph) 和 [发票（Invoices）](#invoices)。
+
+LangSmith 的使用量是按工作区（workspace）衡量的，因为工作区通常代表开发环境（如示例所示）或组织内的团队。
+
+#### 使用量图表
+
+使用量图表允许您检查已消耗的每种基于使用量的定价指标的量。它不会直接显示支出（这将在稍后的草稿发票中查看）。
+
+导航至 **Settings**（设置） -> **Billing and Usage**（账单和使用量） -> **Usage Graph**（使用量图表）下的使用量图表。
+
+LangSmith 收费的指标包括：
+
+- LangSmith Traces (Base Charge)（LangSmith 追踪 - 基础费用）：跟踪发送到 LangSmith 的所有追踪。
+- LangSmith Traces (Extended Data Retention Upgrades)（LangSmith 追踪 - 扩展数据保留升级）：跟踪所有同时具有 400 天扩展数据保留策略的追踪。
+- LangSmith Deployment Agent Runs（LangSmith 部署的代理运行）：跟踪已部署的 LangGraph 代理的端到端调用。
+
+有关追踪的更多详细信息，请参阅 [数据保留概念文档](/langsmith/administration-overview#data-retention)。有关代理运行的更多详细信息，请参阅 [LangSmith 部署计费](#langsmith-deployment-billing)。
+
+#### 发票
+
+要了解您的使用量如何转化为支出，请导航至 **Invoices**（发票）选项卡。屏幕上显示的第一张发票是您本月发票的草稿，显示了您本月迄今为止的累计支出。
+
+<Note>
+LangSmith 的使用量图表和发票使用 `tenant_id` 一词来指代工作区 ID。两者可以互换使用。
+</Note>
+
+### 设定使用量限制
+
+![](/langsmith/images/p2usagelimitsempty-v2.png)
+
+#### 为工作区设置支出限额
+
+1. 要设置限制，请导航至 **Settings**（设置） -> **Billing and Usage**（账单和使用量） -> **Usage limits**（使用量限制）。
+1. 为您选择的工作区输入一个支出限额。LangSmith 将确定与该支出相匹配的适当的基础追踪限制和扩展追踪限制数量。追踪限制包括您的套餐附带的免费追踪额度（请参阅 [定价页面](https://smith.langchain.com/settings/payments) 上的详细信息）。
+
+<Note>
+对于拥有**多个工作区**的组织：为简化起见，LangSmith 会将免费追踪计入**第一个工作区**的成本计算中。实际上，免费追踪可以被任何工作区“消耗”。因此，尽管工作区层级的支出限制对于多工作区组织来说是近似值，但组织层级的支出限制是绝对的。
+</Note>
+
+#### 配置追踪层级的分配
+LangSmith 有两个追踪层级：基础追踪（Base traces）和扩展追踪（Extended traces）。基础追踪具有基础保留期（14 天，短期），而扩展追踪具有扩展保留期（400 天，长期）。有关更多信息，请参阅 [数据保留概念文档](/langsmith/administration-overview#data-retention)。
+
+在 **Default data retention**（默认数据保留）标签下方的选项中，设置所需的默认追踪层级。所有新注册的追踪将默认具有此层级。请注意，由于扩展追踪比基础追踪成本更高，选择 **Extended**（扩展）作为默认数据保留选项，在该计费周期内允许的追踪总量将会减少。默认情况下，更新此设置只会影响将来接收到的追踪。要将其应用于所有现有追踪，请勾选复选框。
+
+如果默认数据保留设置为 **Base**（基础），您可以选择使用滑块在基础追踪和扩展追踪之间分配追踪限制额度。LangSmith 会自动提供此分配的建议，但您可以根据自己的需求进行调整。例如，如果您运行了许多可能会将追踪升级到扩展层的自动化或其他功能，您可能希望增加扩展追踪限制。要查看可能会升级追踪的功能的完整列表，[请参见此处](https://docs.langchain.com/langsmith/administration-overview#how-it-works:~:text=Data%20retention%20auto%2Dupgrades)。
+
+<Note>
+一旦达到扩展数据保留限制，可能会导致追踪以外的其他功能停止工作。如果您计划使用此功能，请阅读更多关于其 [功能和副作用](/langsmith/administration-overview#side-effects-of-extended-data-retention-traces-limit)。
+</Note>
+
+### 管理追踪的其他方法
+
+#### 更改项目级别的默认保留期
+
+数据保留设置可以针对每个追踪项目进行调整。
+
+导航至 **Projects**（项目） > ***Your project name***（您的项目名称） > 选择 **Retention**（保留），然后选择所需的默认保留期。这**仅影响未来**的追踪的保留期（和计费）。
+
+![](/langsmith/images/p1projectretention.png)
+
+#### 将扩展数据保留应用于一部分追踪
+
+您可能不希望所有追踪都在 14 天后过期。您可以创建 [自动化规则](/langsmith/rules)，自动扩展匹配某些标准的追踪的保留期。您可能希望将扩展数据保留应用于特定类型的追踪，例如：
+
+* 10% 的所有追踪：用于一般分析或长期趋势分析。
+* 失败的追踪（Errored traces）：用于彻底调查和调试问题。
+* 具有特定元数据的追踪：用于长期检查特定功能或用户流程。
+
+要进行配置：
+
+1. 导航至 **Projects**（项目） > ***Your project name***（您的项目名称） > 选择 **+ New**（新建） > 选择 **New Automation**（新建自动化）。
+2. 为您的规则命名，并可选择应用过滤器或采样率。有关配置过滤器的更多信息，请参阅 [过滤技术](/langsmith/filter-traces-in-application#filter-operators)。
+
+<Note>
+当自动化规则匹配到 [运行（run）](/langsmith/observability-concepts#runs)（位于 [追踪（trace）](/langsmith/observability-concepts#traces) 内）时，则该追踪内的所有运行都将升级为保留 400 天。
+</Note>
+
+例如，以下是保留 10% 所有追踪以进行扩展数据保留的预期配置：
+
+![](/langsmith/images/P2SampleTraces.png)
+
+如果您想将一部分追踪保留**超过 400 天**用于数据收集目的，您可以创建另一个运行规则，将某些运行发送到一个您选择的数据集。数据集允许您无限期地存储追踪的输入和输出（例如，作为键值数据集），即使追踪被删除后，这些数据仍会保留。
+
+### LangSmith 部署计费
+
+除了追踪费用外，LangSmith 还会对通过 LangSmith Deployment（以前称为 LangGraph Platform）部署的代理收取费用。
+
+- **Agent Runs（代理运行）**：一次 Agent Run 是对已部署的 LangGraph 代理的一次端到端调用，收费为每 $0.005。单个代理执行中的节点和子图不单独收费。对其他 LangGraph 代理的调用会单独计费给托管被调用代理的部署。在使用人机回环（human-in-the-loop）和中断功能时，从中段恢复会创建一个单独的 Agent Run。
+- **Deployment Uptime（部署正常运行时间）**：您还需要为您部署的数据库保持活动和持久化状态的时间付费。有关按部署类型（开发 vs 生产）划分的正常运行时间成本，请参阅 [定价页面](https://www.langchain.com/pricing)。
+
+对于高容量的部署使用情况，请 [联系我们的销售团队](https://www.langchain.com/contact-sales) 讨论定制定价选项。
+
+### 摘要
+
+如果您对如何进一步管理支出有任何疑问，请通过 [support.langchain.com](https://support.langchain.com) 联系支持团队。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\billing.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

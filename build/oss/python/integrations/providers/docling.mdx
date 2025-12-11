@@ -1,0 +1,58 @@
+---
+title: Docling
+---
+
+> [Docling](https://github.com/DS4SD/docling) 可以解析 PDF、DOCX、PPTX、HTML 等多种格式，将其转换为包含文档布局、表格等内容的统一丰富表示，使其能够用于生成式 AI 工作流（例如 RAG）。
+>
+> 此集成通过 `DoclingLoader` 文档加载器提供了 Docling 的功能。
+
+## 安装与设置
+
+只需通过您的包管理器安装 `langchain-docling` 即可，例如使用 pip：
+
+<CodeGroup>
+```bash pip
+pip install langchain-docling
+```
+
+```bash uv
+uv add langchain-docling
+```
+</CodeGroup>
+
+## 文档加载器 (Document Loader)
+
+`langchain-docling` 中的 `DoclingLoader` 类可以无缝地将 Docling 集成到 LangChain 中，使您能够：
+- 轻松快速地在 LLM 应用中使用各种类型的文档，
+- 利用 Docling 丰富的表示形式来实现高级的、面向文档原生的知识基础 (grounding)。
+
+基本用法如下所示：
+
+```python
+from langchain_docling import DoclingLoader
+
+FILE_PATH = ["https://arxiv.org/pdf/2408.09869"]  # Docling 技术报告
+
+loader = DoclingLoader(file_path=FILE_PATH)
+
+docs = loader.load()
+```
+
+有关端到端的用法，请参阅
+[此示例](/oss/python/integrations/document_loaders/docling)。
+
+## 附加资源
+
+- [LangChain Docling 集成 GitHub](https://github.com/DS4SD/docling-langchain)
+- [LangChain Docling 集成 PyPI 包](https://pypi.org/project/langchain-docling/)
+- [Docling GitHub](https://github.com/DS4SD/docling)
+- [Docling 文档](https://ds4sd.github.io/docling/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\docling.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

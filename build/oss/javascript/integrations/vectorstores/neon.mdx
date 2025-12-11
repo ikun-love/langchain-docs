@@ -1,0 +1,153 @@
+---
+title: Neon Postgres
+---
+
+Neon 是一种完全托管的无服务器 PostgreSQL 数据库。它将存储和计算分离，从而提供即时分支和自动扩展等功能。
+
+通过使用 `pgvector` 扩展，Neon 提供了一个向量存储（vector store），该存储可与 LangChain.js 结合使用来存储和查询嵌入向量（embeddings）。
+
+## 设置 (Setup)
+
+### 选择一个 Neon 项目
+
+如果您还没有 Neon 账户，请在 [Neon](https://neon.tech) 注册一个。登录 Neon 控制台后，前往 [Projects](https://console.neon.tech/app/projects) 部分，选择一个现有项目或创建一个新项目。
+
+您的 Neon 项目会附带一个现成的 Postgres 数据库，名为 `neondb`，您可以将其用于存储嵌入向量。请导航到“连接详情 (Connection Details)”部分，找到您的数据库连接字符串。它看起来应该与以下示例相似：
+
+```text
+postgres://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/dbname?sslmode=require
+```
+
+请记下您的连接字符串，以备后用。
+
+### 应用程序代码 (Application code)
+
+要使用 Neon Postgres，您需要安装 `@neondatabase/serverless` 包，该包提供了一个 JavaScript/TypeScript 驱动程序用于连接到数据库。
+
+```bash npm
+npm install @neondatabase/serverless
+```
+<Tip>
+有关安装 LangChain 包的一般说明，请参阅 [此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/community @langchain/core
+```
+要初始化 `NeonPostgres` 向量存储，您需要提供您的 Neon 数据库连接字符串。您可以直接使用我们上面获取的连接字符串，或者将其存储为环境变量并在代码中使用它。
+
+```typescript
+const vectorStore = await NeonPostgres.initialize(embeddings, {
+  connectionString: NEON_POSTGRES_CONNECTION_STRING,
+});
+```
+
+## 用法 (Usage)
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { NeonPostgres } from "@langchain/community/vectorstores/neon";
+
+// 初始化一个嵌入向量实例
+const embeddings = new OpenAIEmbeddings({
+  apiKey: process.env.OPENAI_API_KEY,
+  dimensions: 256,
+  model: "text-embedding-3-small",
+});
+
+// 初始化一个 NeonPostgres 实例来存储嵌入向量
+const vectorStore = await NeonPostgres.initialize(embeddings, {
+  connectionString: process.env.DATABASE_URL as string,
+});
+
+// 您可以将文档添加到存储中，`pageContent` 字段中的字符串将被嵌入并存储在数据库中
+const documents = [
+  { pageContent: "Hello world", metadata: { topic: "greeting" } },
+  { pageContent: "Bye bye", metadata: { topic: "greeting" } },
+  {
+    pageContent: "Mitochondria is the powerhouse of the cell",
+    metadata: { topic: "science" },
+  },
+];
+const idsInserted = await vectorStore.addDocuments(documents);
+
+// 您现在可以对存储进行查询，以查找与输入查询相似的文档
+const resultOne = await vectorStore.similaritySearch("hola", 1);
+console.log(resultOne);
+/*
+[
+  Document {
+    pageContent: 'Hello world',
+    metadata: { topic: 'greeting' }
+  }
+]
+*/
+
+// 您也可以根据元数据进行过滤
+const resultTwo = await vectorStore.similaritySearch("Irrelevant query", 2, {
+  topic: "science",
+});
+console.log(resultTwo);
+/*
+[
+  Document {
+    pageContent: 'Mitochondria is the powerhouse of the cell',
+    metadata: { topic: 'science' }
+  }
+]
+*/
+
+// 带有 IN 过滤器的元数据过滤也同样有效 (Metadata filtering with IN-filters works as well)
+const resultsThree = await vectorStore.similaritySearch("Irrelevant query", 2, {
+  topic: { in: ["greeting"] },
+});
+console.log(resultsThree);
+/*
+[
+  Document { pageContent: 'Bye bye', metadata: { topic: 'greeting' } },
+  Document {
+    pageContent: 'Hello world',
+    metadata: { topic: 'greeting' }
+  }
+]
+*/
+
+// 支持 Upsert（更新或插入）操作
+await vectorStore.addDocuments(
+  [
+    {
+      pageContent: "ATP is the powerhouse of the cell",
+      metadata: { topic: "science" },
+    },
+  ],
+  { ids: [idsInserted[2]] }
+);
+
+const resultsFour = await vectorStore.similaritySearch(
+  "powerhouse of the cell",
+  1
+);
+console.log(resultsFour);
+/*
+[
+  Document {
+    pageContent: 'ATP is the powerhouse of the cell',
+    metadata: { topic: 'science' }
+  }
+]
+*/
+```
+
+## 相关 (Related)
+
+- 向量存储 [概念指南](/oss/javascript/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/javascript/integrations/vectorstores)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\vectorstores\neon.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

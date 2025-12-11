@@ -1,0 +1,92 @@
+---
+title: Zep
+---
+
+> 召回、理解并从聊天历史中提取数据。为个性化的 AI 体验提供支持。
+
+[Zep](https://www.getzep.com) 是 AI 助手应用的长期记忆服务。
+有了 Zep，您可以让 AI 助手具备回忆过去对话的能力，无论这些对话发生多久以前，
+同时还能减少幻觉（hallucinations）、延迟和成本。
+
+## Zep 的工作原理
+
+Zep 会持久化并召回（检索）聊天历史记录，并自动从这些历史记录中生成摘要和其他人工制品（artifacts）。
+它还会对消息和摘要进行向量嵌入（embedding），使您能够从过去的对话中搜索与当前情境相关的上下文。
+Zep 异步完成所有这些操作，确保这些操作不会影响用户的聊天体验。
+数据会持久化到数据库中，以便在业务增长需要时可以水平扩展。
+
+Zep 还提供了一个简单的、易于使用的文档向量搜索抽象层，称为“文档集合”（Document Collections）。
+这旨在补充 Zep 的核心记忆功能，但它并非设计为一个通用的向量数据库。
+
+Zep 允许您更有目的性地构建提示词（prompt）：
+- 自动添加最近的几条消息，消息数量可根据您的应用进行自定义；
+- 添加在上述消息之前的近期对话摘要；
+- 和/或从整个聊天会话中检索到的、具有上下文相关性的摘要或消息。
+- 和/或来自 Zep 文档集合的相关的业务数据。
+
+## 什么是 Zep Cloud？
+[Zep Cloud](https://www.getzep.com) 是一个基于 Zep 开源版本构建的管理服务。
+除了 Zep 开源版本的记忆管理功能外，Zep Cloud 还提供：
+- **事实提取 (Fact Extraction)**：自动从对话中构建事实表，而无需预先定义数据模式（schema）。
+- **对话分类 (Dialog Classification)**：即时、准确地对聊天对话进行分类。了解用户的意图和情绪，细分用户群体，等等。根据语义上下文路由链（chains），并触发事件。
+- **结构化数据提取 (Structured Data Extraction)**：使用您定义的模式，快速从聊天对话中提取业务数据。了解您的助手接下来应该询问什么才能完成任务。
+
+## Zep 开源版 (Zep Open Source)
+Zep 提供了一个开源版本，支持自托管（self-hosted）。
+请参阅 [Zep 开源版](https://github.com/getzep/zep) 仓库以获取更多信息。
+您还可以找到与 Zep 开源版兼容的 [检索器 (Retriever)](/oss/python/integrations/retrievers/zep_memorystore) 和 [向量存储 (Vector Store)](/oss/python/integrations/vectorstores/zep) 示例。
+
+## Zep Cloud 安装和设置
+
+[Zep Cloud 文档](https://help.getzep.com)
+
+1. 安装 Zep Cloud SDK：
+
+<CodeGroup>
+```bash pip
+pip install zep_cloud
+```
+
+```bash uv
+uv add zep_cloud
+```
+</CodeGroup>
+或者
+```bash
+poetry add zep_cloud
+```
+
+## 检索器 (Retriever)
+
+Zep 的记忆检索器（Memory Retriever）是一个 LangChain 检索器，它使您能够从 Zep 会话中检索消息，并使用它们来构建您的提示词。
+
+该检索器支持对单个消息和对话摘要进行搜索。后者有助于为 LLM 提供丰富但简洁的上下文，说明哪些过去的对话是相关的。
+
+Zep 的记忆检索器同时支持相似性搜索（similarity search）和 [最大边际相关性 (MMR) 重排序](https://help.getzep.com/working-with-search#how-zeps-mmr-re-ranking-works)。MMR 搜索有助于确保检索到的消息具有多样性，并且彼此之间不至于过于相似。
+
+参见 [使用示例](/oss/python/integrations/retrievers/zep_cloud_memorystore)。
+
+```python
+from langchain_community.retrievers import ZepCloudRetriever
+```
+
+## 向量存储 (Vector store)
+
+Zep 的 [文档向量存储 API](https://help.getzep.com/document-collections) 使您能够使用向量相似性搜索来存储和检索文档。Zep 不要求您理解距离函数、嵌入类型或索引最佳实践。您只需传入分块（chunked）的文档，Zep 会处理其余的所有事情。
+
+Zep 同时支持相似性搜索和 [最大边际相关性 (MMR) 重排序](https://help.getzep.com/working-with-search#how-zeps-mmr-re-ranking-works)。MMR 搜索有助于确保检索到的文档具有多样性，并且彼此之间不至于过于相似。
+
+```python
+from langchain_community.vectorstores import ZepCloudVectorStore
+```
+
+参见 [使用示例](/oss/python/integrations/vectorstores/zep_cloud)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\zep.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

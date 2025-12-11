@@ -1,0 +1,95 @@
+---
+title: TruLens
+---
+
+>[TruLens](https://trulens.org) 是一个 [开源](https://github.com/truera/trulens) 包，它为基于大型语言模型（LLM）的应用程序提供**检测（Instrumentation）**和**评估**工具。
+
+本页面将介绍如何使用 [TruLens](https://trulens.org) 来评估和跟踪基于 LangChain 构建的 LLM 应用。
+
+
+## 安装和设置
+
+安装 `trulens-eval` Python 包。
+
+<CodeGroup>
+```bash pip
+pip install trulens-eval
+```
+
+```bash uv
+uv add trulens-eval
+```
+</CodeGroup>
+
+## 快速上手 (Quickstart)
+
+请参阅 [TruLens 文档](https://www.trulens.org/trulens_eval/getting_started/quickstarts/langchain_quickstart/) 中的集成详情。
+
+### 追踪 (Tracking)
+
+创建 LLM 链（Chain）后，您就可以使用 TruLens 进行评估和追踪。
+TruLens 提供了许多 [开箱即用的反馈函数 (Feedback Functions)](https://www.trulens.org/trulens_eval/evaluation/feedback_functions/)，同时它本身也是一个可扩展的 LLM 评估框架。
+
+创建反馈函数：
+
+```python
+from trulens_eval.feedback import Feedback, Huggingface,
+
+# 初始化基于 HuggingFace 的反馈函数集合类：
+hugs = Huggingface()
+openai = OpenAI()
+
+# 使用 HuggingFace 定义一个语言匹配反馈函数。
+lang_match = Feedback(hugs.language_match).on_input_output()
+# 默认情况下，这将检查主应用输入和主应用输出的语言是否匹配。
+
+# 评估整体问题与答案之间的相关性。
+qa_relevance = Feedback(openai.relevance).on_input_output()
+# 默认情况下，这将根据主应用输入和主应用输出来评估反馈。
+
+# 输入的毒性（Toxicity）评估。
+toxicity = Feedback(openai.toxicity).on_input()
+```
+
+### 链式集成 (Chains)
+
+在为 LLM 设置好反馈函数后，您可以通过使用 `TruChain` 来封装您的应用程序，从而获得详细的**追踪（tracing）**、**日志记录（logging）**和**评估**功能。
+
+注意：有关 `chain` 创建的完整代码，请参见 [TruLens 文档](https://www.trulens.org/trulens_eval/getting_started/quickstarts/langchain_quickstart/)。
+
+```python
+from trulens_eval import TruChain
+
+# 使用 TruChain 封装您的链
+truchain = TruChain(
+    chain,
+    app_id='Chain1_ChatApplication',
+    feedbacks=[lang_match, qa_relevance, toxicity]
+)
+# 注意：此处指定的任何 `feedbacks` 在使用该链时都将被评估和记录。
+truchain("que hora es?")
+```
+
+### 评估 (Evaluation)
+
+现在您可以开始探索您的 LLM 应用程序了！
+
+这样做将帮助您**一目了然**地了解 LLM 应用的性能表现。当您迭代 LLM 应用的新版本时，您可以比较它们在您设置的所有不同质量指标上的性能。此外，您还可以查看每条记录的详细评估结果，并探索每条记录的链元数据（chain metadata）。
+
+```python
+from trulens_eval import Tru
+
+tru = Tru()
+tru.run_dashboard() # 启动一个 Streamlit 应用供您探索
+```
+
+有关 TruLens 的更多信息，请访问 [trulens.org](https://www.trulens.org/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\trulens.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

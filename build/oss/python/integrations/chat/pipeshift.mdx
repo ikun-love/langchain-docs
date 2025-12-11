@@ -1,0 +1,114 @@
+---
+title: ChatPipeshift
+---
+
+本指南将帮助您开始使用 Pipeshift [聊天模型](/oss/python/langchain/models/)。有关所有 ChatPipeshift 功能和配置的详细文档，请参阅 [API 参考](https://dashboard.pipeshift.com/docs)。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [ChatPipeshift](https://dashboard.pipeshift.com/docs) | [langchain-pipeshift](https://pypi.org/project/langchain-pipeshift/) | ❌ | -| ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-pipeshift?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-pipeshift?style=flat-square&label=%20) |
+
+### 模型特性
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级别流式传输](/oss/python/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
+| ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | - |
+
+## 设置 (Setup)
+
+要访问 Pipeshift 模型，您需要在 Pipeshift 上创建一个账户，获取一个 API 密钥，并安装 `langchain-pipeshift` 集成包。
+
+### 凭证 (Credentials)
+
+前往 [Pipeshift](https://dashboard.pipeshift.com) 注册 Pipeshift 账户并生成 API 密钥。完成操作后，设置 `PIPESHIFT_API_KEY` 环境变量：
+
+```python
+import getpass
+import os
+
+if not os.getenv("PIPESHIFT_API_KEY"):
+    os.environ["PIPESHIFT_API_KEY"] = getpass.getpass("Enter your Pipeshift API key: ")
+```
+
+如果您希望对模型的调用进行自动跟踪（tracing），可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+```
+
+### 安装 (Installation)
+
+LangChain 的 Pipeshift 集成位于 `langchain-pipeshift` 包中：
+
+```python
+pip install -qU langchain-pipeshift
+```
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化模型对象并生成聊天补全（chat completions）：
+
+```python
+from langchain_pipeshift import ChatPipeshift
+
+llm = ChatPipeshift(
+    model="meta-llama/Meta-Llama-3.1-8B-Instruct",
+    temperature=0,
+    max_tokens=512,
+    # other params...
+)
+```
+
+## 调用 (Invocation)
+
+```python
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    ),
+    ("human", "I love programming."),
+]
+ai_msg = llm.invoke(messages)
+ai_msg
+```
+
+```output
+AIMessage(content='Here is the translation:\n\nJe suis amoureux du programme. \n\nHowever, a more common translation would be:\n\nJ\'aime programmer.\n\nNote that "Je suis amoureux" typically implies romantic love, whereas "J\'aime" is a more casual way to express affection or enjoyment for an activity, in this case, programming.', additional_kwargs={}, response_metadata={}, id='run-5cad8e5c-d089-44a8-8dcd-22736cde7d7b-0')
+```
+
+```python
+print(ai_msg.content)
+```
+
+```output
+Here is the translation:
+
+Je suis amoureux du programme.
+
+However, a more common translation would be:
+
+J'aime programmer.
+
+Note that "Je suis amoureux" typically implies romantic love, whereas "J'aime" is a more casual way to express affection or enjoyment for an activity, in this case, programming.
+```
+
+---
+
+## API 参考 (API reference)
+
+有关所有 ChatPipeshift 功能和配置的详细文档，请参阅 API 参考：[dashboard.pipeshift.com/docs](https://dashboard.pipeshift.com/docs)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\pipeshift.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

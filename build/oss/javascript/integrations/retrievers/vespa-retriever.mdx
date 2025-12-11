@@ -1,0 +1,60 @@
+---
+title: Vespa 检索器
+---
+
+本示例展示了如何将 Vespa.ai 用作 LangChain 的检索器（Retriever）。
+Vespa.ai 是一个专注于高效结构化文本和向量搜索的平台。
+有关更多信息，请参阅 [Vespa.ai](https://vespa.ai)。
+
+以下代码设置了一个检索器，用于从 Vespa 的文档搜索中获取结果：
+
+```typescript
+import { VespaRetriever } from "@langchain/community/retrievers/vespa";
+
+export const run = async () => {
+  const url = "https://doc-search.vespa.oath.cloud";
+  const query_body = {
+    yql: "select content from paragraph where userQuery()",
+    hits: 5,
+    ranking: "documentation",
+    locale: "en-us",
+  };
+  const content_field = "content";
+
+  const retriever = new VespaRetriever({
+    url,
+    auth: false,
+    query_body,
+    content_field,
+  });
+
+  const result = await retriever.invoke("what is vespa?");
+  console.log(result);
+};
+```
+
+在此示例中，我们将从 `paragraph` 文档类型中的 `content` 字段检索最多 5 个结果，
+并使用 `documentation` 作为排序（ranking）方法。`userQuery()` 会被替换为从 LangChain 传入的实际查询内容。
+
+有关更多信息，请参阅 [pyvespa 文档](https://pyvespa.readthedocs.io/en/latest/getting-started-pyvespa.html#Query)。
+
+`url` 是 Vespa 应用程序的端点（endpoint）。
+您可以连接到任何 Vespa 端点，无论是远程服务还是使用 Docker 部署的本地实例。
+然而，大多数 Vespa Cloud 实例都受到 mTLS（相互 TLS）保护。
+如果您的实例是这种情况，您可以设置一个 [CloudFlare Worker](https://cloud.vespa.ai/en/security/cloudflare-workers)
+来包含连接到该实例所需的凭证。
+
+现在您可以返回结果，并在 LangChain 中继续使用它们。
+
+## 相关
+
+- [检索指南](/oss/javascript/langchain/retrieval)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\retrievers\vespa-retriever.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

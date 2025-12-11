@@ -1,0 +1,297 @@
+---
+title: ChatLlamaCpp
+---
+
+<Tip>
+**兼容性**
+
+仅在 Node.js 上可用。
+</Tip>
+
+该模块基于用于 [llama.cpp](https://github.com/ggerganov/llama.cpp) 的 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) Node.js 绑定，允许您使用本地运行的大语言模型 (LLM)。这使得您能够使用量化后、体积更小的模型，这些模型能够在笔记本电脑环境中运行，非常适合在不产生高昂费用的情况下进行测试和初步构思！
+
+## 设置 (Setup)
+
+您需要安装 `node-llama-cpp` 的主要版本 `3` 才能与您的本地模型进行通信。
+
+<Tip>
+有关安装 LangChain 包的一般说明，请参阅[此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install -S node-llama-cpp@3 @langchain/community @langchain/core
+```
+
+您还需要一个本地的 Llama 3 模型（或 [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) 支持的模型）。您需要将此模型的路径作为参数的一部分传递给 LlamaCpp 模块（参见示例）。
+
+开箱即用的 `node-llama-cpp` 默认针对在 MacOS 平台上运行进行了优化，支持 Apple M 系列处理器的 Metal GPU。如果您需要禁用此功能或需要支持 CUDA 架构，请参阅 [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/) 上的文档。
+
+关于获取和准备 `llama3` 的建议，请参阅此模块 LLM 版本的文档。
+
+给 LangChain.js 贡献者的一个注意事项：如果您想运行与此模块相关的测试，您需要在环境变量 `LLAMA_PATH` 中设置本地模型的路径。
+
+## 用法 (Usage)
+
+### 基本使用 (Basic use)
+
+在这种情况下，我们传入一个被包装成消息的提示 (prompt)，并期望得到一个响应。
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { HumanMessage } from "@langchain/core/messages";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
+
+const response = await model.invoke([
+  new HumanMessage({ content: "My name is John." }),
+]);
+console.log({ response });
+
+/*
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: 'Hello John.',
+      additional_kwargs: {}
+    },
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'Hello John.',
+    name: undefined,
+    additional_kwargs: {}
+  }
+*/
+```
+
+### 系统消息 (System messages)
+
+我们也可以提供一个系统消息。请注意，对于 `llama_cpp` 模块，系统消息将导致创建一个新的会话 (session)。
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
+
+const response = await model.invoke([
+  new SystemMessage(
+    "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
+  ),
+  new HumanMessage("Tell me where Llamas come from?"),
+]);
+console.log({ response });
+
+/*
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Arr, m'hearty! Llamas come from the land of Peru.",
+      additional_kwargs: {}
+    },
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "Arr, m'hearty! Llamas come from the land of Peru.",
+    name: undefined,
+    additional_kwargs: {}
+  }
+*/
+```
+
+### 链式调用 (Chains)
+
+此模块也可以与链 (chains) 一起使用。请注意，使用更复杂的链条需要使用足够强大的 `llama3` 版本，例如 70B 版本。
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { LLMChain } from "@langchain/classic/chains";
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await ChatLlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.5,
+});
+
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for a company that makes {product}?"
+);
+const chain = new LLMChain({ llm: model, prompt });
+
+const response = await chain.invoke({ product: "colorful socks" });
+
+console.log({ response });
+
+/*
+  {
+  text: `I'm not sure what you mean by "colorful socks" but here are some ideas:\n` +
+    '\n' +
+    '- Sock-it to me!\n' +
+    '- Socks Away\n' +
+    '- Fancy Footwear'
+  }
+*/
+```
+
+### 流式传输 (Streaming)
+
+我们也可以使用 Llama CPP 进行流式传输。这可以使用原始的“单个提示”字符串：
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await ChatLlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.7,
+});
+
+const stream = await model.stream("Tell me a short story about a happy Llama.");
+
+for await (const chunk of stream) {
+  console.log(chunk.content);
+}
+
+/*
+
+  Once
+   upon
+   a
+   time
+  ,
+   in
+   a
+   green
+   and
+   sunny
+   field
+  ...
+*/
+```
+
+或者，您可以提供多条消息。请注意，这会获取输入，然后将 Llama3 格式化的提示提交给模型。
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const llamaCpp = await ChatLlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.7,
+});
+
+const stream = await llamaCpp.stream([
+  new SystemMessage(
+    "You are a pirate, responses must be very verbose and in pirate dialect."
+  ),
+  new HumanMessage("Tell me about Llamas?"),
+]);
+
+for await (const chunk of stream) {
+  console.log(chunk.content);
+}
+
+/*
+
+  Ar
+  rr
+  r
+  ,
+   me
+   heart
+  y
+  !
+
+   Ye
+   be
+   ask
+  in
+  '
+   about
+   llam
+  as
+  ,
+   e
+  h
+  ?
+  ...
+*/
+```
+
+使用 `invoke` 方法，我们也可以实现流式生成，并使用 `signal` 来中止生成过程。
+
+```typescript
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+
+const model = await ChatLlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.7,
+});
+
+const controller = new AbortController();
+
+setTimeout(() => {
+  controller.abort();
+  console.log("Aborted");
+}, 5000);
+
+await model.invoke(
+  [
+    new SystemMessage(
+      "You are a pirate, responses must be very verbose and in pirate dialect."
+    ),
+    new HumanMessage("Tell me about Llamas?"),
+  ],
+  {
+    signal: controller.signal,
+    callbacks: [
+      {
+        handleLLMNewToken(token) {
+          console.log(token);
+        },
+      },
+    ],
+  }
+);
+/*
+
+  Once
+   upon
+   a
+   time
+  ,
+   in
+   a
+   green
+   and
+   sunny
+   field
+  ...
+  Aborted
+
+  AbortError
+
+*/
+```
+
+## 相关 (Related)
+
+- Chat 模型[概念指南](/oss/javascript/langchain/models)
+- Chat 模型[操作指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\chat\llama_cpp.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

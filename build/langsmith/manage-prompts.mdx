@@ -1,0 +1,120 @@
+---
+title: 管理提示词
+sidebarTitle: 管理提示词
+---
+
+LangSmith 提供了多种工具来帮助您有效地管理您的 [_提示词_](/langsmith/prompt-engineering-concepts)。本页介绍以下功能：
+
+- 使用 [提交标签](#commit-tags) 进行版本控制和环境管理。
+- [在提示词提交时触发 Webhook](#trigger-a-webhook-on-prompt-commit)，以便在提示词更新时实现工作流自动化。
+- [公共提示词中心](#public-prompt-hub)，用于发现和使用社区创建的提示词。
+
+## 提交标签 (Commit tags)
+
+[_提交标签_](/langsmith/prompt-engineering-concepts#tags) 是引用提示词版本历史中特定 [_提交_](/langsmith/prompt-engineering-concepts#commits) 的标签。它们帮助您标记重要的版本，并控制不同环境中运行的版本。通过在代码中引用标签而不是提交 ID，您可以在不修改代码本身的情况下，更新正在使用的版本。
+
+每个标签精确引用一个提交，但您可以将标签重新分配给指向另一个提交。
+
+<Note>
+**不要与资源标签混淆**：提交标签专门用于提示词版本控制，引用提示词历史中的单个提交。 **[资源标签](/langsmith/set-up-resource-tags)** 是一对键值，用于组织工作区资源，如项目、数据集和提示词。虽然两者都可以使用相似的命名约定（如 `prod` 或 `staging`），但提交标签控制提示词运行的**哪个版本**，而资源标签则帮助您**组织和筛选**工作区中的资源。
+</Note>
+
+### 创建标签
+
+要创建标签，请导航到提示词的 **Commits**（提交）选项卡。点击您想标记的提交旁边的标签图标（tag icon）。点击 **New Tag**（新建标签）并输入标签名称。
+
+![](/langsmith/images/commits-tab.png) ![](/langsmith/images/create-new-prompt-tag.png)
+
+### 移动标签
+
+要将标签指向不同的提交，请点击目标提交旁边的标签图标，然后选择您想要移动的标签。这将自动更新该标签以指向新的提交。
+
+![](/langsmith/images/move-prompt-tag.png)
+
+### 删除标签
+
+要删除标签，请点击您想要删除的标签旁边的删除图标。这将彻底删除该标签，使其不再与任何提交相关联。
+
+### 在代码中使用标签
+
+标签提供了一种稳定引用的方式，用于在代码中引用特定版本的提示词。您不必直接使用提交哈希值，而是可以引用标签，这样即使版本更新，也无需更改代码。
+
+以下是如何在 Python 中通过标签拉取提示词的示例：
+
+```python
+prompt = client.pull_prompt("joke-generator:prod")
+# 如果 prod 标签指向提交 a1b2c3d4，这等效于：
+prompt = client.pull_prompt("joke-generator:a1b2c3d4")
+```
+
+有关如何在代码中使用提示词的更多信息，请参阅 [以编程方式管理提示词](/langsmith/manage-prompts-programmatically)。
+
+## 在提示词提交时触发 Webhook
+
+您可以配置一个 Webhook，在对提示词进行任何提交时触发。
+
+这包括一些常见的用例：
+
+* 在更新提示词时触发 CI/CD 流水线。
+* 将提示词与 GitHub 仓库同步。
+* 通知团队成员提示词修改情况。
+
+### 配置 Webhook
+
+导航到左侧边栏的 **Prompts**（提示词）部分，或从应用程序主页进入。在右上角，点击 `+ Webhook` 按钮。
+
+添加一个 Webhook URL 和所有必需的标头（headers）。
+
+<Note>
+每个工作区只能配置一个 Webhook。如果您希望为每个工作区配置多个，或者为每个提示词设置不同的 Webhook，请在 [LangChain 论坛](https://forum.langchain.com/) 告知我们。
+</Note>
+
+要测试您的 Webhook，请点击 **Send test notification**（发送测试通知）按钮。这将向您提供的 Webhook URL 发送一个测试通知，其中包含一个示例有效负载（payload）。
+
+示例有效负载是一个包含以下字段的 JSON 对象：
+
+- `prompt_id`: 已提交提示词的 ID。
+- `prompt_name`: 已提交提示词的名称。
+- `commit_hash`: 提示词的提交哈希值。
+- `created_at`: 提交的日期。
+- `created_by`: 提交的作者。
+- `manifest`: 提示词的清单（manifest）。
+
+### 触发 Webhook
+
+对提示词进行提交以触发您已配置的 Webhook。
+
+#### 使用 Playground
+
+如果您在 Playground 中进行操作，系统会提示您取消选择想要避免触发的 Webhook。
+
+![](/langsmith/images/commit-prompt-playground.png)
+
+#### 使用 API
+
+如果您通过 API 进行提交，可以通过将 `skip_webhooks` 参数设置为 `true` 或一个要忽略的 Webhook ID 数组来指定跳过触发 Webhook。有关更多信息，请参阅 [API 文档](https://api.smith.langchain.com/redoc#tag/commits/operation/create_commit_api_v1_commits__owner___repo__post)。
+
+## 公共提示词中心 (Public prompt hub)
+
+LangSmith 的公共提示词中心是 LangChain 社区创建的提示词集合，供您参考使用。
+
+<Note>
+请注意，提示词是用户生成且未经验证的。LangChain 不会审查或认可公共提示词，请自行承担使用风险。使用提示词中心需要遵守我们的 [服务条款](https://www.langchain.com/terms-of-service)。
+</Note>
+
+导航到左侧边栏的 **Prompts**（提示词）部分，然后点击 **Browse all Public Prompts in the LangChain Hub**（在 LangChain Hub 中浏览所有公共提示词）。
+
+在这里，您将找到 LangChain Hub 中所有公开列出的提示词。您可以按名称、句柄、用例、描述或模型搜索提示词。您可以将提示词 Fork（分支）到您的个人组织，查看提示词详情，并在 Playground 中运行提示词。您可以使用 SDK 将 [任何公共提示词拉取到您的代码中](/langsmith/manage-prompts-programmatically)。
+
+要查看与您的工作区关联的提示词，请访问侧边栏中的 **Prompts** 选项卡。
+
+![](/langsmith/images/prompts-tab.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\manage-prompts.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

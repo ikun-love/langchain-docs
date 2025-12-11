@@ -1,0 +1,155 @@
+---
+title: Fireworks
+---
+
+<Warning>
+**您当前位于记录 Fireworks 模型用作文本补全模型的页面。许多流行的 Fireworks 模型是[聊天补全模型](/oss/python/langchain/models)。**
+
+您可能在寻找[这个页面](/oss/python/integrations/chat/fireworks/)。
+</Warning>
+
+>[Fireworks](https://app.fireworks.ai/) 正在通过创建一个创新的 AI 实验和生产平台，加速生成式 AI 的产品开发。
+
+本示例将介绍如何使用 LangChain 与 `Fireworks` 模型进行交互。
+
+## 概述
+
+### 集成详情
+
+| 类名 | 包名 | 本地 | 可序列化 | [JS 支持](https://js.langchain.com/v0.1/docs/integrations/llms/fireworks/) | 下载量 | 版本 |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [`Fireworks`](https://python.langchain.com/api_reference/fireworks/llms/langchain_fireworks.llms.Fireworks.html#langchain_fireworks.llms.Fireworks) | [`langchain-fireworks`](https://pypi.org/project/langchain-fireworks/) | ❌ | ❌ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain_fireworks?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain_fireworks?style=flat-square&label=%20) |
+
+## 设置
+
+### 凭证
+
+登录 [Fireworks AI](http://fireworks.ai) 获取 API 密钥以访问模型，并确保它被设置为 `FIREWORKS_API_KEY` 环境变量。
+3. 使用模型 ID 设置您的模型。如果未设置模型，默认模型是 `fireworks-llama-v2-7b-chat`。请在 [fireworks.ai](https://app.fireworks.ai/models) 上查看完整且最新的模型列表。
+
+```python
+import getpass
+import os
+
+if "FIREWORKS_API_KEY" not in os.environ:
+    os.environ["FIREWORKS_API_KEY"] = getpass.getpass("Fireworks API Key:")
+```
+
+### 安装
+
+您需要安装 `langchain-fireworks` Python 包才能使其余的 Notebook 正常工作。
+
+```python
+pip install -qU langchain-fireworks
+```
+
+## 实例化
+
+```python
+from langchain_fireworks import Fireworks
+
+# 初始化一个 Fireworks 模型
+llm = Fireworks(
+    model="accounts/fireworks/models/llama-v3p1-8b-instruct", # 模型库地址: https://app.fireworks.ai/models
+    base_url="https://api.fireworks.ai/inference/v1/completions",
+)
+```
+
+## 调用
+
+您可以直接使用字符串提示词调用模型以获取补全结果。
+
+```python
+output = llm.invoke("Who's the best quarterback in the NFL?")
+print(output)
+```
+
+```output
+  That's an easy one. It's Aaron Rodgers. Rodgers has consistently been one
+```
+
+### 使用多个提示词调用
+
+```python
+# 调用多个提示词
+output = llm.generate(
+    [
+        "Who's the best cricket player in 2016?",
+        "Who's the best basketball player in the league?",
+    ]
+)
+print(output.generations)
+```
+
+```output
+[[Generation(text=' You could choose one of the top performers in 2016, such as Vir')], [Generation(text=' -- Keith Jackson\nA: LeBron James, Chris Paul and Kobe Bryant are the')]]
+```
+
+### 使用附加参数调用
+
+```python
+# 设置附加参数：temperature（温度）, max_tokens（最大令牌数）, top_p
+llm = Fireworks(
+    model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+    temperature=0.7,
+    max_tokens=15,
+    top_p=1.0,
+)
+print(llm.invoke("What's the weather like in Kansas City in December?"))
+```
+
+```output
+December is a cold month in Kansas City, with temperatures of
+```
+
+## 链式调用 (Chaining)
+
+您可以使用 LangChain 表达式语言 (LCEL) 来构建一个使用非聊天模型的简单链。
+
+```python
+from langchain_core.prompts import PromptTemplate
+from langchain_fireworks import Fireworks
+
+llm = Fireworks(
+    model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+    temperature=0.7,
+    max_tokens=15,
+    top_p=1.0,
+)
+prompt = PromptTemplate.from_template("Tell me a joke about {topic}?")
+chain = prompt | llm
+
+print(chain.invoke({"topic": "bears"}))
+```
+
+```output
+ What do you call a bear with no teeth? A gummy bear!
+```
+
+## 流式输出 (Streaming)
+
+如果您需要，可以对输出进行流式处理。
+
+```python
+for token in chain.stream({"topic": "bears"}):
+    print(token, end="", flush=True)
+```
+
+```output
+ Why do bears hate shoes so much? They like to run around in their
+```
+
+---
+
+## API 参考
+
+有关所有 `Fireworks` LLM 特性和配置的详细文档，请前往[API 参考](https://reference.langchain.com/python/integrations/langchain_fireworks/)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\fireworks.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

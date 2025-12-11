@@ -1,0 +1,166 @@
+---
+title: OpenAI 函数元数据标记器
+---
+
+通常情况下，为摄取（ingested）的文档标记结构化元数据（例如标题、语气或长度）会非常有用，以便将来进行更有针对性的相似性搜索。然而，对于大量的文档来说，手动执行此标记过程可能会很繁琐。
+
+`MetadataTagger` 文档转换器通过根据提供的 Schema 从每个文档中提取元数据，实现了这一过程的自动化。它底层使用了一个可配置的、基于 OpenAI Functions 的链（chain），因此，如果你传入一个自定义的 LLM 实例，它必须是支持函数（functions）的 OpenAI 模型。
+
+**注意：** 此文档转换器最适合处理完整的文档，因此最好先用完整的文档运行它，然后再进行任何其他拆分或预处理！
+
+### 用法
+
+例如，假设您想索引一组电影评论。您可以像下面这样初始化文档转换器：
+
+```typescript
+import * as z from "zod";
+import { createMetadataTaggerFromZod } from "@langchain/classic/document_transformers/openai_functions";
+import { ChatOpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
+
+const zodSchema = z.object({
+  movie_title: z.string(),
+  critic: z.string(),
+  tone: z.enum(["positive", "negative"]),
+  rating: z
+    .optional(z.number())
+    .describe("评论家给电影打的星数"),
+});
+
+const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo" }),
+});
+
+const documents = [
+  new Document({
+    pageContent:
+      "Review of The Bee Movie\nBy Roger Ebert\nThis is the greatest movie ever made. 4 out of 5 stars.",
+  }),
+  new Document({
+    pageContent:
+      "Review of The Godfather\nBy Anonymous\n\nThis movie was super boring. 1 out of 5 stars.",
+    metadata: { reliable: false },
+  }),
+];
+const taggedDocuments = await metadataTagger.transformDocuments(documents);
+
+console.log(taggedDocuments);
+
+/*
+  [
+    Document {
+      pageContent: 'Review of The Bee Movie\n' +
+        'By Roger Ebert\n' +
+        'This is the greatest movie ever made. 4 out of 5 stars.',
+      metadata: {
+        movie_title: 'The Bee Movie',
+        critic: 'Roger Ebert',
+        tone: 'positive',
+        rating: 4
+      }
+    },
+    Document {
+      pageContent: 'Review of The Godfather\n' +
+        'By Anonymous\n' +
+        '\n' +
+        'This movie was super boring. 1 out of 5 stars.',
+      metadata: {
+        movie_title: 'The Godfather',
+        critic: 'Anonymous',
+        tone: 'negative',
+        rating: 1,
+        reliable: false
+      }
+    }
+  ]
+*/
+```
+
+还有一个额外的 `createMetadataTagger` 方法，它接受一个有效的 JSON Schema 对象。
+
+### 自定义
+
+您可以在第二个选项参数中将标准的 LLMChain 参数传递给底层的标记链（tagging chain）。
+例如，如果你想让 LLM 专注于输入文档中的特定细节，或者以某种特定风格提取元数据，你可以传入一个自定义的 Prompt：
+
+```typescript
+import * as z from "zod";
+import { createMetadataTaggerFromZod } from "@langchain/classic/document_transformers/openai_functions";
+import { ChatOpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const taggingChainTemplate = `从以下段落中提取所需信息。
+匿名评论家其实是 Roger Ebert。
+
+段落:
+{input}
+`;
+
+const zodSchema = z.object({
+  movie_title: z.string(),
+  critic: z.string(),
+  tone: z.enum(["positive", "negative"]),
+  rating: z
+    .optional(z.number())
+    .describe("评论家给电影打的星数"),
+});
+
+const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo" }),
+  prompt: PromptTemplate.fromTemplate(taggingChainTemplate),
+});
+
+const documents = [
+  new Document({
+    pageContent:
+      "Review of The Bee Movie\nBy Roger Ebert\nThis is the greatest movie ever made. 4 out of 5 stars.",
+  }),
+  new Document({
+    pageContent:
+      "Review of The Godfather\nBy Anonymous\n\nThis movie was super boring. 1 out of 5 stars.",
+    metadata: { reliable: false },
+  }),
+];
+const taggedDocuments = await metadataTagger.transformDocuments(documents);
+
+console.log(taggedDocuments);
+
+/*
+  [
+    Document {
+      pageContent: 'Review of The Bee Movie\n' +
+        'By Roger Ebert\n' +
+        'This is the greatest movie ever made. 4 out of 5 stars.',
+      metadata: {
+        movie_title: 'The Bee Movie',
+        critic: 'Roger Ebert',
+        tone: 'positive',
+        rating: 4
+      }
+    },
+    Document {
+      pageContent: 'Review of The Godfather\n' +
+        'By Anonymous\n' +
+        '\n' +
+        'This movie was super boring. 1 out of 5 stars.',
+      metadata: {
+        movie_title: 'The Godfather',
+        critic: 'Roger Ebert',
+        tone: 'negative',
+        rating: 1,
+        reliable: false
+      }
+    }
+  ]
+*/
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\document_transformers\openai_metadata_tagger.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

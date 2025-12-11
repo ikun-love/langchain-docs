@@ -1,0 +1,90 @@
+---
+title: Figma
+---
+
+> [Figma](https://www.figma.com/) 是一个用于界面设计的协作式 Web 应用程序。
+
+本指南涵盖了如何从 `Figma` REST API 加载数据，并将其转换为 LangChain 可以摄取（ingest）的格式，同时提供了代码生成的示例用法。
+
+```python
+import os
+
+from langchain.indexes import VectorstoreIndexCreator
+from langchain_community.document_loaders.figma import FigmaFileLoader
+from langchain_core.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
+from langchain_openai import ChatOpenAI
+```
+
+Figma API 需要一个访问令牌（access token）、节点 ID（node\_ids）以及一个文件密钥（file key）。
+
+文件密钥可以从 URL 中提取。 [www.figma.com/file/\{filekey\}/sampleFilename](https://www.figma.com/file/\{filekey\}/sampleFilename)
+
+节点 ID 也可以在 URL 中找到。点击任何元素，查找参数 `?node-id=\{node_id\}`。
+
+访问令牌的说明位于 Figma 帮助中心的文章中： [help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens](https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens)
+
+```python
+figma_loader = FigmaFileLoader(
+    os.environ.get("ACCESS_TOKEN"),
+    os.environ.get("NODE_IDS"),
+    os.environ.get("FILE_KEY"),
+)
+```
+
+```python
+# 有关更多详细信息，请参阅 https://python.langchain.com/en/latest/modules/data_connection/getting_started.html
+index = VectorstoreIndexCreator().from_loaders([figma_loader])
+figma_doc_retriever = index.vectorstore.as_retriever()
+```
+
+```python
+def generate_code(human_input):
+    # 我不确定乔恩·卡马克（Jon Carmack）的风格是否能生成更好的代码。效果因人而异。
+    # 有关聊天信息，请参阅 https://python.langchain.com/en/latest/modules/models/chat/getting_started.html
+    system_prompt_template = """你是一位专家级程序员 Jon Carmack。请根据提供的设计上下文，根据用户的请求创建符合习惯的 HTML/CSS 代码。
+    所有内容必须内联在一个文件中，并且你的响应必须可以直接被浏览器渲染。
+    Figma 文件节点和元数据: {context}"""
+
+    human_prompt_template = "代码化 {text}。请确保它是移动端响应式的"
+    system_message_prompt = SystemMessagePromptTemplate.from_template(
+        system_prompt_template
+    )
+    human_message_prompt = HumanMessagePromptTemplate.from_template(
+        human_prompt_template
+    )
+    # 删除 model_name="gpt-4" 以使用默认的 gpt-3.5 turbo 模型以获得更快的结果
+    gpt_4 = ChatOpenAI(temperature=0.02, model_name="gpt-4")
+    # 如果需要以缩小文档范围，请使用检索器（retriever）的 'get_relevant_documents' 方法
+    relevant_nodes = figma_doc_retriever.invoke(human_input)
+    conversation = [system_message_prompt, human_message_prompt]
+    chat_prompt = ChatPromptTemplate.from_messages(conversation)
+    response = gpt_4(
+        chat_prompt.format_prompt(
+            context=relevant_nodes, text=human_input
+        ).to_messages()
+    )
+    return response
+```
+
+```python
+response = generate_code("page top header")
+```
+
+在 `response.content` 中返回以下内容：
+
+```
+<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <style>\n        @import url(\'https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700&family=Inter:wght@600&display=swap\');\n\n        body {\n            margin: 0;\n            font-family: \'DM Sans\', sans-serif;\n        }\n\n        .header {\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n            padding: 20px;\n            background-color: #fff;\n            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n        }\n\n        .header h1 {\n            font-size: 16px;\n            font-weight: 700;\n            margin: 0;\n        }\n\n        .header nav {\n            display: flex;\n            align-items: center;\n        }\n\n        .header nav a {\n            font-size: 14px;\n            font-weight: 500;\n            text-decoration: none;\n            color: #000;\n            margin-left: 20px;\n        }\n\n        @media (max-width: 768px) {\n            .header nav {\n                display: none;\n            }\n        }\n    </style>\n</head>\n<body>\n    <header class="header">\n        <h1>Company Contact</h1>\n        <nav>\n            <a href="#">Lorem Ipsum</a>\n            <a href="#">Lorem Ipsum</a>\n            <a href="#">Lorem Ipsum</a>\n        </nav>\n    </header>\n</body>\n</html>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\figma.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

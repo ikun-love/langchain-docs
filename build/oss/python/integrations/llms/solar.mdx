@@ -1,0 +1,43 @@
+---
+title: Solar
+---
+
+*此社区集成已被弃用。您应该使用 [`ChatUpstage`](/oss/python/integrations/chat/upstage) 来通过聊天模型连接器访问 Solar LLM。*
+
+```python
+import os
+
+from langchain_community.llms.solar import Solar
+
+os.environ["SOLAR_API_KEY"] = "SOLAR_API_KEY"
+llm = Solar()
+llm.invoke("讲一个故事？")
+```
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms.solar import Solar
+from langchain_core.prompts import PromptTemplate
+
+template = """问题: {question}
+
+回答: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+
+llm = Solar()
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+
+question = "在贾斯汀·比伯出生的那一年，哪支 NFL 球队赢得了超级碗？"
+
+llm_chain.run(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\solar.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

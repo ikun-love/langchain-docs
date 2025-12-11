@@ -1,0 +1,61 @@
+---
+title: PullMd 加载器
+---
+
+>[PullMd](https://pull.md/) 是一种将网页内容转换为 Markdown 格式的服务。`langchain-pull-md` 包利用此服务，可以将 URL（特别是那些使用 React、Angular 或 Vue.js 等 JavaScript 框架渲染的网页）转换为 Markdown，而无需在本地进行渲染。
+
+## 安装和设置
+
+要开始使用 `langchain-pull-md`，您需要通过 pip 安装此包：
+
+<CodeGroup>
+```bash pip
+pip install langchain-pull-md
+```
+
+```bash uv
+uv add langchain-pull-md
+```
+</CodeGroup>
+
+有关详细的集成和使用说明，请参阅 [使用示例](/oss/python/integrations/document_loaders/pull_md)。
+
+## 文档加载器 (Document Loader)
+
+`langchain-pull-md` 中的 `PullMdLoader` 类提供了一种将 URL 转换为 Markdown 的便捷方法。它对于加载现代 Web 应用程序的内容以供 LangChain 处理非常有用。
+
+```python
+from langchain_pull_md import PullMdLoader
+
+# 使用一个经过 JavaScript 渲染的网页 URL 初始化加载器
+loader = PullMdLoader(url='https://example.com')
+
+# 将内容加载为 Document 对象
+documents = loader.load()
+
+# 访问 Markdown 内容
+for document in documents:
+    print(document.page_content)
+```
+
+此加载器支持任何 URL，尤其擅长处理使用动态 JavaScript 构建的网站，使其成为数据处理工作流程中文本内容的通用提取工具。
+
+---
+
+## API 参考
+
+有关所有可用函数及其参数的全面指南，请访问 [API 参考](https://github.com/chigwell/langchain-pull-md)。
+
+## 附加资源
+
+- [GitHub 仓库](https://github.com/chigwell/langchain-pull-md)
+- [PyPi 包](https://pypi.org/project/langchain-pull-md/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\pull-md.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

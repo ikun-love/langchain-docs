@@ -1,0 +1,197 @@
+---
+title: SitemapLoader
+---
+
+`SitemapLoader` 继承自 `WebBaseLoader`，它从给定的 URL 加载站点地图（sitemap），然后爬取并加载站点地图中的所有页面，将每个页面作为一个 `Document` 返回。
+
+爬取过程是**并发**进行的。并发请求有合理的限制，默认设置为每秒 2 次请求。如果你不关心成为一个“良好公民”（即不考虑对目标服务器造成过大负载），或者你控制被爬取的服务器，或者你不在乎负载，你可以增加这个限制。请注意，虽然这样做会加快爬取速度，但可能会导致服务器阻止你的请求。请谨慎操作！
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/sitemap/)|
+| :--- | :--- | :---: | :---: |  :---: |
+| [SiteMapLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.sitemap.SitemapLoader.html#langchain_community.document_loaders.sitemap.SitemapLoader) | [langchain-community](https://python.langchain.com/api_reference/community/index.html) | ✅ | ❌ | ✅ |
+
+### 加载器特性 (Loader features)
+
+| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
+| :---: | :---: | :---: |
+| SiteMapLoader | ✅ | ❌ |
+
+## 设置 (Setup)
+
+要访问 SiteMap 文档加载器，你需要安装 `langchain-community` 集成包。
+
+### 凭证 (Credentials)
+
+运行此加载器**不需要**任何凭证。
+
+要启用模型调用的自动化追踪，请设置你的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("输入你的 LangSmith API 密钥: ")
+os.environ["LANGSMITH_TRACING"] = "true"
+```
+
+### 安装 (Installation)
+
+安装 **langchain-community**。
+
+```python
+pip install -qU langchain-community
+```
+
+### 修复 Jupyter Notebook 的 asyncio bug
+
+```python
+import nest_asyncio
+
+nest_asyncio.apply()
+```
+
+## 初始化 (Initialization)
+
+现在我们可以实例化我们的模型对象并加载文档了：
+
+```python
+from langchain_community.document_loaders.sitemap import SitemapLoader
+```
+
+```python
+sitemap_loader = SitemapLoader(web_path="https://api.python.langchain.com/sitemap.xml")
+```
+
+## 加载 (Load)
+
+```python
+docs = sitemap_loader.load()
+docs[0]
+```
+
+```output
+Fetching pages: 100%|##########| 28/28 [00:04<00:00,  6.83it/s]
+```
+
+```output
+Document(metadata={'source': 'https://api.python.langchain.com/en/stable/', 'loc': 'https://api.python.langchain.com/en/stable/', 'lastmod': '2024-05-15T00:29:42.163001+00:00', 'changefreq': 'weekly', 'priority': '1'}, page_content='\n\n\n\n\n\n\n\n\n\nLangChain Python API Reference Documentation.\n\n\nYou will be automatically redirected to the new location of this page.\n\n')
+```
+
+```python
+print(docs[0].metadata)
+```
+
+```output
+{'source': 'https://api.python.langchain.com/en/stable/', 'loc': 'https://api.python.langchain.com/en/stable/', 'lastmod': '2024-05-15T00:29:42.163001+00:00', 'changefreq': 'weekly', 'priority': '1'}
+```
+
+你可以更改 `requests_per_second` 参数来增加最大并发请求数，并使用 `requests_kwargs` 来传递发送请求时需要的关键字参数 (kwargs)。
+
+```python
+sitemap_loader.requests_per_second = 2
+# 可选：避免 `[SSL: CERTIFICATE_VERIFY_FAILED]` 问题
+sitemap_loader.requests_kwargs = {"verify": False}
+```
+
+## 延迟加载 (Lazy Load)
+
+你也可以**延迟加载**页面，以最大限度地减少内存负载。
+
+```python
+page = []
+for doc in sitemap_loader.lazy_load():
+    page.append(doc)
+    if len(page) >= 10:
+        # 执行一些分页操作，例如：
+        # index.upsert(page)
+
+        page = []
+```
+
+```output
+Fetching pages: 100%|##########| 28/28 [00:01<00:00, 19.06it/s]
+```
+
+## 过滤站点地图 URL (Filtering sitemap URLs)
+
+站点地图文件可能非常庞大，包含数千个 URL。通常你并不需要每一个 URL。你可以通过向 `filter_urls` 参数传递一个字符串列表或正则表达式模式来过滤 URL。只有匹配其中一个模式的 URL 才会被加载。
+
+```python
+loader = SitemapLoader(
+    web_path="https://api.python.langchain.com/sitemap.xml",
+    filter_urls=["https://api.python.langchain.com/en/latest"],
+)
+documents = loader.load()
+```
+
+```python
+documents[0]
+```
+
+```output
+Document(page_content='\n\n\n\n\n\n\n\n\n\nLangChain Python API Reference Documentation.\n\n\nYou will be automatically redirected to the new location of this page.\n\n', metadata={'source': 'https://api.python.langchain.com/en/latest/', 'loc': 'https://api.python.langchain.com/en/latest/', 'lastmod': '2024-02-12T05:26:10.971077+00:00', 'changefreq': 'daily', 'priority': '0.9'})
+```
+
+## 添加自定义爬取规则
+
+`SitemapLoader` 使用 `beautifulsoup4` 进行爬取过程，并且默认情况下会爬取页面上的**每一个**元素。`SitemapLoader` 的构造函数接受一个自定义的爬取函数 (`parsing_function`)。这个功能在你需要定制爬取过程以满足特定需求时非常有用；例如，你可能希望避免爬取页头或导航元素。
+
+下面的示例展示了如何开发和使用一个自定义函数来避免爬取导航和页头元素。
+
+导入 `beautifulsoup4` 库并定义自定义函数。
+
+```python
+pip install beautifulsoup4
+```
+
+```python
+from bs4 import BeautifulSoup
+
+
+def remove_nav_and_header_elements(content: BeautifulSoup) -> str:
+    # 在 BeautifulSoup 对象中查找所有 'nav' 和 'header' 元素
+    nav_elements = content.find_all("nav")
+    header_elements = content.find_all("header")
+
+    # 从 BeautifulSoup 对象中移除每一个 'nav' 和 'header' 元素
+    for element in nav_elements + header_elements:
+        element.decompose()
+
+    return str(content.get_text())
+```
+
+将你的自定义函数添加到 `SitemapLoader` 对象中。
+
+```python
+loader = SitemapLoader(
+    "https://api.python.langchain.com/sitemap.xml",
+    filter_urls=["https://api.python.langchain.com/en/latest/"],
+    parsing_function=remove_nav_and_header_elements,
+)
+```
+
+## 本地站点地图 (Local Sitemap)
+
+站点地图加载器也可以用于加载**本地文件**。
+
+```python
+sitemap_loader = SitemapLoader(web_path="example_data/sitemap.xml", is_local=True)
+
+docs = sitemap_loader.load()
+```
+
+---
+
+## API 参考
+
+有关 SiteMapLoader 所有功能和配置的详细文档，请前往 API 参考页面：[python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.sitemap.SitemapLoader.html#langchain_community.document_loaders.sitemap.SitemapLoader](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.sitemap.SitemapLoader.html#langchain_community.document_loaders.sitemap.SitemapLoader)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\sitemap.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

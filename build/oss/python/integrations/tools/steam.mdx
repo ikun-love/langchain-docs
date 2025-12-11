@@ -1,0 +1,110 @@
+---
+title: Steam 工具包
+---
+
+> [Steam (维基百科)](https://en.wikipedia.org/wiki/Steam_(service)) 是由 `Valve Corporation` 开发的一款电子游戏数字发行服务和商店。它会自动为 Valve 的游戏提供更新，后来扩展到分发第三方游戏。`Steam` 提供各种功能，例如带有 Valve 反作弊措施的游戏服务器匹配、社交网络和游戏串流服务。
+
+>[Steam](https://store.steampowered.com/about/) 是游玩、讨论和创作游戏的终极平台。
+
+Steam 工具包包含两个工具：
+
+- `游戏详情` (`Game Details`)
+- `推荐游戏` (`Recommended Games`)
+
+本指南将引导您完成使用 LangChain 调用 Steam API 的过程，以便根据您当前的 Steam 游戏库存获取游戏推荐，或者收集您提供的特定 Steam 游戏的信息。
+
+## 设置 (Setting up)
+
+我们需要安装两个 Python 库。
+
+## 导入 (Imports)
+
+```python
+pip install -qU python-steam-api python-decouple steamspypi
+```
+
+## 分配环境变量 (Assign Environmental Variables)
+
+要使用此工具包，请准备好您的 OpenAI API 密钥、Steam API 密钥（可从 [此处](https://steamcommunity.com/dev/apikey) 获取）以及您的 SteamID。收到 Steam API 密钥后，您可以将其作为以下环境变量进行输入。
+该工具包将读取 "STEAM_KEY" API 密钥作为环境变量来进行身份验证，因此请在此处设置它们。您还需要设置您的 "OPENAI_API_KEY" 和 "STEAM_ID"。
+
+```python
+import os
+
+os.environ["STEAM_KEY"] = ""
+os.environ["STEAM_ID"] = ""
+os.environ["OPENAI_API_KEY"] = ""
+```
+
+## 初始化 (Initialization)
+
+初始化 LLM、`SteamWebAPIWrapper`、`SteamToolkit`，以及最重要的是用于处理您查询的 LangChain 智能体 (agent)！
+
+## 示例 (Example)
+
+```python
+from langchain_community.agent_toolkits.steam.toolkit import SteamToolkit
+from langchain_community.utilities.steam import SteamWebAPIWrapper
+
+steam = SteamWebAPIWrapper()
+tools = [steam.run]
+```
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent("gpt-4.1-mini", tools)
+```
+
+```python
+events = agent.stream(
+    {"messages": [("user", "can you give the information about the game Terraria?")]},
+    stream_mode="values",
+)
+for event in events:
+    event["messages"][-1].pretty_print()
+```
+
+```output
+================================ Human Message =================================
+
+can you give the information about the game Terraria?
+================================== Ai Message ==================================
+Tool Calls:
+  run (call_6vHAXSIL2MPugXxlv5uyf9Xk)
+ Call ID: call_6vHAXSIL2MPugXxlv5uyf9Xk
+  Args:
+    mode: get_games_details
+    game: Terraria
+================================= Tool Message =================================
+Name: run
+
+The id is: [105600]
+The link is: https://store.steampowered.com/app/105600/Terraria/?snr=1_7_15__13
+The price is: $9.99
+The summary of the game is: Dig, Fight, Explore, Build:  The very world is at your fingertips as you fight for survival, fortune, and glory.   Will you delve deep into cavernous expanses in search of treasure and raw materials with which to craft ever-evolving gear, machinery, and aesthetics?   Perhaps you will choose instead to seek out ever-greater foes to test your mettle in combat?   Maybe you will decide to construct your own city to house the host of mysterious allies you may encounter along your travels? In the World of Terraria, the choice is yours!Blending elements of classic action games with the freedom of sandbox-style creativity, Terraria is a unique gaming experience where both the journey and the destination are completely in the player’s control.   The Terraria adventure is truly as unique as the players themselves!  Are you up for the monumental task of exploring, creating, and defending a world of your own?   Key features: Sandbox Play  Randomly generated worlds Free Content Updates
+The supported languages of the game are: English, French, Italian, German, Spanish - Spain, Polish, Portuguese - Brazil, Russian, Simplified Chinese
+
+================================== Ai Message ==================================
+
+Terraria 是一款可以让您在一个完全由您掌控的世界中挖掘、战斗、探索和建造的游戏。游戏给予您生存、寻求财富和获得荣耀的自由。您可以深入洞穴探险，以寻找制作不断发展的装备、机械和装饰物品所需的宝藏和原材料。或者，您可以选择挑战更强大的敌人，或者建造自己的城市来安置您旅途中可能遇到的神秘盟友。该游戏将经典动作元素与沙盒式创造的自由感融合在一起，提供了一种独特的体验，您在此过程中和最终目的地都完全由自己控制。
+
+Terraria 的主要特点包括沙盒游戏玩法、随机生成的世界以及免费内容更新。
+
+该游戏售价为 $9.99，并支持多种语言，包括英语、法语、意大利语、德语、西班牙语（西班牙）、波兰语、葡萄牙语（巴西）、俄语和简体中文。
+
+您可以在此处找到更多信息并购买：[Steam 上的 Terraria](https://store.steampowered.com/app/105600/Terraria/?snr=1_7_15__13)。
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\steam.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,89 @@
+---
+title: 如何在用户界面中筛选实验
+sidebarTitle: 在用户界面中筛选实验
+---
+
+LangSmith 允许您根据**反馈分数**和**元数据**来筛选您过去的实验，从而轻松找到您真正关心的那些实验。
+
+## 背景知识：向实验添加元数据
+
+当您在 SDK 中运行实验时，您可以附加元数据，以便将来在用户界面（UI）中更容易地进行筛选。如果您在运行实验时已经知道想要深入分析的维度（axes），这将非常有用。
+
+在我们的示例中，我们将围绕所使用的模型、模型提供商以及提示（prompt）的已知 ID 来为实验附加元数据：
+
+```python
+models = {
+    "openai-gpt-4o": ChatOpenAI(model="gpt-4o", temperature=0),
+    "openai-gpt-4o-mini": ChatOpenAI(model="gpt-4o-mini", temperature=0),
+    "anthropic-claude-3-sonnet-20240229": ChatAnthropic(temperature=0, model_name="claude-3-sonnet-20240229")
+}
+
+prompts = {
+    "singleminded": "always answer questions with the word banana.",
+    "fruitminded": "always discuss fruit in your answers.",
+    "basic": "you are a chatbot."
+}
+
+def answer_evaluator(run, example) -> dict:
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    answer_grader = hub.pull("langchain-ai/rag-answer-vs-reference") | llm
+    score = answer_grader.invoke(
+        {
+            "question": example.inputs["question"],
+            "correct_answer": example.outputs["answer"],
+            "student_answer": run.outputs,
+        }
+    )
+    return {"key": "correctness", "score": score["Score"]}
+
+dataset_name = "Filterable Dataset"
+
+for model_type, model in models.items():
+    for prompt_type, prompt in prompts.items():
+        def predict(example):
+            return model.invoke(
+                [("system", prompt), ("user", example["question"])]
+            )
+
+        model_provider = model_type.split("-")[0]
+        model_name = model_type[len(model_provider) + 1:]
+
+        evaluate(
+            predict,
+            data=dataset_name,
+            evaluators=[answer_evaluator],
+            # 在此处添加元数据！！
+            metadata={
+                "model_provider": model_provider,
+                "model_name": model_name,
+                "prompt_id": prompt_type
+            }
+        )
+```
+
+## 在用户界面中筛选实验
+
+在用户界面中，默认情况下我们会看到所有已运行的实验。
+
+![](/langsmith/images/filter-all-experiments.png)
+
+如果我们例如偏好使用 openai 模型，我们可以轻松地进行筛选，首先只查看 openai 模型内部的分数：
+
+![](/langsmith/images/filter-openai.png)
+
+我们可以堆叠（stack）多个筛选条件，允许我们过滤掉正确性（correctness）得分较低的实验，以确保我们只比较相关的那些实验：
+
+![](/langsmith/images/filter-feedback.png)
+
+最后，我们可以清除并重置筛选条件。例如，如果我们发现使用 `singleminded` 提示的实验中有一个明显的获胜者，我们可以更改筛选设置，看看是否有来自其他模型提供商的模型也能与之配合得很好：
+
+![](/langsmith/images/filter-singleminded.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\filter-experiments-ui.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

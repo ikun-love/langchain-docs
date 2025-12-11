@@ -1,0 +1,70 @@
+---
+title: 香蕉 (Banana)
+---
+
+[Banana](https://www.banana.dev/about-us) 致力于构建机器学习基础设施。
+
+这个示例将介绍如何使用 LangChain 与 Banana 模型进行交互。
+
+```python
+## 安装使用集成所需的 langchain 包
+pip install -qU  langchain-community
+```
+
+```python
+# 安装包 https://docs.banana.dev/banana-docs/core-concepts/sdks/python
+pip install -qU  banana-dev
+```
+
+```python
+# 获取新 token 的地址：https://app.banana.dev/
+# 我们可以使用三个参数来调用 Banana.dev API：
+# * 团队 API 密钥 (team api key)
+# * 模型的唯一密钥 (model's unique key)
+# * 模型的 URL slug
+
+import os
+
+# 可以从 https://app.banana.dev/ 的主仪表板获取此密钥
+os.environ["BANANA_API_KEY"] = "YOUR_API_KEY"
+# 或者
+# BANANA_API_KEY = getpass()
+```
+
+```python
+from langchain.chains import LLMChain
+from langchain_community.llms import Banana
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+template = """问题: {question}
+
+答案: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+# 模型密钥 (model_key) 和模型 URL slug (model_url_slug) 都在 https://app.banana.dev/ 的模型详情页面中
+llm = Banana(model_key="YOUR_MODEL_KEY", model_url_slug="YOUR_MODEL_URL_SLUG")
+```
+
+```python
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+```
+
+```python
+question = "贾斯汀·比伯 (Justin Bieber) 出生那年，哪支 NFL 球队赢得了超级碗？"
+
+llm_chain.run(question)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\banana.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

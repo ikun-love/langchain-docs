@@ -1,0 +1,236 @@
+---
+title: 使用 AutoGen 进行追踪
+sidebarTitle: AutoGen
+---
+
+LangSmith 可以使用 OpenInference 的 AutoGen 仪器（instrumentation）来捕获由 [AutoGen](https://microsoft.github.io/autogen/stable/) 生成的追踪（traces）。本指南将向您展示如何自动捕获 AutoGen 多智能体对话中的追踪，并将它们发送到 LangSmith 进行监控和分析。
+
+## 安装
+
+使用您喜欢的包管理器安装所需的包：
+
+<CodeGroup>
+
+```bash pip
+pip install langsmith autogen openinference-instrumentation-autogen openinference-instrumentation-openai
+```
+
+```bash uv
+uv add langsmith autogen openinference-instrumentation-autogen openinference-instrumentation-openai
+```
+
+</CodeGroup>
+
+<Info>
+需要 LangSmith Python SDK 版本 `langsmith>=0.4.26` 以获得最佳的 OpenTelemetry 支持。
+</Info>
+
+## 设置
+
+### 1. 配置环境变量
+
+设置您的 API 密钥和项目名称：
+
+<CodeGroup>
+
+```bash Shell
+export LANGSMITH_API_KEY=<your_langsmith_api_key>
+export LANGSMITH_PROJECT=<your_project_name>
+export OPENAI_API_KEY=<your_openai_api_key>
+```
+
+</CodeGroup>
+
+### 2. 配置 OpenTelemetry 集成
+
+在您的 AutoGen 应用程序中，导入并配置 LangSmith OpenTelemetry 集成，同时配置 AutoGen 和 OpenAI 的仪器：
+
+```python
+from langsmith.integrations.otel import configure
+from openinference.instrumentation.autogen import AutogenInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+# 配置 LangSmith 追踪
+configure(project_name="autogen-demo")
+
+# 仪器化 AutoGen 和 OpenAI 调用
+AutogenInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+```
+
+<Note>
+您不需要手动设置任何 OpenTelemetry 环境变量或配置导出器——`configure()` 会自动处理所有事情。
+</Note>
+
+### 3. 创建并运行您的 AutoGen 应用程序
+
+配置完成后，您的 AutoGen 应用程序将自动向 LangSmith 发送追踪：
+
+```python
+import autogen
+from openinference.instrumentation.autogen import AutogenInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+from langsmith.integrations.otel import configure
+import os
+import dotenv
+
+# 加载环境变量
+dotenv.load_dotenv(".env.local")
+
+# 配置 LangSmith 追踪
+configure(project_name="autogen-code-review")
+
+# 仪器化 AutoGen 和 OpenAI
+AutogenInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+
+# 配置您的智能体
+config_list = [
+    {
+        "model": "gpt-4",
+        "api_key": os.getenv("OPENAI_API_KEY"),
+    }
+]
+
+# 创建一个代码审查智能体
+code_reviewer = autogen.AssistantAgent(
+    name="code_reviewer",
+    llm_config={"config_list": config_list},
+    system_message="""你是一位专业的代码审查员。你的职责是：
+    1. 审查代码中的错误、安全问题和最佳实践
+    2. 提出改进和优化的建议
+    3. 提供建设性的反馈
+    始终保持彻底但具有建设性的审查。""",
+)
+
+# 创建一个开发智能体
+developer = autogen.AssistantAgent(
+    name="developer",
+    llm_config={"config_list": config_list},
+    system_message="""你是一位高级软件开发人员。你的职责是：
+    1. 编写干净、高效的代码
+    2. 响应代码审查的反馈
+    3. 解释你的实现决策
+    4. 实现请求的功能和修复""",
+)
+
+# 创建一个用户代理智能体
+user_proxy = autogen.UserProxyAgent(
+    name="user_proxy",
+    human_input_mode="NEVER",
+    max_consecutive_auto_reply=8,
+    is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+    code_execution_config={"work_dir": "workspace"},
+    llm_config={"config_list": config_list},
+)
+
+def run_code_review_session(task_description: str):
+    """运行一个多智能体代码审查会话。"""
+
+    # 创建一个包含智能体的群聊
+    groupchat = autogen.GroupChat(
+        agents=[user_proxy, developer, code_reviewer],
+        messages=[],
+        max_round=10
+    )
+
+    # 创建一个群聊管理器
+    manager = autogen.GroupChatManager(
+        groupchat=groupchat,
+        llm_config={"config_list": config_list}
+    )
+
+    # 开始对话
+    user_proxy.initiate_chat(
+        manager,
+        message=f"""
+        任务: {task_description}
+
+        开发人员: 请实现所请求的功能。
+        代码审查员: 请审查实现并提供反馈。
+
+        共同努力创建一个高质量的解决方案。
+        """
+    )
+
+    return "代码审查会话完成"
+
+# 示例用法
+if __name__ == "__main__":
+    task = """
+    创建一个实现二分查找算法的 Python 函数。
+    该函数应：
+    - 接受一个已排序的列表和一个目标值作为参数
+    - 如果找到目标值，则返回其索引，否则返回 -1
+    - 包含适当的错误处理和文档
+    """
+
+    result = run_code_review_session(task)
+    print(f"结果: {result}")
+```
+
+## 高级用法
+
+### 自定义元数据和标签
+
+您可以通过在 AutoGen 应用程序中设置 Span 属性来向追踪添加自定义元数据：
+
+```python
+from opentelemetry import trace
+
+# 获取当前追踪器
+tracer = trace.get_tracer(__name__)
+
+def run_code_review_session(task_description: str):
+    with tracer.start_as_current_span("autogen_code_review") as span:
+        # 添加自定义元数据
+        span.set_attribute("langsmith.metadata.session_type", "code_review")
+        span.set_attribute("langsmith.metadata.agent_count", "3")
+        span.set_attribute("langsmith.metadata.task_complexity", "medium")
+        span.set_attribute("langsmith.span.tags", "autogen,code-review,multi-agent")
+
+        # 您的 AutoGen 代码位于此处
+        groupchat = autogen.GroupChat(
+            agents=[user_proxy, developer, code_reviewer],
+            messages=[],
+            max_round=10
+        )
+
+        manager = autogen.GroupChatManager(
+            groupchat=groupchat,
+            llm_config={"config_list": config_list}
+        )
+
+        user_proxy.initiate_chat(manager, message=task_description)
+        return "会话完成"
+```
+
+### 与其他仪器化工具结合使用
+
+您可以通过添加它们并将它们初始化为仪器化工具，将 AutoGen 仪器化与其它仪器化工具（例如 Semantic Kernel、DSPy）结合使用：
+
+```python
+from langsmith.integrations.otel import configure
+from openinference.instrumentation.autogen import AutogenInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+from openinference.instrumentation.dspy import DSPyInstrumentor
+
+# 配置 LangSmith 追踪
+configure(project_name="multi-framework-app")
+
+# 初始化多个仪器化工具
+AutogenInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
+DSPyInstrumentor().instrument()
+
+# 使用多个框架的应用程序代码
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\trace-with-autogen.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

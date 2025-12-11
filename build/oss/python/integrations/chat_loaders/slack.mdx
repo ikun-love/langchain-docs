@@ -1,0 +1,95 @@
+```markdown
+---
+title: Slack
+---
+
+本 Notebook 展示了如何使用 Slack 聊天加载器（Slack chat loader）。此类有助于将导出的 Slack 对话映射到 LangChain 的聊天消息（Chat Messages）。
+
+整个过程包含以下三个步骤：
+
+1. 按照[此处说明](https://slack.com/help/articles/1500001548241-Request-to-export-all-conversations)导出所需的对话线程。
+2. 使用 `SlackChatLoader`，并将文件路径指向 JSON 文件或 JSON 文件所在的目录。
+3. 调用 `loader.load()`（或 `loader.lazy_load()`）执行转换。可选地，您可以使用 `merge_chat_runs` 来合并来自同一发送者的连续消息，和/或使用 `map_ai_messages` 将来自指定发送者的消息转换为 "AIMessage" 类。
+
+## 1. 创建消息转储文件（Message dump）
+
+目前（2023/08/23），此加载器对从 Slack 导出直接消息对话后生成的 JSON 文件组成的 zip 目录支持最佳。请遵循 Slack 提供的最新说明来完成此操作。
+
+我们在 LangChain 仓库中提供了一个示例。
+
+```python
+import requests
+
+permalink = "https://raw.githubusercontent.com/langchain-ai/langchain/342087bdfa3ac31d622385d0f2d09cf5e06c8db3/libs/langchain/tests/integration_tests/examples/slack_export.zip"
+response = requests.get(permalink)
+with open("slack_dump.zip", "wb") as f:
+    f.write(response.content)
+```
+
+## 2. 创建聊天加载器（Chat Loader）
+
+向加载器提供 zip 目录的文件路径。您可以选择性地指定映射到 AI 消息的用户 ID，以及配置是否合并消息的连续序列（message runs）。
+
+```python
+from langchain_community.chat_loaders.slack import SlackChatLoader
+```
+
+```python
+loader = SlackChatLoader(
+    path="slack_dump.zip",
+)
+```
+
+## 3. 加载消息
+
+`load()`（或 `lazy_load`）方法返回一个 "ChatSessions" 列表，目前每个 ChatSession 仅包含按加载的对话划分的消息列表。
+
+```python
+from typing import List
+
+from langchain_community.chat_loaders.utils import (
+    map_ai_messages,
+    merge_chat_runs,
+)
+from langchain_core.chat_sessions import ChatSession
+
+raw_messages = loader.lazy_load()
+# 合并来自同一发送者的连续消息为一个单独的消息
+merged_messages = merge_chat_runs(raw_messages)
+# 将来自 "U0500003428" 的消息转换为 AI 消息
+messages: List[ChatSession] = list(
+    map_ai_messages(merged_messages, sender="U0500003428")
+)
+```
+
+### 后续步骤
+
+接下来，您可以根据需要使用这些消息，例如用于模型的微调（fine-tuning）、少样本示例选择（few-shot example selection），或直接对下一条消息进行预测。
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI()
+
+for chunk in llm.stream(messages[1]["messages"]):
+    print(chunk.content, end="", flush=True)
+```
+
+```output
+嗨，
+
+希望你一切都好。我想联系你，问问你下周是否有空约出来喝杯咖啡。我很想和你叙叙旧，听听你最近的生活怎么样。如果你有兴趣，请告诉我，我们可以找一个对双方都方便的时间。
+
+期待你的回复！
+
+此致，[你的名字]
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat_loaders\slack.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

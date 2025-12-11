@@ -1,0 +1,83 @@
+---
+title: WRITER
+---
+
+所有与 WRITER 相关的[^1]功能
+
+> 本页面将介绍如何在 LangChain 中使用 [WRITER](https://writer.com/) 生态系统。更多信息请参阅 Writer 的 [文档](https://dev.writer.com/home/introduction)。
+>[Palmyra](https://writer.com/blog/palmyra/) 是 `WRITER` 开发的大型语言模型 (LLM)。
+>
+> [Writer API](https://dev.writer.com/api-guides/introduction) 由一套多样化的 Palmyra 子模型提供支持，这些子模型具有不同的能力和定价点。
+
+## 安装和设置
+
+使用以下命令安装集成包：
+<CodeGroup>
+```bash pip
+pip install langchain-writer
+```
+
+```bash uv
+uv add langchain-writer
+```
+</CodeGroup>
+
+获取一个 WRITER API 密钥，并将其设置为环境变量（`WRITER_API_KEY`）。
+
+## 聊天模型 (Chat model)
+
+```python
+from langchain_writer import ChatWriter
+```
+参见 [详情](/oss/python/integrations/chat/writer)。
+
+## PDF 解析器 (PDF Parser)
+
+```python
+from langchain_writer.pdf_parser import PDFParser
+```
+<Warning>
+**弃用通知**：`parse PDF` 工具已被弃用，并计划于 **2025 年 12 月 22 日** 移除。
+
+**迁移路径**：我们计划引入一个用于聊天补全的预构建 PDF 解析工具，它将提供类似的功能。此工具的工作方式将类似于其他预构建工具。一旦该替代方案可用，我们将提供更多详细信息。
+</Warning>
+
+参见 [详情](/oss/python/integrations/document_loaders/parsers/writer_pdf_parser)。
+
+## 工具调用 (Tools calling)
+
+### 函数 (Functions)
+
+支持通过字典 (dicts)、Pydantic、Python 函数等方式定义的**基本函数调用**。
+
+### 图 (Graphs)
+
+```python
+from langchain_writer.tools import GraphTool
+```
+参见 [详情](/oss/python/integrations/tools/writer)。
+
+### 网页搜索工具 (Web search tool)
+
+```python
+from langchain_writer.tools import WebSearchTool
+```
+参见 [详情](/oss/python/integrations/tools/writer)。
+
+### 翻译工具 (Translation tool)
+
+```python
+from langchain_writer.tools import TranslationTool
+```
+参见 [详情](/oss/python/integrations/tools/writer)。
+
+[^1]: WRITER 是指 WRITER 公司或其提供的服务/API。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\writer.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

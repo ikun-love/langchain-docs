@@ -1,0 +1,156 @@
+---
+title: Clarifai
+---
+
+> [Clarifai](https://www.clarifai.com/) 是一个人工智能平台，它提供了完整的人工智能生命周期，涵盖从数据探索、数据标注、模型训练、评估到推理的各个环节。
+
+本示例将介绍如何使用 LangChain 与 `Clarifai` [模型](https://clarifai.com/explore/models)进行交互。
+
+要使用 Clarifai，您必须拥有一个账户和一个个人访问令牌（PAT）密钥。
+请在此处 [Check here](https://clarifai.com/settings/security) 获取或创建 PAT。
+
+# 依赖项 (Dependencies)
+
+```python
+# 安装所需的依赖项
+pip install -qU  clarifai
+```
+
+```python
+# 将 clarifai pat 令牌声明为环境变量，或者您也可以将其作为参数传递给 clarifai 类。
+import os
+
+os.environ["CLARIFAI_PAT"] = "CLARIFAI_PAT_TOKEN"
+```
+
+# 导入 (Imports)
+
+在这里，我们将设置个人访问令牌。您可以在 Clarifai 账户的 [settings/security](https://clarifai.com/settings/security) 路径下找到您的 PAT。
+
+```python
+# 请登录并从 https://clarifai.com/settings/security 获取您的 API 密钥
+from getpass import getpass
+
+CLARIFAI_PAT = getpass()
+```
+
+```python
+# 导入所需的模块
+from langchain.chains import LLMChain
+from langchain_community.llms import Clarifai
+from langchain_core.prompts import PromptTemplate
+```
+
+# 输入 (Input)
+
+创建一个提示模板供 LLM Chain 使用：
+
+```python
+template = """问题: {question}
+
+答案: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+# 设置 (Setup)
+
+设置模型所在的 `user id` 和 `app id`。您可以在 [clarifai.com/explore/models](https://clarifai.com/explore/models) 上找到公共模型的列表。
+
+您还必须初始化 `model id`，如果需要，也可以初始化 `model version id`。有些模型有很多版本，您可以根据任务选择合适的版本。
+
+或者，您可以使用 `model_url`（例如：`"[clarifai.com/anthropic/completion/models/claude-v2](https://clarifai.com/anthropic/completion/models/claude-v2)"`）进行初始化。
+
+```python
+USER_ID = "openai"
+APP_ID = "chat-completion"
+MODEL_ID = "GPT-3_5-turbo"
+
+# 您可以通过 model_version_id 参数提供一个特定的模型版本。
+# MODEL_VERSION_ID = "MODEL_VERSION_ID"
+# 或者
+
+MODEL_URL = "https://clarifai.com/openai/chat-completion/models/GPT-4"
+```
+
+```python
+# 初始化一个 Clarifai LLM 实例
+clarifai_llm = Clarifai(user_id=USER_ID, app_id=APP_ID, model_id=MODEL_ID)
+# 或者
+# 通过 Model URL 初始化
+clarifai_llm = Clarifai(model_url=MODEL_URL)
+```
+
+```python
+# 创建 LLM 链
+llm_chain = LLMChain(prompt=prompt, llm=clarifai_llm)
+```
+
+# 运行链 (Run Chain)
+
+```python
+question = "贾斯汀·比伯出生的那年，哪支 NFL 球队赢得了超级碗？"
+
+llm_chain.run(question)
+```
+
+```output
+' 好的，以下是找出答案的步骤：\n\n1. 贾斯汀·比伯出生于 1994 年 3 月 1 日。\n\n2. 发生在他出生那年的超级碗是第二十八届超级碗（Super Bowl XXVIII）。 \n\n3. 第二十八届超级碗于 1994 年 1 月 30 日举行。\n\n4. 参加第二十八届超级碗的两支球队是达拉斯牛仔队（Dallas Cowboys）和布法罗比尔队（Buffalo Bills）。 \n\n5. 达拉斯牛仔队以 30-13 击败布法罗比尔队，赢得了第二十八届超级碗。\n\n因此，在贾斯汀·比伯出生的那年赢得超级碗的 NFL 球队是达拉斯牛仔队。'
+```
+
+## 使用推理参数（Inference parameters）对 GPT 模型进行预测
+
+或者，您可以使用带有推理参数（如 `temperature`、`max_tokens` 等）的 GPT 模型进行预测。
+
+```python
+# 将参数初始化为字典。
+params = dict(temperature=str(0.3), max_tokens=100)
+```
+
+```python
+clarifai_llm = Clarifai(user_id=USER_ID, app_id=APP_ID, model_id=MODEL_ID)
+llm_chain = LLMChain(
+    prompt=prompt, llm=clarifai_llm, llm_kwargs={"inference_params": params}
+)
+```
+
+```python
+question = "对于所有三位数的偶数，如果其中一位是 5，则后一位数字必须是 7，请问能组成多少个这样的数？"
+
+llm_chain.run(question)
+```
+
+```output
+'步骤 1：第一位数字可以是 1 到 9 中任何一个偶数，但不能是 5。因此第一位有 4 种选择。\n\n步骤 2：如果第一位数字不是 5，则第二位数字必须是 7。因此第二位只有 1 种选择。\n\n步骤 3：第三位可以是 0 到 9 中任何一个偶数，但不能是 5 和 7。因此第三位有 '
+```
+
+为一组提示生成响应
+
+```python
+# 我们可以使用 _generate 来为一组提示生成响应。
+clarifai_llm._generate(
+    [
+        "用 5 句话总结美国独立战争的主要事件。",
+        "用有趣的方式解释火箭科学。",
+        "为大学运动会欢迎致辞创建一个脚本。",
+    ],
+    inference_params=params,
+)
+```
+
+```output
+LLMResult(generations=[[Generation(text=' 以下是美国独立战争关键事件的 5 句话总结：\n\n美国独立战争始于美国殖民地与英国政府之间因“无代表，不纳税”等问题日益紧张的关系。1775 年，英军与美国民兵在列克星敦和康科德爆发冲突，标志着独立战争的开始。大陆会议任命乔治·华盛顿为大陆军总司令，大陆军随后取得了对英军的关键胜利。1776 年，《独立宣言》获得通过，正式宣布这 13 个美洲殖民地脱离英国统治。经过多年的战斗，战争以 1781 年约克镇英军的失败而告终，随后英国承认了美国独立。')], [Generation(text=" 以下是对火箭科学的幽默解释：\n\n火箭科学太简单了，简直是小菜一碟！只需将一个装满爆炸性液体的金属大管子绑在你的屁股底下，然后点燃引信。可能会出什么差错呢？发射！嗖的一声，你很快就会冲向月球。只是要记住戴好头盔，否则当你离开大气层时，你的头可能会像个青春痘一样爆开。\n\n制造火箭也轻而易举。只需混合一些辛辣的香料、大蒜粉、辣椒粉、一小撮火药，瞧——火箭燃料就做好了！再加一撮小苏打和醋，以获得额外的动力。摇匀后倒入你的自制苏打水瓶火箭中。退后，看着那宝贝儿飞升吧！\n\n引导火箭也很有趣，适合全家。只需系好安全带，按下一些随机按钮，看看你会到达哪里。这就像终极惊喜假期！你永远不知道自己最终会落在金星、坠毁在火星，还是快速穿过土星环。\n\n如果出了任何问题，别担心。火箭科学就是这么简单。只需用一些管道胶带和强力胶在飞行中解决问题，你很快就会回到正轨。谁需要任务控制中心，当你拥有这些的时候！")], [Generation(text=" 以下是大学运动会欢迎致辞的草稿：\n\n大家早上好，欢迎参加我们学院的年度运动会！很高兴看到这么多学生、教职员工、校友和客人们今天聚集在这里，共同庆祝我们学院的体育精神和运动成就。\n\n首先，我们要感谢所有幕后辛勤工作的组织者、志愿者、教练和工作人员，使本次活动得以成功举办。没有你们的奉献和承诺，我们的运动会就无法实现。\n\n我也要表彰今天在场的所有学生运动员。你们的才华、精神和决心激励着我们。体育运动具有独特的凝聚力和激励我们社区的力量。通过个人和团队体育运动，你们展示了专注、协作、毅力和韧性——这些品质在赛场内外都将对你们大有裨益。\n\n竞争和公平竞争的精神是任何体育赛事的固有价值。我鼓励大家今天都热情参与竞争。尽你们最大的能力去比赛，并享受乐趣。为你们同伴运动员的努力和体育精神喝彩，无论结果如何。\n\n无论输赢，今天的运动会都是我们建立友谊和创造终生难忘回忆的一天。让我们把它变成一个充满活力和友谊的日子吧。话不多说，让比赛开始吧。祝大家度过愉快的一天！")]], llm_output=None, run=None)
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\clarifai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

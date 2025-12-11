@@ -1,0 +1,82 @@
+---
+title: 通义千问 (Tongyi Qwen)
+---
+
+通义千问（Tongyi Qwen）是由阿里巴巴达摩院开发的大规模语言模型。它基于用户输入的自然语言，通过自然语言理解和语义分析来理解用户意图，并能在不同领域和任务中为用户提供服务和帮助。通过提供清晰详细的指令，您可以获得更符合预期的结果。
+
+## 设置 (Setting up)
+
+```python
+# 安装软件包
+pip install -qU  langchain-community dashscope
+```
+
+```python
+# 获取新的 Token（密钥）：https://help.aliyun.com/document_detail/611472.html?spm=a2c4g.2399481.0.0
+from getpass import getpass
+
+DASHSCOPE_API_KEY = getpass()
+```
+
+```output
+ ········
+```
+
+```python
+import os
+
+os.environ["DASHSCOPE_API_KEY"] = DASHSCOPE_API_KEY
+```
+
+```python
+from langchain_community.llms import Tongyi
+```
+
+```python
+Tongyi().invoke("贾斯汀·比伯出生那年，哪支 NFL 球队赢得了超级碗？")
+```
+
+```output
+'Justin Bieber was born on March 1, 1994. The Super Bowl that took place in the same year was Super Bowl XXVIII, which was played on January 30, 1994. The winner of that Super Bowl was the Dallas Cowboys, who defeated the Buffalo Bills with a score of 30-13.'
+```
+
+## 在链式调用中使用 (Using in a chain)
+
+```python
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+llm = Tongyi()
+```
+
+```python
+template = """问题: {question}
+
+回答: 让我们一步一步思考。"""
+
+prompt = PromptTemplate.from_template(template)
+```
+
+```python
+chain = prompt | llm
+```
+
+```python
+question = "贾斯汀·比伯出生那年，哪支 NFL 球队赢得了超级碗？"
+
+chain.invoke({"question": question})
+```
+
+```output
+'Justin Bieber was born on March 1, 1994. The Super Bowl that took place in the same calendar year was Super Bowl XXVIII, which was played on January 30, 1994. The winner of Super Bowl XXVIII was the Dallas Cowboys, who defeated the Buffalo Bills with a score of 30-13.'
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\tongyi.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

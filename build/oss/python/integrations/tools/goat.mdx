@@ -1,0 +1,173 @@
+---
+title: GOAT
+---
+
+[GOAT](https://github.com/goat-sdk/goat) 是专为 AI 智能体设计的金融工具包。
+
+## 概述
+
+使用 GOAT，您可以创建能够执行以下操作的智能体：
+
+- 发送和接收支付
+- 购买实体和数字商品及服务
+- 参与各种投资策略：
+  - 赚取收益（Yield）
+  - 对预测市场进行投注
+- 购买加密资产
+- 对任何资产进行代币化（Tokenize）
+- 获取金融洞察
+
+### 工作原理
+
+GOAT 利用区块链、加密货币（如稳定币 Stablecoins）和钱包作为基础设施，使智能体能够成为经济参与者：
+
+1. 为您的智能体提供一个 [钱包](https://github.com/goat-sdk/goat/tree/main#chains-and-wallets)
+2. 允许它在 [任何地方](https://github.com/goat-sdk/goat/tree/main#chains-and-wallets) 进行交易
+3. 使用超过 [+200 种工具](https://github.com/goat-sdk/goat/tree/main#tools)
+
+您可以在 [此处](https://github.com/goat-sdk/goat/tree/main#chains-and-wallets) 查看 GOAT 支持的所有功能。
+
+**轻量级且可扩展**
+与其他工具包不同，GOAT 的设计宗旨是保持核心最小化，并通过只安装您需要的工具来实现轻量级和可扩展性。
+
+如果您在我们超过 200 个集成中找不到所需的功能，您可以轻松地：
+
+- 创建您自己的插件
+- 集成一条新的区块链（chain）
+- 集成一个新的钱包
+- 集成一个新的智能体框架
+
+请点击 [此处](https://github.com/goat-sdk/goat/tree/main#-contributing) 查看如何实现。
+
+### 快速入门
+
+开始使用的最佳方法是使用下面的快速入门示例。了解如何配置 GOAT 以实现以下任何用例。
+
+- **按用例分类**
+  - **资金传输 (Money transmission)**
+    - 发送和接收支付 [[EVM](https://github.com/goat-sdk/goat/tree/main/python/examples/by-use-case/evm-send-and-receive-tokens), [Solana](https://github.com/goat-sdk/goat/tree/main/python/examples/by-use-case/solana-send-and-receive-tokens)]
+  - **投资 (Investing)**
+    - 赚取收益 [[Solana](https://github.com/goat-sdk/goat/tree/main/python/examples/by-use-case/solana-usdc-yield-deposit)]
+    - 购买加密资产 [[EVM](https://github.com/goat-sdk/goat/tree/main/python/examples/by-use-case/evm-swap-tokens), [Solana](https://github.com/goat-sdk/goat/tree/main/python/examples/by-use-case/solana-swap-tokens)]
+- **按钱包分类**
+  - [Crossmint](https://github.com/goat-sdk/goat/tree/main/python/examples/by-wallet/crossmint)
+- **在此处查看所有 Python 快速入门示例 [here](https://github.com/goat-sdk/goat/tree/main/python/examples)。**
+
+## 设置 (Setup)
+
+1. 安装核心包和 langchain 适配器：
+
+```bash
+pip install goat-sdk goat-sdk-adapter-langchain
+```
+
+2. 安装您想要使用的钱包类型（例如 solana）：
+
+```bash
+pip install goat-sdk-wallet-solana
+```
+
+3. 在该链中安装您想使用的插件：
+
+```bash
+pip install goat-sdk-plugin-spl-token
+```
+
+## 实例化 (Instantiation)
+
+现在我们可以实例化我们的工具包：
+
+```python
+from goat_adapters.langchain import get_on_chain_tools
+from goat_wallets.solana import solana, send_solana
+from goat_plugins.spl_token import spl_token, SplTokenPluginOptions
+from goat_plugins.spl_token.tokens import SPL_TOKENS
+
+# 初始化 Solana 客户端
+client = SolanaClient(os.getenv("SOLANA_RPC_ENDPOINT"))
+
+# 初始化常规 Solana 钱包
+keypair = Keypair.from_base58_string(os.getenv("SOLANA_WALLET_SEED") or "")
+wallet = solana(client, keypair)
+
+tools = get_on_chain_tools(
+        wallet=wallet,
+        plugins=[
+            send_solana(),
+            spl_token(SplTokenPluginOptions(
+                network="mainnet",  # 依 .env 中指定使用 devnet
+                tokens=SPL_TOKENS
+            )),
+        ],
+    )
+```
+
+## 调用 (Invocation)
+
+```python
+tools["get_balance"].invoke({ "address": "0x1234567890123456789012345678901234567890" })
+```
+
+## 在智能体内部使用 (Use within an agent)
+
+```python
+import os
+import asyncio
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
+from solana.rpc.api import Client as SolanaClient
+from solders.keypair import Keypair
+
+from goat_adapters.langchain import get_on_chain_tools
+from goat_wallets.solana import solana, send_solana
+from goat_plugins.spl_token import spl_token, SplTokenPluginOptions
+from goat_plugins.spl_token.tokens import SPL_TOKENS
+
+# 初始化 Solana 客户端
+client = SolanaClient(os.getenv("SOLANA_RPC_ENDPOINT"))
+
+# 初始化常规 Solana 钱包
+keypair = Keypair.from_base58_string(os.getenv("SOLANA_WALLET_SEED") or "")
+wallet = solana(client, keypair)
+
+# 初始化 LLM
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+def main():
+    # 使用 Solana 钱包初始化工具
+    tools = get_on_chain_tools(
+        wallet=wallet,
+        plugins=[
+            send_solana(),
+            spl_token(SplTokenPluginOptions(
+                network="mainnet",  # 依 .env 中指定使用 devnet
+                tokens=SPL_TOKENS
+            )),
+        ],
+    )
+
+    # 初始化智能体
+    # 您的智能体代码在此处
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## API 参考
+
+- 有关工具的完整列表，请参阅 [GOAT SDK 文档](https://github.com/goat-sdk/goat)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\goat.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

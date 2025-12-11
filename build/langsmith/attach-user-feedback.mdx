@@ -1,0 +1,104 @@
+---
+title: 使用 SDK 记录用户反馈
+sidebarTitle: 使用 SDK 记录用户反馈
+---
+
+<Tip>
+**核心概念**
+- [关于追踪和反馈的概念指南](/langsmith/observability-concepts)
+- [关于反馈数据格式的参考指南](/langsmith/feedback-data-format)
+</Tip>
+
+LangSmith 可以轻松地将反馈附加到追踪（traces）上。
+这种反馈可以来自用户、注释员、自动化评估器等，对于监控和评估应用程序至关重要。
+
+## 使用 [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback) / [createFeedback()](https://docs.smith.langchain.com/reference/js/classes/client.Client#createfeedback)
+
+在这里，我们将介绍如何使用 SDK 记录反馈。
+
+<Info>
+**子运行 (Child runs)**
+您可以将用户反馈附加到追踪中的**任何子运行**，而不仅仅是追踪本身（根运行/root run）。
+这对于评论 LLM 应用程序的具体步骤非常有用，例如 RAG 管道中的检索步骤或生成步骤。
+</Info>
+
+<Tip>
+**非阻塞创建 (仅限 Python)**
+如果向 [create_feedback()](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.create_feedback) 传递了 `trace_id=`，Python 客户端将自动在后台创建反馈。
+这对于低延迟环境至关重要，在这些环境中，您需要确保应用程序不会因为等待反馈创建而被阻塞。
+</Tip>
+
+<CodeGroup>
+
+```python Python
+from langsmith import trace, traceable, Client
+
+    @traceable
+    def foo(x):
+        return {"y": x * 2}
+
+    @traceable
+    def bar(y):
+        return {"z": y - 1}
+
+    client = Client()
+
+    inputs = {"x": 1}
+    with trace(name="foobar", inputs=inputs) as root_run:
+        result = foo(**inputs)
+        result = bar(**result)
+        root_run.outputs = result
+        trace_id = root_run.id
+        child_runs = root_run.child_runs
+
+    # 为追踪（即根运行）提供反馈
+    client.create_feedback(
+        key="user_feedback",
+        score=1,
+        trace_id=trace_id,
+        comment="the user said that ..."
+    )
+
+# 为子运行提供反馈
+foo_run_id = [run for run in child_runs if run.name == "foo"][0].id
+client.create_feedback(
+    key="correctness",
+    score=0,
+    run_id=foo_run_id,
+    # trace_id= 是可选的，但建议提供，以支持批量和后台反馈摄取。
+    # feedback ingestion.
+    trace_id=trace_id,
+)
+```
+
+```typescript TypeScript
+import { Client } from "langsmith";
+const client = new Client();
+
+    // ... 运行您的应用程序并获取 run_id...
+    // 此信息可以来自面向用户的反馈表单
+
+await client.createFeedback(
+    runId,
+    "feedback-key",
+    {
+        score: 1.0,
+        comment: "comment",
+    }
+);
+```
+
+</CodeGroup>
+
+您甚至可以使用 `create_feedback()` / `createFeedback()` 为**正在进行中**的运行记录反馈。请参阅[本指南](/langsmith/access-current-span)，了解如何获取正在进行中的运行的 ID。
+
+要了解如何根据各种属性（包括用户反馈）过滤追踪，请参阅[本指南](/langsmith/filter-traces-in-application)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\attach-user-feedback.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

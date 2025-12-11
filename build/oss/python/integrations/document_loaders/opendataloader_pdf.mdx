@@ -1,0 +1,76 @@
+---
+title: OpenDataLoader PDF
+---
+
+**安全、开放、高性能 — 面向 AI 的 PDF 处理**
+
+[OpenDataLoader PDF](https://github.com/opendataloader-project/opendataloader-pdf) 将 PDF 转换为 JSON、Markdown 或 Html 格式，使其能够无缝集成到现代 AI 技术栈中（如 LLM、向量搜索和 RAG）。
+
+它能够重构文档布局（包括标题、列表、表格和阅读顺序），从而使内容更容易进行分块（Chunking）、索引和查询。
+它采用快速的、基于启发式规则的推理技术，完全在本地机器上运行，并为处理海量文档集提供高吞吐量。
+AI 安全性是默认开启的，它会自动过滤掉嵌入在 PDF 中、可能引发提示注入（Prompt Injection）的内容，从而降低下游风险。
+
+## 概览
+
+### 集成详情
+
+| 类别 (Class) | 包 (Package) | 本地运行 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) |
+| :--- | :--- | :---: | :---: |  :---: |
+| [OpenDataLoader PDF](https://github.com/opendataloader-project/opendataloader-pdf) | [langchain-opendataloader-pdf](https://pypi.org/project/langchain-opendataloader-pdf/) | ✅ | ❌ | ❌ |
+
+### 加载器特性
+
+| 来源 (Source) | 文档延迟加载 (Document Lazy Loading) | 原生异步支持 (Native Async Support)
+| :---: | :---: | :---: |
+| OpenDataLoaderPDFLoader | ✅ | ❌ |
+
+`OpenDataLoaderPDFLoader` 组件使您能够将 PDF 解析为结构化的 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 对象。
+
+## 要求
+- Python >= 3.9
+- 系统 `PATH` 中需安装 Java 11 或更高版本
+- opendataloader-pdf >= 1.1.1
+
+## 安装
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+## 快速开始
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+loader = OpenDataLoaderPDFLoader(
+    file_path=["path/to/document.pdf", "path/to/folder"],
+    format="text"
+)
+documents = loader.load()
+
+for doc in documents:
+    print(doc.metadata, doc.page_content[:80])
+```
+
+## 参数
+
+| 参数 (Parameter) | 类型 (Type) | 必需 (Required) | 默认值 (Default) | 描述 (Description) |
+| :--- | :--- | :--- | :--- | :--- |
+| `file_path` | `List[str]` | ✅ 是 (Yes) | — | 要处理的一个或多个 PDF 文件路径或目录。 |
+| `format` | `str` | 否 (No) | `None` | 输出格式（例如：`"json"`、`"html"`、`"markdown"`、`"text"`）。 |
+| `quiet` | `bool` | 否 (No) | `False` | 如果为 `True`，则抑制命令行界面 (CLI) 的日志输出。 |
+| `content_safety_off` | `Optional[List[str]]` | 否 (No) | `None` | 要禁用的内容安全过滤器列表（例如：`"all"`、`"hidden-text"`、`"off-page"`、`"tiny"`、`"hidden-ocg"`）。 |
+
+## 附加资源
+
+- [LangChain OpenDataLoader PDF 集成 GitHub](https://github.com/opendataloader-project/langchain-opendataloader-pdf)
+- [LangChain OpenDataLoader PDF PyPI 包](https://pypi.org/project/langchain-opendataloader-pdf/)
+- [OpenDataLoader PDF GitHub](https://github.com/opendataloader-project/opendataloader-pdf)
+- [OpenDataLoader PDF 官网](https://opendataloader.org/)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\opendataloader_pdf.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,601 @@
+---
+title: 智能体（Agents）
+---
+
+智能体（Agents）将语言模型与 [工具](/oss/python/langchain/tools) 相结合，创建出能够对任务进行推理、决定使用哪些工具并迭代地寻求解决方案的系统。
+
+[`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 提供了一个可用于生产环境的智能体实现。
+
+
+
+[LLM 智能体通过循环执行工具来实现目标](https://simonwillison.net/2025/Sep/18/agents/)。智能体将持续运行，直到满足停止条件——即模型输出了最终结果或达到了迭代次数限制。
+
+```mermaid
+%%{
+  init: {
+    "fontFamily": "monospace",
+    "flowchart": {
+      "curve": "curve"
+    },
+    "themeVariables": {"edgeLabelBackground": "transparent"}
+  }
+}%%
+graph TD
+  %% Outside the agent
+  QUERY([输入])
+  LLM{模型}
+  TOOL(工具)
+  ANSWER([输出])
+
+  %% Main flows (no inline labels)
+  QUERY --> LLM
+  LLM --"action"--> TOOL
+  TOOL --"observation"--> LLM
+  LLM --"finish"--> ANSWER
+
+  classDef blueHighlight fill:#0a1c25,stroke:#0a455f,color:#bae6fd;
+  classDef greenHighlight fill:#0b1e1a,stroke:#0c4c39,color:#9ce4c4;
+  class QUERY blueHighlight;
+  class ANSWER blueHighlight;
+```
+
+<Info>
+
+[`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 使用 [LangGraph](/oss/python/langgraph/overview) 构建一个基于**图（graph）**的智能体运行时。图由节点（步骤）和边（连接）组成，这些定义了智能体如何处理信息。智能体在这个图中移动，执行诸如模型节点（调用模型）、工具节点（执行工具）或中间件等节点。
+
+
+
+了解更多关于 [图 API](/oss/python/langgraph/graph-api) 的信息。
+
+</Info>
+
+## 核心组件
+
+### 模型（Model）
+
+[模型](/oss/python/langchain/models) 是智能体的推理引擎。它可以以多种方式指定，支持静态和动态的模型选择。
+
+#### 静态模型（Static model）
+
+静态模型在创建智能体时配置一次，并在整个执行过程中保持不变。这是最常见和最直接的方法。
+
+要使用模型标识符字符串 <Tooltip tip="遵循 `provider:model` 格式的字符串（例如 openai:gpt-5）" cta="查看映射" href="https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model)">初始化模型</Tooltip>：
+
+```python wrap
+from langchain.agents import create_agent
+
+agent = create_agent(
+    "gpt-5",
+    tools=tools
+)
+```
+
+
+
+<Tip>
+    模型标识符字符串支持自动推断（例如，`"gpt-5"` 将被推断为 `"openai:gpt-5"`）。请参阅 [reference](https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model)) 查看模型标识符字符串映射的完整列表。
+</Tip>
+
+对于模型配置的更多控制，请使用提供方包直接初始化模型实例。在这个例子中，我们使用了 [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI)。有关其他可用的聊天模型类，请参见 [聊天模型](/oss/python/integrations/chat)。
+
+```python wrap
+from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(
+    model="gpt-5",
+    temperature=0.1,
+    max_tokens=1000,
+    timeout=30
+    # ... (其他参数)
+)
+agent = create_agent(model, tools=tools)
+```
+
+模型实例为您提供了对配置的完全控制。当您需要设置特定的 [参数](/oss/python/langchain/models#parameters) 如 `temperature`、`max_tokens`、`timeouts`、`base_url` 以及其他提供方特定的设置时，请使用它们。请参阅 [参考资料](/oss/python/integrations/providers/all_providers) 查看您的模型上可用的参数和方法。
+
+
+
+#### 动态模型（Dynamic model）
+
+动态模型是根据当前的 <Tooltip tip="智能体的执行环境，包含在智能体执行过程中持久化的不可变配置和上下文数据（例如，用户 ID、会话详情或特定于应用程序的配置）。">运行时</Tooltip>（runtime）中**状态（state）**和上下文进行选择的。<Tooltip tip="流经智能体执行的数据，包括消息、自定义字段以及需要在处理过程中跟踪和可能修改的任何信息（例如，用户偏好或工具使用统计）。">状态</Tooltip> 这使得复杂的路由逻辑和成本优化成为可能。
+
+要使用动态模型，请使用 [`@wrap_model_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_model_call) 装饰器创建中间件，该装饰器修改请求中的模型：
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
+
+
+basic_model = ChatOpenAI(model="gpt-4o-mini")
+advanced_model = ChatOpenAI(model="gpt-4o")
+
+@wrap_model_call
+def dynamic_model_selection(request: ModelRequest, handler) -> ModelResponse:
+    """根据对话复杂性选择模型。"""
+    message_count = len(request.state["messages"])
+
+    if message_count > 10:
+        # 较长的对话使用更高级的模型
+        model = advanced_model
+    else:
+        model = basic_model
+
+    return handler(request.override(model=model))
+
+agent = create_agent(
+    model=basic_model,  # 默认模型
+    tools=tools,
+    middleware=[dynamic_model_selection]
+)
+```
+
+<Warning>
+预先绑定的模型（已经调用了 [`bind_tools`](https://reference.langchain.com/python/langchain_core/language_models/#langchain_core.language_models.chat_models.BaseChatModel.bind_tools) 的模型）在使用结构化输出时不受支持。如果需要使用结构化输出进行动态模型选择，请确保传递给中间件的模型未被预先绑定。
+</Warning>
+
+
+
+
+<Tip>
+有关模型配置的详细信息，请参阅 [模型](/oss/python/langchain/models)。有关动态模型选择模式的详细信息，请参阅 [中间件中的动态模型](/oss/python/langchain/middleware#dynamic-model)。
+</Tip>
+
+### 工具（Tools）
+
+工具赋予智能体执行操作的能力。智能体通过促进以下功能，超越了仅使用模型的工具绑定：
+
+- 连续的多次工具调用（由单个提示触发）
+- 适当情况下的并行工具调用
+- 基于先前结果的动态工具选择
+- 工具重试逻辑和错误处理
+- 跨工具调用的状态持久化
+
+有关更多信息，请参阅 [工具](/oss/python/langchain/tools)。
+
+#### 定义工具
+
+将工具列表传递给智能体。
+
+<Tip>
+工具可以指定为普通的 Python 函数或 <Tooltip tip="可以挂起执行并在稍后时间恢复的方法">协程（coroutines）</Tooltip>。
+
+可以使用 [工具装饰器](/oss/python/langchain/tools#create-tools) 来定制工具名称、描述、参数 Schema 和其他属性。
+</Tip>
+
+```python wrap
+from langchain.tools import tool
+from langchain.agents import create_agent
+
+
+@tool
+def search(query: str) -> str:
+    """搜索信息。"""
+    return f"Results for: {query}"
+
+@tool
+def get_weather(location: str) -> str:
+    """获取某个地点的天气信息。"""
+    return f"Weather in {location}: Sunny, 72°F"
+
+agent = create_agent(model, tools=[search, get_weather])
+```
+
+
+
+如果提供了空工具列表，智能体将只包含一个没有工具调用能力的 LLM 节点。
+
+#### 工具错误处理
+
+要定制工具错误的//{处理}方式，请使用 [`@wrap_tool_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_tool_call) 装饰器创建中间件：
+
+```python wrap
+from langchain.agents import create_agent
+from langchain.agents.middleware import wrap_tool_call
+from langchain.messages import ToolMessage
+
+
+@wrap_tool_call
+def handle_tool_errors(request, handler):
+    """使用自定义消息处理工具执行错误。"""
+    try:
+        return handler(request)
+    except Exception as e:
+        # 向模型返回自定义错误消息
+        return ToolMessage(
+            content=f"Tool error: Please check your input and try again. ({str(e)})",
+            tool_call_id=request.tool_call["id"]
+        )
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[search, get_weather],
+    middleware=[handle_tool_errors]
+)
+```
+
+当工具失败时，智能体将返回带有自定义错误消息的 [`ToolMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.ToolMessage)：
+
+```python
+[
+    ...
+    ToolMessage(
+        content="Tool error: Please check your input and try again. (division by zero)",
+        tool_call_id="..."
+    ),
+    ...
+]
+```
+
+
+
+
+#### ReAct 循环中工具的使用
+
+智能体遵循 ReAct（“推理 + 行动”）模式，在简短的推理步骤和有针对性的工具调用之间交替进行，并将观察结果反馈给后续决策，直到能够提供最终答案为止。
+
+<Accordion title="ReAct 循环示例">
+**提示：** 确定当前最受欢迎的无线耳机并验证其可用性。
+
+```
+================================ 人类消息 =================================
+
+查找目前最受欢迎的无线耳机并检查库存情况
+```
+
+* **推理**：“受欢迎程度是与时间相关的，我需要使用提供的搜索工具。”
+* **行动**：调用 `search_products("wireless headphones")`
+
+```
+================================= AI 消息 =================================
+工具调用:
+  search_products (call_abc123)
+ 调用 ID: call_abc123
+  参数:
+    query: wireless headphones
+```
+```
+================================= 工具消息 =================================
+
+找到 5 个匹配 "wireless headphones" 的产品。前 5 个结果：WH-1000XM5, ...
+```
+
+* **推理**：“我需要确认排名第一的产品的可用性，然后才能回答。”
+* **行动**：调用 `check_inventory("WH-1000XM5")`
+
+```
+================================= AI 消息 =================================
+工具调用:
+  check_inventory (call_def456)
+ 调用 ID: call_def456
+  参数:
+    product_id: WH-1000XM5
+```
+```
+================================= 工具消息 =================================
+
+产品 WH-1000XM5：库存 10 件
+```
+
+* **推理**：“我已经获得了最受欢迎的型号及其库存状态。现在我可以回答用户的问题了。”
+* **行动**：产生最终答案
+
+```
+================================= AI 消息 =================================
+
+我找到了无线耳机（型号 WH-1000XM5），库存有 10 件……
+```
+</Accordion>
+
+<Tip>
+要了解更多关于工具的信息，请参阅 [工具](/oss/python/langchain/tools)。
+</Tip>
+
+### 系统提示（System prompt）
+
+您可以通过提供一个提示来塑造智能体处理任务的方式。[`system_prompt`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent(system_prompt)) 参数可以作为字符串提供：
+
+
+
+
+```python wrap
+agent = create_agent(
+    model,
+    tools,
+    system_prompt="You are a helpful assistant. Be concise and accurate."
+)
+```
+
+
+
+当未提供 [`system_prompt`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent(system_prompt)) 时，智能体将直接从消息中推断其任务。
+
+[`system_prompt`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent(system_prompt)) 参数接受 `str` 或 [`SystemMessage`](https://reference.langchain.com/python/langchain/messages/#langchain.messages.SystemMessage)。使用 `SystemMessage` 可以让您更好地控制提示结构，这对于提供方特定的功能（如[Anthropic 的提示缓存](/oss/python/integrations/chat/anthropic#prompt-caching)）非常有用：
+
+```python wrap
+from langchain.agents import create_agent
+from langchain.messages import SystemMessage, HumanMessage
+
+literary_agent = create_agent(
+    model="anthropic:claude-sonnet-4-5",
+    system_prompt=SystemMessage(
+        content=[
+            {
+                "type": "text",
+                "text": "You are an AI assistant tasked with analyzing literary works.",
+            },
+            {
+                "type": "text",
+                "text": "<the entire contents of 'Pride and Prejudice'>",
+                "cache_control": {"type": "ephemeral"}
+            }
+        ]
+    )
+)
+
+result = literary_agent.invoke(
+    {"messages": [HumanMessage("Analyze the major themes in 'Pride and Prejudice'.")]}
+)
+```
+
+带有 `{"type": "ephemeral"}` 的 `cache_control` 字段指示 Anthropic 缓存该内容块，从而减少使用相同系统提示的重复请求的延迟和成本。
+
+
+
+#### 动态系统提示（Dynamic system prompt）
+
+对于需要根据运行时上下文或智能体状态修改系统提示的更高级用例，您可以使用 [中间件](/oss/python/langchain/middleware)。
+
+[`@dynamic_prompt`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.dynamic_prompt) 装饰器创建的中间件可以根据模型请求生成系统提示：
+
+```python wrap
+from typing import TypedDict
+
+from langchain.agents import create_agent
+from langchain.agents.middleware import dynamic_prompt, ModelRequest
+
+
+class Context(TypedDict):
+    user_role: str
+
+@dynamic_prompt
+def user_role_prompt(request: ModelRequest) -> str:
+    """根据用户角色生成系统提示。"""
+    user_role = request.runtime.context.get("user_role", "user")
+    base_prompt = "You are a helpful assistant."
+
+    if user_role == "expert":
+        return f"{base_prompt} Provide detailed technical responses."
+    elif user_role == "beginner":
+        return f"{base_prompt} Explain concepts simply and avoid jargon."
+
+    return base_prompt
+
+agent = create_agent(
+    model="gpt-4o",
+    tools=[web_search],
+    middleware=[user_role_prompt],
+    context_schema=Context
+)
+
+# 系统提示将根据上下文动态设置
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "Explain machine learning"}]},
+    context={"user_role": "expert"}
+)
+```
+
+
+
+
+<Tip>
+有关消息类型和格式的更多详细信息，请参阅 [消息](/oss/python/langchain/messages)。有关全面的中间件文档，请参阅 [中间件](/oss/python/langchain/middleware)。
+</Tip>
+
+## 调用（Invocation）
+
+您可以通过向其 [`State`](/oss/python/langgraph/graph-api#state) 传递更新来调用智能体。所有智能体都在其状态中包含一个 [消息序列](/oss/python/langgraph/use-graph-api#messagesstate)；要调用智能体，请传递一条新消息：
+
+```python
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]}
+)
+```
+
+
+
+有关从智能体流式传输步骤和/或 token，请参阅 [流式传输](/oss/python/langchain/streaming) 指南。
+
+否则，智能体遵循 LangGraph [图 API](/oss/python/langgraph/use-graph-api)，并支持所有相关的底层方法，如 `stream` 和 `invoke`。
+
+## 高级概念
+
+### 结构化输出（Structured output）
+
+在某些情况下，您可能希望智能体以特定的格式返回输出。LangChain 通过 `response_format` 参数提供了结构化输出的策略。
+
+#### ToolStrategy
+
+`ToolStrategy` 使用人工工具调用来生成结构化输出。这适用于任何支持工具调用的模型：
+
+```python wrap
+from pydantic import BaseModel
+from langchain.agents import create_agent
+from langchain.agents.structured_output import ToolStrategy
+
+
+class ContactInfo(BaseModel):
+    name: str
+    email: str
+    phone: str
+
+agent = create_agent(
+    model="gpt-4o-mini",
+    tools=[search_tool],
+    response_format=ToolStrategy(ContactInfo)
+)
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Extract contact info from: John Doe, john@example.com, (555) 123-4567"}]
+})
+
+result["structured_response"]
+# ContactInfo(name='John Doe', email='john@example.com', phone='(555) 123-4567')
+```
+
+#### ProviderStrategy
+
+`ProviderStrategy` 使用模型提供方的原生结构化输出生成功能。这更可靠，但仅适用于支持原生结构化输出的提供方（例如 OpenAI）：
+
+```python wrap
+from langchain.agents.structured_output import ProviderStrategy
+
+agent = create_agent(
+    model="gpt-4o",
+    response_format=ProviderStrategy(ContactInfo)
+)
+```
+
+<Note>
+从 `langchain 1.0` 开始，仅传递 Schema（例如 `response_format=ContactInfo`）不再受支持。您必须明确使用 `ToolStrategy` 或 `ProviderStrategy`。
+</Note>
+
+
+
+<Tip>
+    要了解结构化输出，请参阅 [结构化输出](/oss/python/langchain/structured-output)。
+</Tip>
+
+### 内存（Memory）
+
+智能体通过消息状态自动维护对话历史。您还可以配置智能体以使用自定义状态 Schema 来在对话中记住额外的信息。
+
+存储在状态中的信息可被视为智能体的[短期记忆](/oss/python/langchain/short-term-memory)：
+
+自定义状态 Schema 必须扩展 [`AgentState`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.AgentState) 作为 `TypedDict`。
+
+定义自定义状态有两种方法：
+1. 通过 [中间件](/oss/python/langchain/middleware)（推荐）
+2. 通过 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 上的 [`state_schema`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.AgentMiddleware.state_schema)
+
+#### 通过中间件定义状态
+
+当您的自定义状态需要被特定中间件钩子和附加到该中间件的工具访问时，使用中间件来定义自定义状态。
+
+```python
+from langchain.agents import AgentState
+from langchain.agents.middleware import AgentMiddleware
+from typing import Any
+
+
+class CustomState(AgentState):
+    user_preferences: dict
+
+class CustomMiddleware(AgentMiddleware):
+    state_schema = CustomState
+    tools = [tool1, tool2]
+
+    def before_model(self, state: CustomState, runtime) -> dict[str, Any] | None:
+        ...
+
+agent = create_agent(
+    model,
+    tools=tools,
+    middleware=[CustomMiddleware()]
+)
+
+# 智能体现在可以跟踪除消息之外的其他状态
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "I prefer technical explanations"}],
+    "user_preferences": {"style": "technical", "verbosity": "detailed"},
+})
+```
+
+#### 通过 `state_schema` 定义状态
+
+在调用 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 时，使用 [`state_schema`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.AgentMiddleware.state_schema) 参数作为快捷方式来定义仅用于工具的自定义状态。
+
+```python
+from langchain.agents import AgentState
+
+
+class CustomState(AgentState):
+    user_preferences: dict
+
+agent = create_agent(
+    model,
+    tools=[tool1, tool2],
+    state_schema=CustomState
+)
+# 智能体现在可以跟踪除消息之外的其他状态
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "I prefer technical explanations"}],
+    "user_preferences": {"style": "technical", "verbosity": "detailed"},
+})
+```
+
+<Note>
+截至 `langchain 1.0`，自定义状态 Schema **必须**是 `TypedDict` 类型。Pydantic 模型和数据类不再受支持。有关更多详细信息，请参阅 [v1 迁移指南](/oss/python/migrate/langchain-v1#state-type-restrictions)。
+</Note>
+
+
+
+
+<Note>
+    通过中间件定义自定义状态（`middleware`）优于通过 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 上的 [`state_schema`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.AgentMiddleware.state_schema) 定义，因为它允许您在概念上将状态扩展范围限定在相关的中间件和工具中。
+
+    [`state_schema`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.AgentMiddleware.state_schema) 仍保留在 [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent) 上以向后兼容。
+</Note>
+
+
+<Tip>
+    要了解有关内存的更多信息，请参阅 [内存](/oss/python/concepts/memory)。有关如何实现跨会话持久化的长期记忆的信息，请参阅 [长期记忆](/oss/python/langchain/long-term-memory)。
+</Tip>
+
+### 流式传输（Streaming）
+
+我们已经看到了如何使用 `invoke` 调用智能体以获得最终响应。如果智能体执行多个步骤，这可能需要一些时间。为了显示中间进度，我们可以像发生的那样流式传输消息。
+
+```python
+for chunk in agent.stream({
+    "messages": [{"role": "user", "content": "Search for AI news and summarize the findings"}]
+}, stream_mode="values"):
+    # 每个 chunk 包含该点的完整状态
+    latest_message = chunk["messages"][-1]
+    if latest_message.content:
+        print(f"Agent: {latest_message.content}")
+    elif latest_message.tool_calls:
+        print(f"Calling tools: {[tc['name'] for tc in latest_message.tool_calls]}")
+```
+
+
+
+<Tip>
+有关流式传输的更多详细信息，请参阅 [流式传输](/oss/python/langchain/streaming)。
+</Tip>
+
+### 中间件（Middleware）
+
+[中间件](/oss/python/langchain/middleware) 提供了强大的可扩展性，用于在执行的不同阶段定制智能体行为。您可以使用中间件来：
+
+- 在调用模型之前处理状态（例如消息修剪、上下文注入）
+- 修改或验证模型的响应（例如护栏、内容过滤）
+- 使用自定义逻辑处理工具执行错误
+- 基于状态或上下文实现动态模型选择
+- 添加自定义日志记录、监控或分析
+
+中间件无缝集成到智能体的执行中，允许您拦截和修改数据流的关键点，而无需更改核心智能体逻辑。
+
+<Tip>
+有关包括 [`@before_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.before_model)、[`@after_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.after_model) 和 [`@wrap_tool_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_tool_call) 等装饰器的全面中间件文档，请参阅 [中间件](/oss/python/langchain/middleware)。
+</Tip>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\agents.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

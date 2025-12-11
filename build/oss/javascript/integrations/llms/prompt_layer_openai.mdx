@@ -1,0 +1,68 @@
+---
+title: PromptLayer OpenAI
+description: PromptLayer OpenAI 的使用说明和日志集成。
+---
+
+<Warning>
+此模块已被弃用，不再受支持。以下文档在 0.2.0 或更高版本中将无法工作。
+</Warning>
+
+LangChain 与 PromptLayer 集成，用于记录和调试提示（prompts）和响应（responses）。要添加对 PromptLayer 的支持：
+
+1. 在此处 [https://promptlayer.com](https://promptlayer.com/) 创建一个 PromptLayer 账户。
+2. 创建一个 API 令牌（token），并通过以下两种方式之一传递它：在 `PromptLayerOpenAI` 构造函数中使用 `promptLayerApiKey` 参数，或者将其设置为 `PROMPTLAYER_API_KEY` 环境变量。
+
+```typescript
+import { PromptLayerOpenAI } from "@langchain/classic/llms/openai";
+
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  apiKey: "YOUR-API-KEY", // 在 Node.js 中，默认为 process.env.OPENAI_API_KEY
+  promptLayerApiKey: "YOUR-API-KEY", // 在 Node.js 中，默认为 process.env.PROMPTLAYER_API_KEY
+});
+const res = await model.invoke(
+  "What would be a good company name a company that makes colorful socks?"
+);
+```
+
+# Azure PromptLayerOpenAI
+
+LangChain 也支持 Azure 托管的 OpenAI 实例与 PromptLayer 的集成：
+
+```typescript
+import { PromptLayerOpenAI } from "@langchain/classic/llms/openai";
+
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "YOUR-AOAI-API-KEY", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiInstanceName: "YOUR-AOAI-INSTANCE-NAME", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "YOUR-AOAI-DEPLOYMENT-NAME", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
+  azureOpenAIApiCompletionsDeploymentName:
+    "YOUR-AOAI-COMPLETIONS-DEPLOYMENT-NAME", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME
+  azureOpenAIApiEmbeddingsDeploymentName:
+    "YOUR-AOAI-EMBEDDINGS-DEPLOYMENT-NAME", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
+  azureOpenAIApiVersion: "YOUR-AOAI-API-VERSION", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIBasePath: "YOUR-AZURE-OPENAI-BASE-PATH", // 在 Node.js 中，默认为 process.env.AZURE_OPENAI_BASE_PATH
+  promptLayerApiKey: "YOUR-API-KEY", // 在 Node.js 中，默认为 process.env.PROMPTLAYER_API_KEY
+});
+const res = await model.invoke(
+  "What would be a good company name a company that makes colorful socks?"
+);
+```
+
+请求和响应都会在 [PromptLayer 控制台](https://promptlayer.com/home) 中进行日志记录。
+
+> **_注意:_** 在流式传输（streaming）模式下，PromptLayer 将不会记录响应内容。
+
+## 相关
+
+- [模型指南](/oss/javascript/langchain/models)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\llms\prompt_layer_openai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,308 @@
+---
+title: 源代码
+---
+
+本 Notebook 介绍了一种使用特殊方法（语言解析）加载源代码文件的方法：代码中每个顶层函数和类都会被加载到单独的文档中。任何在已加载函数和类之外的剩余顶层代码都将加载到另一个单独的文档中。
+
+这种方法有潜力提高 QA 模型在处理源代码时的准确性。
+
+支持的代码解析语言如下：
+
+- C (*)
+- C++ (*)
+- C# (*)
+- COBOL
+- Elixir
+- Go (*)
+- Java (*)
+- JavaScript (需要 `esprima` 包)
+- Kotlin (*)
+- Lua (*)
+- Perl (*)
+- Python
+- Ruby (*)
+- Rust (*)
+- Scala (*)
+- TypeScript (*)
+
+标有 (*) 的项目需要 `tree_sitter` 和 `tree_sitter_languages` 包。
+使用 `tree_sitter` 可以很容易地添加对其他语言的支持，尽管目前这需要修改 LangChain。
+
+可以配置用于解析的语言，以及激活基于语法进行分割所需的最小行数。
+
+如果未明确指定语言，`LanguageParser` 会尝试从文件名扩展名（如果存在）中推断出语言。
+
+```python
+pip install -qU esprima esprima tree_sitter tree_sitter_languages
+```
+
+```python
+import warnings
+
+warnings.filterwarnings("ignore")
+from pprint import pprint
+
+from langchain_community.document_loaders.generic import GenericLoader
+from langchain_community.document_loaders.parsers import LanguageParser
+from langchain_text_splitters import Language
+```
+
+```python
+loader = GenericLoader.from_filesystem(
+    "./example_data/source_code",
+    glob="*",
+    suffixes=[".py", ".js"],
+    parser=LanguageParser(),
+)
+docs = loader.load()
+```
+
+```python
+len(docs)
+```
+
+```output
+6
+```
+
+```python
+for document in docs:
+    pprint(document.metadata)
+```
+
+```output
+{'content_type': 'functions_classes',
+ 'language': <Language.PYTHON: 'python'>,
+ 'source': 'example_data/source_code/example.py'}
+{'content_type': 'functions_classes',
+ 'language': <Language.PYTHON: 'python'>,
+ 'source': 'example_data/source_code/example.py'}
+{'content_type': 'simplified_code',
+ 'language': <Language.PYTHON: 'python'>,
+ 'source': 'example_data/source_code/example.py'}
+{'content_type': 'functions_classes',
+ 'language': <Language.JS: 'js'>,
+ 'source': 'example_data/source_code/example.js'}
+{'content_type': 'functions_classes',
+ 'language': <Language.JS: 'js'>,
+ 'source': 'example_data/source_code/example.js'}
+{'content_type': 'simplified_code',
+ 'language': <Language.JS: 'js'>,
+ 'source': 'example_data/source_code/example.js'}
+```
+
+```python
+print("\n\n--8<--\n\n".join([document.page_content for document in docs]))
+```
+
+```output
+class MyClass:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f"Hello, {self.name}!")
+
+--8<--
+
+def main():
+    name = input("Enter your name: ")
+    obj = MyClass(name)
+    obj.greet()
+
+--8<--
+
+# Code for: class MyClass:
+
+
+# Code for: def main():
+
+
+if __name__ == "__main__":
+    main()
+
+--8<--
+
+class MyClass {
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet() {
+    console.log(`Hello, ${this.name}!`);
+  }
+}
+
+--8<--
+
+function main() {
+  const name = prompt("Enter your name:");
+  const obj = new MyClass(name);
+  obj.greet();
+}
+
+--8<--
+
+// Code for: class MyClass {
+
+// Code for: function main() {
+
+main();
+```
+
+对于较小的文件，可以禁用解析器。
+
+参数 `parser_threshold` 表示源代码文件必须拥有的最小行数，达到该行数才会使用解析器进行分段。
+
+```python
+loader = GenericLoader.from_filesystem(
+    "./example_data/source_code",
+    glob="*",
+    suffixes=[".py"],
+    parser=LanguageParser(language=Language.PYTHON, parser_threshold=1000),
+)
+docs = loader.load()
+```
+
+```python
+len(docs)
+```
+
+```output
+1
+```
+
+```python
+print(docs[0].page_content)
+```
+
+```output
+class MyClass:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f"Hello, {self.name}!")
+
+
+def main():
+    name = input("Enter your name: ")
+    obj = MyClass(name)
+    obj.greet()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## 分割 (Splitting)
+
+对于那些过大的函数、类或脚本，可能需要额外的分割。
+
+```python
+loader = GenericLoader.from_filesystem(
+    "./example_data/source_code",
+    glob="*",
+    suffixes=[".js"],
+    parser=LanguageParser(language=Language.JS),
+)
+docs = loader.load()
+```
+
+```python
+from langchain_text_splitters import (
+    Language,
+    RecursiveCharacterTextSplitter,
+)
+```
+
+```python
+js_splitter = RecursiveCharacterTextSplitter.from_language(
+    language=Language.JS, chunk_size=60, chunk_overlap=0
+)
+```
+
+```python
+result = js_splitter.split_documents(docs)
+```
+
+```python
+len(result)
+```
+
+```output
+7
+```
+
+```python
+print("\n\n--8<--\n\n".join([document.page_content for document in result]))
+```
+
+```output
+class MyClass {
+  constructor(name) {
+    this.name = name;
+
+--8<--
+
+}
+
+--8<--
+
+greet() {
+    console.log(`Hello, ${this.name}!`);
+  }
+}
+
+--8<--
+
+function main() {
+  const name = prompt("Enter your name:");
+
+--8<--
+
+const obj = new MyClass(name);
+  obj.greet();
+}
+
+--8<--
+
+// Code for: class MyClass {
+
+// Code for: function main() {
+
+--8<--
+
+main();
+```
+
+## 使用 Tree-sitter 模板添加语言
+
+使用 Tree-Sitter 模板扩展语言支持涉及几个关键步骤：
+
+1. **创建新的语言文件**:
+    - 首先，在指定的目录（`langchain/libs/community/langchain_community/document_loaders/parsers/language`）中创建一个新文件。
+    - 以现有语言文件（如 **`cpp.py`**）的结构和解析逻辑为蓝本，创建此文件。
+    - 您还需要在 LangChain 目录（`langchain/libs/langchain/langchain/document_loaders/parsers/language`）中创建一个文件。
+2. **解析语言特定内容**:
+    - 模仿 **`cpp.py`** 文件中使用的结构，并根据您要整合的语言的语法和结构进行调整。
+    - 主要的修改在于调整 `chunk query` 数组以适应您正在解析的语言的语法和结构。
+3. **测试语言解析器**:
+    - 为了进行彻底的验证，请为新语言生成一个测试文件。在指定的目录（`langchain/libs/community/tests/unit_tests/document_loaders/parsers/language`）中创建 **`test_language.py`**。
+    - 遵循 **`test_cpp.py`** 中设定的示例，为新语言中解析出的元素建立基本的测试。
+4. **集成到解析器和文本分割器中**:
+    - 在 **`language_parser.py`** 文件中整合您的新语言。确保更新 `LANGUAGE_EXTENSIONS` 和 `LANGUAGE_SEGMENTERS`，并更新 `LanguageParser` 的文档字符串，以便能够识别和处理添加的语言。
+    - 同样，确认您的语言已包含在类 `Language` 的 **`text_splitter.py`** 文件中，以确保正确解析。
+
+通过遵循这些步骤，并确保持有全面的测试和集成工作，您将成功使用 Tree-Sitter 模板扩展语言支持。
+
+祝您好运！
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\source_code.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

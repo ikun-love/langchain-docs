@@ -1,0 +1,95 @@
+---
+title: 从代码调用智能体
+description: 使用 LangGraph SDK 从 Python 或 JavaScript 调用 Agent Builder 智能体。
+sidebarTitle: 从代码调用
+---
+
+您可以使用 LangGraph SDK 从您的应用程序中调用 Agent Builder 智能体。您可以像使用任何其他 LangGraph 部署一样使用所有相同的 API 方法。
+
+## 身份验证 (Authentication)
+
+要对正在运行 Agent Builder 智能体的部署进行身份验证，您必须在实例化 LangGraph SDK 客户端时，通过 `api_key` 参数，或者通过 `X-API-Key` 标头，提供一个与您的用户关联的个人访问令牌 (PAT) API 密钥。然后，将 `X-Auth-Scheme` 标头设置为 `langsmith-api-key`。
+
+如果您提供的 PAT 未与智能体所有者关联，您的请求将被拒绝并返回 404 Not Found 错误。
+
+如果您尝试调用的智能体是工作区智能体（workspace agent），并且您不是所有者，您将能够执行与在 UI 中相同的操作（只读）。
+
+## 示例 (Example)
+
+要调用智能体，您可以复制下面的代码，并将 `agent_id` 和 `api_url` 替换为正确的值。
+
+或者，您可以通过 Agent Builder UI 复制下面显示的相同代码，并预先填充正确的智能体 ID 和 API URL。要执行此操作，请导航到您想要调用的智能体，访问编辑器页面，然后点击右上角的 <Icon icon="gear" /> 设置图标，然后点击 `View code snippets`（查看代码片段）。您仍然需要手动设置 `LANGGRAPH_API_KEY` 环境变量。
+
+<Tabs>
+  <Tab title="Python">
+```python
+import os
+from dotenv import load_dotenv
+from langgraph_sdk.client import get_client
+
+load_dotenv()
+
+agent_id = "your-agent-id"
+
+# This must be a PAT API key tied to your user
+api_key = os.getenv("LANGGRAPH_API_KEY")
+api_url = "https://prod-agent-builder-5ccea139413e5ef289ab8e5d04688e11.us.langgraph.app"
+
+client = get_client(
+    url=api_url,
+    api_key=api_key,
+    headers={
+        "X-Auth-Scheme": "langsmith-api-key",
+    },
+)
+
+async def get_assistant(agent_id: str):
+    agent = await client.assistants.get(agent_id)
+    print(agent)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(get_assistant(agent_id))
+```
+  </Tab>
+  <Tab title="TypeScript">
+```ts
+import "dotenv/config";
+import { Client } from "@langchain/langgraph-sdk";
+
+const agentId = "your-agent-id";
+
+// This must be a PAT API key tied to your user
+const apiKey = process.env.LANGGRAPH_API_KEY;
+const apiUrl = "https://prod-agent-builder-5ccea139413e5ef289ab8e5d04688e11.us.langgraph.app";
+
+const client = new Client({
+  apiUrl,
+  apiKey,
+  defaultHeaders: {
+    "X-Auth-Scheme": "langsmith-api-key",
+  },
+});
+
+async function main(agentId: string) {
+  const agent = await client.assistants.get(agentId);
+  console.log(agent);
+}
+
+main(agentId).catch(console.error);
+```
+  </Tab>
+</Tabs>
+
+<Callout icon="key" color="#FEF3C7" iconType="regular">
+  请使用与您的用户帐户关联的 PAT（个人访问令牌）API 密钥。将 `X-Auth-Scheme` 标头设置为 `langsmith-api-key` 以进行身份验证。如果您实现了自定义身份验证，请在标头中传递您用户的令牌，以便智能体可以使用面向用户的工具范围。请参阅“添加自定义身份验证”。
+</Callout>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\agent-builder-code.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,141 @@
+---
+title: 情境化 AI 重排序器
+---
+
+Contextual AI 的指令遵循重排序器 (Instruction-Following Reranker) 是世界上第一个专为根据特定标准（如新旧程度、来源和元数据）定制化指令来优先排序文档而设计的重排序器。它在 BEIR 基准测试中表现出色（得分 61.2，显著超越竞争对手），为企业级 RAG 应用带来了前所未有的控制力和准确性。
+
+## 核心能力
+
+- **指令遵循 (Instruction Following)**：通过自然语言命令动态控制文档的排名顺序。
+- **冲突解决 (Conflict Resolution)**：智能处理来自多个知识源的相互矛盾的信息。
+- **卓越的准确性 (Superior Accuracy)**：在行业基准测试中实现最先进的性能。
+- **无缝集成 (Seamless Integration)**：作为现有重排序器的即插即用替代品，集成到您的 RAG 管道中。
+
+该重排序器在解决企业知识库中的现实挑战方面表现出色，例如：优先考虑最新的文档而不是过时的文档，或者偏好内部文档而非外部来源。
+
+要了解更多关于我们的指令遵循重排序器并查看其实际应用示例，请访问我们的 [产品概览](https://contextual.ai/blog/introducing-instruction-following-reranker/)。
+
+有关 Contextual AI 产品的全面文档，请访问我们的 [开发者门户](https://docs.contextual.ai/)。
+
+此集成需要 `contextual-client` Python SDK。在此[处](https://github.com/ContextualAI/contextual-client-python)了解更多信息。
+
+## 概览
+
+此集成会调用 Contextual AI 的基础语言模型 (Grounded Language Model)。
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | JS 支持 (JS support) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [ContextualRerank](https://python.langchain.com/api_reference/en/latest/chat_models/langchain_contextual.rerank.ContextualRerank.html) | [langchain-contextual](https://python.langchain.com/api_reference/en/latest/contextual_api_reference.html) | ❌ | beta | ❌ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-contextual?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-contextual?style=flat-square&label=%20) |
+
+## 设置
+
+要访问 Contextual 的重排序模型，您需要创建一个 Contextual AI 账户，获取一个 API 密钥，并安装 `langchain-contextual` 集成包。
+
+### 凭证 (Credentials)
+
+请访问 [app.contextual.ai](https://app.contextual.ai) 注册 Contextual 账户并生成 API 密钥。完成此操作后，设置 `CONTEXTUAL_AI_API_KEY` 环境变量：
+
+```python
+import getpass
+import os
+
+if not os.getenv("CONTEXTUAL_AI_API_KEY"):
+    os.environ["CONTEXTUAL_AI_API_KEY"] = getpass.getpass(
+        "Enter your Contextual API key: "
+    )
+```
+
+## 安装
+
+LangChain Contextual 集成位于 `langchain-contextual` 包中：
+
+```python
+pip install -qU langchain-contextual
+```
+
+## 实例化
+
+Contextual 重排序器的参数如下：
+
+| 参数 (Parameter) | 类型 (Type) | 描述 (Description) |
+| --- | --- | --- |
+| documents | list[Document] | 需要进行重排序的文档序列。文档中包含的任何元数据也将用于重排序。 |
+| query | str | 用于重排序的查询。 |
+| model | str | 要使用的重排序器版本。目前只有 "ctxl-rerank-en-v1-instruct"。 |
+| top_n | Optional[int] | 要返回的结果数量。如果为 None 则返回所有结果。默认为 self.top_n。 |
+| instruction | Optional[str] | 将用于重排序器的指令。 |
+| callbacks | Optional[Callbacks] | 在压缩过程中运行的回调函数。 |
+
+```python
+from langchain_contextual import ContextualRerank
+
+api_key = ""
+model = "ctxl-rerank-en-v1-instruct"
+
+compressor = ContextualRerank(
+    model=model,
+    api_key=api_key,
+)
+```
+
+## 用法
+
+首先，我们将设置全局变量和示例，并实例化我们的重排序器客户端。
+
+```python
+from langchain_core.documents import Document
+
+query = "What is the current enterprise pricing for the RTX 5090 GPU for bulk orders?"
+instruction = "Prioritize internal sales documents over market analysis reports. More recent documents should be weighted higher. Enterprise portal content supersedes distributor communications."
+
+document_contents = [
+    "Following detailed cost analysis and market research, we have implemented the following changes: AI training clusters will see a 15% uplift in raw compute performance, enterprise support packages are being restructured, and bulk procurement programs (100+ units) for the RTX 5090 Enterprise series will operate on a $2,899 baseline.",
+    "Enterprise pricing for the RTX 5090 GPU bulk orders (100+ units) is currently set at $3,100-$3,300 per unit. This pricing for RTX 5090 enterprise bulk orders has been confirmed across all major distribution channels.",
+    "RTX 5090 Enterprise GPU requires 450W TDP and 20% cooling overhead.",
+]
+
+metadata = [
+    {
+        "Date": "January 15, 2025",
+        "Source": "NVIDIA Enterprise Sales Portal",
+        "Classification": "Internal Use Only",
+    },
+    {"Date": "11/30/2023", "Source": "TechAnalytics Research Group"},
+    {
+        "Date": "January 25, 2025",
+        "Source": "NVIDIA Enterprise Sales Portal",
+        "Classification": "Internal Use Only",
+    },
+]
+
+documents = [
+    Document(page_content=content, metadata=metadata[i])
+    for i, content in enumerate(document_contents)
+]
+reranked_documents = compressor.compress_documents(
+    query=query,
+    instruction=instruction,
+    documents=documents,
+)
+```
+
+## 在链式调用中使用 (Use within a chain)
+
+示例即将推出。
+
+---
+
+## API 参考
+
+有关所有 ChatContextual 功能和配置的详细文档，请访问 GitHub 页面：[github.com/ContextualAI//langchain-contextual](https://github.com/ContextualAI//langchain-contextual)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\retrievers\contextual.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

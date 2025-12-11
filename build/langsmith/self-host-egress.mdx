@@ -1,0 +1,313 @@
+---
+title: 订阅指标和操作元数据的出口配置
+sidebarTitle: 配置订阅指标的出口
+---
+
+<Info>
+此部分仅适用于未在离线模式下运行的客户，并假设您使用的是服务于 **0.9.0** 或更高版本的自托管 LangSmith 实例。早期版本的 LangSmith 不具备此功能。
+</Info>
+
+自托管 LangSmith 实例会将所有信息本地存储，并且永远不会将敏感信息发送到您的网络之外。根据您的订单中的授权，我们目前仅出于计费目的跟踪平台使用情况。为了更好地远程支持我们的客户，我们确实需要向 `https://beacon.langchain.com` 开放出口访问权限。
+
+将来，我们将引入支持诊断功能，以帮助我们确保 LangSmith 在您的环境中以最佳状态运行。
+
+<Warning>
+**这要求您的网络必须能够访问 `https://beacon.langchain.com`。如果需要静态 IP 地址，请参阅 [允许列表 IP 部分](/langsmith/cloud#allowlisting-ip-addresses)。**
+</Warning>
+
+通常，我们发送到 Beacon 的数据可按如下方式分类：
+
+* 订阅指标 (Subscription Metrics)
+
+  * 订阅指标用于确定 LangSmith 的访问级别和利用率。这包括但不限于：
+
+    * 跟踪 (traces) 的数量
+    * 根据合同分配的席位数 (Seats)
+    * 当前正在使用的席位数
+
+* 操作元数据 (Operational Metadata)
+  * 此元数据将包含并收集上述订阅指标，以协助远程支持，使 LangChain 团队能够更有效、更主动地诊断和解决性能问题。
+
+## LangSmith 遥测 (Telemetry)
+
+从 ***0.11*** 版本开始，LangSmith 部署将默认向我们的后端发送遥测数据。所有遥测数据都与组织和部署相关联，但绝不会与单个用户标识。我们***不会***以任何形式收集 PII（个人身份信息）。
+
+### 我们用它来做什么
+
+* 为自托管实例提供更主动的支持和更快的故障排除。
+* 协助进行性能调优。
+* 了解真实世界的使用情况，以便优先改进。
+
+### 我们收集什么
+
+* **请求元数据**: 匿名化的请求计数、大小和持续时间。
+* **数据库指标**: 查询持续时间、错误率和性能计数器。
+* **操作性 LangSmith 跟踪**: 包含延迟和错误信息的跟踪记录，用于处理高延迟或失败的请求。这些**不是**客户的跟踪记录，而是关于 LangSmith 实例运行情况的操作性跟踪记录。
+
+<Info>
+我们不收集实际的负载内容 (payload contents)、数据库记录或任何可以识别您的最终用户或客户的数据。
+</Info>
+
+### 如何禁用
+
+在您的 `langsmith_config.yaml` 文件中设置以下值：
+
+```yaml
+config:
+  telemetry:
+    metrics: false
+    traces: false
+```
+
+## 示例负载 (Example payloads)
+
+为了最大限度地保持透明度，我们在 [下面] 提供示例负载：
+
+### 许可证验证 (License Verification)
+
+**端点 (Endpoint):**
+
+`POST beacon.langchain.com/v1/beacon/verify`
+
+**请求 (Request):**
+
+```json
+{
+  "license": "<YOUR_LICENSE_KEY>"
+}
+```
+
+**响应 (Response):**
+
+```json
+{
+  "token": "Valid JWT" // 用于避免重复许可证检查的短期 JWT 令牌
+}
+```
+
+### 用量报告 (Usage Reporting)
+
+**端点 (Endpoint):**
+
+`POST beacon.langchain.com/v1/beacon/ingest-traces`
+
+**请求 (Request):**
+
+```json
+{
+  "license": "<YOUR_LICENSE_KEY>",
+  "trace_transactions": [
+    {
+      "id": "af28dfea-5358-463d-a2dc-37df1da72498",
+      "tenant_id": "3a1c2b6f-4430-4b92-8a5b-79b8b567bbc1",
+      "session_id": "b26ae531-cdb3-42a5-8bcf-05355199fe27",
+      "trace_count": 5,
+      "start_insertion_time": "2025-01-06T10:00:00Z",
+      "end_insertion_time": "2025-01-06T11:00:00Z",
+      "start_interval_time": "2025-01-06T09:00:00Z",
+      "end_interval_time": "2025-01-06T10:00:00Z",
+      "status": "completed",
+      "num_failed_send_attempts": 0,
+      "transaction_type": "type1",
+      "organization_id": "c5b5f53a-4716-4326-8967-d4f7f7799735"
+    }
+  ]
+}
+```
+
+**响应 (Response):**
+
+```json
+{
+  "inserted_count": 1 // 成功摄取 (ingested) 的事务数量
+}
+```
+
+### 遥测：操作性 LangSmith 指标 (Telemetry: Operational LangSmith Metrics)
+
+**端点 (Endpoint):**
+
+`POST beacon.langchain.com/v1/beacon/v1/metrics`
+
+**请求 (Request):**
+
+```json
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "resource.name",
+            "value": { "stringValue": "langsmith-metrics" }
+          },
+          {
+            "key": "env",
+            "value": { "stringValue": "ls_self_hosted" }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "langsmith.metrics",
+            "version": "0.1.0"
+          },
+          "metrics": [
+            {
+              "name": "langsmith_http_requests_latency",
+              "unit": "seconds",
+              "description": "LangSmith 服务的请求延迟",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asDouble": 12.34,
+                    "startTimeUnixNano": 1678886400000000000,
+                    "timeUnixNano": 1678886400000000000,
+                    "attributes": [
+                      {
+                        "key": "endpoint",
+                        "value": { "stringValue": "/sessions" }
+                      },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "service_name",
+                        "value": { "stringValue": "langsmith_backend" }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "langsmith_http_requests_failed",
+              "unit": "1",
+              "description": "LangSmith 服务的失败请求计数器",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "asInt": 456,
+                    "startTimeUnixNano": 1678886400000000000,
+                    "timeUnixNano": 1678886400000000000,
+                    "attributes": [
+                      {
+                        "key": "endpoint",
+                        "value": { "stringValue": "/info" }
+                      },
+                      { "key": "method", "value": { "stringValue": "POST" } },
+                      {
+                        "key": "service_name",
+                        "value": { "stringValue": "langsmith_platform_backend" }
+                      }
+                    ],
+                    "aggregationTemporality": 2,
+                    "isMonotonic": true
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 遥测：操作性 LangSmith 跟踪 (Telemetry: Operational LangSmith Traces)
+
+**端点 (Endpoint):**
+
+`POST beacon.langchain.com/v1/beacon/v1/traces`
+
+**请求 (Request):**
+
+```json
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "env",
+            "value": {
+              "stringValue": "ls_self_hosted"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "langsmith_backend"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {},
+          "spans": [
+            {
+              "traceId": "71699b6fe85982c7c8995ea3d9c95df2",
+              "spanId": "3c191d03fa8be0",
+              "parentSpanId": "",
+              "name": "receive_request",
+              "startTimeUnixNano": "1581452772000000321",
+              "endTimeUnixNano": "1581452773000000789",
+              "droppedAttributesCount": 1,
+              "events": [
+                {
+                  "timeUnixNano": "1581452773000000123",
+                  "name": "parse_request",
+                  "attributes": [
+                    {
+                      "key": "request_size",
+                      "value": {
+                        "stringValue": "100"
+                      }
+                    }
+                  ],
+                  "droppedAttributesCount": 2
+                },
+                {
+                  "timeUnixNano": "1581452773000000123",
+                  "name": "event",
+                  "droppedAttributesCount": 2
+                }
+              ],
+              "droppedEventsCount": 1,
+              "status": {
+                "message": "status-cancelled",
+                "code": 2
+              }
+            },
+            {
+              "traceId": "71699b6fe85982c7c8995ea3d9c95df2",
+              "spanId": "0932ksdka12345",
+              "parentSpanId": "3c191d03fa8be0",
+              "name": "process_request",
+              "startTimeUnixNano": "1581452772000000321",
+              "endTimeUnixNano": "1581452773000000789",
+              "links": [],
+              "droppedLinksCount": 3,
+              "status": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 我们的承诺 (Our Commitment)
+
+LangChain 不会在订阅指标或操作元数据中存储任何敏感信息。收集到的任何数据都不会与第三方共享。如果您对发送的数据有任何疑虑，请联系您的客户团队。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\self-host-egress.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

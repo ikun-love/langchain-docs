@@ -1,0 +1,164 @@
+---
+title: Vectara
+---
+
+Vectara 是一个用于构建 GenAI 应用的平台。它提供了一个易于使用的 API，用于文档索引和查询，这些功能由 Vectara 管理，并针对性能和准确性进行了优化。
+
+您可以将 Vectara 用作 LangChain.js 的向量存储（vector store）。
+
+## 👉 内置嵌入模型 (Embeddings Included)
+
+Vectara 在底层使用了自己的嵌入模型（embeddings），因此您无需自己提供任何模型，也无需调用其他服务来获取嵌入向量。
+
+这意味着，如果您提供了自己（自定义的）的嵌入模型，它们将不会生效（no-op）。
+
+```typescript
+const store = await VectaraStore.fromTexts(
+  ["hello world", "hi there"],
+  [{ foo: "bar" }, { foo: "baz" }],
+  // 这将不会产生任何效果。为了清晰起见，请提供一个 FakeEmbeddings 实例。
+  new OpenAIEmbeddings(),
+  args
+);
+```
+
+## 设置 (Setup)
+
+您需要执行以下操作：
+
+- 创建一个 [免费的 Vectara 账户](https://vectara.com/integrations/langchain)。
+- 创建一个 [语料库 (corpus)](https://docs.vectara.com/docs/console-ui/creating-a-corpus) 来存储您的数据。
+- 创建一个 [API 密钥](https://docs.vectara.com/docs/common-use-cases/app-authn-authz/api-keys)，并授予其 QueryService 和 IndexService 的访问权限，以便您可以访问该语料库。
+
+配置您的 `.env` 文件，或提供参数（args）来连接 LangChain 到您的 Vectara 语料库：
+
+```
+VECTARA_CUSTOMER_ID=your_customer_id
+VECTARA_CORPUS_ID=your_corpus_id
+VECTARA_API_KEY=your-vectara-api-key
+```
+
+请注意，您可以提供多个以逗号分隔的语料库 ID，以便一次性查询多个语料库。例如：`VECTARA_CORPUS_ID=3,8,9,43`。
+要对多个语料库进行索引，您需要为每个语料库创建单独的 `VectaraStore` 实例。
+
+## 用法 (Usage)
+
+```typescript
+import { VectaraStore } from "@langchain/community/vectorstores/vectara";
+import { VectaraSummaryRetriever } from "@langchain/community/retrievers/vectara_summary";
+import { Document } from "@langchain/core/documents";
+
+// 创建 Vectara 存储实例。
+const store = new VectaraStore({
+  customerId: Number(process.env.VECTARA_CUSTOMER_ID),
+  corpusId: Number(process.env.VECTARA_CORPUS_ID),
+  apiKey: String(process.env.VECTARA_API_KEY),
+  verbose: true,
+});
+
+// 添加两个文档及其元数据。
+const doc_ids = await store.addDocuments([
+  new Document({
+    pageContent: "Do I dare to eat a peach?",
+    metadata: {
+      foo: "baz",
+    },
+  }),
+  new Document({
+    pageContent: "In the room the women come and go talking of Michelangelo",
+    metadata: {
+      foo: "bar",
+    },
+  }),
+]);
+
+// 执行相似性搜索。
+const resultsWithScore = await store.similaritySearchWithScore(
+  "What were the women talking about?",
+  1,
+  {
+    lambda: 0.025,
+  }
+);
+
+// 打印搜索结果。
+console.log(JSON.stringify(resultsWithScore, null, 2));
+/*
+[
+  [
+    {
+      "pageContent": "In the room the women come and go talking of Michelangelo",
+      "metadata": {
+        "lang": "eng",
+        "offset": "0",
+        "len": "57",
+        "foo": "bar"
+      }
+    },
+    0.4678752
+  ]
+]
+*/
+
+const retriever = new VectaraSummaryRetriever({ vectara: store, topK: 3 });
+const documents = await retriever.invoke("What were the women talking about?");
+
+console.log(JSON.stringify(documents, null, 2));
+/*
+[
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  },
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  },
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  }
+]
+*/
+
+// 删除这些文档。
+await store.deleteDocuments(doc_ids);
+```
+
+请注意，`lambda` 参数与 Vectara 的混合搜索能力（hybrid search capability）相关，它提供了神经搜索（neural search）和布尔/精确匹配（boolean/exact match）之间的权衡，具体描述可见 [此处](https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching)。我们推荐使用 0.025 作为默认值，同时也允许高级用户根据需要自定义此值。
+
+## API 接口
+
+Vectara 的 LangChain 向量存储使用了 Vectara 的核心 API：
+
+- 索引 API (Indexing API)：用于将文档存储到 Vectara 语料库中。
+- 搜索 API (Search API)：用于查询这些数据。该 API 支持混合搜索。
+
+## 相关资源
+
+- 向量存储 [概念指南](/oss/javascript/integrations/vectorstores)
+- 向量存储 [操作指南](/oss/javascript/integrations/vectorstores)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\vectorstores\vectara.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

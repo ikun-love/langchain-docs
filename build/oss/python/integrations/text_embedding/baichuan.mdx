@@ -1,0 +1,51 @@
+---
+title: 百川文本嵌入模型 (BaichuanTextEmbeddings)
+---
+
+截至今日（2024 年 1 月 25 日），BaichuanTextEmbeddings 在 C-MTEB（中文多任务嵌入基准测试）排行榜上排名第一。
+
+排行榜（请查看 Overall -> Chinese 部分）：[huggingface.co/spaces/mteb/leaderboard](https://huggingface.co/spaces/mteb/leaderboard)
+
+官方网站：[platform.baichuan-ai.com/docs/text-Embedding](https://platform.baichuan-ai.com/docs/text-Embedding)
+
+使用此嵌入模型需要一个 API 密钥。您可以通过在 [platform.baichuan-ai.com/docs/text-Embedding](https://platform.baichuan-ai.com/docs/text-Embedding) 注册来获取密钥。
+
+BaichuanTextEmbeddings 支持 512 个 Token 的窗口大小，并生成维度为 1024 的向量。
+
+请注意，BaichuanTextEmbeddings **仅支持中文文本嵌入**。多语言支持即将推出。
+
+```python
+from langchain_community.embeddings import BaichuanTextEmbeddings
+
+embeddings = BaichuanTextEmbeddings(baichuan_api_key="sk-*")
+```
+
+或者，您可以通过以下方式设置 API 密钥：
+
+```python
+import os
+
+os.environ["BAICHUAN_API_KEY"] = "YOUR_API_KEY"
+```
+
+```python
+text_1 = "今天天气不错"
+text_2 = "今天阳光很好"
+
+query_result = embeddings.embed_query(text_1)
+query_result
+```
+
+```python
+doc_result = embeddings.embed_documents([text_1, text_2])
+doc_result
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\baichuan.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

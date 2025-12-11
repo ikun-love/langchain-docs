@@ -1,0 +1,54 @@
+---
+title: INVALID_TOOL_RESULTS 错误
+---
+
+<Note>
+    目前仅在 `langchainjs`（JavaScript/TypeScript）中使用。
+</Note>
+
+当在工具调用操作中，向模型传递不匹配、不足或过多的 [`ToolMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.ToolMessage.html) 对象时，会发生此错误。
+
+该错误源于一个基本要求：带有 `tool_calls` 的助手消息（`assistant` message）之后，必须紧接着提供相应的工具消息（`tool` messages），以响应每一个 `tool_call_id`。
+
+当模型返回带有工具调用的 [`AIMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.AIMessage.html) 时，您**必须**为每个工具调用提供**恰好一个**对应的 [`ToolMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.ToolMessage.html)，并且 `tool_call_id` 值必须匹配。
+
+## 常见原因
+
+*   **响应不足**：如果模型请求了两次工具执行，但您只提供了一次响应消息，模型将拒绝接收这种不完整的消息链。
+*   **重复响应**：为同一个工具调用 ID 提供了多个 [`ToolMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.ToolMessage.html) 对象，或者存在不匹配的 ID，都会导致被拒绝。
+*   **孤立的工具消息**：发送了一个 [`ToolMessage`](https://reference.langchain.com/javascript/classes/_langchain_core.messages.ToolMessage.html)，但前面没有对应的、包含工具调用的 @[`AIMessage__] 来指示该消息是响应谁的，这违反了协议要求。
+
+
+
+下面是一个有问题模式的示例：
+
+```javascript
+// 模型请求了两个工具调用
+responseMessage.tool_calls // 返回 2 个调用
+
+// 但只提供了一个 ToolMessage
+chatHistory.push({
+  role: "tool",
+  content: toolResponse,
+  tool_call_id: responseMessage.tool_calls[0].id
+});
+
+await modelWithTools.invoke(chatHistory); // 会以 INVALID_TOOL_RESULTS 错误失败
+```
+
+
+## 故障排除
+
+要解决此错误：
+
+*   **计算匹配对**：确保前一个 @[`AIMessage__] 中有多少个工具调用，当前就有多少个对应的 @[`ToolMessage__]`。
+*   **验证 ID**：确认每个 `ToolMessage.tool_call_id` 都与实际的工具调用标识符相匹配。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\langchain\errors\INVALID_TOOL_RESULTS.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

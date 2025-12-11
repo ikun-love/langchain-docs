@@ -1,0 +1,98 @@
+---
+title: Google 学术搜索工具
+---
+
+本Notebook 提供了 [`SERPGoogleScholarTool`](https://api.js.langchain.com/classes/_langchain_community.tools_google_scholar.SERPGoogleScholarAPITool.html) 的快速入门指南。有关 `SERPGoogleScholarAPITool` 所有功能和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.tools_google_scholar.SERPGoogleScholarAPITool.html)。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 软件包 (Package) | [Python 支持](https://python.langchain.com/docs/integrations/tools/google_scholar/) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |
+| [GoogleScholarTool](https://api.js.langchain.com/classes/_langchain_community.tools_google_scholar.SERPGoogleScholarAPITool.html) | [@langchain/community](https://www.npmjs.com/package/@langchain/community) |  ✅  |  ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&) |
+
+### 工具功能
+
+-   根据主题、作者或查询检索学术出版物。
+-   获取元数据，例如标题、作者和发表年份。
+-   高级搜索过滤，包括引用次数和期刊名称。
+
+## 设置
+
+该集成位于 `@langchain/community` 包中。
+
+```bash
+npm install @langchain/community
+```
+
+### 凭证 (Credentials)
+
+确保您拥有访问 Google 学术搜索所需的 API 密钥。将其设置在您的环境变量中：
+
+```typescript
+SERPAPI_API_KEY="your-serp-api-key"
+```
+
+为了获得最佳的可观察性（observability），建议同时设置 [LangSmith](https://smith.langchain.com/)：
+
+```typescript
+process.env.LANGSMITH_TRACING="true"
+process.env.LANGSMITH_API_KEY="your-langchain-api-key"
+```
+
+## 实例化
+
+您可以像下面这样导入并实例化 `SERPGoogleScholarAPITool` 工具：
+
+```python
+import { SERPGoogleScholarAPITool } from "@langchain/community/tools/google_scholar";
+
+const tool = new SERPGoogleScholarAPITool({
+  apiKey: process.env.SERPAPI_API_KEY,
+});
+```
+
+## 调用 (Invocation)
+
+### 直接使用参数调用 (Invoke directly with args)
+
+您可以直接使用查询参数调用该工具：
+
+```python
+const results = await tool.invoke({
+  query: "neural networks",
+  maxResults: 5,
+});
+
+console.log(results);
+```
+
+### 使用工具调用 (Invoke with ToolCall)
+
+我们也可以使用模型生成的 `ToolCall` 来调用该工具：
+
+```python
+const modelGeneratedToolCall = {
+  args: { query: "machine learning" },
+  id: "1",
+  name: tool.name,
+  type: "tool_call",
+};
+await tool.invoke(modelGeneratedToolCall);
+```
+
+---
+
+## API 参考
+
+有关 `SERPGoogleScholarAPITool` 所有功能和配置的详细文档，请查阅 [API 参考](https://api.js.langchain.com/classes/_langchain_community.tools_google_scholar.SERPGoogleScholarAPITool.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\google_scholar.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

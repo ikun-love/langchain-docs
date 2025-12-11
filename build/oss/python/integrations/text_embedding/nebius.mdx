@@ -1,0 +1,256 @@
+---
+title: Nebius
+---
+
+[Nebius AI Studio](https://studio.nebius.ai/) 通过统一的接口提供对高质量嵌入模型（embedding models）的 API 访问。Nebius 嵌入模型可以将文本转换成数值向量，这些向量捕获了文本的语义信息，因此可用于语义搜索、聚类和推荐等各种应用场景。
+
+## 概览 (Overview)
+
+`NebiusEmbeddings` 类通过 LangChain 提供了对 Nebius AI Studio 嵌入模型的访问。这些嵌入可用于语义搜索、文档相似性匹配以及其他需要文本向量表示的自然语言处理（NLP）任务。
+
+### 集成详情 (Integration details)
+
+- **提供商 (Provider)**: Nebius AI Studio
+- **模型类型 (Model Types)**: 文本嵌入模型
+- **主要用例 (Primary Use Case)**: 生成文本的向量表示，用于语义相似度和检索
+- **可用模型 (Available Models)**: 各种嵌入模型，包括 BAAI/bge-en-icl 等
+- **维度 (Dimensions)**: 因模型而异（通常为 1024-4096 维）
+
+## 设置 (Setup)
+
+### 安装 (Installation)
+
+可以通过 pip 安装 Nebius 集成包：
+
+```python
+pip install -U langchain-nebius
+```
+
+### 凭证 (Credentials)
+
+Nebius 需要一个 API 密钥。该密钥可以作为初始化参数 `api_key` 传入，或者设置为环境变量 `NEBIUS_API_KEY`。您可以通过在 [Nebius AI Studio](https://studio.nebius.ai/) 创建账户来获取 API 密钥。
+
+```python
+import getpass
+import os
+
+# 确保您的 API 密钥已设置为环境变量
+if "NEBIUS_API_KEY" not in os.environ:
+    os.environ["NEBIUS_API_KEY"] = getpass.getpass("Enter your Nebius API key: ")
+```
+
+## 实例化 (Instantiation)
+
+`NebiusEmbeddings` 类可以携带可选参数（如 API 密钥和模型名称）进行实例化：
+
+```python
+from langchain_nebius import NebiusEmbeddings
+
+# 初始化嵌入模型
+embeddings = NebiusEmbeddings(
+    # api_key="YOUR_API_KEY",  # 也可以直接传入 API 密钥
+    model="BAAI/bge-en-icl"  # 默认的嵌入模型
+)
+```
+
+### 可用模型 (Available Models)
+
+支持的模型列表可以在 [studio.nebius.com/?modality=embedding](https://studio.nebius.com/?modality=embedding) 查看。
+
+## 索引和检索 (Indexing and Retrieval)
+
+嵌入模型通常用于检索增强生成 (RAG) 流程中，用于数据的索引构建和后续的检索。以下示例展示了如何将 `NebiusEmbeddings` 与向量存储一起用于文档检索。
+
+```python
+from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+
+# 准备文档
+docs = [
+    Document(
+        page_content="Machine learning algorithms build mathematical models based on sample data"
+    ),
+    Document(page_content="Deep learning uses neural networks with many layers"),
+    Document(page_content="Climate change is a major global environmental challenge"),
+    Document(
+        page_content="Neural networks are inspired by the human brain's structure"
+    ),
+]
+
+# 创建向量存储
+vector_store = FAISS.from_documents(docs, embeddings)
+
+# 执行相似性搜索
+query = "How does the brain influence AI?"
+results = vector_store.similarity_search(query, k=2)
+
+print("Search results for query:", query)
+for i, doc in enumerate(results):
+    print(f"Result {i + 1}: {doc.page_content}")
+```
+
+```output
+Search results for query: How does the brain influence AI?
+Result 1: Neural networks are inspired by the human brain's structure
+Result 2: Deep learning uses neural networks with many layers
+```
+
+### 与 InMemoryVectorStore 一起使用
+
+对于轻量级应用，您也可以使用 `InMemoryVectorStore`：
+
+```python
+from langchain_core.vectorstores import InMemoryVectorStore
+
+# 创建一个示例文本
+text = "LangChain is a framework for developing applications powered by language models"
+
+# 创建向量存储
+vectorstore = InMemoryVectorStore.from_texts(
+    [text],
+    embedding=embeddings,
+)
+
+# 用作检索器
+retriever = vectorstore.as_retriever()
+
+# 检索相似文档
+docs = retriever.invoke("What is LangChain?")
+print(f"Retrieved document: {docs[0].page_content}")
+```
+
+```output
+Retrieved document: LangChain is a framework for developing applications powered by language models
+```
+
+## 直接使用 (Direct Usage)
+
+您可以直接使用 `NebiusEmbeddings` 类来生成文本的嵌入，而无需使用向量存储。
+
+### 嵌入单个文本 (Embedding a Single Text)
+
+您可以使用 `embed_query` 方法来嵌入单个文本片段：
+
+```python
+query = "What is machine learning?"
+query_embedding = embeddings.embed_query(query)
+
+# 检查嵌入维度
+print(f"Embedding dimension: {len(query_embedding)}")
+print(f"First few values: {query_embedding[:5]}")
+```
+
+```output
+Embedding dimension: 4096
+First few values: [0.007419586181640625, 0.002246856689453125, 0.00193023681640625, -0.0066070556640625, -0.0179901123046875]
+```
+
+### 嵌入多个文本 (Embedding Multiple Texts)
+
+您可以使用 `embed_documents` 方法一次性嵌入多个文本：
+
+```python
+documents = [
+    "Machine learning is a branch of artificial intelligence",
+    "Deep learning is a subfield of machine learning",
+    "Natural language processing deals with interactions between computers and human language",
+]
+
+document_embeddings = embeddings.embed_documents(documents)
+
+# 检查结果
+print(f"Number of document embeddings: {len(document_embeddings)}")
+print(f"Each embedding has {len(document_embeddings[0])} dimensions")
+```
+
+```output
+Number of document embeddings: 3
+Each embedding has 4096 dimensions
+```
+
+### 异步支持 (Async Support)
+
+NebiusEmbeddings 支持异步操作：
+
+```python
+import asyncio
+
+
+async def generate_embeddings_async():
+    # 嵌入单个查询
+    query_result = await embeddings.aembed_query("What is the capital of France?")
+    print(f"Async query embedding dimension: {len(query_result)}")
+
+    # 嵌入多个文档
+    docs = [
+        "Paris is the capital of France",
+        "Berlin is the capital of Germany",
+        "Rome is the capital of Italy",
+    ]
+    docs_result = await embeddings.aembed_documents(docs)
+    print(f"Async document embeddings count: {len(docs_result)}")
+
+
+await generate_embeddings_async()
+```
+
+```output
+Async query embedding dimension: 4096
+Async document embeddings count: 3
+```
+
+### 文档相似性示例 (Document Similarity Example)
+
+```python
+import numpy as np
+from scipy.spatial.distance import cosine
+
+# 创建一些文档
+documents = [
+    "Machine learning algorithms build mathematical models based on sample data",
+    "Deep learning uses neural networks with many layers",
+    "Climate change is a major global environmental challenge",
+    "Neural networks are inspired by the human brain's structure",
+]
+
+# 嵌入文档
+embeddings_list = embeddings.embed_documents(documents)
+
+
+# 计算相似度的函数
+def calculate_similarity(embedding1, embedding2):
+    return 1 - cosine(embedding1, embedding2)
+
+
+# 打印相似度矩阵
+print("Document Similarity Matrix:")
+for i, emb_i in enumerate(embeddings_list):
+    similarities = []
+    for j, emb_j in enumerate(embeddings_list):
+        similarity = calculate_similarity(emb_i, emb_j)
+        similarities.append(f"{similarity:.4f}")
+    print(f"Document {i + 1}: {similarities}")
+```
+
+```output
+Document Similarity Matrix:
+Document 1: ['1.0000', '0.8282', '0.5811', '0.7985']
+Document 2: ['0.8282', '1.0000', '0.5897', '0.8315']
+Document 3: ['0.5811', '0.5897', '1.0000', '0.5918']
+Document 4: ['0.7985', '0.8315', '0.5918', '1.0000']
+```
+
+---
+
+## API 参考 (API reference)
+
+有关 Nebius AI Studio API 的更多详细信息，请访问 [Nebius AI Studio 文档](https://studio.nebius.ai/docs/api-reference)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\nebius.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

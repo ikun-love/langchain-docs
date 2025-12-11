@@ -1,0 +1,173 @@
+---
+title: Eden AI
+---
+
+Eden AI 正在通过整合顶级的 AI 供应商来彻底改变人工智能格局，赋能用户释放无限潜力，并挖掘人工智能的真正价值。凭借一个全面、省心的一体化平台，它允许用户**极速部署** AI 功能到生产环境，通过**单一 API** 实现对全部 AI 能力的轻松访问。（网站：[edenai.co/](https://edenai.co/)）
+
+本示例将介绍如何使用 LangChain 与 Eden AI 模型进行交互。
+
+-----------------------------------------------------------------------------------
+
+访问 EDENAI 的 API 需要一个 API 密钥。
+
+您可以通过在 [app.edenai.run/user/register](https://app.edenai.run/user/register) 创建账户，然后前往 [app.edenai.run/admin/account/settings](https://app.edenai.run/admin/account/settings) 获取密钥。
+
+获取密钥后，我们通常会将其设置为环境变量，方法是运行以下命令：
+
+```bash
+export EDENAI_API_KEY="..."
+```
+
+如果您不想设置环境变量，也可以在初始化 `EdenAI` LLM 类时，直接通过名为 `edenai_api_key` 的参数传递密钥：
+
+```python
+from langchain_community.llms import EdenAI
+```
+
+```python
+llm = EdenAI(edenai_api_key="...", provider="openai", temperature=0.2, max_tokens=250)
+```
+
+## 调用模型
+
+EdenAI API 汇集了各种供应商，每个供应商都提供多种模型。
+
+要访问特定模型，您可以在实例化时简单地添加 `model` 参数。
+
+例如，让我们探索 OpenAI 提供的模型，比如 GPT-3.5。
+
+### 文本生成 (text generation)
+
+```python
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
+
+llm = EdenAI(
+    feature="text",
+    provider="openai",
+    model="gpt-3.5-turbo-instruct",
+    temperature=0.2,
+    max_tokens=250,
+)
+
+prompt = """
+User: 请逐步推理来回答以下是/否问题。狗会开车吗？
+Assistant:
+"""
+
+llm(prompt)
+```
+
+### 图像生成 (image generation)
+
+```python
+import base64
+from io import BytesIO
+
+from PIL import Image
+
+
+def print_base64_image(base64_string):
+    # 将 base64 字符串解码为二进制数据
+    decoded_data = base64.b64decode(base64_string)
+
+    # 创建一个内存流来读取二进制数据
+    image_stream = BytesIO(decoded_data)
+
+    # 使用 PIL 打开图像
+    image = Image.open(image_stream)
+
+    # 显示图像
+    image.show()
+```
+
+```python
+text2image = EdenAI(feature="image", provider="openai", resolution="512x512")
+```
+
+```python
+image_output = text2image("A cat riding a motorcycle by Picasso")
+```
+
+```python
+print_base64_image(image_output)
+```
+
+### 带有回调的文本生成 (text generation with callback)
+
+```python
+from langchain_community.llms import EdenAI
+from langchain_core.callbacks import StreamingStdOutCallbackHandler
+
+llm = EdenAI(
+    callbacks=[StreamingStdOutCallbackHandler()],
+    feature="text",
+    provider="openai",
+    temperature=0.2,
+    max_tokens=250,
+)
+prompt = """
+User: 请逐步推理来回答以下是/否问题。狗会开车吗？
+Assistant:
+"""
+print(llm.invoke(prompt))
+```
+
+## 链式调用 (Chaining Calls)
+
+```python
+from langchain.chains import LLMChain, SimpleSequentialChain
+from langchain_core.prompts import PromptTemplate
+```
+
+```python
+llm = EdenAI(feature="text", provider="openai", temperature=0.2, max_tokens=250)
+text2image = EdenAI(feature="image", provider="openai", resolution="512x512")
+```
+
+```python
+prompt = PromptTemplate(
+    input_variables=["product"],
+    template="为生产 {product} 的公司想一个好的名字？",
+)
+
+chain = LLMChain(llm=llm, prompt=prompt)
+```
+
+```python
+second_prompt = PromptTemplate(
+    input_variables=["company_name"],
+    template="为这家公司写一个 Logo 描述：{company_name}，Logo 中完全不能包含文字",
+)
+chain_two = LLMChain(llm=llm, prompt=second_prompt)
+```
+
+```python
+third_prompt = PromptTemplate(
+    input_variables=["company_logo_description"],
+    template="{company_logo_description}",
+)
+chain_three = LLMChain(llm=text2image, prompt=third_prompt)
+```
+
+```python
+# 运行链，只指定第一个链的输入变量。
+overall_chain = SimpleSequentialChain(
+    chains=[chain, chain_two, chain_three], verbose=True
+)
+output = overall_chain.run("hats")
+```
+
+```python
+# 打印图像
+print_base64_image(output)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\llms\edenai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

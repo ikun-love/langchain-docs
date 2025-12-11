@@ -1,0 +1,58 @@
+---
+title: Google Places 工具
+---
+
+Google Places 工具允许您的智能体利用 Google Places API 来查找有关 Google Places 上列出的地点的地址、电话号码、网站等信息。
+
+## 设置 (Setup)
+
+您需要从 [Google 此处](https://developers.google.com/maps/documentation/places/web-service/overview) 获取 API 密钥，并**启用新的 Places API** ([https://console.cloud.google.com/apis/library/places.googleapis.com](https://console.cloud.google.com/apis/library/places.googleapis.com))。然后，将您的 API 密钥设置为 `process.env.GOOGLE_PLACES_API_KEY`，或者将其作为 `apiKey` 构造函数参数传入。
+
+## 使用 (Usage)
+
+<Tip>
+有关安装 LangChain 包的通用说明，请参阅[此部分](/oss/javascript/langchain/install)。
+</Tip>
+
+```bash npm
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
+```typescript
+import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
+import { OpenAI } from "@langchain/openai";
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
+
+export async function run() {
+  const model = new OpenAI({
+    temperature: 0,
+  });
+
+  const tools = [new GooglePlacesAPI()];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
+
+  const res = await executor.invoke({
+    input: "Where is the University of Toronto - Scarborough? ", // 哪里是多伦多大学士嘉堡校区？
+  });
+
+  console.log(res.output);
+}
+```
+
+## 相关 (Related)
+
+- 工具[概念指南](/oss/javascript/langchain/tools)
+- 工具[操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\google_places.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,54 @@
+---
+title: ERNIE
+---
+
+[ERNIE Embedding-V1](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu) 是基于 `Baidu Wenxin` 大规模模型技术构建的文本表示模型，它能将文本转换为由数值表示的向量形式，应用于文本检索、信息推荐、知识挖掘等场景。
+
+**弃用警告**
+
+我们建议使用 `langchain_community.embeddings.QianfanEmbeddingsEndpoint` 来替代 `langchain_community.embeddings.ErnieEmbeddings`。
+
+`QianfanEmbeddingsEndpoint` 的文档请参见 [此处](/oss/python/integrations/text_embedding/baidu_qianfan_endpoint/)。
+
+我们推荐用户使用 `QianfanEmbeddingsEndpoint` 的两个理由是：
+
+1. `QianfanEmbeddingsEndpoint` 支持千帆平台上的更多嵌入模型。
+2. `ErnieEmbeddings` 已缺少维护和支持，已被弃用。
+
+以下是一些迁移的示例提示：
+
+```python
+from langchain_community.embeddings import QianfanEmbeddingsEndpoint
+
+embeddings = QianfanEmbeddingsEndpoint(
+    qianfan_ak="your qianfan ak",
+    qianfan_sk="your qianfan sk",
+)
+```
+
+## 用法
+
+```python
+from langchain_community.embeddings import ErnieEmbeddings
+```
+
+```python
+embeddings = ErnieEmbeddings()
+```
+
+```python
+query_result = embeddings.embed_query("foo")
+```
+
+```python
+doc_results = embeddings.embed_documents(["foo"])
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\ernie.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,269 @@
+```markdown
+---
+title: LangSmith 部署的控制平面 API 参考
+sidebarTitle: 控制平面 API
+---
+
+控制平面 API 是 [LangSmith 部署](/langsmith/deployments) 的一部分。借助控制平面 API，您可以以编程方式创建、管理和自动化您的 [Agent Server](/langsmith/agent-server) 部署，例如将其作为自定义 CI/CD 工作流的一部分。
+
+<Card title="API 参考" href="https://api.host.langchain.com/docs" icon="book">
+  查看完整的控制平面 API 参考文档
+</Card>
+
+## 主机 (Host)
+
+控制平面为主机托管云数据区域：
+
+| US (美国) | EU (欧洲) |
+|----|----|
+| `https://api.host.langchain.com` | `https://eu.api.host.langchain.com` |
+
+**注意**: LangSmith 的自托管部署将为主控制平面拥有一个自定义主机。可以通过路径 `/api-host` 访问控制平面 API。例如：`http(s)://<host>/api-host/v2/deployments`。有关更多详细信息，请参见[此处](../langsmith/self-host-usage#configuring-the-application-you-want-to-use-with-langsmith)。
+
+## 身份验证 (Authentication)
+
+要使用控制平面 API 进行身份验证，请将 `X-Api-Key` 标头设置为有效的 LangSmith API 密钥，并将 `X-Tenant-Id` 标头设置为有效的**工作区 ID** 以进行定位。
+
+示例 `curl` 命令：
+
+```shell
+curl --request GET \
+  --url http://localhost:8124/v2/deployments \
+  --header 'X-Api-Key: LANGSMITH_API_KEY'
+  --header 'X-Tenant-Id': WORKSPACE_ID'
+```
+
+## 版本控制 (Versioning)
+
+每个端点路径都以版本前缀（例如 `v1`, `v2`）。
+
+## 快速开始 (Quick Start)
+
+1. 调用 `POST /v2/deployments` 来创建一个新的部署 (Deployment)。响应体包含部署 ID (`id`) 和最新（也是第一个）修订版的 ID (`latest_revision_id`)。
+2. 调用 `GET /v2/deployments/{deployment_id}` 来检索该部署。将 URL 中的 `deployment_id` 设置为部署 ID (`id`) 的值。
+3. 通过调用 `GET /v2/deployments/{deployment_id}/revisions/{latest_revision_id}` 轮询修订版的 `status`，直到 `status` 为 `DEPLOYED`（已部署）。
+4. 调用 `PATCH /v2/deployments/{deployment_id}` 来更新部署。
+
+## 示例代码 (Example Code)
+
+下面是一段示例 Python 代码，演示了如何编排控制平面 API 来创建部署、更新部署和删除部署。
+
+```python
+import os
+import time
+
+import requests
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+# 必需的环境变量
+CONTROL_PLANE_HOST = os.getenv("CONTROL_PLANE_HOST")
+LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
+WORKSPACE_ID = os.getenv("WORKSPACE_ID")
+INTEGRATION_ID = os.getenv("INTEGRATION_ID")
+MAX_WAIT_TIME = 1800  # 30 分钟
+
+
+def get_headers() -> dict:
+    """返回向控制平面 API 发起请求所需的通用标头。"""
+    return {
+        "X-Api-Key": LANGSMITH_API_KEY,
+        "X-Tenant-Id": WORKSPACE_ID,
+    }
+
+
+def create_deployment() -> str:
+    """创建部署。返回部署 ID。"""
+    headers = get_headers()
+    headers["Content-Type"] = "application/json"
+
+    deployment_name = "my_deployment"
+
+    request_body = {
+        "name": deployment_name,
+        "source": "github",
+        "source_config": {
+            "integration_id": INTEGRATION_ID,
+            "repo_url": "https://github.com/langchain-ai/langgraph-example",
+            "deployment_type": "dev",
+            "build_on_push": False,
+            "custom_url": None,
+            "resource_spec": None,
+        },
+        "source_revision_config": {
+            "repo_ref": "main",
+            "langgraph_config_path": "langgraph.json",
+            "image_uri": None,
+        },
+        "secrets": [
+            {
+                "name": "OPENAI_API_KEY",
+                "value": "test_openai_api_key",
+            },
+            {
+                "name": "ANTHROPIC_API_KEY",
+                "value": "test_anthropic_api_key",
+            },
+            {
+                "name": "TAVILY_API_KEY",
+                "value": "test_tavily_api_key",
+            },
+        ],
+    }
+
+    response = requests.post(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments",
+        headers=headers,
+        json=request_body,
+    )
+
+    if response.status_code != 201:
+        raise Exception(f"创建部署失败: {response.text}")
+
+    deployment_id = response.json()["id"]
+    print(f"已创建部署 {deployment_name} ({deployment_id})")
+    return deployment_id
+
+
+def get_deployment(deployment_id: str) -> dict:
+    """获取部署。"""
+    response = requests.get(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
+        headers=get_headers(),
+    )
+
+    if response.status_code != 200:
+        raise Exception(f"获取部署 ID {deployment_id} 失败: {response.text}")
+
+    return response.json()
+
+
+def list_revisions(deployment_id: str) -> list[dict]:
+    """列出修订版。
+
+    返回的列表按 created_at 降序排序（最新的在前）。
+    """
+    response = requests.get(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}/revisions",
+        headers=get_headers(),
+    )
+
+    if response.status_code != 200:
+        raise Exception(
+            f"列出部署 ID {deployment_id} 的修订版失败: {response.text}"
+        )
+
+    return response.json()
+
+
+def get_revision(
+    deployment_id: str,
+    revision_id: str,
+) -> dict:
+    """获取修订版。"""
+    response = requests.get(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}/revisions/{revision_id}",
+        headers=get_headers(),
+    )
+
+    if response.status_code != 200:
+        raise Exception(f"获取修订版 ID {revision_id} 失败: {response.text}")
+
+    return response.json()
+
+
+def patch_deployment(deployment_id: str) -> None:
+    """更新部署。"""
+    headers = get_headers()
+    headers["Content-Type"] = "application/json"
+
+    # 因为包含了 source_revision_config，所以这将创建一个新的修订版
+    response = requests.patch(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
+        headers=headers,
+        json={
+            "source_config": {
+                "build_on_push": True,
+            },
+            "source_revision_config": {
+                "repo_ref": "main",
+                "langgraph_config_path": "langgraph.json",
+            },
+        },
+    )
+
+    if response.status_code != 200:
+        raise Exception(f"更新部署失败: {response.text}")
+
+    print(f"已更新部署 ID {deployment_id}")
+
+
+def wait_for_deployment(deployment_id: str, revision_id: str) -> None:
+    """等待修订版状态变为 DEPLOYED（已部署）。"""
+    start_time = time.time()
+    revision, status = None, None
+    while time.time() - start_time < MAX_WAIT_TIME:
+        revision = get_revision(deployment_id, revision_id)
+        status = revision["status"]
+        if status == "DEPLOYED":
+            break
+        elif "FAILED" in status:
+            raise Exception(f"修订版 ID {revision_id} 失败: {revision}")
+
+        print(f"正在等待修订版 ID {revision_id} 变为 DEPLOYED...")
+        time.sleep(60)
+
+    if status != "DEPLOYED":
+        raise Exception(
+            f"等待修订版 ID {revision_id} 变为 DEPLOYED 超时: {revision}"
+        )
+
+
+def delete_deployment(deployment_id: str) -> None:
+    """删除部署。"""
+    response = requests.delete(
+        url=f"{CONTROL_PLANE_HOST}/v2/deployments/{deployment_id}",
+        headers=get_headers(),
+    )
+
+    if response.status_code != 204:
+        raise Exception(
+            f"删除部署 ID {deployment_id} 失败: {response.text}"
+        )
+
+    print(f"部署 ID {deployment_id} 已删除")
+
+
+if __name__ == "__main__":
+    # 创建部署并获取最新修订版
+    deployment_id = create_deployment()
+    revisions = list_revisions(deployment_id)
+    latest_revision = revisions["resources"][0]
+    latest_revision_id = latest_revision["id"]
+
+    # 等待最新修订版部署完成
+    wait_for_deployment(deployment_id, latest_revision_id)
+
+    # 更新部署并获取最新修订版
+    patch_deployment(deployment_id)
+    revisions = list_revisions(deployment_id)
+    latest_revision = revisions["resources"][0]
+    latest_revision_id = latest_revision["id"]
+
+    # 等待最新修订版部署完成
+    wait_for_deployment(deployment_id, latest_revision_id)
+
+    # 删除部署
+    delete_deployment(deployment_id)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\api-ref-control-plane.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

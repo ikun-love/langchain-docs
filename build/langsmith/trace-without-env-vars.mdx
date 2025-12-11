@@ -1,0 +1,110 @@
+```markdown
+---
+title: 在不设置环境变量的情况下进行追踪
+sidebarTitle: 不使用环境变量进行追踪
+keywords: cloudflare, cloudflare workers, serverless
+---
+
+正如其他指南中所提到的，以下环境变量允许您配置追踪启用状态、API 端点、API 密钥和追踪项目：
+
+* `LANGSMITH_TRACING`
+* `LANGSMITH_API_KEY`
+* `LANGSMITH_ENDPOINT`
+* `LANGSMITH_PROJECT`
+
+如果您需要使用自定义配置追踪运行、在不支持常规环境变量的环境中工作（例如 Cloudflare Workers），或者只是不想依赖环境变量，LangSmith 允许您以编程方式配置追踪。
+
+<Warning>
+由于社区要求对使用 `trace` 上下文管理器的追踪进行更精细的控制，在 Python SDK **0.1.95 版本**中，我们**更改了** `with trace` 的行为，使其遵循 `LANGSMITH_TRACING` 环境变量。您可以在 [发布说明](https://github.com/langchain-ai/langsmith-sdk/releases/tag/v0.1.95) 中找到更多详细信息。禁用/启用追踪而不设置环境变量的推荐方法是使用 `with tracing_context` 上下文管理器，如下面的示例所示。
+</Warning>
+
+- Python：在 Python 中执行此操作的推荐方法是使用 `tracing_context` 上下文管理器。这对用 `traceable` 注释的代码以及在 `trace` 上下文管理器内的代码都有效。
+- TypeScript：您可以将客户端和 `tracingEnabled` 标志传递给 `traceable` 装饰器。
+
+<CodeGroup>
+
+```python Python
+import openai
+from langsmith import Client, tracing_context, traceable
+from langsmith.wrappers import wrap_openai
+
+langsmith_client = Client(
+  api_key="YOUR_LANGSMITH_API_KEY",  # 可以从密钥管理器中检索
+  api_url="https://api.smith.langchain.com",  # 对于自托管安装或欧盟地区，请相应更新
+  workspace_id="YOUR_WORKSPACE_ID", # 对于作用域限制于多个工作区的 API 密钥必须指定
+)
+
+client = wrap_openai(openai.Client())
+
+@traceable(run_type="tool", name="检索上下文")
+def my_tool(question: str) -> str:
+  return "在今天早上的会议中，我们解决了所有世界冲突。"
+
+@traceable
+def chat_pipeline(question: str):
+  context = my_tool(question)
+  messages = [
+      { "role": "system", "content": "您是一个乐于助人的助手。请仅根据给定的上下文回复用户的请求。" },
+      { "role": "user", "content": f"问题: {question}\n上下文: {context}"}
+  ]
+  chat_completion = client.chat.completions.create(
+      model="gpt-4o-mini", messages=messages
+  )
+  return chat_completion.choices[0].message.content
+
+# 可以设置为 False 以在此处禁用追踪，而无需更改代码结构
+with tracing_context(enabled=True):
+  # 使用 langsmith_extra 传入自定义客户端
+  chat_pipeline("你能总结一下今天早上的会议吗？", langsmith_extra={"client": langsmith_client})
+```
+
+```typescript TypeScript
+import { Client } from "langsmith";
+import { traceable } from "langsmith/traceable";
+import { wrapOpenAI } from "langsmith/wrappers";
+import { OpenAI } from "openai";
+
+const client = new Client({
+    apiKey: "YOUR_API_KEY",  // 可以从密钥管理器中检索
+    apiUrl: "https://api.smith.langchain.com",  // 对于自托管安装或欧盟地区，请相应更新
+});
+
+const openai = wrapOpenAI(new OpenAI());
+
+const tool = traceable((question: string) => {
+    return "During this morning's meeting, we solved all world conflict.";
+}, { name: "Retrieve Context", runType: "tool" });
+
+const pipeline = traceable(
+    async (question: string) => {
+        const context = await tool(question);
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system" as const, content: "You are a helpful assistant. Please respond to the user's request only based on the given context." },
+                { role: "user" as const, content: `Question: ${question}\nContext: ${context}`}
+            ]
+        });
+
+        return completion.choices[0].message.content;
+    },
+    { name: "Chat", client, tracingEnabled: true }
+);
+
+await pipeline("Can you summarize this morning's meetings?");
+```
+
+</CodeGroup>
+
+如果您更喜欢视频教程，请在 LangSmith 入门课程中查看 [Alternative Ways to Trace 视频](https://academy.langchain.com/pages/intro-to-langsmith-preview)。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\trace-without-env-vars.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

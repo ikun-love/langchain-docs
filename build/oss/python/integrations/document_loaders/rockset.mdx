@@ -1,0 +1,152 @@
+---
+title: Rockset
+---
+
+⚠️ **弃用通知：Rockset 集成已禁用**
+>
+> 自 2024 年 6 月起，Rockset 已被 [OpenAI 收购](https://openai.com/index/openai-acquires-rockset/)并**关闭了公共服务**。
+>
+> Rockset 曾是一个实时分析数据库，以其世界一流的索引和检索能力而闻名。现在，其核心团队和技术正在整合到 OpenAI 的基础架构中，用以支持未来的人工智能产品。
+>
+> 此 LangChain 集成已不再可用，仅**保留用于存档目的**。
+
+> Rockset 是一个实时分析数据库，它支持对海量、半结构化数据进行查询，且无需承担额外的运维负担。使用 Rockset 时，摄取的数据可在**一秒内**进行查询，并且对该数据的分析查询通常在**毫秒级别**执行。Rockset 针对计算进行了优化，非常适合服务于并发量高、数据量在 100TB 范围内的应用（或通过 Rollups 处理超过 100TB 的数据）。
+
+本 Notebook 演示了如何将 Rockset 用作 LangChain 中的文档加载器（document loader）。要开始使用，请确保您拥有一个 Rockset 账户和一个可用的 API 密钥。
+
+## 设置环境
+
+1. 访问 [Rockset 控制台](https://console.rockset.com/apikeys) 并获取 API 密钥。您可以在 [API 参考](https://rockset.com/docs/rest-api/#introduction) 中找到您的 API 区域。在本 Notebook 的演示中，我们假设您使用的是 Rockset 的 `Oregon(us-west-2)` 区域。
+2. 设置环境变量 `ROCKSET_API_KEY`。
+3. 安装 Rockset 的 Python 客户端，LangChain 将使用它与 Rockset 数据库进行交互。
+
+```python
+pip install -qU  rockset
+```
+
+# 加载文档
+
+LangChain 与 Rockset 的集成允许您通过 SQL 查询从 Rockset 集合中加载文档。要执行此操作，您必须构造一个 `RocksetLoader` 对象。下面是一个初始化 `RocksetLoader` 的示例代码片段。
+
+```python
+from langchain_community.document_loaders import RocksetLoader
+from rockset import Regions, RocksetClient, models
+
+loader = RocksetLoader(
+    RocksetClient(Regions.usw2a1, "<api key>"),
+    models.QueryRequestSql(query="SELECT * FROM langchain_demo LIMIT 3"),  # SQL 查询
+    ["text"],  # 内容列
+    metadata_keys=["id", "date"],  # 元数据列
+)
+```
+
+在这里，您可以看到执行了以下查询：
+
+```sql
+SELECT * FROM langchain_demo LIMIT 3
+```
+
+集合中的 `text` 列被用作页面内容（page content），记录的 `id` 和 `date` 列被用作元数据（如果您没有为 `metadata_keys` 传递任何内容，则整个 Rockset 文档都将用作元数据）。
+
+要执行查询并访问结果 `Document` 对象的迭代器，请运行：
+
+```python
+loader.lazy_load()
+```
+
+要执行查询并一次性访问所有结果 `Document` 对象，请运行：
+
+```python
+loader.load()
+```
+
+以下是 `loader.load()` 的一个示例响应：
+
+```python
+[
+    Document(
+        page_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas a libero porta, dictum ipsum eget, hendrerit neque. Morbi blandit, ex ut suscipit viverra, enim velit tincidunt tellus, a tempor velit nunc et ex. Proin hendrerit odio nec convallis lobortis. Aenean in purus dolor. Vestibulum orci orci, laoreet eget magna in, commodo euismod justo.",
+        metadata={"id": 83209, "date": "2022-11-13T18:26:45.000000Z"}
+    ),
+    Document(
+        page_content="Integer at finibus odio. Nam sit amet enim cursus lacus gravida feugiat vestibulum sed libero. Aenean eleifend est quis elementum tincidunt. Curabitur sit amet ornare erat. Nulla id dolor ut magna volutpat sodales fringilla vel ipsum. Donec ultricies, lacus sed fermentum dignissim, lorem elit aliquam ligula, sed suscipit sapien purus nec ligula.",
+        metadata={"id": 89313, "date": "2022-11-13T18:28:53.000000Z"}
+    ),
+    Document(
+        page_content="Morbi tortor enim, commodo id efficitur vitae, fringilla nec mi. Nullam molestie faucibus aliquet. Praesent a est facilisis, condimentum justo sit amet, viverra erat. Fusce volutpat nisi vel purus blandit, et facilisis felis accumsan. Phasellus luctus ligula ultrices tellus tempor hendrerit. Donec at ultricies leo.",
+        metadata={"id": 87732, "date": "2022-11-13T18:49:04.000000Z"}
+    )
+]
+```
+
+## 使用多个列作为内容
+
+您可以选择使用多个列作为内容：
+
+```python
+from langchain_community.document_loaders import RocksetLoader
+from rockset import Regions, RocksetClient, models
+
+loader = RocksetLoader(
+    RocksetClient(Regions.usw2a1, "<api key>"),
+    models.QueryRequestSql(query="SELECT * FROM langchain_demo LIMIT 1 WHERE id=38"),
+    ["sentence1", "sentence2"],  # 两个内容列
+)
+```
+
+假设 "sentence1" 字段是 `"This is the first sentence."`，而 "sentence2" 字段是 `"This is the second sentence."`，那么生成的 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 的 `page_content` 将是：
+
+```
+This is the first sentence.
+This is the second sentence.
+```
+
+您可以通过在 `RocksetLoader` 构造函数中设置 `content_columns_joiner` 参数来定义自己的函数来连接内容列。`content_columns_joiner` 是一个方法，它接受一个 `List[Tuple[str, Any]]` 作为参数，代表 (列名, 列值) 的元组列表。默认情况下，此方法使用换行符连接每个列的值。
+
+例如，如果您想用空格而不是换行符连接 sentence1 和 sentence2，您可以像下面这样设置 `content_columns_joiner`：
+
+```python
+RocksetLoader(
+    RocksetClient(Regions.usw2a1, "<api key>"),
+    models.QueryRequestSql(query="SELECT * FROM langchain_demo LIMIT 1 WHERE id=38"),
+    ["sentence1", "sentence2"],
+    content_columns_joiner=lambda docs: " ".join(
+        [doc[1] for doc in docs]
+    ),  # 使用空格连接而不是 /n
+)
+```
+
+生成的 [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) 的 `page_content` 将是：
+
+```
+This is the first sentence. This is the second sentence.
+```
+
+通常，您希望在 `page_content` 中包含列名。您可以这样做：
+
+```python
+RocksetLoader(
+    RocksetClient(Regions.usw2a1, "<api key>"),
+    models.QueryRequestSql(query="SELECT * FROM langchain_demo LIMIT 1 WHERE id=38"),
+    ["sentence1", "sentence2"],
+    content_columns_joiner=lambda docs: "\n".join(
+        [f"{doc[0]}: {doc[1]}" for doc in docs]
+    ),
+)
+```
+
+这将导致以下 `page_content`：
+
+```
+sentence1: This is the first sentence.
+sentence2: This is the second sentence.
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\rockset.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

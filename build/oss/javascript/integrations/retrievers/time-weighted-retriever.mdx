@@ -1,0 +1,79 @@
+---
+title: 时间加权检索器
+---
+
+时间加权检索器（Time-Weighted Retriever）是一种除了考虑相似度之外，还会考虑**时效性（Recency）**的检索器。其评分算法如下：
+
+```typescript
+let score = (1.0 - this.decayRate) ** hoursPassed + vectorRelevance;
+```
+
+值得注意的是，上述代码中的 `hoursPassed` 指的是对象距离**上次被访问**的小时数，而不是距离其创建的时间。这意味着经常被访问的对象会保持“新鲜度”，从而获得更高的分数。
+
+`this.decayRate` 是一个可配置的介于 0 和 1 之间的十进制数。数值越低，文档被“记住”的时间越长；数值越高，则越侧重于最近访问过的文档。
+
+请注意，如果设置的衰减率（decay rate）恰好为 0 或 1，`hoursPassed` 将变得无关紧要，此时该检索器等效于标准的向量查找。
+
+## 使用方法
+
+以下示例展示了如何使用向量存储（vector store）初始化 `TimeWeightedVectorStoreRetriever`。
+需要注意的是，由于需要元数据（metadata）的配合，所有文档必须使用**检索器**上的 `addDocuments` 方法添加到后端的向量存储中，而不是直接使用向量存储本身的方法。
+
+```typescript
+import { TimeWeightedVectorStoreRetriever } from "@langchain/classic/retrievers/time_weighted";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
+import { OpenAIEmbeddings } from "@langchain/openai";
+
+const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
+
+const retriever = new TimeWeightedVectorStoreRetriever({
+  vectorStore,
+  memoryStream: [],
+  searchKwargs: 2,
+});
+
+const documents = [
+  "My name is John.",
+  "My name is Bob.",
+  "My favourite food is pizza.",
+  "My favourite food is pasta.",
+  "My favourite food is sushi.",
+].map((pageContent) => ({ pageContent, metadata: {} }));
+
+// 所有文档必须通过检索器上的此方法添加（而不是直接通过向量存储！），
+// 以便填充正确的访问历史元数据
+await retriever.addDocuments(documents);
+
+const results1 = await retriever.invoke("What is my favourite food?");
+
+console.log(results1);
+
+/*
+[
+  Document { pageContent: 'My favourite food is pasta.', metadata: {} }
+]
+ */
+
+const results2 = await retriever.invoke("What is my favourite food?");
+
+console.log(results2);
+
+/*
+[
+  Document { pageContent: 'My favourite food is pasta.', metadata: {} }
+]
+ */
+```
+
+## 相关内容
+
+- [检索指南](/oss/javascript/langchain/retrieval)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\retrievers\time-weighted-retriever.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

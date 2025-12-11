@@ -1,0 +1,170 @@
+```mdx
+---
+title: 应用程序结构
+sidebarTitle: 应用程序结构
+---
+
+import FrameworkAgnosticPy from '/snippets/langsmith/framework-agnostic-py.mdx';
+import FrameworkAgnosticJS from '/snippets/langsmith/framework-agnostic-js.mdx';
+
+要在 LangSmith 上部署，应用程序必须包含一个或多个图（graph）、一个配置文件（`langgraph.json`）、一个指定依赖项的文件，以及一个可选的 `.env` 文件（用于指定环境变量）。
+
+本页面将解释 LangSmith 应用程序的组织方式，以及如何提供部署所需的配置信息。
+
+## 核心概念
+
+要使用 LangSmith 进行部署，需要提供以下信息：
+
+1.  [配置文件](#configuration-file-concepts)（`langgraph.json`），用于指定应用程序要使用的依赖项、图和环境变量。
+1.  实现应用程序逻辑的[图（Graphs）](#graphs)。
+1.  一个指定运行应用程序所需[依赖项](#dependencies)的文件。
+1.  运行应用程序所需的[环境变量](#environment-variables)。
+
+<Tip>
+**与框架无关 (Framework agnostic)**
+<FrameworkAgnosticPy/>
+
+
+</Tip>
+
+## 文件结构
+
+以下是 Python 和 JavaScript 应用程序的目录结构示例：
+
+<Tabs>
+    <Tab title="Python (requirements.txt)">
+    ```plaintext
+    my-app/
+    ├── my_agent # 所有项目代码位于此处
+    │   ├── utils # 图的工具函数
+    │   │   ├── __init__.py
+    │   │   ├── tools.py # 图的工具定义
+    │   │   ├── nodes.py # 图的节点函数定义
+    │   │   └── state.py # 图的状态定义
+    │   ├── __init__.py
+    │   └── agent.py # 构建图的代码
+    ├── .env # 环境变量
+    ├── requirements.txt # 包依赖项
+    └── langgraph.json # LangGraph 的配置文件
+    ```
+    </Tab>
+    <Tab title="Python (pyproject.toml)">
+    ```plaintext
+    my-app/
+    ├── my_agent # 所有项目代码位于此处
+    │   ├── utils # 图的工具函数
+    │   │   ├── __init__.py
+    │   │   ├── tools.py # 图的工具定义
+    │   │   ├── nodes.py # 图的节点函数定义
+    │   │   └── state.py # 图的状态定义
+    │   ├── __init__.py
+    │   └── agent.py # 构建图的代码
+    ├── .env # 环境变量
+    ├── langgraph.json  # LangGraph 的配置文件
+    └── pyproject.toml # 项目的依赖项
+    ```
+    </Tab>
+    <Tab title="JS (package.json)">
+    ```plaintext
+    my-app/
+    ├── src # 所有项目代码位于此处
+    │   ├── utils # 图的可选工具函数
+    │   │   ├── tools.ts # 图的工具定义
+    │   │   ├── nodes.ts # 图的节点函数定义
+    │   │   └── state.ts # 图的状态定义
+    │   └── agent.ts # 构建图的代码
+    ├── package.json # 包依赖项
+    ├── .env # 环境变量
+    └── langgraph.json # LangGraph 的配置文件
+    ```
+    </Tab>
+</Tabs>
+
+<Note>
+应用程序的目录结构会根据所使用的编程语言和包管理器而有所不同。
+</Note>
+
+<a id="configuration-file-concepts"></a>
+## 配置文件
+
+`langgraph.json` 文件是一个 JSON 文件，用于指定部署应用程序所需的依赖项、图、环境变量和其他设置。
+
+有关 JSON 文件中所有受支持键的详细信息，请参阅 [LangGraph 配置文件参考](/langsmith/cli#configuration-file)。
+
+<Tip>
+[LangGraph CLI](/langsmith/cli) 默认使用当前目录下的配置文件 `langgraph.json`。
+</Tip>
+
+### 示例
+
+<Tabs>
+    <Tab title="Python">
+    * 依赖项涉及一个自定义的本地包和 `langchain_openai` 包。
+    * 单个图将从文件 `./your_package/your_file.py` 中的变量 `agent` 加载。
+    * 环境变量从 `.env` 文件加载。
+
+    ```json
+    {
+        "dependencies": [
+            "langchain_openai",
+            "./your_package"
+        ],
+        "graphs": {
+            "my_agent": "./your_package/your_file.py:agent"
+        },
+        "env": "./.env"
+    }
+    ```
+    </Tab>
+    <Tab title="JavaScript">
+    * 依赖项将从本地目录中的依赖文件加载（例如 `package.json`）。
+    * 单个图将从文件 `./your_package/your_file.js` 中的函数 `agent` 加载。
+    * 环境变量 `OPENAI_API_KEY` 是内联设置的。
+
+    ```json
+    {
+        "dependencies": [
+            "."
+        ],
+        "graphs": {
+            "my_agent": "./your_package/your_file.js:agent"
+        },
+        "env": {
+            "OPENAI_API_KEY": "secret-key"
+        }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## 依赖项 (Dependencies)
+
+应用程序可能依赖于其他 Python 包或 JavaScript 库（取决于应用程序的编程语言）。
+
+通常，您需要指定以下信息才能使依赖项设置正确：
+
+1.  目录中指定依赖项的文件（例如 `requirements.txt`、`pyproject.toml` 或 `package.json`）。
+1.  [配置文件](#configuration-file-concepts)中指定的 `dependencies` 键，用于列出运行应用程序所需的依赖项。
+1.  任何额外的二进制文件或系统库都可以使用[LangGraph 配置文件](#configuration-file-concepts)中的 `dockerfile_lines` 键进行指定。
+
+## 图 (Graphs)
+
+使用[配置文件](#configuration-file-concepts)中的 `graphs` 键来指定部署的应用程序中可用的图。
+
+您可以在配置文件中指定一个或多个图。每个图都由一个唯一的名称和一个指向（1）已编译图或（2）定义图的函数的路径来标识。
+
+## 环境变量 (Environment variables)
+
+如果您在本地使用已部署的 LangGraph 应用程序（通过 [本地服务器](/langsmith/local-server)），您可以在[配置文件](#configuration-file-concepts)的 `env` 键中配置环境变量。
+
+对于生产部署，您通常希望在部署环境中配置这些环境变量。
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\application-structure.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

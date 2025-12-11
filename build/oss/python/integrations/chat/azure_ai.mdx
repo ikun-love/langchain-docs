@@ -1,0 +1,118 @@
+```markdown
+---
+title: AzureAIChatCompletionsModel
+---
+
+这将帮助您开始使用 AzureAIChatCompletionsModel [聊天模型](/oss/python/langchain/models)。有关所有 AzureAIChatCompletionsModel 功能和配置的详细文档，请访问 [API 参考](https://python.langchain.com/api_reference/azure_ai/chat_models/langchain_azure_ai.chat_models.AzureAIChatCompletionsModel.html)。
+
+`AzureAIChatCompletionsModel` 类使用 Azure AI Foundry SDK。AI Foundry 包含多种聊天模型，包括 AzureOpenAI、Cohere、Llama、Phi-3/4 和 DeepSeek-R1 等。您可以在 [Azure 文档](https://learn.microsoft.com/azure/ai-studio/how-to/model-catalog-overview)中找到有关其最新模型、成本、上下文窗口和支持的输入类型的信息。
+
+## 概述
+
+### 集成详情
+
+| 类 (Class) | 包 (Package) | 本地 (Local) | 可序列化 (Serializable) | [JS 支持](https://v03.api.js.langchain.com/classes/_langchain_openai.AzureChatOpenAI.html) | 下载量 (Downloads) | 版本 (Version) |
+| :--- | :--- | :---: | :---: |  :---: | :---: | :---: |
+| [AzureAIChatCompletionsModel](https://python.langchain.com/api_reference/azure_ai/chat_models/langchain_azure_ai.chat_models.AzureAIChatCompletionsModel.html) | [langchain-azure-ai](https://python.langchain.com/api_reference/langchain_azure_ai/index.html) | ❌ | ✅ | ✅ | ![PyPI - Downloads](https://img.shields.io/pypi/dm/langchain-azure-ai?style=flat-square&label=%20) | ![PyPI - Version](https://img.shields.io/pypi/v/langchain-azure-ai?style=flat-square&label=%20) |
+
+### 模型特性
+
+| [工具调用](/oss/python/langchain/tools) | [结构化输出](/oss/python/langchain/structured-output) | JSON 模式 | [图像输入](/oss/python/langchain/messages#multimodal) | 音频输入 | 视频输入 | [Token 级流式传输](/oss/python/langchain/streaming/) | 原生异步 (Native async) | [Token 使用量](/oss/python/langchain/models#token-usage) | [Logprobs](/oss/python/langchain/models#log-probabilities) |
+| :---: | :---: | :---: | :---: |  :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅|
+
+## 设置
+
+要访问 `AzureAIChatCompletionsModel` 模型，您需要创建一个 [Azure 帐户](https://azure.microsoft.com/pricing/purchase-options/azure-account)，获取 API 密钥，并安装 `langchain-azure-ai` 集成包。
+
+### 凭证 (Credentials)
+
+请参阅 [Azure 文档](https://learn.microsoft.com/en-us/azure/ai-studio/how-to/develop/sdk-overview?tabs=sync&pivots=programming-language-python)，了解如何创建部署并生成 API 密钥。部署模型后，在 AI Foundry 中点击“获取终结点”（get endpoint）按钮。这将显示您的终结点和 API 密钥。完成这些步骤后，设置 `AZURE_AI_CREDENTIAL` 和 `AZURE_AI_ENDPOINT` 环境变量：
+
+```python
+import getpass
+import os
+
+if not os.getenv("AZURE_AI_CREDENTIAL"):
+    os.environ["AZURE_AI_CREDENTIAL"] = getpass.getpass(
+        "Enter your AzureAIChatCompletionsModel API key: "
+    )
+
+if not os.getenv("AZURE_AI_ENDPOINT"):
+    os.environ["AZURE_AI_ENDPOINT"] = getpass.getpass(
+        "Enter your model endpoint: "
+    )
+```
+
+如果您想对模型调用进行自动化跟踪，可以通过取消注释以下代码来设置您的 [LangSmith](https://docs.smith.langchain.com/) API 密钥：
+
+```python
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = getpass.getpass("Enter your LangSmith API key: ")
+```
+
+### 安装
+
+LangChain AzureAIChatCompletionsModel 集成位于 `langchain-azure-ai` 包中：
+
+```python
+pip install -qU langchain-azure-ai
+```
+
+## 实例化
+
+现在我们可以实例化模型对象并生成聊天补全：
+
+```python
+from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
+
+llm = AzureAIChatCompletionsModel(
+    model_name="gpt-4",
+    temperature=0,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2,
+)
+```
+
+## 调用 (Invocation)
+
+```python
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    ),
+    ("human", "I love programming."),
+]
+ai_msg = llm.invoke(messages)
+ai_msg
+```
+
+```output
+AIMessage(content="J'adore programmer.", additional_kwargs={}, response_metadata={'model': 'gpt-4o-2024-05-13', 'token_usage': {'input_tokens': 31, 'output_tokens': 4, 'total_tokens': 35}, 'finish_reason': 'stop'}, id='run-c082dffd-b1de-4b3f-943f-863836663ddb-0', usage_metadata={'input_tokens': 31, 'output_tokens': 4, 'total_tokens': 35})
+```
+
+```python
+print(ai_msg.content)
+```
+
+```output
+J'adore programmer.
+```
+
+---
+
+## API 参考
+
+有关所有 AzureAIChatCompletionsModel 功能和配置的详细文档，请访问 API 参考：[python.langchain.com/api_reference/azure_ai/chat_models/langchain_azure_ai.chat_models.AzureAIChatCompletionsModel.html](https://python.langchain.com/api_reference/azure_ai/chat_models/langchain_azure_ai.chat_models.AzureAIChatCompletionsModel.html)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\azure_ai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

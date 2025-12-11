@@ -1,0 +1,50 @@
+---
+title: GPT4All
+---
+
+[GPT4All](https://gpt4all.io/index.html) 是一款免费使用、可本地运行、注重隐私保护的聊天机器人。它**不需要 GPU 或互联网连接**。它集成了流行的模型以及其自有的模型，例如 GPT4All Falcon、Wizard 等。
+
+本指南（Notebook）将解释如何将 [GPT4All 嵌入模型](https://docs.gpt4all.io/gpt4all_python_embedding.html#gpt4all.gpt4all.Embed4All) 与 LangChain 结合使用。
+
+## 安装 GPT4All 的 Python 绑定
+
+```python
+pip install -qU  gpt4all > /dev/null
+```
+
+```python
+from langchain_community.embeddings import GPT4AllEmbeddings
+```
+
+```python
+gpt4all_embd = GPT4AllEmbeddings()
+```
+
+```output
+Model downloaded at:  /Users/rlm/.cache/gpt4all/ggml-all-MiniLM-L6-v2-f16.bin
+```
+
+```python
+text = "This is a test document."
+```
+
+## 嵌入文本数据
+
+```python
+query_result = gpt4all_embd.embed_query(text)
+```
+
+您可以使用 `embed_documents` 方法来嵌入多段文本。您还可以将这些嵌入向量与 [Nomic's Atlas](https://docs.nomic.ai/index.html) 进行映射，从而可视化地展示您的数据。
+
+```python
+doc_result = gpt4all_embd.embed_documents([text])
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\gpt4all.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,160 @@
+---
+title: Azure AI
+---
+
+本页面涵盖了 LangChain 与 [Microsoft Azure](https://azure.microsoft.com/) 及其相关项目的所有集成。
+
+Azure AI、动态会话（Dynamic Sessions）和 SQL Server 的集成包维护在
+[langchain-azure](https://github.com/langchain-ai/langchain-azure) 仓库中。
+
+## 聊天模型 (Chat Models)
+
+我们建议开发者从 (`langchain-azure-ai`) 开始，以访问 [Azure AI Foundry](https://learn.microsoft.com/en-us/azure/ai-studio/how-to/model-catalog-overview) 中所有可用的模型。
+
+### Azure AI 聊天补全 (Azure AI Chat Completions)
+
+使用 `AzureAIChatCompletionsModel` 类访问 Azure OpenAI、DeepSeek R1、Cohere、Phi 和 Mistral 等模型。
+
+<CodeGroup>
+```bash pip
+pip install -U langchain-azure-ai
+```
+
+```bash uv
+uv add langchain-azure-ai
+```
+</CodeGroup>
+
+配置您的 API 密钥和终结点 (Endpoint)。
+
+```bash
+export AZURE_AI_CREDENTIAL=your-api-key
+export AZURE_AI_ENDPOINT=your-endpoint
+```
+
+```python
+from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
+
+llm = AzureAIChatCompletionsModel(
+    model_name="gpt-4o",
+    api_version="2024-05-01-preview",
+)
+
+llm.invoke('Tell me a joke and include some emojis')
+```
+
+## 嵌入模型 (Embedding Models)
+
+### Azure AI 模型推理用于嵌入 (Azure AI model inference for embeddings)
+
+<CodeGroup>
+```bash pip
+pip install -U langchain-azure-ai
+```
+
+```bash uv
+uv add langchain-azure-ai
+```
+</CodeGroup>
+
+配置您的 API 密钥和终结点 (Endpoint)。
+
+```bash
+export AZURE_AI_CREDENTIAL=your-api-key
+export AZURE_AI_ENDPOINT=your-endpoint
+```
+
+```python
+from langchain_azure_ai.embeddings import AzureAIEmbeddingsModel
+
+embed_model = AzureAIEmbeddingsModel(
+    model_name="text-embedding-ada-002"
+)
+```
+
+## 向量存储 (Vector Stores)
+
+### Azure CosmosDB NoSQL 向量搜索 (Azure CosmosDB NoSQL Vector Search)
+
+> [Azure CosmosDB NoSQL](https://azure.microsoft.com/en-us/products/cosmos-db/) 是一个完全托管的、
+> 全局分布式、无服务器的文档数据库，专为现代应用程序设计。它以灵活的
+> JSON 文档形式存储数据，并使用类似 SQL 的查询语言。这提供了高性能、低延迟和自动、
+> 弹性的可伸缩性。它还具有集成的向量搜索功能，可用于生成式 AI 和 RAG 等 AI 工作负载。这使得您可以在同一数据库中将向量相似性搜索与传统
+> 关键字搜索结合起来，以获得相关结果，并可从各种索引方法中进行选择以达到最佳性能。
+> 这种统一的方法简化了应用程序架构并确保了数据一致性。
+
+我们需要安装 `azure-cosmos` 包才能使用此向量存储。
+
+<CodeGroup>
+    ```bash pip
+    pip install -qU azure-cosmos
+    ```
+
+    ```bash uv
+    uv add azure-cosmos
+    ```
+</CodeGroup>
+
+```python
+from langchain_azure_ai.vectorstores.azure_cosmos_db_no_sql import (
+    AzureCosmosDBNoSqlVectorSearch,
+)
+vector_search = AzureCosmosDBNoSqlVectorSearch.from_documents(
+    documents=docs,
+    embedding=openai_embeddings,
+    cosmos_client=cosmos_client,
+    database_name=database_name,
+    container_name=container_name,
+    vector_embedding_policy=vector_embedding_policy,
+    full_text_policy=full_text_policy,
+    indexing_policy=indexing_policy,
+    cosmos_container_properties=cosmos_container_properties,
+    cosmos_database_properties={},
+    full_text_search_enabled=True,
+)
+```
+
+查看 [使用示例](/oss/python/integrations/vectorstores/azure_cosmos_db_no_sql)。
+
+
+### Azure CosmosDB Mongo vCore 向量搜索 (Azure CosmosDB Mongo vCore Vector Search)
+
+> [Azure CosmosDB Mongo vCore](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/) 架构使
+创建具有完全原生 MongoDB 支持的数据库变得容易。您可以通过将应用程序指向 MongoDB (vCore) API
+集群的连接字符串，来应用您的 MongoDB 经验并继续使用您最喜欢的 MongoDB 驱动程序、SDK 和工具。
+
+我们需要安装 `pymongo` 包才能使用此向量存储。
+
+<CodeGroup>
+    ```bash pip
+    pip install -qU pymongo
+    ```
+
+    ```bash uv
+    uv add pymongo
+    ```
+</CodeGroup>
+
+```python
+from langchain_azure_ai.vectorstores.azure_cosmos_db_mongo_vcore import (
+    AzureCosmosDBMongoVCoreVectorSearch,
+)
+
+vectorstore = AzureCosmosDBMongoVCoreVectorSearch.from_documents(
+    docs,
+    openai_embeddings,
+    collection=collection,
+    index_name=INDEX_NAME,
+)
+```
+
+查看 [使用示例](/oss/python/integrations/vectorstores/azure_cosmos_db_mongo_vcore)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\providers\azure_ai.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,95 @@
+---
+title: Pathway (路径)
+---
+
+> [Pathway](https://pathway.com/) 是一个开放的数据处理框架。它允许您轻松开发数据转换管道和机器学习应用，这些应用能够处理实时数据源和不断变化的数据。
+
+本手册（Notebook）演示了如何将实时的 `Pathway` 数据索引管道与 `LangChain` 结合使用。您可以像查询常规的向量存储一样，从您的链（Chains）中查询此管道的结果。然而，在底层，Pathway 会在每次数据更改时更新索引，从而确保您获得始终最新的答案。
+
+在本手册中，我们将使用一个 [公开的演示文档处理管道](https://pathway.com/solutions/ai-pipelines#try-it-out)，该管道会执行以下操作：
+
+1. 监控多个云数据源的数据变化。
+2. 为数据构建向量索引。
+
+要拥有您自己的文档处理管道，请查看我们的 [托管服务](https://pathway.com/solutions/ai-pipelines) 或 [构建您自己的管道](https://pathway.com/developers/user-guide/llm-xpack/vectorstore_pipeline/)。
+
+我们将使用 [`VectorStore`](https://reference.langchain.com/python/langchain_core/vectorstores/?h=#langchain_core.vectorstores.base.VectorStore) 客户端连接到索引，该客户端实现了 `similarity_search` 函数来检索匹配的文档。
+
+本文档中使用的基本管道允许您毫不费力地为存储在云位置的文件构建一个简单的向量索引。但是，Pathway 提供了构建实时数据管道和应用程序所需的一切，包括类似 SQL 的操作，例如 `groupby-reductions`（分组/归约）和在不同数据源之间进行 `joins`（连接），数据的基于时间的 `grouping`（分组）和 `windowing`（窗口化），以及种类繁多的连接器。
+
+您需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
+
+## 查询数据管道
+
+要实例化和配置客户端，您需要提供文档索引管道的 `url` 或 `host` 和 `port`。在下面的代码中，我们使用了公开可用的 [演示管道](https://pathway.com/solutions/ai-pipelines#try-it-out)，其 REST API 可通过 `https://demo-document-indexing.pathway.stream` 访问。此演示从 [Google Drive](https://drive.google.com/drive/u/0/folders/1cULDv2OaViJBmOfG5WB0oWcgayNrGtVs) 和 [Sharepoint](https://navalgo.sharepoint.com/sites/ConnectorSandbox/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FConnectorSandbox%2FShared%20Documents%2FIndexerSandbox&p=true&ga=1) 中摄取文档，并维护一个索引用于检索文档。
+
+```python
+from langchain_community.vectorstores import PathwayVectorClient
+
+client = PathwayVectorClient(url="https://demo-document-indexing.pathway.stream")
+```
+
+ 我们可以开始提问了：
+
+```python
+query = "What is Pathway?"
+docs = client.similarity_search(query)
+```
+
+```python
+print(docs[0].page_content)
+```
+
+ **轮到您了！** [获取您的管道](https://pathway.com/solutions/ai-pipelines)，或者向演示管道上传 [新文档](https://chat-realtime-sharepoint-gdrive.demo.pathway.com/)，然后重试查询！
+
+## 基于文件元数据的过滤
+
+我们支持使用 [jmespath](https://jmespath.org/) 表达式对文档进行过滤，例如：
+
+```python
+# 只考虑晚于特定 Unix 时间戳修改的源
+docs = client.similarity_search(query, metadata_filter="modified_at >= `1702672093`")
+
+# 只考虑晚于特定 Unix 时间戳修改的源
+docs = client.similarity_search(query, metadata_filter="owner == `james`")
+
+# 只考虑路径中包含 'repo_readme' 的源
+docs = client.similarity_search(query, metadata_filter="contains(path, 'repo_readme')")
+
+# 两个条件的 AND 组合
+docs = client.similarity_search(
+    query, metadata_filter="owner == `james` && modified_at >= `1702672093`"
+)
+
+# 两个条件的 OR 组合
+docs = client.similarity_search(
+    query, metadata_filter="owner == `james` || modified_at >= `1702672093`"
+)
+```
+
+## 获取有关已索引文件的信息
+
+ `PathwayVectorClient.get_vectorstore_statistics()` (获取向量存储统计信息) 提供了有关向量存储状态的基本统计数据，例如已索引文件的数量以及最近一次更新的时间戳。您可以在链（Chains）中使用它来告知用户您的知识库有多新。
+
+```python
+client.get_vectorstore_statistics()
+```
+
+## 您自己的管道
+
+### 在生产环境中运行
+
+要拥有您自己的 Pathway 数据索引管道，请查看 Pathway 的 [托管管道](https://pathway.com/solutions/ai-pipelines) 解决方案。您也可以运行自己的 Pathway 管道——有关如何构建管道的信息，请参阅 [Pathway 指南](https://pathway.com/developers/user-guide/llm-xpack/vectorstore_pipeline/)。
+
+### 处理文档
+
+向量化管道支持用于解析、分割和嵌入文档的可插入组件。对于嵌入和分割，您可以使用 [LangChain 组件](https://pathway.com/developers/user-guide/llm-xpack/vectorstore_pipeline/#langchain)，或者查看 Pathway 中可用的 [embedders (嵌入器)](https://pathway.com/developers/api-docs/pathway-xpacks-llm/embedders) 和 [splitters (分割器)](https://pathway.com/developers/api-docs/pathway-xpacks-llm/splitters)。如果未提供解析器（parser），则默认为 `UTF-8` 解析器。您可以在 [此处](https://github.com/pathwaycom/pathway/blob/main/python/pathway/xpacks/llm/parser.py) 找到可用的解析器。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\pathway.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

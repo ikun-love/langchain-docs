@@ -1,0 +1,105 @@
+---
+title: Upstash Redis
+---
+
+此示例演示了如何使用 `UpstashRedisStore` [`BaseStore`](https://reference.langchain.com/javascript/classes/_langchain_langgraph-checkpoint.BaseStore.html) 集成来设置聊天历史记录存储。
+
+## 设置
+
+```bash npm
+npm install @langchain/community @langchain/core @upstash/redis
+```
+
+## 用法
+
+```typescript
+import { Redis } from "@upstash/redis";
+import { UpstashRedisStore } from "@langchain/community/storage/upstash_redis";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+
+// 省心提示：定义一个帮助函数来获取您的客户端，同时处理环境变量未设置的情况。
+const getClient = () => {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    throw new Error(
+      "环境变量中必须设置 UPSTASH_REDIS_REST_URL 和 UPSTASH_REDIS_REST_TOKEN"
+    );
+  }
+  const client = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  return client;
+};
+
+// 定义客户端和存储
+const client = getClient();
+const store = new UpstashRedisStore({
+  client,
+});
+// 定义我们的编码器/解码器，用于在字符串和 Uint8Array 之间进行转换
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+/**
+ * 在这里，您需要定义您的 LLM 和聊天链，调用 LLM，并最终获得消息列表。
+ * 对于此示例，我们假设我们已经有了一个列表。
+ */
+const messages = Array.from({ length: 5 }).map((_, index) => {
+  if (index % 2 === 0) {
+    return new AIMessage("ai stuff...");
+  }
+  return new HumanMessage("human stuff...");
+});
+// 将您的消息设置到存储中
+// 键将以 `message:id:` 为前缀，并以索引结尾。
+await store.mset(
+  messages.map((message, index) => [
+    `message:id:${index}`,
+    encoder.encode(JSON.stringify(message)),
+  ])
+);
+// 现在您可以从存储中获取您的消息了
+const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+// 确保解码这些值
+console.log(retrievedMessages.map((v) => decoder.decode(v)));
+/**
+[
+  '{"id":["langchain","AIMessage"],"kwargs":{"content":"ai stuff..."}}',
+  '{"id":["langchain","HumanMessage"],"kwargs":{"content":"human stuff..."}}'
+]
+ */
+// 或者，如果您想取回所有键，您可以调用 `yieldKeys` 方法。
+// 您可以选择传递一个键前缀，以便只取回应匹配该前缀的键。
+const yieldedKeys = [];
+for await (const key of store.yieldKeys("message:id")) {
+  yieldedKeys.push(key);
+}
+// 键没有被编码，因此不需要解码
+console.log(yieldedKeys);
+/**
+[
+  'message:id:2',
+  'message:id:1',
+  'message:id:3',
+  'message:id:0',
+  'message:id:4'
+]
+ */
+// 最后，让我们从存储中删除这些键
+await store.mdelete(yieldedKeys);
+```
+
+## 相关
+
+- [键值存储概念指南](/oss/javascript/integrations/stores)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\stores\upstash_redis_storage.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,80 @@
+---
+title: Searxng 搜索工具
+---
+
+`SearxngSearch` 工具将您的智能体（Agents）和链（Chains）连接到互联网。
+
+作为 SearxNG API 的一个封装器（Wrapper），此工具非常适合使用 SearxNG API 执行元搜索引擎（Meta-search engine）查询。它在回答有关**当前事件**的问题时尤其有用。
+
+## 用法
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { AgentExecutor } from "@langchain/classic/agents";
+import { BaseMessageChunk } from "@langchain/core/messages";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { SearxngSearch } from "@langchain/community/tools/searxng_search";
+
+const model = new ChatOpenAI({
+  maxTokens: 1000,
+  model: "gpt-4",
+});
+
+// `apiBase` 将自动从 .env 文件中解析，请在 .env 中设置 "SEARXNG_API_BASE"
+const tools = [
+  new SearxngSearch({
+    params: {
+      format: "json", // 请勿更改此项，"json" 以外的格式将引发错误
+      engines: "google",
+    },
+    // 自定义 Headers，用于支持 rapidAPI 认证或任何需要自定义请求头的实例
+    headers: {},
+  }),
+];
+const prefix = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    "请尽力回答以下问题。在您的最终答案中，请使用项目符号列表（bulleted list）的 Markdown 格式。",
+  ],
+  ["human", "{input}"],
+]);
+// 请用您实际的输出解析器替换此处的占位符。
+const customOutputParser = (
+  input: BaseMessageChunk
+): AgentAction | AgentFinish => ({
+  log: "test",
+  returnValues: {
+    output: input,
+  },
+});
+// 请用您实际的智能体实现替换此处的占位符。
+const agent = RunnableSequence.from([prefix, model, customOutputParser]);
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
+  tools,
+});
+console.log("Agent 已加载。");
+const input = `什么是 LangChain？请用 50 个词进行描述`;
+console.log(`正在使用输入 "${input}" 执行...`);
+const result = await executor.invoke({ input });
+console.log(result);
+/**
+ * LangChain 是一个用于开发由语言模型驱动的应用程序的框架，例如聊天机器人、生成式问答、文本摘要等。它提供了一个标准接口、与其他工具的集成以及针对常见应用的端到端链。LangChain 使得构建数据感知和强大的应用程序成为可能。
+ */
+```
+
+## 相关
+
+- 工具 [概念指南](/oss/javascript/langchain/tools)
+- 工具 [操作指南](/oss/javascript/langchain/tools)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\javascript\integrations\tools\searxng.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

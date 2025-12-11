@@ -1,0 +1,43 @@
+---
+title: Slack
+---
+
+>[Slack](https://slack.com/) 是一款即时通讯程序。
+
+本 Notebook 介绍**如何加载**由 `Slack` 导出生成的 Zip 文件中的文档。
+
+要获取此 `Slack` 导出文件，请遵循以下说明：
+
+## 🧑 摄取您自己数据集的说明
+
+导出您的 Slack 数据。您可以通过访问工作区管理页面 (Workspace Management page)，然后点击“导入/导出”(Import/Export) 选项（地址格式为：\{your\_slack\_domain\}.slack.com/services/export）来完成此操作。之后，选择正确的日期范围，并点击 `Start export`（开始导出）。导出完成后，Slack 会通过电子邮件和私信 (DM) 通知您。
+
+下载的结果是一个 `.zip` 文件，它会出现在您的“下载”文件夹中（或者根据您的操作系统配置，出现在任何可以找到下载文件的地方）。
+
+复制该 `.zip` 文件的路径，并将其赋值给下面的 `LOCAL_ZIPFILE` 变量。
+
+```python
+from langchain_community.document_loaders import SlackDirectoryLoader
+```
+
+```python
+# 可选：设置您的 Slack URL。这将确保文档来源中包含正确的 URL。
+SLACK_WORKSPACE_URL = "https://xxx.slack.com"
+LOCAL_ZIPFILE = ""  # 在此处粘贴 Slack zip 文件的本地路径。
+
+loader = SlackDirectoryLoader(LOCAL_ZIPFILE, SLACK_WORKSPACE_URL)
+```
+
+```python
+docs = loader.load()
+docs
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\slack.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

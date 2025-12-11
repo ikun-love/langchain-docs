@@ -1,0 +1,218 @@
+---
+title: 自然语言 API 工具包
+---
+
+`自然语言 API` 工具包 (`NLAToolkit`) 允许 LangChain 智能体（Agents）高效地规划和组合对各个端点的调用。
+
+本 Notebook 演示了 `Speak`、`Klarna` 和 `Spoonacular` API 的一个组合示例。
+
+### 首先，导入依赖项并加载 LLM
+
+```python
+from langchain.agents import AgentType, initialize_agent
+from langchain_community.agent_toolkits import NLAToolkit
+from langchain_community.utilities import Requests
+from langchain_openai import OpenAI
+```
+
+```python
+# 选择要使用的 LLM。这里我们使用 gpt-3.5-turbo-instruct
+llm = OpenAI(
+    temperature=0, max_tokens=700, model_name="gpt-3.5-turbo-instruct"
+)  # 您可以在此处切换不同的核心 LLM。
+```
+
+### 接下来，加载自然语言 API 工具包
+
+```python
+speak_toolkit = NLAToolkit.from_llm_and_url(llm, "https://api.speak.com/openapi.yaml")
+klarna_toolkit = NLAToolkit.from_llm_and_url(
+    llm, "https://www.klarna.com/us/shopping/public/openai/v0/api-docs/"
+)
+```
+
+```output
+Attempting to load an OpenAPI 3.0.1 spec.  This may result in degraded performance. Convert your OpenAPI spec to 3.1.* spec for better support.
+Attempting to load an OpenAPI 3.0.1 spec.  This may result in degraded performance. Convert your OpenAPI spec to 3.1.* spec for better support.
+Attempting to load an OpenAPI 3.0.1 spec.  This may result in degraded performance. Convert your OpenAPI spec to 3.1.* spec for better support.
+```
+
+### 创建智能体 (Agent)
+
+```python
+# 对默认智能体的指令进行微调
+openapi_format_instructions = """使用以下格式：
+
+Question: 您必须回答的输入问题
+Thought: 您应该始终思考要做什么
+Action: 要执行的操作，应为 [{tool_names}] 中的一项
+Action Input: 要指示 AI 操作代表的操作的内容。
+Observation: 智能体的响应
+... (此 Thought/Action/Action Input/Observation 可以重复 N 次)
+Thought: 我现在知道最终答案了。用户看不到我的任何观察结果、API 响应、链接或工具。
+Final Answer: 对原始输入问题的最终答案，包含足够详细的信息
+
+当您用 Final Answer 进行回复时，请记住，您回复的人**看不到**您的任何 Thought/Action/Action Input/Observations，因此如果其中有任何相关信息，您需要明确地将其包含在您的回复中。"""
+```
+
+```python
+natural_language_tools = speak_toolkit.get_tools() + klarna_toolkit.get_tools()
+mrkl = initialize_agent(
+    natural_language_tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    agent_kwargs={"format_instructions": openapi_format_instructions},
+)
+```
+
+```python
+mrkl.run(
+    "I have an end of year party for my Italian class and have to buy some Italian clothes for it"
+)
+```
+
+```output
+> Entering new AgentExecutor chain...
+ 我需要找出有什么意大利服装可供选择
+Action: Open_AI_Klarna_product_Api.productsUsingGET
+Action Input: Italian clothes
+Observation: API 响应包含来自 Alé 品牌的两款意大利蓝色产品。第一款是 Alé Colour Block Short Sleeve Jersey Men - Italian Blue，价格为 86.49 美元；第二款是 Alé Dolid Flash Jersey Men - Italian Blue，价格为 40.00 美元。
+Thought: 我现在知道有什么意大利服装可供选择以及它们的价格。
+Final Answer: 您可以为您的年末派对购买 Alé 品牌的两款意大利蓝色产品。Alé Colour Block Short Sleeve Jersey Men - Italian Blue 售价 86.49 美元，Alé Dolid Flash Jersey Men - Italian Blue 售价 40.00 美元。
+
+> Finished chain.
+```
+
+```output
+'You can buy two products from the Alé brand in Italian Blue for your end of year party. The Alé Colour Block Short Sleeve Jersey Men - Italian Blue costs $86.49, and the Alé Dolid Flash Jersey Men - Italian Blue costs $40.00.'
+```
+
+### 使用身份验证 (Auth) 并添加更多端点
+
+某些端点可能需要通过访问令牌等方式进行用户身份验证。这里我们展示如何通过 `Requests` 包装器对象传入身份验证信息。
+
+由于每个 NLATool 为其包装的 API 提供简洁的自然语言接口，顶层的对话智能体在整合每个端点以满足用户请求时会更加轻松。
+
+**添加 Spoonacular 端点。**
+
+1. 前往 [Spoonacular API Console](https://spoonacular.com/food-api/console#Profile) 并免费注册一个账户。
+2. 点击 `Profile` 并将在下面复制您的 API 密钥。
+
+```python
+spoonacular_api_key = ""  # 从 API 控制台复制
+```
+
+```python
+requests = Requests(headers={"x-api-key": spoonacular_api_key})
+spoonacular_toolkit = NLAToolkit.from_llm_and_url(
+    llm,
+    "https://spoonacular.com/application/frontend/downloads/spoonacular-openapi-3.json",
+    requests=requests,
+    max_text_length=1800,  # 如果您想截断响应文本
+)
+```
+
+```output
+Attempting to load an OpenAPI 3.0.0 spec.  This may result in degraded performance. Convert your OpenAPI spec to 3.1.* spec for better support.
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Accept. Valid values are ['path', 'query'] Ignoring optional parameter
+Unsupported APIPropertyLocation "header" for parameter Content-Type. Valid values are ['path', 'query'] Ignoring optional parameter
+```
+
+```python
+natural_language_api_tools = (
+    speak_toolkit.get_tools()
+    + klarna_toolkit.get_tools()
+    + spoonacular_toolkit.get_tools()[:30]
+)
+print(f"{len(natural_language_api_tools)} tools loaded.")
+```
+
+```output
+34 tools loaded.
+```
+
+```python
+# 使用新工具创建智能体
+mrkl = initialize_agent(
+    natural_language_api_tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    agent_kwargs={"format_instructions": openapi_format_instructions},
+)
+```
+
+```python
+# 使查询更复杂！
+user_input = (
+    "I'm learning Italian, and my language class is having an end of year party... "
+    " Could you help me find an Italian outfit to wear and"
+    " an appropriate recipe to prepare so I can present for the class in Italian?"
+)
+```
+
+```python
+mrkl.run(user_input)
+```
+
+```output
+> Entering new AgentExecutor chain...
+ 我需要找到一个意大利主题的食谱和一套服装。
+Action: spoonacular_API.searchRecipes
+Action Input: Italian
+Observation: API 响应包含 10 个意大利食谱，包括 Turkey Tomato Cheese Pizza (火鸡番茄芝士披萨), Broccolini Quinoa Pilaf (西兰花藜麦抓饭), Bruschetta Style Pork & Pasta (意式烤面包风格猪肉和意大利面), Salmon Quinoa Risotto (三文鱼藜麦烩饭), Italian Tuna Pasta (意式金枪鱼意大利面), Roasted Brussels Sprouts With Garlic (大蒜烤抱子甘蓝), Asparagus Lemon Risotto (芦笋柠檬烩饭), Italian Steamed Artichokes (意大利式蒸朝鲜蓟), Crispy Italian Cauliflower Poppers Appetizer (香脆意大利花椰菜开胃小吃), 和 Pappa Al Pomodoro (意大利番茄面包汤)。
+Thought: 我需要找一套意大利主题的服装。
+Action: Open_AI_Klarna_product_Api.productsUsingGET
+Action Input: Italian
+Observation: 我在 API 响应中找到了 10 个与“Italian”相关的产品。这些产品包括 Italian Gold Sparkle Perfectina Necklace - Gold (意大利金色闪耀 Perfectina 项链 - 金色), Italian Design Miami Cuban Link Chain Necklace - Gold (意大利设计迈阿密古巴链项链 - 金色), Italian Gold Miami Cuban Link Chain Necklace - Gold (意大利金色迈阿密古巴链项链 - 金色), Italian Gold Herringbone Necklace - Gold (意大利金色人字形项链 - 金色), Italian Gold Claddagh Ring - Gold (意大利金色 Claddagh 戒指 - 金色), Italian Gold Herringbone Chain Necklace - Gold (意大利金色人字形链条项链 - 金色), Garmin QuickFit 22mm Italian Vacchetta Leather Band (Garmin QuickFit 22mm 意大利牛皮表带), Macy's Italian Horn Charm - Gold (Macy's 意大利号角吊饰 - 金色), Dolce & Gabbana Light Blue Italian Love Pour Homme EdT 1.7 fl oz (杜嘉班纳浅蓝“意大利之恋”男士淡香水 1.7 液量盎司)。
+Thought: 我现在知道了最终答案。
+Final Answer: 为了在您的意大利语课上进行展示，您可以选择佩戴 Italian Gold Sparkle Perfectina Necklace - Gold、Italian Design Miami Cuban Link Chain Necklace - Gold 或 Italian Gold Miami Cuban Link Chain Necklace - Gold。对于食谱，您可以制作 Turkey Tomato Cheese Pizza、Broccolini Quinoa Pilaf、Bruschetta Style Pork & Pasta、Salmon Quinoa Risotto、Italian Tuna Pasta、Roasted Brussels Sprouts With Garlic、Asparagus Lemon Risotto、Italian Steamed Artichokes、Crispy Italian Cauliflower Poppers Appetizer 或 Pappa Al Pomodoro。
+
+> Finished chain.
+```
+
+```output
+'To present for your Italian language class, you could wear an Italian Gold Sparkle Perfectina Necklace - Gold, an Italian Design Miami Cuban Link Chain Necklace - Gold, or an Italian Gold Miami Cuban Link Chain Necklace - Gold. For a recipe, you could make Turkey Tomato Cheese Pizza, Broccolini Quinoa Pilaf, Bruschetta Style Pork & Pasta, Salmon Quinoa Risotto, Italian Tuna Pasta, Roasted Brussels Sprouts With Garlic, Asparagus Lemon Risotto, Italian Steamed Artichokes, Crispy Italian Cauliflower Poppers Appetizer, or Pappa Al Pomodoro.'
+```
+
+## 谢谢
+
+```python
+natural_language_api_tools[1].run(
+    "Tell the LangChain audience to 'enjoy the meal' in Italian, please!"
+)
+```
+
+```output
+"In Italian, you can say 'Buon appetito' to someone to wish them to enjoy their meal. This phrase is commonly used in Italy when someone is about to eat, often at the beginning of a meal. It's similar to saying 'Bon appétit' in French or 'Guten Appetit' in German."
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\openapi_nla.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,77 @@
+---
+title: 如何比较实验结果
+sidebarTitle: 比较实验结果
+---
+
+当您迭代 LLM 应用程序（例如更改模型或提示词）时，您需要比较不同 [_实验_](/langsmith/evaluation-concepts#experiment) 的结果。
+
+LangSmith 支持一种比较视图，让您可以集中关注不同实验之间的关键差异、回归（性能下降）和改进。
+
+## 打开比较视图
+
+1. 要访问实验比较视图，请导航到 **Datasets & Experiments**（数据集与实验）页面。
+1. 选择一个数据集，这将打开 **Experiments**（实验）选项卡。
+1. 选择两个或更多实验，然后点击 **Compare**（比较）。
+
+![在 UI 中显示 3 个已选实验并高亮显示 Compare 按钮的 Experiments 视图。](/langsmith/images/compare-select.png)
+
+## 调整表格显示
+
+您可以通过点击 **Comparing Experiments**（比较实验）页面顶部的 **Full**（完整）或 **Compact**（紧凑）来切换不同的视图。
+
+切换到 **Full** 将显示每个运行（run）的输入、输出和参考输出的完整文本。如果参考输出太长以至于无法在表格中显示，您可以点击 **Expand detailed view**（展开详细视图）来查看完整内容。
+
+您还可以通过 **Display**（显示）设置下拉菜单选择并隐藏单个反馈键或单个指标，以便在比较视图中仅关注所需信息。
+
+## 查看回归和改进
+
+在比较视图中，相对于基线实验在您指定的反馈键上**性能出现回归**的运行将以**红色**高亮显示，而**性能有所改进**的运行将以**绿色**高亮显示。在每列的顶部，您可以找到该实验中有多少运行表现优于或差于基线实验。
+
+点击每列顶部的回归或改进按钮，可以筛选出在该特定实验中出现回归或改进的运行。
+
+![比较视图，比较 2 个实验，其中回归和改进分别以红色和绿色高亮显示。](/langsmith/images/regression-view.png)
+
+## 更新基线实验和指标
+
+为了追踪回归，您需要：
+
+1. 在比较视图顶部的 **Baseline**（基线）下拉菜单中，选择一个作为比较基准的 **Baseline experiment**（基线实验）。默认情况下，最新的实验被选为基线。
+1. 选择您想重点比较的 **Feedback key**（反馈键，即评估指标）。系统会默认分配一个，但您可以根据需要进行调整。
+1. 配置所选反馈键是**分数越高越好**还是分数越低越好。此偏好设置将被保存。
+
+![高亮显示了已选实验和反馈键为 "hallucination"（幻觉）的 Baseline 下拉菜单。](/langsmith/images/select-baseline.png)
+
+## 打开跟踪（Trace）
+
+如果正在评估的示例来自已摄取的 [运行（run）](/langsmith/observability-concepts#runs)，您可以将鼠标悬停在输出单元格上，然后点击跟踪图标（trace icon），以打开该运行的跟踪视图。这将会在侧边栏打开一个跟踪（trace）详情。
+
+![从已摄取运行中高亮显示的 View trace 图标。](/langsmith/images/open-source-trace.png)
+
+## 展开详细视图
+
+从任何单元格中，您可以点击悬停状态下的展开图标（expand icon），以打开该特定示例输入的所有实验结果的详细视图，包括反馈键和分数。
+
+![在 Comparing Experiments 视图中，一个示例的展开视图，展示了重复项。](/langsmith/images/expanded-view.png)
+
+## 查看汇总图表
+
+点击页面顶部的 **Charts**（图表）选项卡即可查看汇总图表。
+
+![Charts 汇总页面，显示了比较的 8 个汇总图表。](/langsmith/images/charts-tab.png)
+
+## 使用实验元数据作为图表标签
+
+您可以根据 [实验元数据](/langsmith/filter-experiments-ui#background-add-metadata-to-your-experiments) 来配置图表的 x 轴标签。
+
+在 **x-axis**（x 轴）下拉菜单中选择一个元数据键，即可更改图表标签。
+
+![高亮显示的 x-axis 下拉菜单，其中包含附加到实验的元数据列表。](/langsmith/images/metadata-in-charts.png)
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\compare-experiment-results.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

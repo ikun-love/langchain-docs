@@ -1,0 +1,228 @@
+---
+title: 如何定义要评估的目标函数
+sidebarTitle: 定义要评估的目标函数
+---
+
+运行一次评估主要涉及三个核心部分：
+
+1. 一个包含测试输入和预期输出的[数据集](/langsmith/evaluation-concepts#datasets)。
+2. 要评估的**目标函数 (target function)**。
+3. 用于对目标函数的输**出进行评分的评估器 (Evaluators)**（参见 [Evaluators 概念](/langsmith/evaluation-concepts#evaluators)）。
+
+本指南将根据您要评估的应用部分，展示如何定义这个目标函数。如需了解如何创建数据集、如何定义评估器以及一个完整的评估运行示例，请参考 [创建数据集](/langsmith/manage-datasets-programmatically)、[定义评估器](/langsmith/code-evaluator) 和 [端到端示例](/langsmith/evaluate-llm-application)。
+
+## 目标函数的签名
+
+为了在代码中评估一个应用，我们需要一种运行该应用的方法。在使用 `evaluate()` ([Python](https://docs.smith.langchain.com/reference/python/client/langsmith.client.Client#langsmith.client.Client.evaluate)/[TypeScript](https://docs.smith.langchain.com/reference/js/functions/evaluation.evaluate)) 时，我们会传入一个**目标函数 (target function)**参数。这个函数接收数据集中的一个 [示例 (Example)](/langsmith/evaluation-concepts#examples) 输入，并返回应用输出，格式为 `dict`。在这个函数内部，我们可以根据需要调用我们的应用并格式化输出。关键在于，我们定义的任何评估器函数都必须能够处理目标函数返回的输出格式。
+
+```python
+from langsmith import Client
+
+# 'inputs' 将从您的数据集中获取。
+def dummy_target(inputs: dict) -> dict:
+    return {"foo": 1, "bar": "two"}
+
+# 'inputs' 将从您的数据集中获取。
+# 'outputs' 将从您的目标函数中获取。
+def evaluator_one(inputs: dict, outputs: dict) -> bool:
+    return outputs["foo"] == 2
+
+def evaluator_two(inputs: dict, outputs: dict) -> bool:
+    return len(outputs["bar"]) < 3
+
+client = Client()
+results = client.evaluate(
+    dummy_target,  # <-- 目标函数
+    data="your-dataset-name",
+    evaluators=[evaluator_one, evaluator_two],
+    ...
+)
+```
+
+<Check>
+`evaluate()` 会自动追踪（trace）您的目标函数。这意味着，如果您在目标函数内运行了任何可追踪的代码，这些执行过程也会作为目标追踪的子运行（child runs）一起被追踪。
+</Check>
+
+## 示例：单次 LLM 调用
+
+<CodeGroup>
+
+```python Python
+from langsmith import wrappers
+from openai import OpenAI
+
+# 可选：包装 OpenAI 客户端以便自动追踪所有模型调用。
+oai_client = wrappers.wrap_openai(OpenAI())
+
+def target(inputs: dict) -> dict:
+  # 假设您的数据集包含一个带有 'messages' 键的输入。
+  # 您可以根据您的数据集 Schema 进行调整。
+  messages = inputs["messages"]
+  response = oai_client.chat.completions.create(
+      messages=messages,
+      model="gpt-4o-mini",
+  )
+  return {"answer": response.choices[0].message.content}
+```
+
+```typescript TypeScript
+import OpenAI from 'openai';
+import { wrapOpenAI } from "langsmith/wrappers";
+
+const client = wrapOpenAI(new OpenAI());
+
+// 这是您将要评估的函数。
+const target = async(inputs) => {
+  // 假设您的数据集包含一个带有 `messages` 键的输入
+  const messages = inputs.messages;
+  const response = await client.chat.completions.create({
+      messages: messages,
+      model: 'gpt-4o-mini',
+  });
+  return { answer: response.choices[0].message.content };
+}
+```
+
+```python Python (LangChain)
+from langchain.chat_models import init_chat_model
+
+model = init_chat_model("gpt-4o-mini")
+
+def target(inputs: dict) -> dict:
+  # 假设您的数据集包含一个带有 `messages` 键的输入
+  messages = inputs["messages"]
+  response = model.invoke(messages)
+  return {"answer": response.content}
+```
+
+```typescript TypeScript (LangChain)
+import { ChatOpenAI } from '@langchain/openai';
+
+// 这是您将要评估的函数。
+const target = async(inputs) => {
+  // 假设您的数据集包含一个带有 `messages` 键的输入
+  const messages = inputs.messages;
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+  const response = await model.invoke(messages);
+  return {"answer": response.content};
+}
+```
+
+</CodeGroup>
+
+## 示例：非 LLM 组件
+
+<CodeGroup>
+
+```python Python
+from langsmith import traceable
+
+# 可选：使用 '@traceable' 装饰器来追踪此函数的所有调用。
+@traceable
+def calculator_tool(operation: str, number1: float, number2: float) -> str:
+  if operation == "add":
+      return str(number1 + number2)
+  elif operation == "subtract":
+      return str(number1 - number2)
+  elif operation == "multiply":
+      return str(number1 * number2)
+  elif operation == "divide":
+      return str(number1 / number2)
+  else:
+      raise ValueError(f"Unrecognized operation: {operation}.")
+
+# 这是您将要评估的函数。
+def target(inputs: dict) -> dict:
+  # 假设您的数据集包含 `operation`、`num1` 和 `num2` 键的输入。
+  operation = inputs["operation"]
+  number1 = inputs["num1"]
+  number2 = inputs["num2"]
+  result = calculator_tool(operation, number1, number2)
+  return {"result": result}
+```
+
+```typescript TypeScript
+import { traceable } from "langsmith/traceable";
+
+// 可选：使用 'traceable' 包装以追踪此函数的所有调用。
+const calculatorTool = traceable(async ({ operation, number1, number2 }) => {
+// 函数必须返回字符串
+if (operation === "add") {
+  return (number1 + number2).toString();
+} else if (operation === "subtract") {
+  return (number1 - number2).toString();
+} else if (operation === "multiply") {
+  return (number1 * number2).toString();
+} else if (operation === "divide") {
+  return (number1 / number2).toString();
+} else {
+  throw new Error("Invalid operation.");
+}
+});
+
+// 这是您将要评估的函数。
+const target = async (inputs) => {
+// 假设您的数据集包含 `operation`、`num1` 和 `num2` 键的输入
+const result = await calculatorTool.invoke({
+  operation: inputs.operation,
+  number1: inputs.num1,
+  number2: inputs.num2,
+});
+return { result };
+}
+```
+
+</CodeGroup>
+
+## 示例：应用程序或智能体 (Agent)
+
+<CodeGroup>
+
+```python Python
+from my_agent import agent
+
+      # 这是您将要评估的函数。
+def target(inputs: dict) -> dict:
+  # 假设您的数据集包含一个带有 `messages` 键的输入
+  messages = inputs["messages"]
+  # 使用您调用 Agent 的方式替换 `invoke`
+  response = agent.invoke({"messages": messages})
+  # 假设您的 Agent 输出是所需的格式
+  return response
+```
+
+```typescript TypeScript
+import { agent } from 'my_agent';
+
+// 这是您将要评估的函数。
+const target = async(inputs) => {
+// 假设您的数据集包含一个带有 `messages` 键的输入
+const messages = inputs.messages;
+// 使用您调用 Agent 的方式替换 `invoke`
+const response = await agent.invoke({ messages });
+// 假设您的 Agent 输出是所需的格式
+return response;
+}
+```
+
+</CodeGroup>
+
+<Check>
+如果您有一个 LangGraph/LangChain Agent，它接受数据集中定义的输入，并返回您希望在评估器中使用的输出格式，您可以直接将该对象作为目标参数传入：
+
+```python
+from my_agent import agent
+from langsmith import Client
+client = Client()
+client.evaluate(agent, ...)
+```
+</Check>
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\define-target-function.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

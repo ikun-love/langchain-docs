@@ -1,0 +1,89 @@
+---
+title: Epsilla
+---
+
+>[Epsilla](https://www.epsilla.com) 是一个开源的向量数据库，它利用先进的并行图遍历技术进行向量索引。Epsilla 使用 GPL-3.0 许可证授权。
+
+您需要使用 `pip install -qU langchain-community` 来安装 `langchain-community` 才能使用此集成。
+
+本教程展示了如何使用与 `Epsilla` 向量数据库相关的各项功能。
+
+作为先决条件，您需要有一个正在运行的 Epsilla 向量数据库（例如，通过我们的 Docker 镜像），并安装 `pyepsilla` 包。请访问 [docs](https://epsilla-inc.gitbook.io/epsilladb/quick-start) 查看完整文档。
+
+```python
+!pip/pip3 install pyepsilla
+```
+
+我们希望使用 [`OpenAIEmbeddings`](https://reference.langchain.com/python/integrations/langchain_openai/OpenAIEmbeddings)，因此我们需要获取 OpenAI API 密钥。
+
+```python
+import getpass
+import os
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API Key:")
+```
+
+OpenAI API Key: ········
+
+```python
+from langchain_community.vectorstores import Epsilla
+from langchain_openai import OpenAIEmbeddings
+```
+
+```python
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import CharacterTextSplitter
+
+loader = TextLoader("../../how_to/state_of_the_union.txt")
+documents = loader.load()
+
+documents = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0).split_documents(
+    documents
+)
+
+embeddings = OpenAIEmbeddings()
+```
+
+Epsilla 向量数据库正在使用默认主机 `"localhost"` 和端口 `"8888"` 运行。我们在这里指定了一个自定义的数据库路径（db path）、数据库名称（db name）和集合名称（collection name），而不是使用默认值。
+
+```python
+from pyepsilla import vectordb
+
+client = vectordb.Client()
+vector_store = Epsilla.from_documents(
+    documents,
+    embeddings,
+    client,
+    db_path="/tmp/mypath",
+    db_name="MyDB",
+    collection_name="MyCollection",
+)
+```
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+docs = vector_store.similarity_search(query)
+print(docs[0].page_content)
+```
+
+在州接一个州之后，新的法律被通过了，这些法律不仅是为了压制投票，也是为了颠覆整个选举。
+
+我们不能让这种情况发生。
+
+今晚，我呼吁参议院：通过《投票自由法案》（Freedom to Vote Act）。通过《约翰·刘易斯投票权法案》（John Lewis Voting Rights Act）。顺便说一句，通过《披露法案》（Disclose Act），这样美国人民就能知道谁在资助我们的选举了。
+
+今晚，我想向一位为服务这个国家奉献了一生的同仁致敬：最高法院大法官斯蒂芬·布雷耶（Stephen Breyer）——一位陆军老兵、宪法学者，以及即将退休的美国最高法院大法官。布雷耶大法官，感谢您的服务。
+
+总统拥有的最严肃的宪法责任之一就是提名一位候选人进入美国最高法院。
+
+四天前，我提名了该上诉法院的法官凯坦吉·布朗·杰克逊（Ketanji Brown Jackson）。她是全国顶尖的法律人才之一，她将延续布雷耶大法官卓越的法律遗产。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\epsilla.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

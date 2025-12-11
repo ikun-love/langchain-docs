@@ -1,0 +1,118 @@
+---
+title: Nebula (Symbl.ai)
+---
+
+本指南介绍如何开始使用 Symbl.ai 的聊天模型——[Nebula](https://docs.symbl.ai/docs/nebula-llm)。
+
+### 集成详情
+
+请访问 [API 参考](https://docs.symbl.ai/reference/nebula-chat) 以获取详细文档。
+
+### 模型特性：待办 (TODO)
+
+## 设置 (Setup)
+
+### 凭证 (Credentials)
+
+要开始使用，请申请一个 [Nebula API 密钥](https://platform.symbl.ai/#/login)，并设置 `NEBULA_API_KEY` 环境变量：
+
+```python
+import getpass
+import os
+
+os.environ["NEBULA_API_KEY"] = getpass.getpass()
+```
+
+### 安装 (Installation)
+
+该集成模块已包含在 `langchain-community` 包中。
+
+## 实例化 (Instantiation)
+
+```python
+from langchain_community.chat_models.symblai_nebula import ChatNebula
+from langchain.messages import AIMessage, HumanMessage, SystemMessage
+```
+
+```python
+chat = ChatNebula(max_tokens=1024, temperature=0.5)
+```
+
+## 调用 (Invocation)
+
+```python
+messages = [
+    SystemMessage(
+        content="You are a helpful assistant that answers general knowledge questions."
+    ),
+    HumanMessage(content="What is the capital of France?"),
+]
+chat.invoke(messages)
+```
+
+```output
+AIMessage(content=[{'role': 'human', 'text': 'What is the capital of France?'}, {'role': 'assistant', 'text': 'The capital of France is Paris.'}])
+```
+
+### 异步 (Async)
+
+```python
+await chat.ainvoke(messages)
+```
+
+```output
+AIMessage(content=[{'role': 'human', 'text': 'What is the capital of France?'}, {'role': 'assistant', 'text': 'The capital of France is Paris.'}])
+```
+
+### 流式传输 (Streaming)
+
+```python
+for chunk in chat.stream(messages):
+    print(chunk.content, end="", flush=True)
+```
+
+```output
+ The capital of France is Paris.
+```
+
+### 批量处理 (Batch)
+
+```python
+chat.batch([messages])
+```
+
+```output
+[AIMessage(content=[{'role': 'human', 'text': 'What is the capital of France?'}, {'role': 'assistant', 'text': 'The capital of France is Paris.'}])]
+```
+
+## 链式调用 (Chaining)
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_template("Tell me a joke about {topic}")
+chain = prompt | chat
+```
+
+```python
+chain.invoke({"topic": "cows"})
+```
+
+```output
+AIMessage(content=[{'role': 'human', 'text': 'Tell me a joke about cows'}, {'role': 'assistant', 'text': "Sure, here's a joke about cows:\n\nWhy did the cow cross the road?\n\nTo get to the udder side!"}])
+```
+
+---
+
+## API 参考
+
+有关更多详细信息，请查阅 [API 参考](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.symblai_nebula.ChatNebula.html)。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat\symblai_nebula.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

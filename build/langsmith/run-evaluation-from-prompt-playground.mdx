@@ -1,0 +1,39 @@
+---
+title: 从提示词游乐场运行评估
+sidebarTitle: 使用 UI
+---
+
+LangSmith 允许您直接在 UI 中运行评估。 [**提示词游乐场 (Prompt Playground)**](/langsmith/prompt-engineering#prompt-playground) 允许您针对一系列输入来测试您的提示词或模型配置，从而查看它在不同上下文或场景下的得分情况，而无需编写任何代码。
+
+在运行评估之前，您需要有一个 [现有数据集](/langsmith/evaluation-concepts#datasets)。了解如何 [从 UI 创建数据集](/langsmith/manage-datasets-in-application#set-up-your-dataset)。
+
+如果您更倾向于通过代码运行实验，请访问 [使用 SDK 运行评估](/langsmith/evaluate-llm-application) 页面。
+
+![](/langsmith/images/playground-experiment.gif)
+
+## 在提示词游乐场中创建实验[​](#create-an-experiment-in-the-prompt-playground "Direct link to Create an experiment in the prompt playground")
+
+1. **导航到游乐场**：点击侧边栏中的 **Playground**。
+2. **添加提示词**：选择一个现有已保存的提示词或创建一个新的提示词。
+3. **从“Test over dataset”下拉菜单中选择一个数据集**：
+
+* 请注意，数据集中输入的键（keys）必须与提示词的输入变量（input variables）相匹配。例如，在上面的视频中，所选数据集的输入键是 "blog"，这与提示词的输入变量正确匹配。
+* 提示词游乐场最多允许有 15 个输入变量。
+
+4. **启动实验**：点击 **Start** 或按下 `CMD+Enter` 键。这将对数据集中的所有示例运行该提示词，并在数据集详情页面中创建一个实验条目。我们建议在启动实验之前将提示词提交到提示词中心（prompt hub），以便日后在审查实验时可以轻松引用它。
+5. **查看完整结果**：点击 **View full experiment**。这将带您进入实验详情页面，您可以在其中查看实验的结果。
+
+## 将评估分数添加到实验中[​](#add-evaluation-scores-to-the-experiment "Direct link to Add evaluation scores to the experiment")
+
+通过添加评估器（evaluators），您可以根据特定标准对实验进行评估。在游乐场中使用 **+Evaluator** 按钮添加基于 LLM 的裁判（LLM-as-a-Judge）或自定义代码评估器。
+
+要了解更多关于通过 UI 添加评估器的信息，请访问 [如何定义基于 LLM 的裁判评估器](/langsmith/llm-as-judge) 页面。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\run-evaluation-from-prompt-playground.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

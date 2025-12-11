@@ -1,0 +1,418 @@
+```markdown
+---
+title: 以编程方式管理提示词（Prompts）
+sidebarTitle: 以编程方式管理提示词（Prompts）
+---
+
+您可以使用 LangSmith 的 Python 和 TypeScript SDK 来以编程方式管理提示词。
+
+<Note>
+过去此功能位于 `langchainhub` 包中，该包现已弃用。今后所有功能都将集成在 `langsmith` 包中。
+</Note>
+
+## 安装包
+
+在 Python 中，您可以直接使用 LangSmith SDK（*推荐，功能最全*），或者通过 LangChain 包使用（功能仅限于推送和拉取提示词）。
+
+在 TypeScript 中，拉取提示词必须使用 LangChain npm 包（它也支持推送）。对于所有其他功能，请使用 LangSmith 包。
+
+<CodeGroup>
+```bash pip
+pip install -U langsmith # 版本 >= 0.1.99
+```
+
+```bash uv
+uv add langsmith  # 版本 >= 0.1.99
+```
+
+```bash TypeScript
+yarn add langsmith langchain // langsmith 版本 >= 0.1.99 且 langchain 版本 >= 0.2.14
+```
+</CodeGroup>
+
+## 配置环境变量
+
+如果您已经为 LangSmith 设置了当前工作区的 API 密钥（即设置了 `LANGSMITH_API_KEY`），则可以跳过此步骤。
+
+否则，请导航至 LangSmith 中的 `Settings > API Keys > Create API Key` 来获取您工作区的 API 密钥。
+
+设置您的环境变量。
+
+```bash
+export LANGSMITH_API_KEY="lsv2_..."
+```
+
+<Note>
+我们所说的“提示词”（prompts）以前被称为“仓库”（repos），因此代码中所有提到 "repo" 的地方都指的是一个提示词。
+</Note>
+
+## 推送提示词 (Push a prompt)
+
+要创建新提示词或更新现有提示词，您可以使用 `push_prompt` 方法。
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+from langchain_core.prompts import ChatPromptTemplate
+
+client = Client()
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+url = client.push_prompt("joke-generator", object=prompt)
+# url 是 LangSmith UI 中该提示词的链接
+print(url)
+```
+
+```python LangChain (Python)
+from langchain_classic import hub as prompts
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+url = prompts.push("joke-generator", prompt)
+# url 是 LangSmith UI 中该提示词的链接
+print(url)
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
+const url = hub.push("joke-generator", {
+  object: prompt,
+});
+// url 是 LangSmith UI 中该提示词的链接
+console.log(url);
+```
+
+</CodeGroup>
+
+您也可以将提示词以及所用的模型配置为一个 `RunnableSequence` 进行推送。这对于存储您希望与此提示词一起使用的模型配置非常有用。提供商必须能被 LangSmith Playground 支持（参见此处的设置：[Supported Providers](https://langsmith.com/playground)）。
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+client = Client()
+model = ChatOpenAI(model="gpt-4o-mini")
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+chain = prompt | model
+client.push_prompt("joke-generator-with-model", object=chain)
+```
+
+```python LangChain (Python)
+from langchain_classic import hub as prompts
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(model="gpt-4o-mini")
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+chain = prompt | model
+url = prompts.push("joke-generator-with-model", chain)
+# url 是 LangSmith UI 中该提示词的链接
+print(url)
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
+const chain = prompt.pipe(model);
+await hub.push("joke-generator-with-model", {
+  object: chain,
+});
+```
+
+</CodeGroup>
+
+## 拉取提示词 (Pull a prompt)
+
+要拉取提示词，您可以使用 `pull_prompt` 方法，它会返回一个 LangChain `PromptTemplate` 对象。
+
+要拉取**私有提示词**，您不需要指定作者（Handle）（当然，如果您知道作者名称，也可以指定）。
+
+要从 LangChain Hub 拉取**公共提示词**，您需要指定作者的 Handle。
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+from langchain_openai import ChatOpenAI
+
+client = Client()
+prompt = client.pull_prompt("joke-generator")
+model = ChatOpenAI(model="gpt-4o-mini")
+chain = prompt | model
+chain.invoke({"topic": "cats"})
+```
+
+```python LangChain (Python)
+from langchain_classic import hub as prompts
+from langchain_openai import ChatOpenAI
+
+prompt = prompts.pull("joke-generator")
+model = ChatOpenAI(model="gpt-4o-mini")
+chain = prompt | model
+chain.invoke({"topic": "cats"})
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { ChatOpenAI } from "@langchain/openai";
+
+const prompt = await hub.pull("joke-generator");
+const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+const chain = prompt.pipe(model);
+await chain.invoke({"topic": "cats"});
+```
+
+</CodeGroup>
+
+与推送类似，拉取提示词时，您也可以将其作为一个包含提示词和模型的 `RunnableSequence` 来拉取。只需在拉取时设置 `include_model=True` 即可。如果存储的提示词包含模型，它将被返回为一个 `RunnableSequence`。请确保已为使用的模型设置了正确的环境变量。
+
+<CodeGroup>
+
+```python Python
+from langsmith import Client
+
+client = Client()
+chain = client.pull_prompt("joke-generator-with-model", include_model=True)
+chain.invoke({"topic": "cats"})
+```
+
+```python LangChain (Python)
+from langchain_classic import hub as prompts
+
+chain = prompts.pull("joke-generator-with-model", include_model=True)
+chain.invoke({"topic": "cats"})
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { Runnable } from "@langchain/core/runnables";
+
+const chain = await hub.pull<Runnable>("joke-generator-with-model", { includeModel: true });
+await chain.invoke({"topic": "cats"});
+```
+
+</CodeGroup>
+
+拉取提示词时，您还可以指定特定的提交哈希（commit hash）或[提交标签](/langsmith/manage-prompts#commit-tags)来拉取提示词的特定版本。
+
+<CodeGroup>
+
+```python Python
+prompt = client.pull_prompt("joke-generator:12344e88")
+```
+
+```python LangChain (Python)
+prompt = prompts.pull("joke-generator:12344e88")
+```
+
+```typescript TypeScript
+const prompt = await hub.pull("joke-generator:12344e88")
+```
+
+</CodeGroup>
+
+要从 LangChain Hub 拉取公共提示词，您需要指定作者的 Handle。
+
+<CodeGroup>
+
+```python Python
+prompt = client.pull_prompt("efriis/my-first-prompt")
+```
+
+```python LangChain (Python)
+prompt = prompts.pull("efriis/my-first-prompt")
+```
+
+```typescript TypeScript
+const prompt = await hub.pull("efriis/my-first-prompt")
+```
+
+</CodeGroup>
+
+<Note>
+对于拉取提示词，如果您使用的是支持动态导入的 Node.js 或环境，我们推荐使用 `langchain/hub/node` 入口点，因为它会自动处理与您的提示词配置相关的模型的反序列化。
+
+如果您处于非 Node 环境中，`includeModel` 对于非 OpenAI 模型不受支持，您应该使用基础的 `langchain/hub` 入口点。
+</Note>
+
+## 在不使用 LangChain 的情况下使用提示词
+
+如果您希望将提示词存储在 LangSmith 中，但想直接将其用于模型提供商的 API，您可以使用我们的转换方法。这些方法可以将您的提示词转换为 OpenAI 或 Anthropic API 所需的负载格式。
+
+这些转换方法依赖于 LangChain 集成包内的逻辑，因此除了选择官方 SDK 之外，您还需要将相应的包作为依赖项安装。以下是一些示例：
+
+### OpenAI
+
+<CodeGroup>
+
+```bash Python
+pip install -U langchain_openai
+```
+
+```bash TypeScript
+yarn add @langchain/openai @langchain/core // @langchain/openai 版本 >= 0.3.2
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```python Python
+from openai import OpenAI
+from langsmith.client import Client, convert_prompt_to_openai_format
+
+# langsmith 客户端
+client = Client()
+# openai 客户端
+oai_client = OpenAI()
+
+# 拉取提示词并调用以填充变量
+prompt = client.pull_prompt("joke-generator")
+prompt_value = prompt.invoke({"topic": "cats"})
+openai_payload = convert_prompt_to_openai_format(prompt_value)
+openai_response = oai_client.chat.completions.create(**openai_payload)
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { convertPromptToOpenAI } from "@langchain/openai";
+import OpenAI from "openai";
+
+const prompt = await hub.pull("jacob/joke-generator");
+const formattedPrompt = await prompt.invoke({
+  topic: "cats",
+});
+const { messages } = convertPromptToOpenAI(formattedPrompt);
+
+const openAIClient = new OpenAI();
+const openAIResponse = await openAIClient.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages,
+});
+```
+
+</CodeGroup>
+
+### Anthropic
+
+<CodeGroup>
+
+```bash Python
+pip install -U langchain_anthropic
+```
+
+```bash TypeScript
+yarn add @langchain/anthropic @langchain/core // @langchain/anthropic 版本 >= 0.3.3
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```python Python
+from anthropic import Anthropic
+from langsmith.client import Client, convert_prompt_to_anthropic_format
+
+# langsmith 客户端
+client = Client()
+# anthropic 客户端
+anthropic_client = Anthropic()
+
+# 拉取提示词并调用以填充变量
+prompt = client.pull_prompt("joke-generator")
+prompt_value = prompt.invoke({"topic": "cats"})
+anthropic_payload = convert_prompt_to_anthropic_format(prompt_value)
+anthropic_response = anthropic_client.messages.create(**anthropic_payload)
+```
+
+```typescript TypeScript
+import * as hub from "langchain/hub";
+import { convertPromptToAnthropic } from "@langchain/anthropic";
+import Anthropic from "@anthropic-ai/sdk";
+
+const prompt = await hub.pull("jacob/joke-generator");
+const formattedPrompt = await prompt.invoke({
+  topic: "cats",
+});
+const { messages, system } = convertPromptToAnthropic(formattedPrompt);
+
+const anthropicClient = new Anthropic();
+const anthropicResponse = await anthropicClient.messages.create({
+  model: "claude-haiku-4-5-20251001",
+  system,
+  messages,
+  max_tokens: 1024,
+  stream: false,
+});
+```
+
+</CodeGroup>
+
+## 列出、删除和点赞提示词
+
+您还可以使用 `list_prompts`、`delete_prompt`、`like_prompt` 和 `unlike_prompt` 方法来列出、删除和点赞/取消点赞提示词。有关这些方法的详细文档，请参阅 [LangSmith SDK 客户端](https://github.com/langchain-ai/langsmith-sdk)。
+
+<CodeGroup>
+
+```python Python
+# 列出工作区中的所有提示词
+prompts = client.list_prompts()
+
+# 列出包含 "joke" 的我的私有提示词
+prompts = client.list_prompts(query="joke", is_public=False)
+
+# 删除一个提示词
+client.delete_prompt("joke-generator")
+
+# 点赞一个提示词
+client.like_prompt("efriis/my-first-prompt")
+
+# 取消点赞一个提示词
+client.unlike_prompt("efriis/my-first-prompt")
+```
+
+```typescript TypeScript
+// 列出工作区中的所有提示词
+import Client from "langsmith";
+
+const client = new Client({ apiKey: "lsv2_..." });
+const prompts = client.listPrompts();
+
+for await (const prompt of prompts) {
+  console.log(prompt);
+}
+
+// 列出包含 "joke" 的我的私有提示词
+const private_joke_prompts = client.listPrompts({ query: "joke", isPublic: false});
+
+// 删除一个提示词
+client.deletePrompt("joke-generator");
+
+// 点赞一个提示词
+client.likePrompt("efriis/my-first-prompt");
+
+// 取消点赞一个提示词
+client.unlikePrompt("efriis/my-first-prompt");
+```
+
+</CodeGroup>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\manage-prompts-programmatically.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

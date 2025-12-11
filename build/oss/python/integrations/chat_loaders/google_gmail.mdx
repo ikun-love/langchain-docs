@@ -1,0 +1,95 @@
+---
+title: Gmail
+---
+
+此加载器（Loader）介绍了如何从 Gmail 中加载数据。您可能希望以多种方式从 Gmail 中提取数据，但该加载器目前在实现方式上比较固定的。其处理流程是：首先查找您发送的所有邮件；然后查找您回复了先前某封邮件的邮件；接着获取那封先前被回复的邮件，并创建一个训练样本，该样本由“先前邮件”紧接着“您的回复邮件”组成。
+
+请注意，这里存在明显的局限性。例如，所有创建的样本都只考虑前一封邮件作为上下文信息。
+
+使用步骤：
+
+- 设置 Google 开发者账户：访问 Google 开发者控制台，创建一个项目，并为该项目启用 Gmail API。这将为您提供一个 `credentials.json` 文件，稍后需要用到。
+
+- 安装 Google 客户端库：运行以下命令安装 Google 客户端库：
+
+```python
+pip install -qU  google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+```
+
+```python
+import os.path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+
+
+creds = None
+# 文件 token.json 存储了用户的访问令牌和刷新令牌，它在首次完成授权流程时会自动创建。
+if os.path.exists("email_token.json"):
+    creds = Credentials.from_authorized_user_file("email_token.json", SCOPES)
+# 如果没有（有效的）凭据，允许用户登录。
+if not creds or not creds.valid:
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file(
+            # 您的凭据文件放在这里。请根据此处的指南创建一个 json 文件：https://cloud.google.com/docs/authentication/getting-started
+            "creds.json",
+            SCOPES,
+        )
+        creds = flow.run_local_server(port=0)
+    # 保存凭据以供下次运行使用
+    with open("email_token.json", "w") as token:
+        token.write(creds.to_json())
+```
+
+```python
+from langchain_community.chat_loaders.gmail import GMailLoader
+```
+
+```python
+loader = GMailLoader(creds=creds, n=3)
+```
+
+```python
+data = loader.load()
+```
+
+```python
+# 有时可能会出现我们静默忽略的错误
+len(data)
+```
+
+```output
+2
+```
+
+```python
+from langchain_community.chat_loaders.utils import (
+    map_ai_messages,
+)
+```
+
+```python
+# 这会将 hchase@langchain.com 发送的邮件标记为 AI 消息
+# 这意味着您将训练一个 LLM，使其看起来像是以 hchase 的身份进行回复
+training_data = list(
+    map_ai_messages(data, sender="Harrison Chase [hchase@langchain.com](mailto:hchase@langchain.com)")
+)
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat_loaders\google_gmail.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

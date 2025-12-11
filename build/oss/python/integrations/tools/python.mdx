@@ -1,0 +1,51 @@
+---
+title: Python REPL
+---
+
+有时，对于复杂的计算，与其让 LLM 直接生成答案，不如让 LLM 生成代码来计算答案，然后运行该代码以获得结果。为了方便做到这一点，我们提供了一个简单的 Python REPL（交互式解释器）来执行命令。
+
+此界面只会返回被 `print` 输出的内容——因此，如果你希望使用它来计算答案，请务必让它打印出最终答案。
+
+<Warning>
+**Python REPL 可以执行主机上的任意代码（例如，删除文件、发起网络请求）。请谨慎使用。**
+
+</Warning>
+
+```python
+from langchain.tools import Tool
+from langchain_experimental.utilities import PythonREPL
+```
+
+```python
+python_repl = PythonREPL()
+```
+
+```python
+python_repl.run("print(1+1)")
+```
+
+```output
+Python REPL can execute arbitrary code. Use with caution.
+```
+
+```output
+'2\n'
+```
+
+```python
+# 你可以创建 tool 传递给 Agent
+repl_tool = Tool(
+    name="python_repl",
+    description="一个 Python shell。使用此工具来执行 Python 命令。输入内容应是有效的 Python 命令。如果你想查看某个值的结果，你应该使用 `print(...)` 将其打印出来。",
+    func=python_repl.run,
+)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\tools\python.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

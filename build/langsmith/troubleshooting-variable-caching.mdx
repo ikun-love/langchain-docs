@@ -1,0 +1,51 @@
+---
+title: 解决变量缓存问题
+sidebarTitle: 解决变量缓存问题
+---
+
+如果您没有在跟踪项目中看到跟踪记录，或者发现跟踪记录被记录到了错误的**项目/工作区**，那么问题可能出在 LangSmith 的默认**环境变量缓存**机制上。这在您于 Jupyter Notebook 中运行 LangSmith 时尤为常见。请遵循以下步骤来诊断和解决此问题：
+
+## 1. 验证您的环境变量
+
+首先，请运行以下命令，检查环境变量是否已正确设置：
+
+```python
+import os
+print(os.getenv("LANGSMITH_PROJECT"))
+print(os.getenv("LANGSMITH_TRACING"))
+print(os.getenv("LANGSMITH_ENDPOINT"))
+print(os.getenv("LANGSMITH_API_KEY"))
+```
+
+如果输出与您在 `.env` 文件中定义的内容不匹配，则很可能是由于环境变量缓存导致的。
+
+## 2. 清除缓存
+
+使用以下命令清除缓存的环境变量：
+
+```python
+utils.get_env_var.cache_clear()
+```
+
+## 3. 重新加载环境变量
+
+通过执行以下代码，从 `.env` 文件中重新加载您的环境变量：
+
+```python
+from dotenv import load_dotenv
+import os
+load_dotenv(<path to .env file>, override=True)
+```
+
+重新加载后，您的环境变量应该会正确设置。
+
+如果您持续遇到问题，请通过共享的 Slack 频道或电子邮件支持（仅适用于 Plus 和 Enterprise 计划用户）与我们联系，或者在 [LangChain 论坛](https://forum.langchain.com/) 上提问。
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\troubleshooting-variable-caching.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

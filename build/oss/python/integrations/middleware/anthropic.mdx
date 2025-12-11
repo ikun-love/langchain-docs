@@ -1,0 +1,472 @@
+```markdown
+---
+title: Anthropic 中间件
+---
+
+专为 Anthropic 的 Claude 模型设计的中间件。了解更多关于 [中间件](/oss/python/langchain/middleware/overview) 的信息。
+
+| 中间件 | 描述 |
+|------------|-------------|
+| [提示词缓存](#prompt-caching) | 通过缓存重复的提示词前缀来降低成本 |
+| [Bash 工具](#bash-tool) | 使用本地命令执行来执行 Claude 的原生 bash 工具 |
+| [文本编辑器](#text-editor) | 为文件编辑提供 Claude 的文本编辑器工具 |
+| [内存](#memory) | 为持久化的 Agent 内存提供 Claude 的内存工具 |
+| [文件搜索](#file-search) | 针对基于状态的文件系统的搜索工具 |
+
+## Prompt caching (提示词缓存)
+
+通过在 Anthropic 的服务器上缓存静态或重复的提示词内容（如系统提示词、工具定义和对话历史），来降低成本和延迟。此中间件实现了一种**对话式缓存策略**，它在最新消息之后设置缓存断点，允许整个对话历史（包括最新的用户消息）被缓存并在后续的 API 调用中重复使用。提示词缓存适用于以下场景：
+
+- 包含较长、静态系统提示词，且这些提示词在请求之间不发生变化的应用程序
+- 包含许多工具定义，且这些定义在调用中保持不变的 Agent
+- 对话中早期消息历史需要在多个轮次中重复使用的场景
+- 降低 API 成本和延迟至关重要的海量部署场景
+
+<Info>
+    了解更多关于 [Anthropic 提示词缓存](https://platform.claude.com/docs/en/build-with-claude/prompt-caching#cache-limitations) 策略和限制。
+</Info>
+
+**API 参考:** [`AnthropicPromptCachingMiddleware`](https://reference.langchain.com/python/integrations/langchain_anthropic/middleware/#langchain_anthropic.middleware.AnthropicPromptCachingMiddleware)
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    system_prompt="<Your long system prompt here>",
+    middleware=[AnthropicPromptCachingMiddleware(ttl="5m")],
+)
+```
+
+<Accordion title="配置选项">
+
+<ParamField body="type" type="string" default="ephemeral">
+    缓存类型。目前仅支持 `'ephemeral'`。
+</ParamField>
+
+<ParamField body="ttl" type="string" default="5m">
+    缓存内容的存活时间（Time to live）。有效值: `'5m'` 或 `'1h'`
+</ParamField>
+
+<ParamField body="min_messages_to_cache" type="number" default="0">
+    开始缓存前的最小消息数
+</ParamField>
+
+<ParamField body="unsupported_model_behavior" type="string" default="warn">
+    使用非 Anthropic 模型时的行为。选项: `'ignore'`, `'warn'`, 或 `'raise'`
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+该中间件缓存当前请求中**包含**最新消息的所有内容。在 TTL 窗口（5分钟或1小时）内的后续请求中，之前看到的内容会从缓存中检索而不是重新处理，从而显著降低成本和延迟。
+
+**工作原理:**
+1. **首次请求**: 系统提示词、工具和用户消息 "Hi, my name is Bob" 被发送到 API 并缓存。
+2. **第二次请求**: 缓存的内容（系统提示词、工具和第一条消息）从缓存中检索。只需处理新消息 "What's my name?"，再加上模型对第一条消息的响应。
+3. **后续轮次**: 每个请求都会重复此模式，重用缓存的对话历史。
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
+from langchain.agents import create_agent
+from langchain.messages import HumanMessage
+
+
+LONG_PROMPT = """
+Please be a helpful assistant.
+
+<Lots more context ...>
+"""
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    system_prompt=LONG_PROMPT,
+    middleware=[AnthropicPromptCachingMiddleware(ttl="5m")],
+)
+
+# 首次调用: 使用系统提示词、工具和 "Hi, my name is Bob" 创建缓存
+agent.invoke({"messages": [HumanMessage("Hi, my name is Bob")]})
+
+# 第二次调用: 重用缓存的系统提示词、工具和之前的消息
+# 只处理新消息 "What's my name?" 以及前一个 AI 响应
+agent.invoke({"messages": [HumanMessage("What's my name?")]})
+```
+
+</Accordion>
+
+## Bash tool (Bash 工具)
+
+使用本地命令执行来执行 Claude 的原生 `bash_20250124` 工具。bash 工具中间件适用于以下场景：
+
+- 使用 Claude 内置的 bash 工具进行本地执行
+- 利用 Claude 优化的 bash 工具接口
+- 需要与 Anthropic 模型保持持久 shell 会话的 Agent
+
+<Info>
+    此中间件封装了 `ShellToolMiddleware`，并将其公开为 Claude 的原生 bash 工具。
+</Info>
+
+**API 参考:** [`ClaudeBashToolMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ClaudeBashToolMiddleware)
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import ClaudeBashToolMiddleware
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        ClaudeBashToolMiddleware(
+            workspace_root="/workspace",
+        ),
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+`ClaudeBashToolMiddleware` 接受 `ShellToolMiddleware` 的所有参数，包括：
+
+<ParamField body="workspace_root" type="str | Path | None">
+    Shell 会话的基础目录
+</ParamField>
+
+<ParamField body="startup_commands" type="tuple[str, ...] | list[str] | str | None">
+    会话启动时要运行的命令
+</ParamField>
+
+<ParamField body="execution_policy" type="BaseExecutionPolicy | None">
+    执行策略（`HostExecutionPolicy`、`DockerExecutionPolicy` 或 `CodexSandboxExecutionPolicy`）
+</ParamField>
+
+<ParamField body="redaction_rules" type="tuple[RedactionRule, ...] | list[RedactionRule] | None">
+    用于清理命令输出的规则
+</ParamField>
+
+请参阅 [Shell 工具](/oss/python/langchain/middleware/built-in#shell-tool) 获取完整的配置详情。
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import ClaudeBashToolMiddleware
+from langchain.agents import create_agent
+from langchain.agents.middleware import DockerExecutionPolicy
+
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        ClaudeBashToolMiddleware(
+            workspace_root="/workspace",
+            startup_commands=["pip install requests"],
+            execution_policy=DockerExecutionPolicy(
+                image="python:3.11-slim",
+            ),
+        ),
+    ],
+)
+
+# Claude 现在可以使用其原生 bash 工具
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "List files in the workspace"}]
+})
+```
+
+</Accordion>
+
+
+## Text editor (文本编辑器)
+
+为 Claude 的文本编辑器工具（`text_editor_20250728`）提供文件创建和编辑功能。文本编辑器中间件适用于以下场景：
+
+- 基于文件的 Agent 工作流
+- 代码编辑和重构任务
+- 多文件项目工作
+- 需要持久文件存储的 Agent
+
+<Note>
+    提供两种变体：**基于状态的 (State-based)**（文件存储在 LangGraph 状态中）和 **基于文件系统的 (Filesystem-based)**（文件存储在磁盘上）。
+</Note>
+
+**API 参考:** [`StateClaudeTextEditorMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.StateClaudeTextEditorMiddleware), [`FilesystemClaudeTextEditorMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.FilesystemClaudeTextEditorMiddleware)
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import StateClaudeTextEditorMiddleware
+from langchain.agents import create_agent
+
+# 基于状态的 (文件存储在 LangGraph 状态中)
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeTextEditorMiddleware(),
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+**[`StateClaudeTextEditorMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.StateClaudeTextEditorMiddleware) (基于状态的)**
+
+<ParamField body="allowed_path_prefixes" type="Sequence[str] | None">
+    可选的允许路径前缀列表。如果指定，则只允许以这些前缀开头的路径。
+</ParamField>
+
+**[`FilesystemClaudeTextEditorMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.FilesystemClaudeTextEditorMiddleware) (基于文件系统的)**
+
+<ParamField body="root_path" type="str" required>
+    文件操作的根目录
+</ParamField>
+
+<ParamField body="allowed_prefixes" type="list[str] | None">
+    可选的允许虚拟路径前缀列表 (默认: `["/"]`)
+</ParamField>
+
+<ParamField body="max_file_size_mb" type="int" default="10">
+    最大文件大小（MB）
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+Claude 的文本编辑器工具支持以下命令：
+- `view` - 查看文件内容或列出目录
+- `create` - 创建一个新文件
+- `str_replace` - 替换文件中的字符串
+- `insert` - 在行号处插入文本
+- `delete` - 删除一个文件
+- `rename` - 重命名/移动文件
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import (
+    StateClaudeTextEditorMiddleware,
+    FilesystemClaudeTextEditorMiddleware,
+)
+from langchain.agents import create_agent
+
+
+# 基于状态的: 文件持久化在 LangGraph 状态中
+agent_state = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeTextEditorMiddleware(
+            allowed_path_prefixes=["/project"],
+        ),
+    ],
+)
+
+# 基于文件系统的: 文件持久化在磁盘上
+agent_fs = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        FilesystemClaudeTextEditorMiddleware(
+            root_path="/workspace",
+            allowed_prefixes=["/src"],
+            max_file_size_mb=10,
+        ),
+    ],
+)
+```
+
+</Accordion>
+
+
+## Memory (内存)
+
+为 Claude 的内存工具（`memory_20250818`）提供跨对话轮次持久化 Agent 内存的功能。内存中间件适用于以下场景：
+
+- 长时间运行的 Agent 对话
+- 跨中断维护上下文
+- 任务进度跟踪
+- 持久化的 Agent 状态管理
+
+<Info>
+    Claude 的内存工具使用 `/memories` 目录，并自动注入一个系统提示词，鼓励 Agent 检查和更新内存。
+</Info>
+
+**API 参考:** [`StateClaudeMemoryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.StateClaudeMemoryMiddleware), [`FilesystemClaudeMemoryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.FilesystemClaudeMemoryMiddleware)
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import StateClaudeMemoryMiddleware
+from langchain.agents import create_agent
+
+# 基于状态的内存
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeMemoryMiddleware(),
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+**[`StateClaudeMemoryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.StateClaudeMemoryMiddleware) (基于状态的)**
+
+<ParamField body="allowed_path_prefixes" type="Sequence[str] | None">
+    可选的允许路径前缀列表。默认为 `["/memories"]`。
+</ParamField>
+
+<ParamField body="system_prompt" type="str">
+    注入的系统提示词。默认是 Anthropic 推荐的内存提示词，鼓励 Agent 检查和更新内存。
+</ParamField>
+
+**[`FilesystemClaudeMemoryMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.FilesystemClaudeMemoryMiddleware) (基于文件系统的)**
+
+<ParamField body="root_path" type="str" required>
+    文件操作的根目录
+</ParamField>
+
+<ParamField body="allowed_prefixes" type="list[str] | None">
+    可选的允许虚拟路径前缀列表。默认为 `["/memories"]`。
+</ParamField>
+
+<ParamField body="max_file_size_mb" type="int" default="10">
+    最大文件大小（MB）
+</ParamField>
+
+<ParamField body="system_prompt" type="str">
+    注入的系统提示词
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import (
+    StateClaudeMemoryMiddleware,
+    FilesystemClaudeMemoryMiddleware,
+)
+from langchain.agents import create_agent
+
+
+# 基于状态的: 内存持久化在 LangGraph 状态中
+agent_state = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeMemoryMiddleware(),
+    ],
+)
+
+# 基于文件系统的: 内存持久化在磁盘上
+agent_fs = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        FilesystemClaudeMemoryMiddleware(
+            root_path="/workspace",
+        ),
+    ],
+)
+
+# Agent 将自动执行以下操作:
+# 1. 在启动时检查 /memories 目录
+# 2. 在执行过程中记录进度和思考过程
+# 3. 随着工作的进展更新内存文件
+```
+
+</Accordion>
+
+
+## File search (文件搜索)
+
+为存储在 LangGraph 状态中的文件提供 Glob 和 Grep 搜索工具。文件搜索中间件适用于以下场景：
+
+- 搜索基于状态的虚拟文件系统
+- 与文本编辑器和内存工具配合使用
+- 按模式查找文件
+- 使用正则表达式进行内容搜索
+
+**API 参考:** [`StateFileSearchMiddleware`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.StateFileSearchMiddleware)
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import (
+    StateClaudeTextEditorMiddleware,
+    StateFileSearchMiddleware,
+)
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeTextEditorMiddleware(),
+        StateFileSearchMiddleware(),  # 搜索文本编辑器文件
+    ],
+)
+```
+
+<Accordion title="配置选项">
+
+<ParamField body="state_key" type="str" default="text_editor_files">
+    用于包含要搜索文件的状态键。对于文本编辑器文件使用 `"text_editor_files"`，对于内存文件使用 `"memory_files"`。
+</ParamField>
+
+</Accordion>
+
+<Accordion title="完整示例">
+
+此中间件添加了 Glob 和 Grep 搜索工具，它们可以处理基于状态的文件。
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import (
+    StateClaudeTextEditorMiddleware,
+    StateClaudeMemoryMiddleware,
+    StateFileSearchMiddleware,
+)
+from langchain.agents import create_agent
+
+
+# 搜索文本编辑器文件
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeTextEditorMiddleware(),
+        StateFileSearchMiddleware(state_key="text_editor_files"),
+    ],
+)
+
+# 搜索内存文件
+agent_memory = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-5-20250929"),
+    tools=[],
+    middleware=[
+        StateClaudeMemoryMiddleware(),
+        StateFileSearchMiddleware(state_key="memory_files"),
+    ],
+)
+```
+
+</Accordion>
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\middleware\anthropic.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

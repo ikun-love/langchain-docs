@@ -1,0 +1,70 @@
+---
+title: Athena
+---
+
+> [Amazon Athena](https://aws.amazon.com/athena/) 是一项无服务器、交互式的分析服务，它基于开源框架构建，支持开放的表格式和文件格式。`Athena` 提供了一种简化、灵活的方式，用于分析数据所在位置的 PB 级数据。你可以对 Amazon Simple Storage Service (S3) 数据湖以及包括本地数据源或其他云系统在内的 30 个数据源中的数据进行分析，或使用 SQL 或 Python 构建应用程序。`Athena` 构建于开源的 `Trino` 和 `Presto` 引擎以及 `Apache Spark` 框架之上，无需进行任何资源预置或配置工作。
+
+本 Notebook 将介绍如何从 `AWS Athena` 加载文档。
+
+## 设置 (Setting up)
+
+请遵循 [设置 AWS 账户的说明](https://docs.aws.amazon.com/athena/latest/ug/setting-up.html)。
+
+安装一个 Python 库：
+
+```python
+! pip install boto3
+```
+
+## 示例 (Example)
+
+```python
+from langchain_community.document_loaders.athena import AthenaLoader
+```
+
+```python
+database_name = "my_database"
+s3_output_path = "s3://my_bucket/query_results/"
+query = "SELECT * FROM my_table"
+profile_name = "my_profile"
+
+loader = AthenaLoader(
+    query=query,
+    database=database_name,
+    s3_output_uri=s3_output_path,
+    profile_name=profile_name,
+)
+
+documents = loader.load()
+print(documents)
+```
+
+包含元数据列的示例
+
+```python
+database_name = "my_database"
+s3_output_path = "s3://my_bucket/query_results/"
+query = "SELECT * FROM my_table"
+profile_name = "my_profile"
+metadata_columns = ["_row", "_created_at"]
+
+loader = AthenaLoader(
+    query=query,
+    database=database_name,
+    s3_output_uri=s3_output_path,
+    profile_name=profile_name,
+    metadata_columns=metadata_columns,
+)
+
+documents = loader.load()
+print(documents)
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\athena.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,89 @@
+---
+title: 使用 Instructor 进行追踪
+sidebarTitle: Instructor (仅限 Python)
+---
+
+LangSmith 提供了与 [Instructor](https://python.useinstructor.com/) 的便捷集成。Instructor 是一个流行的开源库，用于使用大型语言模型（LLM）生成结构化输出。
+
+要开始使用，您首先需要设置您的 LangSmith API 密钥。
+
+```shell
+export LANGSMITH_API_KEY=<your-api-key>
+# 对于链接到多个工作区的 LangSmith API 密钥，请设置 LANGSMITH_WORKSPACE_ID 环境变量以指定要使用的工作区。
+export LANGSMITH_WORKSPACE_ID=<your-workspace-id>
+```
+
+接下来，您需要安装 LangSmith SDK：
+
+<CodeGroup>
+```bash pip
+pip install -U langsmith
+```
+
+```bash uv
+uv add langsmith
+```
+</CodeGroup>
+
+使用 `langsmith.wrappers.wrap_openai` 包装您的 OpenAI 客户端：
+
+```python
+from openai import OpenAI
+from langsmith import wrappers
+
+client = wrappers.wrap_openai(OpenAI())
+```
+
+在此之后，您可以使用 `instructor` 来修补（patch）这个被包装的客户端：
+
+```python
+import instructor
+
+client = instructor.patch(client)
+```
+
+现在，您可以像往常一样使用 `instructor` 了，但是所有操作现在都会被记录到 LangSmith 中！
+
+```python
+from pydantic import BaseModel
+
+
+class UserDetail(BaseModel):
+    name: str
+    age: int
+
+
+user = client.chat.completions.create(
+    model="gpt-4o-mini",
+    response_model=UserDetail,
+    messages=[
+        {"role": "user", "content": "Extract Jason is 25 years old"},
+    ]
+)
+```
+
+很多时候，您会在其他函数内部使用 `instructor`。通过使用这个被包装的客户端并使用 `@traceable` 装饰器装饰这些函数，您可以获得嵌套的追踪（nested traces）。有关如何使用 `@traceable` 装饰器来注解您的代码以进行追踪的更多信息，请参阅[此指南](./annotate-code)。
+
+```python {highlight={2}}
+# 您可以使用 `name` 关键字参数来自定义运行名称 (run name)
+@traceable(name="提取用户详细信息")
+def my_function(text: str) -> UserDetail:
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        response_model=UserDetail,
+        messages=[
+            {"role": "user", "content": f"Extract {text}"},
+        ]
+    )
+
+my_function("Jason is 25 years old")
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/langsmith\trace-with-instructor.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

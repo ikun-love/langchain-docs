@@ -1,0 +1,43 @@
+---
+title: Joplin
+---
+
+>[Joplin](https://joplinapp.org/) 是一款开源的笔记应用。它可以捕获您的想法，并确保您可以在任何设备上安全地访问它们。
+
+本笔记涵盖了如何从 `Joplin` 数据库加载文档。
+
+`Joplin` 提供了一个 [REST API](https://joplinapp.org/api/references/rest_api/) 来访问其本地数据库。此加载器利用该 API 来检索数据库中的所有笔记及其元数据。为此，需要一个访问令牌（access token），您可以按照以下步骤从应用中获取该令牌：
+
+1. 打开 `Joplin` 应用。在加载文档期间，该应用**必须保持打开**状态。
+2. 前往设置/选项（settings / options），然后选择“Web Clipper”。
+3. 确保 Web Clipper 服务已启用。
+4. 在“高级选项”（Advanced Options）下，复制授权令牌。
+
+您可以直接使用此访问令牌初始化加载器，或者将其存储在环境变量 `JOPLIN_ACCESS_TOKEN` 中。
+
+另一种方法是将 `Joplin` 的笔记数据库导出为 Markdown 文件（可以选择包含 Front Matter 元数据），然后使用 Markdown 加载器（例如 `ObsidianLoader`）来加载这些文件。
+
+```python
+from langchain_community.document_loaders import JoplinLoader
+```
+
+```python
+loader = JoplinLoader(access_token="<access-token>")
+```
+
+```python
+docs = loader.load()
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\joplin.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

@@ -1,0 +1,116 @@
+---
+title: Pebblo 安全文档加载器
+---
+
+> [Pebblo](https://daxa-ai.github.io/pebblo/) 旨在帮助开发者安全地加载数据，并将其 Gen AI 应用推广到部署阶段，而无需担心组织的安全合规性要求。该项目会识别加载数据中发现的语义主题和实体，并将它们汇总到 UI 或 PDF 报告中。
+
+Pebblo 包含两个组件：
+
+1. 面向 LangChain 的 Pebblo 安全文档加载器 (Pebblo Safe DocumentLoader for LangChain)
+1. Pebblo 服务器 (Pebblo Server)
+
+本文档描述了如何使用 Pebblo Safe DocumentLoader 增强您现有的 LangChain DocumentLoader，从而深入了解摄取到 Gen-AI LangChain 应用程序中的**主题 (Topics)** 和**实体 (Entities)** 的类型。有关 `Pebblo Server` 的详细信息，请参阅 [pebblo 服务器](https://daxa-ai.github.io/pebblo/daemon) 文档。
+
+Pebblo Safeloader 实现了 LangChain `DocumentLoader` 的安全数据摄取。这是通过将文档加载器的调用包装在 `Pebblo Safe DocumentLoader` 中来完成的。
+
+注意：如需将 pebblo 服务器配置到除 pebblo 默认值（localhost:8000）以外的 URL，请将正确的 URL 放入 `PEBBLO_CLASSIFIER_URL` 环境变量中。这也可以使用 `classifier_url` 关键字参数进行配置。参考：[服务器配置](https://daxa-ai.github.io/pebblo/config)
+
+#### 如何实现 Pebblo 级别的文档加载？
+
+假设有一个 LangChain RAG 应用片段，使用 `CSVLoader` 读取 CSV 文档以进行推理。
+
+以下是使用 `CSVLoader` 进行文档加载的片段。
+
+```python
+from langchain_community.document_loaders import CSVLoader
+
+loader = CSVLoader("data/corp_sens_data.csv")
+documents = loader.load()
+print(documents)
+```
+
+可以通过对上述片段进行几行代码更改来启用 Pebblo SafeLoader。
+
+```python
+from langchain_community.document_loaders import CSVLoader, PebbloSafeLoader
+
+loader = PebbloSafeLoader(
+    CSVLoader("data/corp_sens_data.csv"),
+    name="acme-corp-rag-1",  # 应用名称 (必填)
+    owner="Joe Smith",  # 所有者 (可选)
+    description="Support productivity RAG application",  # 描述 (可选)
+)
+documents = loader.load()
+print(documents)
+```
+
+### 将语义主题和身份信息发送到 Pebblo 云服务器
+
+要将语义数据发送到 pebblo-cloud，请将 api-key 作为参数传递给 PebbloSafeLoader，或者将 api-key 放入 `PEBBLO_API_KEY` 环境变量中。
+
+```python
+from langchain_community.document_loaders import CSVLoader, PebbloSafeLoader
+
+loader = PebbloSafeLoader(
+    CSVLoader("data/corp_sens_data.csv"),
+    name="acme-corp-rag-1",  # 应用名称 (必填)
+    owner="Joe Smith",  # 所有者 (可选)
+    description="Support productivity RAG application",  # 描述 (可选)
+    api_key="my-api-key",  # API 密钥 (可选，也可设置为环境变量 PEBBLO_API_KEY)
+)
+documents = loader.load()
+print(documents)
+```
+
+### 将语义主题和身份信息添加到已加载的元数据中
+
+若要将语义主题和语义实体添加到已加载文档的元数据中，可以将 `load_semantic` 设置为 `True` 作为参数，或者定义一个新的环境变量 `PEBBLO_LOAD_SEMANTIC` 并将其设置为 `True`。
+
+```python
+from langchain_community.document_loaders import CSVLoader, PebbloSafeLoader
+
+loader = PebbloSafeLoader(
+    CSVLoader("data/corp_sens_data.csv"),
+    name="acme-corp-rag-1",  # 应用名称 (必填)
+    owner="Joe Smith",  # 所有者 (可选)
+    description="Support productivity RAG application",  # 描述 (可选)
+    api_key="my-api-key",  # API 密钥 (可选，也可设置为环境变量 PEBBLO_API_KEY)
+    load_semantic=True,  # 加载语义数据 (可选，默认为 False，也可设置为环境变量 PEBBLO_LOAD_SEMANTIC)
+)
+documents = loader.load()
+print(documents[0].metadata)
+```
+
+### 匿名化片段以屏蔽所有 PII 详情
+
+将 `anonymize_snippets` 设置为 `True`，可以从进入 VectorDB 的片段和生成的报告中匿名化所有个人身份信息 (PII)。
+
+> 注意：_Pebblo 实体分类器 (Pebblo Entity Classifier)_ 能有效地识别个人身份信息 (PII)，并且它在不断发展中。虽然它的召回率尚未达到 100%，但它正在稳步提高。
+> 更多详细信息，请参阅 [_Pebblo 实体分类器文档_](https://daxa-ai.github.io/pebblo/entityclassifier/)
+
+```python
+from langchain_community.document_loaders import CSVLoader, PebbloSafeLoader
+
+loader = PebbloSafeLoader(
+    CSVLoader("data/corp_sens_data.csv"),
+    name="acme-corp-rag-1",  # 应用名称 (必填)
+    owner="Joe Smith",  # 所有者 (可选)
+    description="Support productivity RAG application",  # 描述 (可选)
+    anonymize_snippets=True,  # 是否在 PDF 报告中对实体进行匿名化处理 (可选，默认为 False)
+)
+documents = loader.load()
+print(documents[0].metadata)
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\document_loaders\pebblo.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

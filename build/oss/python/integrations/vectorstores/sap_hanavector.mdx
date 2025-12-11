@@ -1,0 +1,903 @@
+```markdown
+---
+title: SAP HANA Cloud 向量引擎
+description: SAP HANA Cloud Vector Engine 简介与使用指南
+---
+
+>[SAP HANA Cloud Vector Engine](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide) 是一个完全集成在 `SAP HANA Cloud` 数据库中的向量存储。
+
+## 设置 (Setup)
+
+安装 `langchain-hana` 外部集成包，以及本 Notebook 中使用的其他包。
+
+```python
+pip install -qU langchain-hana
+```
+
+### 凭证 (Credentials)
+
+确保您的 SAP HANA 实例正在运行。从环境变量加载您的凭证并建立连接：
+
+```python
+import os
+
+from dotenv import load_dotenv
+from hdbcli import dbapi
+
+load_dotenv()
+# 使用来自环境的连接设置
+connection = dbapi.connect(
+    address=os.environ.get("HANA_DB_ADDRESS"),
+    port=os.environ.get("HANA_DB_PORT"),
+    user=os.environ.get("HANA_DB_USER"),
+    password=os.environ.get("HANA_DB_PASSWORD"),
+    autocommit=True,
+    sslValidateCertificate=False,
+)
+```
+
+了解更多关于 SAP HANA 的信息，请参阅 [What is SAP HANA?](https://www.sap.com/products/data-cloud/hana/what-is-sap-hana.html)。
+
+### 初始化 (Initialization)
+
+要初始化一个 `HanaDB` 向量存储，您需要一个数据库连接和一个嵌入模型实例。SAP HANA Cloud Vector Engine 同时支持外部和内部嵌入。
+
+- #### 使用外部嵌入 (Using External Embeddings)
+
+<EmbeddingTabs/>
+
+```python
+# | output: false
+# | echo: false
+from langchain_openai import OpenAIEmbeddings
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+```
+
+- #### 使用内部嵌入 (Using Internal Embeddings)
+
+或者，您可以使用 SAP HANA 的原生 `VECTOR_EMBEDDING()` 函数直接在其中计算嵌入。要启用此功能，请使用您的内部模型 ID 实例化 `HanaInternalEmbeddings` 并将其传递给 `HanaDB`。请注意，`HanaInternalEmbeddings` 实例专为与 `HanaDB` 配合使用而设计，不适用于其他向量存储实现。有关内部嵌入的更多信息，请参阅 [SAP HANA VECTOR_EMBEDDING Function](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/vector-embedding-function-vector)。
+
+> **注意 (Caution):** 确保您的 SAP HANA Cloud 实例中已启用 NLP (自然语言处理)。
+
+```python
+from langchain_hana import HanaInternalEmbeddings
+
+embeddings = HanaInternalEmbeddings(internal_embedding_model_id="SAP_NEB.20240715")
+```
+
+拥有连接和嵌入实例后，通过将它们以及用于存储向量的表名传递给 `HanaDB` 来创建向量存储：
+
+```python
+from langchain_hana import HanaDB
+
+db = HanaDB(
+    embedding=embeddings, connection=connection, table_name="STATE_OF_THE_UNION"
+)
+```
+
+## 示例 (Example)
+
+加载示例文档 "state_of_the_union.txt" 并从中创建文本块 (chunks)。
+
+```python
+from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+
+text_documents = TextLoader(
+    "../../how_to/state_of_the_union.txt", encoding="UTF-8"
+).load()
+text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+text_chunks = text_splitter.split_documents(text_documents)
+print(f"Number of document chunks: {len(text_chunks)}")
+```
+
+```output
+Number of document chunks: 88
+```
+
+将加载的文档块添加到表中。对于此示例，我们删除了表中可能在先前运行时已存在的所有内容。
+
+```python
+# Delete already existing documents from the table
+db.delete(filter={})
+
+# add the loaded document chunks
+db.add_documents(text_chunks)
+```
+
+```output
+[]
+```
+
+执行查询，从上一步添加的文档中获取两个最匹配的文档块。
+默认情况下，搜索使用“余弦相似度 (Cosine Similarity)”。
+
+```python
+query = "What did the president say about Ketanji Brown Jackson"
+docs = db.similarity_search(query, k=2)
+
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
+
+And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
+--------------------------------------------------------------------------------
+As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
+
+While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
+```
+
+使用“欧几里得距离 (Euclidian Distance)”查询相同的内容。结果应与“余弦相似度”的结果相同。
+
+```python
+from langchain_hana.utils import DistanceStrategy
+
+db = HanaDB(
+    embedding=embeddings,
+    connection=connection,
+    distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE,
+    table_name="STATE_OF_THE_UNION",
+)
+
+query = "What did the president say about Ketanji Brown Jackson"
+docs = db.similarity_search(query, k=2)
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
+
+And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
+--------------------------------------------------------------------------------
+As I said last year, especially to our younger transgender Americans, I will always have your back as your President, so you can be yourself and reach your God-given potential.
+
+While it often appears that we never agree, that isn’t true. I signed 80 bipartisan bills into law last year. From preventing government shutdowns to protecting Asian-Americans from still-too-common hate crimes to reforming military justice.
+```
+
+## 最大边际相关性搜索 (Maximal Marginal Relevance Search, MMR)
+
+`最大边际相关性 (Maximal marginal relevance)` 优化查询的相关性 **和** 所选文档之间的多样性。将从数据库中检索前 20 个 (fetch\_k) 项目。然后，MMR 算法将找到最佳的 2 (k) 个匹配项。
+
+```python
+docs = db.max_marginal_relevance_search(query, k=2, fetch_k=20)
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
+
+And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
+--------------------------------------------------------------------------------
+Groups of citizens blocking tanks with their bodies. Everyone from students to retirees teachers turned soldiers defending their homeland.
+
+In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
+
+Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
+```
+
+## 创建 HNSW 向量索引 (Creating an HNSW Vector Index)
+
+向量索引可以显著加速向量的 Top-k 最近邻查询。用户可以使用 `create_hnsw_index` 函数创建**分层可导航小世界 (Hierarchical Navigable Small World, HNSW)** 向量索引。
+
+有关在数据库级别创建索引的更多信息，请参阅[官方文档](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/create-vector-index-statement-data-definition)。
+
+```python
+# HanaDB 实例默认使用余弦相似度 (cosine similarity):
+db_cosine = HanaDB(
+    embedding=embeddings, connection=connection, table_name="STATE_OF_THE_UNION"
+)
+
+# 尝试使用默认参数创建 HNSW 索引
+db_cosine.create_hnsw_index()  # 如果未指定其他参数，将使用默认值
+# 默认值: m=64, ef_construction=128, ef_search=200
+# 默认索引名称将是: STATE_OF_THE_UNION_COSINE_SIMILARITY_IDX (请在 HanaDB 类中验证此命名模式)
+
+
+# 使用 L2 距离作为相似性函数并定义值的 HanaDB 实例
+db_l2 = HanaDB(
+    embedding=embeddings,
+    connection=connection,
+    table_name="STATE_OF_THE_UNION",
+    distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE,  # 指定 L2 距离
+)
+
+# 这将创建一个基于 L2 距离策略的索引。
+db_l2.create_hnsw_index(
+    index_name="STATE_OF_THE_UNION_L2_index",
+    m=100,  # 每个图节点的最大邻居数 (有效范围: 4 到 1000)
+    ef_construction=200,  # 图构造期间的最大候选数 (有效范围: 1 到 100000)
+    ef_search=500,  # 搜索期间的最小候选数 (有效范围: 1 到 100000)
+)
+
+# 使用 L2 索引执行 MMR
+docs = db_l2.max_marginal_relevance_search(query, k=2, fetch_k=20)
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.
+
+And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
+--------------------------------------------------------------------------------
+Groups of citizens blocking tanks with their bodies. Everyone from students to retirees teachers turned soldiers defending their homeland.
+
+In this struggle as President Zelenskyy said in his speech to the European Parliament “Light will win over darkness.” The Ukrainian Ambassador to the United States is here tonight.
+
+Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
+```
+
+**关键点 (Key Points)**:
+
+- **相似性函数 (Similarity Function)**: 索引的相似性函数默认为**余弦相似度**。如果您想使用不同的相似性函数（例如 `L2` 距离），则需要在初始化 `HanaDB` 实例时指定它。
+- **默认参数 (Default Parameters)**: 在 `create_hnsw_index` 函数中，如果用户未为 `m`、`ef_construction` 或 `ef_search` 等参数提供自定义值，系统将自动使用默认值（例如 `m=64`、`ef_construction=128`、`ef_search=200`）。这些值确保在无需用户干预的情况下创建具有合理性能的索引。
+
+## 基本向量存储操作 (Basic Vectorstore Operations)
+
+```python
+db = HanaDB(
+    connection=connection, embedding=embeddings, table_name="LANGCHAIN_DEMO_BASIC"
+)
+
+# Delete already existing documents from the table
+db.delete(filter={})
+```
+
+```output
+True
+```
+
+我们可以向现有表中添加简单的文本文档。
+
+```python
+docs = [Document(page_content="Some text"), Document(page_content="Other docs")]
+db.add_documents(docs)
+```
+
+```output
+[]
+```
+
+添加带有元数据的文档。
+
+```python
+docs = [
+    Document(
+        page_content="foo",
+        metadata={"start": 100, "end": 150, "doc_name": "foo.txt", "quality": "bad"},
+    ),
+    Document(
+        page_content="bar",
+        metadata={"start": 200, "end": 250, "doc_name": "bar.txt", "quality": "good"},
+    ),
+]
+db.add_documents(docs)
+```
+
+```output
+[]
+```
+
+按特定元数据查询文档。
+
+```python
+docs = db.similarity_search("foobar", k=2, filter={"quality": "bad"})
+# With filtering on "quality"=="bad", only one document should be returned
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+    print(doc.metadata)
+```
+
+```output
+--------------------------------------------------------------------------------
+foo
+{'start': 100, 'end': 150, 'doc_name': 'foo.txt', 'quality': 'bad'}
+```
+
+按特定元数据删除文档。
+
+```python
+db.delete(filter={"quality": "bad"})
+
+# Now the similarity search with the same filter will return no results
+docs = db.similarity_search("foobar", k=2, filter={"quality": "bad"})
+print(len(docs))
+```
+
+```output
+0
+```
+
+## 高级过滤 (Advanced filtering)
+
+除了基本的基于值的过滤功能外，还可以使用更高级的过滤。
+下表显示了可用的过滤运算符。
+
+| 运算符 (Operator) | 语义 (Semantic) |
+|----------|-------------------------|
+| `$eq`    | 等于 (==)           |
+| `$ne`    | 不等于 (!=)         |
+| `$lt`    | 小于 (<)           |
+| `$lte`   | 小于或等于 (<=) |
+| `$gt`    | 大于 (>)        |
+| `$gte`   | 大于或等于 (>=) |
+| `$in`    | 包含在一组给定值中 (in)    |
+| `$nin`   | 不包含在一组给定值中 (not in)  |
+| `$between` | 在两个边界值之间 |
+| `$like`  | 基于 SQL 中的 "LIKE" 语义的文本相等性 (使用 "%" 作为通配符)  |
+| `$contains` | 过滤包含特定关键字的文档 |
+| `$and`   | 逻辑 "与"，支持两个或多个操作数 |
+| `$or`    | 逻辑 "或"，支持两个或多个操作数 |
+
+```python
+# Prepare some test documents
+docs = [
+    Document(
+        page_content="First",
+        metadata={"name": "Adam Smith", "is_active": True, "id": 1, "height": 10.0},
+    ),
+    Document(
+        page_content="Second",
+        metadata={"name": "Bob Johnson", "is_active": False, "id": 2, "height": 5.7},
+    ),
+    Document(
+        page_content="Third",
+        metadata={"name": "Jane Doe", "is_active": True, "id": 3, "height": 2.4},
+    ),
+]
+
+db = HanaDB(
+    connection=connection,
+    embedding=embeddings,
+    table_name="LANGCHAIN_DEMO_ADVANCED_FILTER",
+)
+
+# Delete already existing documents from the table
+db.delete(filter={})
+db.add_documents(docs)
+
+
+# Helper function for printing filter results
+def print_filter_result(result):
+    if len(result) == 0:
+        print("<empty result>")
+    for doc in result:
+        print(doc.metadata)
+```
+
+使用 `$ne`、`$gt`、`$gte`、`$lt`、`$lte` 进行过滤
+
+```python
+advanced_filter = {"id": {"$ne": 1}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"id": {"$gt": 1}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"id": {"$gte": 1}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"id": {"$lt": 1}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"id": {"$lte": 1}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+```
+
+```output
+Filter: {'id': {'$ne': 1}}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'id': {'$gt': 1}}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'id': {'$gte': 1}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'id': {'$lt': 1}}
+<empty result>
+Filter: {'id': {'$lte': 1}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+```
+
+使用 `$between`、`$in`、`$nin` 进行过滤
+
+```python
+advanced_filter = {"id": {"$between": (1, 2)}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$in": ["Adam Smith", "Bob Johnson"]}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$nin": ["Adam Smith", "Bob Johnson"]}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+```
+
+```output
+Filter: {'id': {'$between': (1, 2)}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'name': {'$in': ['Adam Smith', 'Bob Johnson']}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'name': {'$nin': ['Adam Smith', 'Bob Johnson']}}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+```
+
+使用 `$like` 进行文本过滤
+
+```python
+advanced_filter = {"name": {"$like": "a%"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$like": "%a%"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+```
+
+```output
+Filter: {'name': {'$like': 'a%'}}
+<empty result>
+Filter: {'name': {'$like': '%a%'}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+```
+
+使用 `$contains` 进行文本过滤
+
+```python
+advanced_filter = {"name": {"$contains": "bob"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$contains": "bo"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$contains": "Adam Johnson"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"name": {"$contains": "Adam Smith"}}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+```
+
+```output
+Filter: {'name': {'$contains': 'bob'}}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'name': {'$contains': 'bo'}}
+<empty result>
+Filter: {'name': {'$contains': 'Adam Johnson'}}
+<empty result>
+Filter: {'name': {'$contains': 'Adam Smith'}}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+```
+
+使用 `$and`、`$or` 进行组合过滤
+
+```python
+advanced_filter = {"$or": [{"id": 1}, {"name": "bob"}]}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"$and": [{"id": 1}, {"id": 2}]}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {"$or": [{"id": 1}, {"id": 2}, {"id": 3}]}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+
+advanced_filter = {
+    "$and": [{"name": {"$contains": "bob"}}, {"name": {"$contains": "johnson"}}]
+}
+print(f"Filter: {advanced_filter}")
+print_filter_result(db.similarity_search("just testing", k=5, filter=advanced_filter))
+```
+
+```output
+Filter: {'$or': [{'id': 1}, {'name': 'bob'}]}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+Filter: {'$and': [{'id': 1}, {'id': 2}]}
+<empty result>
+Filter: {'$or': [{'id': 1}, {'id': 2}, {'id': 3}]}
+{'name': 'Adam Smith', 'is_active': True, 'id': 1, 'height': 10.0}
+{'name': 'Jane Doe', 'is_active': True, 'id': 3, 'height': 2.4}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+Filter: {'$and': [{'name': {'$contains': 'bob'}}, {'name': {'$contains': 'johnson'}}]}
+{'name': 'Bob Johnson', 'is_active': False, 'id': 2, 'height': 5.7}
+```
+
+## 在检索增强生成 (RAG) 的链中使用向量存储作为检索器 (Using a VectorStore as a retriever in chains for retrieval augmented generation (RAG))
+
+```python
+# Access the vector DB with a new table
+db = HanaDB(
+    connection=connection,
+    embedding=embeddings,
+    table_name="LANGCHAIN_DEMO_RETRIEVAL_CHAIN",
+)
+
+# Delete already existing entries from the table
+db.delete(filter={})
+
+# add the loaded document chunks from the "State Of The Union" file
+db.add_documents(text_chunks)
+
+# Create a retriever instance of the vector store
+retriever = db.as_retriever()
+```
+
+定义提示模板 (Define the prompt)。
+
+```python
+from langchain_core.prompts import PromptTemplate
+
+prompt_template = """
+You are an expert in state of the union topics. You are provided multiple context items that are related to the prompt you have to answer.
+Use the following pieces of context to answer the question at the end.
+
+'''
+{context}
+'''
+
+Question: {question}
+"""
+
+PROMPT = PromptTemplate(
+    template=prompt_template, input_variables=["context", "question"]
+)
+chain_type_kwargs = {"prompt": PROMPT}
+```
+
+创建 `ConversationalRetrievalChain`，它处理聊天历史记录以及检索相似文档块以添加到提示中的过程。
+
+```python
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-3.5-turbo")
+memory = ConversationBufferMemory(
+    memory_key="chat_history", output_key="answer", return_messages=True
+)
+qa_chain = ConversationalRetrievalChain.from_llm(
+    llm,
+    db.as_retriever(search_kwargs={"k": 5}),
+    return_source_documents=True,
+    memory=memory,
+    verbose=False,
+    combine_docs_chain_kwargs={"prompt": PROMPT},
+)
+```
+
+提出第一个问题（并验证使用了多少个文本块）。
+
+```python
+question = "What about Mexico and Guatemala?"
+
+result = qa_chain.invoke({"question": question})
+print("Answer from LLM:")
+print("================")
+print(result["answer"])
+
+source_docs = result["source_documents"]
+print("================")
+print(f"Number of used source document chunks: {len(source_docs)}")
+```
+
+```output
+Answer from LLM:
+================
+The United States has set up joint patrols with Mexico and Guatemala to catch more human traffickers at the border. This collaborative effort aims to improve border security and combat illegal activities such as human trafficking.
+================
+Number of used source document chunks: 5
+```
+
+详细检查链中使用的块。检查排名最佳的块是否包含有关问题中提到的“墨西哥和危地马拉”的信息。
+
+```python
+for doc in source_docs:
+    print("-" * 80)
+    print(doc.page_content)
+    print(doc.metadata)
+```
+
+在同一对话链中提出另一个问题。答案应该与先前的答案相关。
+
+```python
+question = "How many casualties were reported after that?"
+
+result = qa_chain.invoke({"question": question})
+print("Answer from LLM:")
+print("================")
+print(result["answer"])
+```
+
+```output
+Answer from LLM:
+================
+Countries like Mexico and Guatemala are participating in joint patrols to catch human traffickers. The United States is also working with partners in South and Central America to host more refugees and secure their borders. Additionally, the U.S. is working with twenty-seven members of the European Union, as well as countries like France, Germany, Italy, the United Kingdom, Canada, Japan, Korea, Australia, New Zealand, and Switzerland.
+```
+
+## 标准表与包含向量数据的“自定义”表 (Standard tables vs. "custom" tables with vector data)
+
+作为默认行为，嵌入的表包含 3 列：
+
+- 一列 `VEC_TEXT`，包含文档的文本
+- 一列 `VEC_META`，包含文档的元数据
+- 一列 `VEC_VECTOR`，包含文档文本的嵌入向量
+
+```python
+# Access the vector DB with a new table
+db = HanaDB(
+    connection=connection, embedding=embeddings, table_name="LANGCHAIN_DEMO_NEW_TABLE"
+)
+
+# Delete already existing entries from the table
+db.delete(filter={})
+
+# Add a simple document with some metadata
+docs = [
+    Document(
+        page_content="A simple document",
+        metadata={"start": 100, "end": 150, "doc_name": "simple.txt"},
+    )
+]
+db.add_documents(docs)
+```
+
+```output
+[]
+```
+
+显示表 "LANGCHAIN_DEMO_NEW_TABLE" 中的列
+
+```python
+cur = connection.cursor()
+cur.execute(
+    "SELECT COLUMN_NAME, DATA_TYPE_NAME FROM SYS.TABLE_COLUMNS WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = 'LANGCHAIN_DEMO_NEW_TABLE'"
+)
+rows = cur.fetchall()
+for row in rows:
+    print(row)
+cur.close()
+```
+
+```output
+('VEC_META', 'NCLOB')
+('VEC_TEXT', 'NCLOB')
+('VEC_VECTOR', 'REAL_VECTOR')
+```
+
+显示在三列中插入的文档的值
+
+```python
+cur = connection.cursor()
+cur.execute(
+    "SELECT VEC_TEXT, VEC_META, TO_NVARCHAR(VEC_VECTOR) FROM LANGCHAIN_DEMO_NEW_TABLE LIMIT 1"
+)
+rows = cur.fetchall()
+print(rows[0][0])  # The text
+print(rows[0][1])  # The metadata
+print(rows[0][2])  # The vector
+cur.close()
+```
+
+自定义表至少需要具有与标准表语义匹配的三个列：
+
+- 一个 `NCLOB` 或 `NVARCHAR` 类型的列，用于嵌入的文本/上下文
+- 一个 `NCLOB` 或 `NVARCHAR` 类型的列，用于元数据
+- 一个 `REAL_VECTOR` 类型的列，用于嵌入向量
+
+该表可以包含额外的列。当新文档插入到表中时，这些附加列必须允许 NULL 值。
+
+```python
+# Create a new table "MY_OWN_TABLE_ADD" with three "standard" columns and one additional column
+my_own_table_name = "MY_OWN_TABLE_ADD"
+cur = connection.cursor()
+cur.execute(
+    (
+        f"CREATE TABLE {my_own_table_name} ("
+        "SOME_OTHER_COLUMN NVARCHAR(42), "
+        "MY_TEXT NVARCHAR(2048), "
+        "MY_METADATA NVARCHAR(1024), "
+        "MY_VECTOR REAL_VECTOR )"
+    )
+)
+
+# Create a HanaDB instance with the own table
+db = HanaDB(
+    connection=connection,
+    embedding=embeddings,
+    table_name=my_own_table_name,
+    content_column="MY_TEXT",
+    metadata_column="MY_METADATA",
+    vector_column="MY_VECTOR",
+)
+
+# Add a simple document with some metadata
+docs = [
+    Document(
+        page_content="Some other text",
+        metadata={"start": 400, "end": 450, "doc_name": "other.txt"},
+    )
+]
+db.add_documents(docs)
+
+# Check if data has been inserted into our own table
+cur.execute(f"SELECT * FROM {my_own_table_name} LIMIT 1")
+rows = cur.fetchall()
+print(rows[0][0])  # Value of column "SOME_OTHER_DATA". Should be NULL/None
+print(rows[0][1])  # The text
+print(rows[0][2])  # The metadata
+print(rows[0][3])  # The vector
+
+cur.close()
+```
+
+```output
+None
+Some other text
+{"start": 400, "end": 450, "doc_name": "other.txt"}
+<memory at 0x110f856c0>
+```
+
+添加另一个文档并在自定义表上执行相似性搜索。
+
+```python
+docs = [
+    Document(
+        page_content="Some more text",
+        metadata={"start": 800, "end": 950, "doc_name": "more.txt"},
+    )
+]
+db.add_documents(docs)
+
+query = "What's up?"
+docs = db.similarity_search(query, k=2)
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+Some more text
+--------------------------------------------------------------------------------
+Some other text
+```
+
+### 使用自定义列进行过滤性能优化 (Filter Performance Optimization with Custom Columns)
+
+为了支持灵活的元数据值，所有元数据默认存储在元数据列中的 JSON 格式中。如果已知一些使用的元数据键和值类型，可以通过创建包含键名作为列名的目标表，并通过 `specific_metadata_columns` 列表将它们传递给 HanaDB 构造函数，将它们存储在额外的列中。在插入过程中，匹配这些值的元数据键将被复制到特殊列中。过滤操作将使用特殊列而不是元数据 JSON 列中对应于 `specific_metadata_columns` 列表中的键的值。
+
+```python
+# Create a new table "PERFORMANT_CUSTOMTEXT_FILTER" with three "standard" columns and one additional column
+my_own_table_name = "PERFORMANT_CUSTOMTEXT_FILTER"
+cur = connection.cursor()
+cur.execute(
+    (
+        f"CREATE TABLE {my_own_table_name} ("
+        "CUSTOMTEXT NVARCHAR(500), "
+        "MY_TEXT NVARCHAR(2048), "
+        "MY_METADATA NVARCHAR(1024), "
+        "MY_VECTOR REAL_VECTOR )"
+    )
+)
+
+# Create a HanaDB instance with the own table
+db = HanaDB(
+    connection=connection,
+    embedding=embeddings,
+    table_name=my_own_table_name,
+    content_column="MY_TEXT",
+    metadata_column="MY_METADATA",
+    vector_column="MY_VECTOR",
+    specific_metadata_columns=["CUSTOMTEXT"],
+)
+
+# Add a simple document with some metadata
+docs = [
+    Document(
+        page_content="Some other text",
+        metadata={
+            "start": 400,
+            "end": 450,
+            "doc_name": "other.txt",
+            "CUSTOMTEXT": "Filters on this value are very performant",
+        },
+    )
+]
+db.add_documents(docs)
+
+# Check if data has been inserted into our own table
+cur.execute(f"SELECT * FROM {my_own_table_name} LIMIT 1")
+rows = cur.fetchall()
+print(
+    rows[0][0]
+)  # Value of column "CUSTOMTEXT". Should be "Filters on this value are very performant"
+print(rows[0][1])  # The text
+print(
+    rows[0][2]
+)  # The metadata without the "CUSTOMTEXT" data, as this is extracted into a sperate column
+print(rows[0][3])  # The vector
+
+cur.close()
+```
+
+```output
+Filters on this value are very performant
+Some other text
+{"start": 400, "end": 450, "doc_name": "other.txt", "CUSTOMTEXT": "Filters on this value are very performant"}
+<memory at 0x110f859c0>
+```
+
+特殊列对 Langchain 接口是完全透明的。一切都像以前一样工作，只是性能更好了。
+
+```python
+docs = [
+    Document(
+        page_content="Some more text",
+        metadata={
+            "start": 800,
+            "end": 950,
+            "doc_name": "more.txt",
+            "CUSTOMTEXT": "Another customtext value",
+        },
+    )
+]
+db.add_documents(docs)
+
+advanced_filter = {"CUSTOMTEXT": {"$like": "%value%"}}
+query = "What's up?"
+docs = db.similarity_search(query, k=2, filter=advanced_filter)
+for doc in docs:
+    print("-" * 80)
+    print(doc.page_content)
+```
+
+```output
+--------------------------------------------------------------------------------
+Some more text
+--------------------------------------------------------------------------------
+Some other text
+```
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\vectorstores\sap_hanavector.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

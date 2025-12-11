@@ -1,0 +1,63 @@
+---
+title: Aleph Alpha
+---
+
+使用 Aleph Alpha 的语义嵌入（semantic embeddings）有两种可能的方式。如果您的文本结构**不同**（例如，一个是 `Document` 文档，另一个是 `Query` 查询），那么您应该使用**非对称嵌入（asymmetric embeddings）**。相反，如果文本结构是**相似的**，则建议使用**对称嵌入（symmetric embeddings）**。
+
+## 非对称 (Asymmetric)
+
+```python
+from langchain_community.embeddings import AlephAlphaAsymmetricSemanticEmbedding
+```
+
+```python
+document = "This is a content of the document"
+query = "What is the content of the document?"
+```
+
+```python
+embeddings = AlephAlphaAsymmetricSemanticEmbedding(normalize=True, compress_to_size=128)
+```
+
+```python
+doc_result = embeddings.embed_documents([document])
+```
+
+```python
+query_result = embeddings.embed_query(query)
+```
+
+## 对称 (Symmetric)
+
+```python
+from langchain_community.embeddings import AlephAlphaSymmetricSemanticEmbedding
+```
+
+```python
+text = "This is a test text"
+```
+
+```python
+embeddings = AlephAlphaSymmetricSemanticEmbedding(normalize=True, compress_to_size=128)
+```
+
+```python
+doc_result = embeddings.embed_documents([text])
+```
+
+```python
+query_result = embeddings.embed_query(text)
+```
+
+```python
+
+```
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\text_embedding\aleph_alpha.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>

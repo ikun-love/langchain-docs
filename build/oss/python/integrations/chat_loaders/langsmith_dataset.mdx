@@ -1,0 +1,160 @@
+---
+title: LangSmith 聊天数据集
+---
+
+此 Notebook 展示了一个加载 LangSmith 聊天数据集并使用该数据对模型进行微调的简便方法。
+该过程非常简单，包含 3 个步骤。
+
+1. 创建聊天数据集。
+2. 使用 `LangSmithDatasetChatLoader` 加载示例。
+3. 对模型进行微调。
+
+完成之后，您就可以在 LangChain 应用中使用经过微调的模型了。
+
+在深入了解之前，我们先安装所需的依赖项。
+
+## 前提条件 (Prerequisites)
+
+请确保您已安装 `langchain >= 0.0.311`，并且已使用您的 LangSmith API 密钥配置好环境变量。
+
+```python
+pip install -qU  langchain langchain-openai
+```
+
+```python
+import os
+import uuid
+
+uid = uuid.uuid4().hex[:6]
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = "YOUR API KEY"
+```
+
+## 1. 选择数据集
+
+本 Notebook 直接针对所选的运行（runs）进行模型微调。这些运行通常是您从跟踪（traced）的运行中精心挑选出来的。您可以查阅 [文档](https://docs.smith.langchain.com/evaluation/concepts#datasets) 了解更多关于 LangSmith 数据集的知识。
+
+为了本教程的演示目的，我们将在这里上传一个您可以用于实验的数据集。
+
+```python
+from langsmith.client import Client
+
+client = Client()
+```
+
+```python
+import requests
+
+url = "https://raw.githubusercontent.com/langchain-ai/langchain/v0.3/docs/docs/integrations/chat_loaders/example_data/langsmith_chat_dataset.json"
+response = requests.get(url)
+response.raise_for_status()
+data = response.json()
+```
+
+```python
+dataset_name = f"Extraction Fine-tuning Dataset {uid}"
+ds = client.create_dataset(dataset_name=dataset_name, data_type="chat")
+```
+
+```python
+_ = client.create_examples(
+    inputs=[e["inputs"] for e in data],
+    outputs=[e["outputs"] for e in data],
+    dataset_id=ds.id,
+)
+```
+
+## 2. 准备数据
+
+现在，我们可以创建一个 `LangSmithRunChatLoader` 实例，并使用其 `lazy_load()` 方法加载聊天会话。
+
+```python
+from langchain_community.chat_loaders.langsmith import LangSmithDatasetChatLoader
+
+loader = LangSmithDatasetChatLoader(dataset_name=dataset_name)
+
+chat_sessions = loader.lazy_load()
+```
+
+#### 加载完聊天会话后，将其转换为适合微调的格式
+
+```python
+from langchain_community.adapters.openai import convert_messages_for_finetuning
+
+training_data = convert_messages_for_finetuning(chat_sessions)
+```
+
+## 3. 微调模型
+
+现在，使用 OpenAI 库启动微调过程。
+
+```python
+import json
+import time
+from io import BytesIO
+
+import openai
+
+my_file = BytesIO()
+for dialog in training_data:
+    my_file.write((json.dumps({"messages": dialog}) + "\n").encode("utf-8"))
+
+my_file.seek(0)
+training_file = openai.files.create(file=my_file, purpose="fine-tune")
+
+job = openai.fine_tuning.jobs.create(
+    training_file=training_file.id,
+    model="gpt-3.5-turbo",
+)
+
+# 等待微调完成（这可能需要一段时间）
+status = openai.fine_tuning.jobs.retrieve(job.id).status
+start_time = time.time()
+while status != "succeeded":
+    print(f"Status=[{status}]... {time.time() - start_time:.2f}s", end="\r", flush=True)
+    time.sleep(5)
+    status = openai.fine_tuning.jobs.retrieve(job.id).status
+
+# 您的模型现在已完成微调！
+```
+
+```output
+Status=[running]... 429.55s. 46.34s
+```
+
+## 4. 在 LangChain 中使用
+
+微调完成后，请将生成得到的模型 ID 与 LangChain 中的 `ChatOpenAI` 模型类一起使用。
+
+```python
+# 获取微调后的模型 ID
+job = openai.fine_tuning.jobs.retrieve(job.id)
+model_id = job.fine_tuned_model
+
+# 在 LangChain 中使用微调后的模型
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(
+    model=model_id,
+    temperature=1,
+)
+```
+
+```python
+model.invoke("There were three ravens sat on a tree.")
+```
+
+```output
+AIMessage(content='[{"s": "There were three ravens", "object": "tree", "relation": "sat on"}, {"s": "three ravens", "object": "a tree", "relation": "sat on"}]')
+```
+
+恭喜！您已成功使用来自 LangSmith LLM 运行的数据微调了模型！
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss\python\integrations\chat_loaders\langsmith_dataset.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>
